@@ -99,7 +99,7 @@ export class DispensariesService {
       };
     }
 
-    Object.assign(dispensary, updateData);```````````````````````````
+    Object.assign(dispensary, updateData);
     await this.dispensaryRepository.save(dispensary);
 
     return this.findOne(id);
@@ -127,4 +127,4 @@ export class DispensariesService {
     Object.assign(dispensary.branding, updateDto);
     return this.brandingRepository.save(dispensary.branding);
   }
-}`````````````
+}

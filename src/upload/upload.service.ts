@@ -6,19 +6,33 @@ import * as path from 'path';
 
 @Injectable()
 export class UploadService {
-  private s3Client: S3Client;
-  private bucketName: string;
-  private cloudFrontDomain: string;
+  private s3Client!: S3Client;
+  private bucketName!: string;
+  private cloudFrontDomain!: string;
 
   constructor(private configService: ConfigService) {
     const region = this.configService.get<string>('aws.region');
     const accessKeyId = this.configService.get<string>('aws.accessKeyId');
-    const secretAccessKey = this.configService.get<string>('aws.secretAccessKey');
+    const secretAccessKey = this.configService.get<string>(
+      'aws.secretAccessKey',
+    );
     const bucketName = this.configService.get<string>('aws.s3BucketName');
-    const cloudFrontDomain = this.configService.get<string>('aws.cloudFrontDomain');
+    const cloudFrontDomain = this.configService.get<string>(
+      'aws.cloudFrontDomain',
+    );
 
-    if (!region || !accessKeyId || !secretAccessKey || !bucketName || !cloudFrontDomain) {
-      throw new Error('AWS configuration is incomplete');
+    if (
+      !region ||
+      !accessKeyId ||
+      !secretAccessKey ||
+      !bucketName ||
+      !cloudFrontDomain
+    ) {
+      console.warn(
+        '⚠️  AWS configuration is incomplete - file uploads will be disabled',
+      );
+      return;
+      ``;
     }
 
     this.s3Client = new S3Client({

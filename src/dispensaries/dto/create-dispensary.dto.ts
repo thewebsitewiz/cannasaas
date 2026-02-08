@@ -60,7 +60,7 @@ export class CreateDispensaryDto {
   @IsNumber()
   @Min(-180)
   @Max(180)
-  longitude: number;
+  longitude!: number;
 
   @IsOptional()
   @IsString()

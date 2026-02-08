@@ -4,12 +4,14 @@ export default registerAs('database', () => ({
   postgres: {
     host: process.env.DATABASE_HOST || 'localhost',
     port: parseInt(process.env.DATABASE_PORT || '5432', 10),
-    username: process.env.DATABASE_USERNAME || 'cannasaas_user',
-    password: process.env.DATABASE_PASSWORD || 'cannasaas_password',
-    database: process.env.DATABASE_NAME || 'cannasaas_db',
+    username: process.env.DATABASE_USERNAME || 'postgress',
+    password: process.env.DATABASE_PASSWORD || 'postgress',
+    database: process.env.DATABASE_NAME || 'cannasaas',
   },
   mongodb: {
-    uri: process.env.MONGODB_URI || 'mongodb://cannasaas_user:cannasaas_password@localhost:27017/cannasaas_products?authSource=admin',
+    uri:
+      process.env.MONGODB_URI ||
+      'mongodb://cannasaas_user:cannasaas_password@localhost:27017/cannasaas_products?authSource=admin',
   },
   redis: {
     host: process.env.REDIS_HOST || 'localhost',
