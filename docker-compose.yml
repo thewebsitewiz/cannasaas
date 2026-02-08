@@ -1,0 +1,100 @@
+services:
+  postgres:
+    image: postgis/postgis:15-3.3
+    container_name: cannasaas-postgres
+    environment:
+      POSTGRES_USER: postgres # ← CRITICAL!
+      POSTGRES_PASSWORD: postgres # ← CRITICAL!
+      POSTGRES_DB: cannasaas # ← CRITICAL!
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - cannasaas-network
+
+  # MongoDB - Product Catalog
+  mongodb:
+    image: mongo:7
+    container_name: cannasaas-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: cannasaas_user
+      MONGO_INITDB_ROOT_PASSWORD: cannasaas_password
+      MONGO_INITDB_DATABASE: cannasaas_products
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./scripts/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - cannasaas-network
+
+  # Redis - Cache & Sessions
+  redis:
+    image: redis:7-alpine
+    container_name: cannasaas-redis
+    restart: unless-stopped
+    command: redis-server --requirepass cannasaas_password --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - cannasaas-network
+
+  # PgAdmin - PostgreSQL UI (Optional)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: cannasaas-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@cannasaas.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - cannasaas-network
+
+  # Mongo Express - MongoDB UI (Optional)
+  mongo-express:
+    image: mongo-express:latest
+    container_name: cannasaas-mongo-express
+    restart: unless-stopped
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: cannasaas_user
+      ME_CONFIG_MONGODB_ADMINPASSWORD: cannasaas_password
+      ME_CONFIG_MONGODB_URL: mongodb://cannasaas_user:cannasaas_password@mongodb:27017/
+      ME_CONFIG_BASICAUTH: false
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mongodb
+    networks:
+      - cannasaas-network
+
+  # Redis Commander - Redis UI (Optional)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: cannasaas-redis-commander
+    restart: unless-stopped
+    environment:
+      REDIS_HOSTS: local:redis:6379:0:cannasaas_password
+    ports:
+      - "8082:8081"
+    depends_on:
+      - redis
+    networks:
+      - cannasaas-network
+
+volumes:
+  postgres_data:
+  mongodb_data:
+  redis_data:
+
+networks:
+  cannasaas-network:
+    driver: bridge
