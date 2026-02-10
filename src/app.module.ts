@@ -20,7 +20,6 @@ import { UploadModule } from './upload/upload.module';
     TypeOrmModule.forRootAsync({
       imports: [
         ConfigModule,
-        AuthModule,
         OrganizationsModule,
         CompaniesModule,
         DispensariesModule,
@@ -50,6 +49,7 @@ import { UploadModule } from './upload/upload.module';
       },
       inject: [ConfigService],
     }),
+    AuthModule,
     OrganizationsModule,
     CompaniesModule,
     DispensariesModule,
