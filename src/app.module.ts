@@ -1,11 +1,13 @@
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 
-// Import new modules
 import { AuthModule } from './auth/auth.module';
 import { CompaniesModule } from './companies/companies.module';
+import { ComplianceModule } from './compliance/compliance.module';
 import { DispensariesModule } from './dispensaries/dispensaries.module';
+import { OrdersModule } from './orders/orders.module';
 import { OrganizationsModule } from './organizations/organizations.module';
+import { ProductsModule } from './products/products.module';
 import { Tenant } from './tenants/entities/tenant.entity';
 import { TenantMiddleware } from './common/middleware/tenant.middleware';
 import { TenantModule } from './common/tenant/tenant.module';
@@ -22,37 +24,30 @@ import databaseConfig from './config/database.config';
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => {
-        const password = configService.get('database.postgres.password');
-        console.log('DB CONFIG:', {
-          host: configService.get('database.postgres.host'),
-          password: typeof password,
-          passwordValue: password, // temporarily log it to debug
-        });
-
-        return {
-          type: 'postgres',
-          host: configService.get('database.postgres.host'),
-          port: configService.get('database.postgres.port'),
-          database: configService.get('database.postgres.database'),
-          username: configService.get('database.postgres.username'),
-          password: configService.get('database.postgres.password'),
-          entities: [__dirname + '/**/*.entity{.ts,.js}'],
-          migrations: [__dirname + '/migrations/*{.ts,.js}'],
-          synchronize: true, // TODO Set to false in production
-          logging: true, // configService.get('database.logging'),
-          autoLoadEntities: true,
-        };
-      },
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        host: configService.get('database.postgres.host'),
+        port: configService.get('database.postgres.port'),
+        username: configService.get('database.postgres.username'),
+        password: configService.get('database.postgres.password'),
+        database: configService.get('database.postgres.database'),
+        entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        migrations: [__dirname + '/migrations/*{.ts,.js}'],
+        synchronize: false, // Use migrations in production
+        autoLoadEntities: true,
+      }),
       inject: [ConfigService],
     }),
+    TypeOrmModule.forFeature([Tenant]),
+    TenantModule,
     AuthModule,
     OrganizationsModule,
     CompaniesModule,
     DispensariesModule,
+    ProductsModule,
+    OrdersModule,
+    ComplianceModule,
     UploadModule,
-    TenantModule,
-    TypeOrmModule.forFeature([Tenant]),
   ],
 })
 export class AppModule implements NestModule {

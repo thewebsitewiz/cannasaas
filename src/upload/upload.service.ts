@@ -1,8 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import * as crypto from 'crypto';
 import * as path from 'path';
+
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+
+import { ConfigService } from '@nestjs/config';
+import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class UploadService {
@@ -17,22 +19,15 @@ export class UploadService {
       'aws.secretAccessKey',
     );
     const bucketName = this.configService.get<string>('aws.s3BucketName');
-    const cloudFrontDomain = this.configService.get<string>(
-      'aws.cloudFrontDomain',
-    );
+    const cloudFrontDomain =
+      this.configService.get<string>('aws.cloudFrontDomain') || '';
 
-    if (
-      !region ||
-      !accessKeyId ||
-      !secretAccessKey ||
-      !bucketName ||
-      !cloudFrontDomain
-    ) {
+    if (!region || !accessKeyId || !secretAccessKey || !bucketName) {
       console.warn(
         '⚠️  AWS configuration is incomplete - file uploads will be disabled',
       );
+
       return;
-      ``;
     }
 
     this.s3Client = new S3Client({
