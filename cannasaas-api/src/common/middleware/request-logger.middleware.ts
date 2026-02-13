@@ -17,7 +17,7 @@ export class RequestLoggerMiddleware implements NestMiddleware {
       this.logger.log({
         requestId, method: req.method, url: req.originalUrl,
         statusCode: res.statusCode, duration: `${Date.now() - start}ms`,
-        orgId: req['organizationId'], userId: req['user']?.id,
+        orgId: req['organizationId'], userId: req['user']?.['id'],
         ip: req.ip, userAgent: req.get('user-agent'),
       });
     });

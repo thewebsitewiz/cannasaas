@@ -49,4 +49,3 @@ export class OrderItem {
   @JoinColumn({ name: 'order_id' })
   order!: Order;
 }
-sa;

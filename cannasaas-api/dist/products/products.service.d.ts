@@ -24,4 +24,8 @@ export declare class ProductsService {
     }): Promise<Product[]>;
     findOneProduct(id: string): Promise<Product>;
     updateProduct(id: string, dto: UpdateProductDto): Promise<Product>;
+    removeProduct(id: string): Promise<void>;
+    updateInventory(variantId: string, quantityChange: number): Promise<ProductVariant>;
+    getLowStockProducts(dispensaryId: string): Promise<ProductVariant[]>;
+    addProductImage(productId: string, imageUrl: string, isPrimary?: boolean): Promise<ProductImage>;
 }

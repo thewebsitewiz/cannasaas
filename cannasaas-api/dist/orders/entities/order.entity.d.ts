@@ -52,4 +52,6 @@ export declare class Order {
     statusHistory: OrderStatusHistory[];
     createdAt: Date;
     updatedAt: Date;
+    customerId: string;
+    totalWeight: number;
 }

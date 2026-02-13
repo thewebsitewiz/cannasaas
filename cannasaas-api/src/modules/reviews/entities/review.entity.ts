@@ -1,16 +1,28 @@
 // cannasaas-api/src/modules/reviews/entities/review.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne,
-  CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
-import { Product } from '../../products/entities/product.entity';
-import { User } from '../../users/entities/user.entity';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
-export enum ReviewStatus { PENDING = 'pending', APPROVED = 'approved', REJECTED = 'rejected' }
+import { Product } from '../../../products/entities/product.entity';
+import { User } from '../../../users/entities/user.entity';
+
+export enum ReviewStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+}
 
 @Entity('reviews')
 @Index(['productId', 'status'])
 @Index(['userId', 'productId'], { unique: true })
 export class Review {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn('uuid' as any)
   id: string;
 
   @Column('uuid')

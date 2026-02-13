@@ -9,6 +9,12 @@ export enum UserRole {
   DISPENSARY_MANAGER = 'dispensary_manager',
   BUDTENDER = 'budtender',
   CUSTOMER = 'customer',
+
+  @Column({ name: "date_of_birth", type: "date", nullable: true })
+  dateOfBirth: Date;
+
+  @Column({ name: "id_verified_at", type: "timestamptz", nullable: true })
+  idVerifiedAt: Date;
 }
 
 @Entity('users')
@@ -54,4 +60,10 @@ export class User extends BaseEntity {
   @ManyToOne(() => Tenant, { eager: true })
   @JoinColumn({ name: 'tenant_id' })
   tenant!                                                                                 : Tenant;
+
+  @Column({ name: "date_of_birth", type: "date", nullable: true })
+  dateOfBirth: Date;
+
+  @Column({ name: "id_verified_at", type: "timestamptz", nullable: true })
+  idVerifiedAt: Date;
 }

@@ -8,7 +8,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Order = exports.FulfillmentType = exports.PaymentStatus = exports.OrderStatus = void 0;
 const typeorm_1 = require("typeorm");
@@ -27,6 +26,8 @@ var OrderStatus;
     OrderStatus["CANCELLED"] = "cancelled";
     OrderStatus["REFUNDED"] = "refunded";
 })(OrderStatus || (exports.OrderStatus = OrderStatus = {}));
+customerId: string;
+totalWeight: number;
 var PaymentStatus;
 (function (PaymentStatus) {
     PaymentStatus["PENDING"] = "pending";
@@ -35,11 +36,15 @@ var PaymentStatus;
     PaymentStatus["FAILED"] = "failed";
     PaymentStatus["REFUNDED"] = "refunded";
 })(PaymentStatus || (exports.PaymentStatus = PaymentStatus = {}));
+customerId: string;
+totalWeight: number;
 var FulfillmentType;
 (function (FulfillmentType) {
     FulfillmentType["PICKUP"] = "pickup";
     FulfillmentType["DELIVERY"] = "delivery";
 })(FulfillmentType || (exports.FulfillmentType = FulfillmentType = {}));
+customerId: string;
+totalWeight: number;
 let Order = class Order {
 };
 exports.Order = Order;
@@ -152,15 +157,15 @@ __decorate([
 ], Order.prototype, "internalNotes", void 0);
 __decorate([
     (0, typeorm_1.Column)({ name: 'confirmed_at', type: 'timestamp', nullable: true }),
-    __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
+    __metadata("design:type", Date)
 ], Order.prototype, "confirmedAt", void 0);
 __decorate([
     (0, typeorm_1.Column)({ name: 'completed_at', type: 'timestamp', nullable: true }),
-    __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
+    __metadata("design:type", Date)
 ], Order.prototype, "completedAt", void 0);
 __decorate([
     (0, typeorm_1.Column)({ name: 'cancelled_at', type: 'timestamp', nullable: true }),
-    __metadata("design:type", typeof (_c = typeof Date !== "undefined" && Date) === "function" ? _c : Object)
+    __metadata("design:type", Date)
 ], Order.prototype, "cancelledAt", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => user_entity_1.User),
@@ -184,12 +189,20 @@ __decorate([
 ], Order.prototype, "statusHistory", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)({ name: 'created_at' }),
-    __metadata("design:type", typeof (_d = typeof Date !== "undefined" && Date) === "function" ? _d : Object)
+    __metadata("design:type", Date)
 ], Order.prototype, "createdAt", void 0);
 __decorate([
     (0, typeorm_1.UpdateDateColumn)({ name: 'updated_at' }),
-    __metadata("design:type", typeof (_e = typeof Date !== "undefined" && Date) === "function" ? _e : Object)
+    __metadata("design:type", Date)
 ], Order.prototype, "updatedAt", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: "customer_id", type: "uuid", nullable: true }),
+    __metadata("design:type", String)
+], Order.prototype, "customerId", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: "total_weight", type: "decimal", precision: 10, scale: 2, nullable: true }),
+    __metadata("design:type", Number)
+], Order.prototype, "totalWeight", void 0);
 exports.Order = Order = __decorate([
     (0, typeorm_1.Entity)('orders'),
     (0, typeorm_1.Index)(['dispensaryId', 'createdAt'])

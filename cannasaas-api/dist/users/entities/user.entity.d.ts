@@ -19,4 +19,6 @@ export declare class User extends BaseEntity {
     passwordResetToken: string;
     passwordResetExpires: Date;
     tenant: Tenant;
+    dateOfBirth: Date;
+    idVerifiedAt: Date;
 }

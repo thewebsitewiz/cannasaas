@@ -24,6 +24,12 @@ export enum OrderStatus {
   COMPLETED = 'completed',
   CANCELLED = 'cancelled',
   REFUNDED = 'refunded',
+
+  @Column({ name: "customer_id", type: "uuid", nullable: true })
+  customerId: string;
+
+  @Column({ name: "total_weight", type: "decimal", precision: 10, scale: 2, nullable: true })
+  totalWeight: number;
 }
 
 export enum PaymentStatus {
@@ -32,11 +38,23 @@ export enum PaymentStatus {
   CAPTURED = 'captured',
   FAILED = 'failed',
   REFUNDED = 'refunded',
+
+  @Column({ name: "customer_id", type: "uuid", nullable: true })
+  customerId: string;
+
+  @Column({ name: "total_weight", type: "decimal", precision: 10, scale: 2, nullable: true })
+  totalWeight: number;
 }
 
 export enum FulfillmentType {
   PICKUP = 'pickup',
   DELIVERY = 'delivery',
+
+  @Column({ name: "customer_id", type: "uuid", nullable: true })
+  customerId: string;
+
+  @Column({ name: "total_weight", type: "decimal", precision: 10, scale: 2, nullable: true })
+  totalWeight: number;
 }
 
 @Entity('orders')
@@ -167,4 +185,10 @@ export class Order {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
+
+  @Column({ name: "customer_id", type: "uuid", nullable: true })
+  customerId: string;
+
+  @Column({ name: "total_weight", type: "decimal", precision: 10, scale: 2, nullable: true })
+  totalWeight: number;
 }

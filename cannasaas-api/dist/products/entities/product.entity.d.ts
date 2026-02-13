@@ -44,4 +44,8 @@ export declare class Product {
     images: ProductImage[];
     createdAt: Date;
     updatedAt: Date;
+    aiDescription: string;
+    aiDescriptionGeneratedAt: Date;
+    terpenes: string[];
+    price: number;
 }

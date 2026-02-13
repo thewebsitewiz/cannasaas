@@ -4,7 +4,7 @@ export declare class HealthController {
     private db;
     private mongoose;
     constructor(health: HealthCheckService, db: TypeOrmHealthIndicator, mongoose: MongooseHealthIndicator);
-    check(): any;
-    checkPostgres(): any;
-    checkMongoDB(): any;
+    check(): Promise<import("@nestjs/terminus").HealthCheckResult>;
+    checkPostgres(): Promise<import("@nestjs/terminus").HealthCheckResult>;
+    checkMongoDB(): Promise<import("@nestjs/terminus").HealthCheckResult>;
 }

@@ -8,7 +8,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HealthController = void 0;
 const common_1 = require("@nestjs/common");
@@ -60,6 +59,8 @@ __decorate([
 ], HealthController.prototype, "checkMongoDB", null);
 exports.HealthController = HealthController = __decorate([
     (0, common_1.Controller)('health'),
-    __metadata("design:paramtypes", [typeof (_a = typeof terminus_1.HealthCheckService !== "undefined" && terminus_1.HealthCheckService) === "function" ? _a : Object, typeof (_b = typeof terminus_1.TypeOrmHealthIndicator !== "undefined" && terminus_1.TypeOrmHealthIndicator) === "function" ? _b : Object, typeof (_c = typeof terminus_1.MongooseHealthIndicator !== "undefined" && terminus_1.MongooseHealthIndicator) === "function" ? _c : Object])
+    __metadata("design:paramtypes", [terminus_1.HealthCheckService,
+        terminus_1.TypeOrmHealthIndicator,
+        terminus_1.MongooseHealthIndicator])
 ], HealthController);
 //# sourceMappingURL=health.controller.js.map

@@ -8,7 +8,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.User = exports.UserRole = void 0;
 const typeorm_1 = require("typeorm");
@@ -23,6 +22,8 @@ var UserRole;
     UserRole["BUDTENDER"] = "budtender";
     UserRole["CUSTOMER"] = "customer";
 })(UserRole || (exports.UserRole = UserRole = {}));
+dateOfBirth: Date;
+idVerifiedAt: Date;
 let User = class User extends base_entity_1.BaseEntity {
 };
 exports.User = User;
@@ -72,13 +73,21 @@ __decorate([
 __decorate([
     (0, typeorm_1.Column)({ name: 'password_reset_expires', type: 'timestamp', nullable: true }),
     (0, class_transformer_1.Exclude)(),
-    __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
+    __metadata("design:type", Date)
 ], User.prototype, "passwordResetExpires", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => tenant_entity_1.Tenant, { eager: true }),
     (0, typeorm_1.JoinColumn)({ name: 'tenant_id' }),
     __metadata("design:type", tenant_entity_1.Tenant)
 ], User.prototype, "tenant", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: "date_of_birth", type: "date", nullable: true }),
+    __metadata("design:type", Date)
+], User.prototype, "dateOfBirth", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: "id_verified_at", type: "timestamptz", nullable: true }),
+    __metadata("design:type", Date)
+], User.prototype, "idVerifiedAt", void 0);
 exports.User = User = __decorate([
     (0, typeorm_1.Entity)('users')
 ], User);

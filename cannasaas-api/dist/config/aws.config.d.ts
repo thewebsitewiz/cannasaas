@@ -1,10 +1,10 @@
 declare const _default: () => {
     aws: {
-        region: any;
-        accessKeyId: any;
-        secretAccessKey: any;
-        s3BucketName: any;
-        cloudFrontDomain: any;
+        region: string;
+        accessKeyId: string;
+        secretAccessKey: string;
+        s3BucketName: string;
+        cloudFrontDomain: string;
     };
 };
 export default _default;

@@ -3,7 +3,7 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Review, ReviewStatus } from './entities/review.entity';
-import { OrderService } from '../orders/order.service';
+import { OrderService } from '../../orders/orders.service';
 
 @Injectable()
 export class ReviewService {

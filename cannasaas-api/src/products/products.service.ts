@@ -136,7 +136,6 @@ export class ProductsService {
 
     Object.assign(product, productData);
     await this.productRepository.save(product);
-`````````
     // Update variants if provided
     if (variants) {
       // Remove existing variants and replace

@@ -104,89 +104,52 @@ let ProductsService = class ProductsService {
         const { variants, ...productData } = dto;
         Object.assign(product, productData);
         await this.productRepository.save(product);
-        `` `` `` `` `
-    // Update variants if provided
-    if (variants) {
-      // Remove existing variants and replace
-      await this.variantRepository.delete({ productId: id });
-      const variantEntities = variants.map((v, index) =>
-        this.variantRepository.create({
-          ...v,
-          productId: id,
-          sortOrder: index,
-        }),
-      );
-      await this.variantRepository.save(variantEntities);
-    }
-
-    return this.findOneProduct(id);
-  }
-
-  async removeProduct(id: string): Promise<void> {
-    const product = await this.findOneProduct(id);
-    await this.productRepository.remove(product);
-  }
-
-  // --- Inventory ---
-
-  async updateInventory(
-    variantId: string,
-    quantityChange: number,
-  ): Promise<ProductVariant> {
-    const variant = await this.variantRepository.findOne({
-      where: { id: variantId },
-    });
-
-    if (!variant) {
-      throw new NotFoundException(`;
-        Variant;
-        with (ID)
-            $;
-        {
-            variantId;
+        if (variants) {
+            await this.variantRepository.delete({ productId: id });
+            const variantEntities = variants.map((v, index) => this.variantRepository.create({
+                ...v,
+                productId: id,
+                sortOrder: index,
+            }));
+            await this.variantRepository.save(variantEntities);
         }
-        not;
-        found `);
+        return this.findOneProduct(id);
     }
-
-    variant.quantity += quantityChange;
-    if (variant.quantity < 0) variant.quantity = 0;
-
-    return this.variantRepository.save(variant);
-  }
-
-  async getLowStockProducts(dispensaryId: string): Promise<ProductVariant[]> {
-    return this.variantRepository
-      .createQueryBuilder('variant')
-      .leftJoinAndSelect('variant.product', 'product')
-      .where('product.dispensaryId = :dispensaryId', { dispensaryId })
-      .andWhere('variant.quantity <= variant.lowStockThreshold')
-      .andWhere('variant.isActive = true')
-      .getMany();
-  }
-
-  // --- Product Images ---
-
-  async addProductImage(
-    productId: string,
-    imageUrl: string,
-    isPrimary: boolean = false,
-  ): Promise<ProductImage> {
-    // If setting as primary, unset existing primary
-    if (isPrimary) {
-      await this.imageRepository.update({ productId }, { isPrimary: false });
+    async removeProduct(id) {
+        const product = await this.findOneProduct(id);
+        await this.productRepository.remove(product);
     }
-
-    const image = this.imageRepository.create({
-      productId,
-      imageUrl,
-      isPrimary,
-    });
-
-    return this.imageRepository.save(image);
-  }
-}
-        ;
+    async updateInventory(variantId, quantityChange) {
+        const variant = await this.variantRepository.findOne({
+            where: { id: variantId },
+        });
+        if (!variant) {
+            throw new common_1.NotFoundException(`Variant with ID ${variantId} not found`);
+        }
+        variant.quantity += quantityChange;
+        if (variant.quantity < 0)
+            variant.quantity = 0;
+        return this.variantRepository.save(variant);
+    }
+    async getLowStockProducts(dispensaryId) {
+        return this.variantRepository
+            .createQueryBuilder('variant')
+            .leftJoinAndSelect('variant.product', 'product')
+            .where('product.dispensaryId = :dispensaryId', { dispensaryId })
+            .andWhere('variant.quantity <= variant.lowStockThreshold')
+            .andWhere('variant.isActive = true')
+            .getMany();
+    }
+    async addProductImage(productId, imageUrl, isPrimary = false) {
+        if (isPrimary) {
+            await this.imageRepository.update({ productId }, { isPrimary: false });
+        }
+        const image = this.imageRepository.create({
+            productId,
+            imageUrl,
+            isPrimary,
+        });
+        return this.imageRepository.save(image);
     }
 };
 exports.ProductsService = ProductsService;

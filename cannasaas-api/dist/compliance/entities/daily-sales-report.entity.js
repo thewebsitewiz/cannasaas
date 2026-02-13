@@ -8,7 +8,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DailySalesReport = void 0;
 const typeorm_1 = require("typeorm");
@@ -82,11 +81,11 @@ __decorate([
 ], DailySalesReport.prototype, "uniqueCustomers", void 0);
 __decorate([
     (0, typeorm_1.Column)({ name: 'sales_by_type', type: 'jsonb', nullable: true }),
-    __metadata("design:type", typeof (_a = typeof Record !== "undefined" && Record) === "function" ? _a : Object)
+    __metadata("design:type", Object)
 ], DailySalesReport.prototype, "salesByType", void 0);
 __decorate([
     (0, typeorm_1.Column)({ name: 'sales_by_category', type: 'jsonb', nullable: true }),
-    __metadata("design:type", typeof (_b = typeof Record !== "undefined" && Record) === "function" ? _b : Object)
+    __metadata("design:type", Object)
 ], DailySalesReport.prototype, "salesByCategory", void 0);
 __decorate([
     (0, typeorm_1.Column)({ name: 'cancelled_orders', type: 'int', default: 0 }),
@@ -109,7 +108,7 @@ __decorate([
 ], DailySalesReport.prototype, "dispensary", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)({ name: 'created_at' }),
-    __metadata("design:type", typeof (_c = typeof Date !== "undefined" && Date) === "function" ? _c : Object)
+    __metadata("design:type", Date)
 ], DailySalesReport.prototype, "createdAt", void 0);
 exports.DailySalesReport = DailySalesReport = __decorate([
     (0, typeorm_1.Entity)('daily_sales_reports'),

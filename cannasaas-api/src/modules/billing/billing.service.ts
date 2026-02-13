@@ -17,7 +17,7 @@ export class BillingService {
 
   constructor(@InjectRepository(Organization) private orgRepo: Repository<Organization>) {
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2024-12-18.acacia',
+      apiVersion: '2026-01-28.clover',
     });
   }
 

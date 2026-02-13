@@ -45,7 +45,7 @@ describe('TenantsService', () => {
 }); 
   describe('findBySubdomain', () => {
     it('should return a tenant when found', async () => {
-      jest.spyOn(repPository, 'findOne').mockResolvedValue(mockTenant);
+      jest.spyOn(repository, 'findOne').mockResolvedValue(mockTenant);
 
       const result = await service.findBySubdomain('test');
 

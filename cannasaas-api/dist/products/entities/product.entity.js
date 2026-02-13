@@ -8,7 +8,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Product = exports.StrainType = exports.ProductType = void 0;
 const typeorm_1 = require("typeorm");
@@ -26,6 +25,10 @@ var ProductType;
     ProductType["PRE_ROLL"] = "pre_roll";
     ProductType["ACCESSORY"] = "accessory";
 })(ProductType || (exports.ProductType = ProductType = {}));
+aiDescription: string;
+aiDescriptionGeneratedAt: Date;
+terpenes: string[];
+price: number;
 var StrainType;
 (function (StrainType) {
     StrainType["SATIVA"] = "sativa";
@@ -33,6 +36,10 @@ var StrainType;
     StrainType["HYBRID"] = "hybrid";
     StrainType["CBD"] = "cbd";
 })(StrainType || (exports.StrainType = StrainType = {}));
+aiDescription: string;
+aiDescriptionGeneratedAt: Date;
+terpenes: string[];
+price: number;
 let Product = class Product {
 };
 exports.Product = Product;
@@ -160,12 +167,28 @@ __decorate([
 ], Product.prototype, "images", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)({ name: 'created_at' }),
-    __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
+    __metadata("design:type", Date)
 ], Product.prototype, "createdAt", void 0);
 __decorate([
     (0, typeorm_1.UpdateDateColumn)({ name: 'updated_at' }),
-    __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
+    __metadata("design:type", Date)
 ], Product.prototype, "updatedAt", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: "ai_description", type: "text", nullable: true }),
+    __metadata("design:type", String)
+], Product.prototype, "aiDescription", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: "ai_description_generated_at", type: "timestamptz", nullable: true }),
+    __metadata("design:type", Date)
+], Product.prototype, "aiDescriptionGeneratedAt", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: "simple-array", nullable: true }),
+    __metadata("design:type", Array)
+], Product.prototype, "terpenes", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: "decimal", precision: 10, scale: 2, nullable: true }),
+    __metadata("design:type", Number)
+], Product.prototype, "price", void 0);
 exports.Product = Product = __decorate([
     (0, typeorm_1.Entity)('products'),
     (0, typeorm_1.Index)(['dispensaryId', 'slug'], { unique: true })

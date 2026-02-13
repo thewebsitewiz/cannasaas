@@ -14,6 +14,6 @@ export declare class TenantMiddleware implements NestMiddleware {
     private tenantRepository;
     private tenantService;
     constructor(tenantRepository: Repository<Tenant>, tenantService: TenantService);
-    use(req: Request, res: Response, next: NextFunction): any;
+    use(req: Request, res: Response, next: NextFunction): Promise<void>;
     private extractSubdomain;
 }

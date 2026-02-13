@@ -23,6 +23,18 @@ export enum ProductType {
   TINCTURE = 'tincture',
   PRE_ROLL = 'pre_roll',
   ACCESSORY = 'accessory',
+
+  @Column({ name: "ai_description", type: "text", nullable: true })
+  aiDescription: string;
+
+  @Column({ name: "ai_description_generated_at", type: "timestamptz", nullable: true })
+  aiDescriptionGeneratedAt: Date;
+
+  @Column({ type: "simple-array", nullable: true })
+  terpenes: string[];
+
+  @Column({ type: "decimal", precision: 10, scale: 2, nullable: true })
+  price: number;
 }
 
 export enum StrainType {
@@ -30,6 +42,18 @@ export enum StrainType {
   INDICA = 'indica',
   HYBRID = 'hybrid',
   CBD = 'cbd',
+
+  @Column({ name: "ai_description", type: "text", nullable: true })
+  aiDescription: string;
+
+  @Column({ name: "ai_description_generated_at", type: "timestamptz", nullable: true })
+  aiDescriptionGeneratedAt: Date;
+
+  @Column({ type: "simple-array", nullable: true })
+  terpenes: string[];
+
+  @Column({ type: "decimal", precision: 10, scale: 2, nullable: true })
+  price: number;
 }
 
 @Entity('products')
@@ -141,4 +165,16 @@ export class Product {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
+
+  @Column({ name: "ai_description", type: "text", nullable: true })
+  aiDescription: string;
+
+  @Column({ name: "ai_description_generated_at", type: "timestamptz", nullable: true })
+  aiDescriptionGeneratedAt: Date;
+
+  @Column({ type: "simple-array", nullable: true })
+  terpenes: string[];
+
+  @Column({ type: "decimal", precision: 10, scale: 2, nullable: true })
+  price: number;
 }

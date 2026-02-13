@@ -8,7 +8,7 @@ import { Repository, DataSource } from 'typeorm';
 import { Order, OrderStatus, FulfillmentType } from './entities/order.entity';
 import { OrderItem } from './entities/order-item.entity';
 import { OrderStatusHistory } from './entities/order-status-history.entity';
-import { CartService } from './cart.service';
+import { CartService } from '../cart/cart.service';
 import { ProductsService } from '../products/products.service';
 import { ComplianceService } from 'src/compliance/compliance.service';
 
