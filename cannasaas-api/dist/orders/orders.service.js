@@ -11,7 +11,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrdersService = void 0;
 const common_1 = require("@nestjs/common");
@@ -195,6 +194,22 @@ let OrdersService = class OrdersService {
         const seq = String(count + 1).padStart(4, '0');
         return `ORD-${today}-${seq}`;
     }
+    async hasUserPurchasedProduct(userId, productId) {
+        const order = await this.orderRepository.createQueryBuilder("order")
+            .innerJoin("order.items", "item")
+            .where("order.userId = :userId", { userId })
+            .andWhere("item.productId = :productId", { productId })
+            .getOne();
+        return !!order;
+    }
+    async hasUserPurchasedProduct(userId, productId) {
+        const order = await this.orderRepository.createQueryBuilder("order")
+            .innerJoin("order.items", "item")
+            .where("order.userId = :userId", { userId })
+            .andWhere("item.productId = :productId", { productId })
+            .getOne();
+        return !!order;
+    }
 };
 exports.OrdersService = OrdersService;
 exports.OrdersService = OrdersService = __decorate([
@@ -204,7 +219,9 @@ exports.OrdersService = OrdersService = __decorate([
     __param(2, (0, typeorm_1.InjectRepository)(order_status_history_entity_1.OrderStatusHistory)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository,
-        typeorm_2.Repository, typeof (_a = typeof cart_service_1.CartService !== "undefined" && cart_service_1.CartService) === "function" ? _a : Object, products_service_1.ProductsService,
+        typeorm_2.Repository,
+        cart_service_1.CartService,
+        products_service_1.ProductsService,
         typeorm_2.DataSource,
         compliance_service_1.ComplianceService])
 ], OrdersService);

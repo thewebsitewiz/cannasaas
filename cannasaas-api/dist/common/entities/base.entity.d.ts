@@ -1,6 +1,9 @@
 export declare abstract class BaseEntity {
     id: string;
-    tenantId: string;
     createdAt: Date;
     updatedAt: Date;
+    deletedAt?: Date;
+}
+export declare abstract class TenantBaseEntity extends BaseEntity {
+    organizationId: string;
 }

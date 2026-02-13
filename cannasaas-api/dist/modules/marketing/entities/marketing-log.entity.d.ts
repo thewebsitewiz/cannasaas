@@ -2,9 +2,9 @@ export declare class MarketingLog {
     id: string;
     organizationId: string;
     userId: string;
-    campaign: string;
+    campaignType: string;
+    channel: string;
     email: string;
-    status: string;
     metadata: Record<string, any>;
     sentAt: Date;
 }

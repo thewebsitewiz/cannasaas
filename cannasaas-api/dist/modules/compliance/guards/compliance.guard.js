@@ -13,11 +13,12 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ComplianceGuard = void 0;
+const order_entity_1 = require("../../../orders/entities/order.entity");
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const organization_entity_1 = require("../../organizations/organization.entity");
-const order_entity_1 = require("../../orders/entities/order.entity");
+const order_entity_2 = require("../../orders/entities/order.entity");
 const user_entity_1 = require("../../users/entities/user.entity");
 let ComplianceGuard = class ComplianceGuard {
     constructor(orgRepo, orderRepo, userRepo) {
@@ -51,7 +52,7 @@ let ComplianceGuard = class ComplianceGuard {
             today.setHours(0, 0, 0, 0);
             const todaysOrders = await this.orderRepo.find({
                 where: { customerId: userId, organizationId: orgId,
-                    createdAt: (0, typeorm_2.MoreThan)(today), status: 'completed' },
+                    createdAt: (0, typeorm_2.MoreThan)(today), status: order_entity_1.OrderStatus.COMPLETED },
             });
             const todaysTotal = todaysOrders.reduce((s, o) => s + Number(o.totalWeight || 0), 0);
             if (todaysTotal >= org.complianceConfig.dailyPurchaseLimit)
@@ -72,7 +73,7 @@ exports.ComplianceGuard = ComplianceGuard;
 exports.ComplianceGuard = ComplianceGuard = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(organization_entity_1.Organization)),
-    __param(1, (0, typeorm_1.InjectRepository)(order_entity_1.Order)),
+    __param(1, (0, typeorm_1.InjectRepository)(order_entity_2.Order)),
     __param(2, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository,

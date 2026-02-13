@@ -3,13 +3,13 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Review, ReviewStatus } from './entities/review.entity';
-import { OrderService } from '../../orders/orders.service';
+import { OrdersService } from '../../orders/orders.service';
 
 @Injectable()
 export class ReviewService {
   constructor(
     @InjectRepository(Review) private reviewRepo: Repository<Review>,
-    private orderService: OrderService,
+    private orderService: OrdersService,
   ) {}
 
   async create(userId: string, dto: {

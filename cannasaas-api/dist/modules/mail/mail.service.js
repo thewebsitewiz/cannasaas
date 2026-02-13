@@ -14,10 +14,10 @@ let MailService = MailService_1 = class MailService {
         this.logger = new common_1.Logger(MailService_1.name);
     }
     async sendBetaInvitation(data) {
-        this.logger.log(`[STUB] Beta invitation to ${data.to} with code ${data.code}`);
+        this.logger.log(`[STUB] Beta invitation to ${data.to} code ${data.code}`);
     }
     async sendStaffInvitation(data) {
-        this.logger.log(`[STUB] Staff invitation to ${data.to} for org ${data.orgName}`);
+        this.logger.log(`[STUB] Staff invitation to ${data.to} for ${data.orgName}`);
     }
     async sendAbandonedCartEmail(data) {
         this.logger.log(`[STUB] Abandoned cart email to ${data.to}`);

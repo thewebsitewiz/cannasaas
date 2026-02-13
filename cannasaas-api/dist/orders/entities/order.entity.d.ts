@@ -46,12 +46,13 @@ export declare class Order {
     confirmedAt: Date;
     completedAt: Date;
     cancelledAt: Date;
+    customerId: string;
+    totalWeight: number;
     user: User;
     dispensary: Dispensary;
     items: OrderItem[];
     statusHistory: OrderStatusHistory[];
     createdAt: Date;
     updatedAt: Date;
-    customerId: string;
-    totalWeight: number;
+    organizationId: string;
 }

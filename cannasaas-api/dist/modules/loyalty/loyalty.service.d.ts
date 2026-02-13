@@ -15,13 +15,13 @@ export declare class LoyaltyService {
     getOrCreateAccount(userId: string, orgId: string): Promise<LoyaltyAccount>;
     earnPoints(userId: string, orgId: string, orderId: string, amount: number): Promise<{
         pointsEarned: number;
-        newBalance: any;
+        newBalance: number;
         tier: string;
     }>;
     redeemPoints(userId: string, orgId: string, points: number): Promise<{
         pointsRedeemed: number;
         discountAmount: number;
-        remainingBalance: any;
+        remainingBalance: number;
     }>;
     private calculateTier;
 }

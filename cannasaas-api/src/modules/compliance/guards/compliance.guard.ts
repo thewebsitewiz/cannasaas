@@ -1,3 +1,4 @@
+import { OrderStatus } from '../../../orders/entities/order.entity';
 // cannasaas-api/src/modules/compliance/guards/compliance.guard.ts
 import { Injectable, CanActivate, ExecutionContext,
   ForbiddenException } from '@nestjs/common';
@@ -47,7 +48,7 @@ export class ComplianceGuard implements CanActivate {
       const today = new Date(); today.setHours(0, 0, 0, 0);
       const todaysOrders = await this.orderRepo.find({
         where: { customerId: userId, organizationId: orgId,
-          createdAt: MoreThan(today), status: 'completed' },
+          createdAt: MoreThan(today), status: OrderStatus.COMPLETED },
       });
       const todaysTotal = todaysOrders.reduce(
         (s, o) => s + Number(o.totalWeight || 0), 0);

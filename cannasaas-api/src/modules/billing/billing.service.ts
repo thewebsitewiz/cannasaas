@@ -50,7 +50,7 @@ export class BillingService {
     await this.orgRepo.save(org);
 
     const invoice = subscription.latest_invoice as Stripe.Invoice;
-    const pi = invoice.payment_intent as Stripe.PaymentIntent;
+    const pi = (invoice as any).payment_intent as Stripe.PaymentIntent;
     return { subscriptionId: subscription.id, clientSecret: pi?.client_secret };
   }
 

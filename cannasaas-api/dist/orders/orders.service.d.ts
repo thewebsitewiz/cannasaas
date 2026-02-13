@@ -30,4 +30,5 @@ export declare class OrdersService {
     updateStatus(orderId: string, newStatus: OrderStatus, changedBy: string, notes?: string): Promise<Order>;
     private validateStatusTransition;
     private generateOrderNumber;
+    hasUserPurchasedProduct(userId: string, productId: string): Promise<boolean>;
 }

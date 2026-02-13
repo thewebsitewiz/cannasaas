@@ -24,12 +24,6 @@ export enum OrderStatus {
   COMPLETED = 'completed',
   CANCELLED = 'cancelled',
   REFUNDED = 'refunded',
-
-  @Column({ name: "customer_id", type: "uuid", nullable: true })
-  customerId: string;
-
-  @Column({ name: "total_weight", type: "decimal", precision: 10, scale: 2, nullable: true })
-  totalWeight: number;
 }
 
 export enum PaymentStatus {
@@ -38,23 +32,11 @@ export enum PaymentStatus {
   CAPTURED = 'captured',
   FAILED = 'failed',
   REFUNDED = 'refunded',
-
-  @Column({ name: "customer_id", type: "uuid", nullable: true })
-  customerId: string;
-
-  @Column({ name: "total_weight", type: "decimal", precision: 10, scale: 2, nullable: true })
-  totalWeight: number;
 }
 
 export enum FulfillmentType {
   PICKUP = 'pickup',
   DELIVERY = 'delivery',
-
-  @Column({ name: "customer_id", type: "uuid", nullable: true })
-  customerId: string;
-
-  @Column({ name: "total_weight", type: "decimal", precision: 10, scale: 2, nullable: true })
-  totalWeight: number;
 }
 
 @Entity('orders')
@@ -64,7 +46,7 @@ export class Order {
   id!: string;
 
   @Column({ name: 'order_number', length: 20, unique: true })
-  orderNumber!: string; // Human-readable: "ORD-20260210-001"
+  orderNumber!: string;
 
   @Column({ name: 'user_id', type: 'uuid' })
   userId!: string;
@@ -95,7 +77,7 @@ export class Order {
     scale: 2,
     default: 0,
   })
-  exciseTax!: number; // Cannabis-specific excise tax
+  exciseTax!: number;
 
   @Column({
     name: 'discount_amount',
@@ -163,6 +145,13 @@ export class Order {
   @Column({ name: 'cancelled_at', type: 'timestamp', nullable: true })
   cancelledAt!: Date;
 
+  // Sprint 7+ fields
+  @Column({ name: 'customer_id', type: 'uuid', nullable: true })
+  customerId: string;
+
+  @Column({ name: 'total_weight', type: 'decimal', precision: 10, scale: 2, nullable: true })
+  totalWeight: number;
+
   // Relations
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
@@ -186,9 +175,7 @@ export class Order {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
 
-  @Column({ name: "customer_id", type: "uuid", nullable: true })
-  customerId: string;
+  @Column({ name: 'organization_id', type: 'uuid', nullable: true })
+  organizationId: string;
 
-  @Column({ name: "total_weight", type: "decimal", precision: 10, scale: 2, nullable: true })
-  totalWeight: number;
 }

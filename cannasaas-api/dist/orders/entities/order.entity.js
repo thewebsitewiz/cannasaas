@@ -26,8 +26,6 @@ var OrderStatus;
     OrderStatus["CANCELLED"] = "cancelled";
     OrderStatus["REFUNDED"] = "refunded";
 })(OrderStatus || (exports.OrderStatus = OrderStatus = {}));
-customerId: string;
-totalWeight: number;
 var PaymentStatus;
 (function (PaymentStatus) {
     PaymentStatus["PENDING"] = "pending";
@@ -36,15 +34,11 @@ var PaymentStatus;
     PaymentStatus["FAILED"] = "failed";
     PaymentStatus["REFUNDED"] = "refunded";
 })(PaymentStatus || (exports.PaymentStatus = PaymentStatus = {}));
-customerId: string;
-totalWeight: number;
 var FulfillmentType;
 (function (FulfillmentType) {
     FulfillmentType["PICKUP"] = "pickup";
     FulfillmentType["DELIVERY"] = "delivery";
 })(FulfillmentType || (exports.FulfillmentType = FulfillmentType = {}));
-customerId: string;
-totalWeight: number;
 let Order = class Order {
 };
 exports.Order = Order;
@@ -168,6 +162,14 @@ __decorate([
     __metadata("design:type", Date)
 ], Order.prototype, "cancelledAt", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ name: 'customer_id', type: 'uuid', nullable: true }),
+    __metadata("design:type", String)
+], Order.prototype, "customerId", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'total_weight', type: 'decimal', precision: 10, scale: 2, nullable: true }),
+    __metadata("design:type", Number)
+], Order.prototype, "totalWeight", void 0);
+__decorate([
     (0, typeorm_1.ManyToOne)(() => user_entity_1.User),
     (0, typeorm_1.JoinColumn)({ name: 'user_id' }),
     __metadata("design:type", user_entity_1.User)
@@ -196,13 +198,9 @@ __decorate([
     __metadata("design:type", Date)
 ], Order.prototype, "updatedAt", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: "customer_id", type: "uuid", nullable: true }),
+    (0, typeorm_1.Column)({ name: 'organization_id', type: 'uuid', nullable: true }),
     __metadata("design:type", String)
-], Order.prototype, "customerId", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ name: "total_weight", type: "decimal", precision: 10, scale: 2, nullable: true }),
-    __metadata("design:type", Number)
-], Order.prototype, "totalWeight", void 0);
+], Order.prototype, "organizationId", void 0);
 exports.Order = Order = __decorate([
     (0, typeorm_1.Entity)('orders'),
     (0, typeorm_1.Index)(['dispensaryId', 'createdAt'])

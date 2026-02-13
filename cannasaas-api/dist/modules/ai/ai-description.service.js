@@ -28,12 +28,12 @@ let AiDescriptionService = class AiDescriptionService {
     }
     async generateDescription(productId, options) {
         const product = await this.productRepo.findOneOrFail({
-            where: { id: productId }, relations: ['category'],
+            where: { id: productId },
         });
         const prompt = `Generate a product description for a cannabis dispensary.
 
 Product: ${product.name}
-Category: ${product.category?.name || 'General'}
+Category: ${product.category || 'General'}
 Strain Type: ${product.strainType || 'N/A'}
 THC: ${product.thcContent || 'N/A'}%
 CBD: ${product.cbdContent || 'N/A'}%

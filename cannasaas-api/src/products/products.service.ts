@@ -42,8 +42,8 @@ export class ProductsService {
   async createProduct(dto: CreateProductDto): Promise<Product> {
     const { variants, ...productData } = dto;
 
-    const product = this.productRepository.create(productData);
-    const savedProduct = await this.productRepository.save(product);
+    const product = this.productRepository.create(productData as any);
+    const savedProduct: any = await this.productRepository.save(product);
 
     // Create variants
     if (variants && variants.length > 0) {

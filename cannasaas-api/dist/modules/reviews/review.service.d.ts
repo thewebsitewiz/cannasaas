@@ -1,10 +1,10 @@
 import { Repository } from 'typeorm';
 import { Review, ReviewStatus } from './entities/review.entity';
-import { OrderService } from '../../orders/orders.service';
+import { OrdersService } from '../../orders/orders.service';
 export declare class ReviewService {
     private reviewRepo;
     private orderService;
-    constructor(reviewRepo: Repository<Review>, orderService: OrderService);
+    constructor(reviewRepo: Repository<Review>, orderService: OrdersService);
     create(userId: string, dto: {
         productId: string;
         rating: number;

@@ -15,7 +15,7 @@ export class LoyaltyAccount {
   organizationId: string;
 
   @Column({ type: 'int', default: 0 })
-  points: number;
+  balance: number;
 
   @Column({ name: 'lifetime_points', type: 'int', default: 0 })
   lifetimePoints: number;

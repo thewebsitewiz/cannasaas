@@ -7,20 +7,20 @@ export class MarketingLog {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'organization_id', type: 'uuid' })
+  @Column({ name: 'organization_id', type: 'uuid', nullable: true })
   organizationId: string;
 
   @Column({ name: 'user_id', type: 'uuid', nullable: true })
   userId: string;
 
-  @Column({ length: 50 })
-  campaign: string;
+  @Column({ name: 'campaign_type', length: 50 })
+  campaignType: string;
 
-  @Column({ length: 255 })
+  @Column({ length: 30, nullable: true })
+  channel: string;
+
+  @Column({ length: 255, nullable: true })
   email: string;
-
-  @Column({ length: 30 })
-  status: string;
 
   @Column({ type: 'jsonb', nullable: true })
   metadata: Record<string, any>;

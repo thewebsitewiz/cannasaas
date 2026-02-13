@@ -19,7 +19,7 @@ __decorate([
     __metadata("design:type", String)
 ], MarketingLog.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'organization_id', type: 'uuid' }),
+    (0, typeorm_1.Column)({ name: 'organization_id', type: 'uuid', nullable: true }),
     __metadata("design:type", String)
 ], MarketingLog.prototype, "organizationId", void 0);
 __decorate([
@@ -27,17 +27,17 @@ __decorate([
     __metadata("design:type", String)
 ], MarketingLog.prototype, "userId", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ length: 50 }),
+    (0, typeorm_1.Column)({ name: 'campaign_type', length: 50 }),
     __metadata("design:type", String)
-], MarketingLog.prototype, "campaign", void 0);
+], MarketingLog.prototype, "campaignType", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ length: 255 }),
+    (0, typeorm_1.Column)({ length: 30, nullable: true }),
+    __metadata("design:type", String)
+], MarketingLog.prototype, "channel", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ length: 255, nullable: true }),
     __metadata("design:type", String)
 ], MarketingLog.prototype, "email", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ length: 30 }),
-    __metadata("design:type", String)
-], MarketingLog.prototype, "status", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'jsonb', nullable: true }),
     __metadata("design:type", Object)

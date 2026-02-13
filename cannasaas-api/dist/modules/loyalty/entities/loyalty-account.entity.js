@@ -29,7 +29,7 @@ __decorate([
 __decorate([
     (0, typeorm_1.Column)({ type: 'int', default: 0 }),
     __metadata("design:type", Number)
-], LoyaltyAccount.prototype, "points", void 0);
+], LoyaltyAccount.prototype, "balance", void 0);
 __decorate([
     (0, typeorm_1.Column)({ name: 'lifetime_points', type: 'int', default: 0 }),
     __metadata("design:type", Number)
