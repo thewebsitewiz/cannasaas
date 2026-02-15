@@ -11,6 +11,7 @@ import { ProductsModule } from './products/products.module';
 import { Tenant } from './tenants/entities/tenant.entity';
 import { TenantMiddleware } from './common/middleware/tenant.middleware';
 import { TenantModule } from './common/tenant/tenant.module';
+import { TenantsModule } from './tenants/tenants.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UploadModule } from './upload/upload.module';
 import configuration from './config/aws.config';
@@ -48,10 +49,19 @@ import databaseConfig from './config/database.config';
     OrdersModule,
     ComplianceModule,
     UploadModule,
+    TenantsModule,
   ],
 })
-export class AppModule implements NestModule {
+/* export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(TenantMiddleware).forRoutes('auth');
+  }
+} */
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(TenantMiddleware)
+      .exclude('tenants/public') // <-- Add this exclusion
+      .forRoutes('*'); // <-- Apply to all other routes
   }
 }

@@ -13,8 +13,11 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    const tenantId = localStorage.getItem('tenantId') || '10000000-0000-0000-0000-000000000001';
-    config.headers['x-tenant-id'] = tenantId;
+    // Dynamic tenant ID — set by login form, falls back to first tenant
+    const tenantId = localStorage.getItem('tenantId');
+    if (tenantId) {
+      config.headers['x-tenant-id'] = tenantId;
+    }
     return config;
   },
   (error) => Promise.reject(error),

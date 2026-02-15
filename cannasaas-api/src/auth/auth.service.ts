@@ -11,8 +11,9 @@ import { User } from '../users/entities/user.entity';
 import { TenantService } from '../common/tenant/tenant.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { instanceToPlain } from 'class-transformer';
 
-@Injectable()                                   
+@Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
@@ -94,7 +95,11 @@ export class AuthService {
     const accessToken = this.generateAccessToken(user);
     const refreshToken = this.generateRefreshToken(user);
 
-    return { user, accessToken, refreshToken };
+    return {
+      user: instanceToPlain(user) as User,
+      accessToken,
+      refreshToken,
+    };
   }
 
   async validateUser(userId: string): Promise<User> {
@@ -136,4 +141,4 @@ export class AuthService {
   private generateToken(): string {
     return Math.random().toString(36).substring(2) + Date.now().toString(36);
   }
-}                                                                         
+}

@@ -1,18 +1,20 @@
+import * as bcrypt from 'bcrypt';
+
 import {
-  Entity,
-  Column,
-  ManyToOne,
-  JoinColumn,
-  OneToMany,
-  Index,
   BeforeInsert,
   BeforeUpdate,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
 } from 'typeorm';
-import * as bcrypt from 'bcrypt';
-import { TenantBaseEntity } from '../../common/entities/base.entity';
-import { Organization } from '../../organizations/entities/organization.entity';
-import { Order } from '../../orders/entities/order.entity';
+
 import { Exclude } from 'class-transformer';
+import { Order } from '../../orders/entities/order.entity';
+import { Organization } from '../../organizations/entities/organization.entity';
+import { TenantBaseEntity } from '../../common/entities/base.entity';
 
 export enum UserRole {
   SUPER_ADMIN = 'super_admin',
@@ -27,6 +29,30 @@ export enum UserRole {
 @Entity('users')
 @Index(['email', 'organizationId'], { unique: true })
 export class User extends TenantBaseEntity {
+  @Column({ name: 'password_hash', length: 255 })
+  @Exclude()
+  passwordHash: string;
+
+  @Column({ name: 'refresh_token', length: 500, nullable: true })
+  @Exclude()
+  refreshToken?: string;
+
+  @Column({ name: 'email_verification_token', nullable: true })
+  @Exclude()
+  emailVerificationToken!: string | null;
+
+  @Column({ name: 'last_login_ip', nullable: true, length: 45 })
+  @Exclude()
+  lastLoginIp!: string | null;
+
+  @Column({ name: 'failed_login_attempts', default: 0 })
+  @Exclude()
+  failedLoginAttempts!: number;
+
+  @Column({ name: 'two_factor_enabled', default: false })
+  @Exclude()
+  twoFactorEnabled!: boolean;
+
   @Column({ length: 255 })
   email: string;
 
@@ -38,10 +64,6 @@ export class User extends TenantBaseEntity {
 
   @Column({ name: 'phone_verified', default: false })
   phoneVerified: boolean;
-
-  @Column({ name: 'password_hash', length: 255 })
-  @Exclude()
-  passwordHash: string;
 
   // Profile
   @Column({ name: 'first_name', length: 100 })
@@ -134,21 +156,8 @@ export class User extends TenantBaseEntity {
   @Column({ name: 'last_login', type: 'timestamp', nullable: true })
   lastLogin?: Date;
 
-  @Column({ name: 'last_login_ip', length: 45, nullable: true })
-  lastLoginIp?: string;
-
-  @Column({ name: 'failed_login_attempts', default: 0 })
-  failedLoginAttempts: number;
-
-  @Column({ name: 'two_factor_enabled', default: false })
-  twoFactorEnabled: boolean;
-
   @Column({ name: 'age_verified', default: false })
   ageVerified: boolean;
-
-  @Column({ name: 'refresh_token', length: 500, nullable: true })
-  @Exclude()
-  refreshToken?: string;
 
   // Relations
   @ManyToOne(() => Organization, { onDelete: 'CASCADE' })
@@ -180,8 +189,4 @@ export class User extends TenantBaseEntity {
 
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
-
-
-  @Column({ name: 'email_verification_token', length: 255, nullable: true })
-  emailVerificationToken: string;
 }
