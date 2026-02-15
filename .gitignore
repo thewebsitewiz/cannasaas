@@ -1,6 +1,7 @@
 # compiled output
 /dist
 /cannasaas-api/dist
+/cannasaas-platform/node_modules
 /node_modules
 /build
 /readmes
