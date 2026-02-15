@@ -21,3 +21,4 @@ VALUES
   (gen_random_uuid(), 'Concentrates', 'concentrates', '30000000-0000-0000-0000-000000000001', NOW(), NOW()),
   (gen_random_uuid(), 'Pre-Rolls', 'pre-rolls', '30000000-0000-0000-0000-000000000001', NOW(), NOW());
 "
+            
