@@ -26,7 +26,7 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-interface Tenant {
+interface TenantOption {
   id: string;
   name: string;
   subdomain: string;
@@ -34,7 +34,7 @@ interface Tenant {
 
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
-  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [tenants, setTenants] = useState<TenantOption[]>([]);
   const [selectedTenantId, setSelectedTenantId] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -47,7 +47,6 @@ export function LoginForm() {
     resolver: zodResolver(loginSchema),
   });
 
-  // Fetch tenants on mount (no auth/tenant header needed)
   useEffect(() => {
     const baseUrl =
       import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
@@ -56,14 +55,15 @@ export function LoginForm() {
       .then((res) => {
         setTenants(res.data);
         if (res.data.length > 0) {
-          setSelectedTenantId(res.data[0].id);
+          const saved = localStorage.getItem('tenantId');
+          const match = res.data.find((t: TenantOption) => t.id === saved);
+          setSelectedTenantId(match ? match.id : res.data[0].id);
         }
       })
-      .catch((err) => {
-        console.error('Failed to fetch tenants:', err);
+      .catch(() => {
         toast({
-          title: 'Error',
-          description: 'Could not load organizations',
+          title: 'Warning',
+          description: 'Could not load organizations. Using default.',
           variant: 'destructive',
         });
       });
@@ -80,23 +80,17 @@ export function LoginForm() {
     }
 
     setIsLoading(true);
+    localStorage.setItem('tenantId', selectedTenantId);
 
     try {
-      // Save tenant ID BEFORE making the API call
-      // so the axios interceptor picks it up
-      localStorage.setItem('tenantId', selectedTenantId);
-
       const response = await api.post('/auth/login', data);
 
-      // Store tokens
+      // Store tokens AND user data
       localStorage.setItem('accessToken', response.data.accessToken);
       localStorage.setItem('refreshToken', response.data.refreshToken);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
 
-      toast({
-        title: 'Success',
-        description: 'Logged in successfully',
-      });
-
+      toast({ title: 'Success', description: 'Logged in successfully' });
       navigate('/dashboard');
     } catch (error: any) {
       toast({
@@ -112,24 +106,25 @@ export function LoginForm() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle>Login</CardTitle>
+        <CardTitle>Login to CannaSaas</CardTitle>
         <CardDescription>
           Select your organization and enter your credentials
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Tenant Selector */}
           <div className="space-y-2">
             <Label htmlFor="tenant">Organization</Label>
             <select
               id="tenant"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               value={selectedTenantId}
               onChange={(e) => setSelectedTenantId(e.target.value)}
               disabled={isLoading || tenants.length === 0}
             >
-              {tenants.length === 0 && <option value="">Loading...</option>}
+              {tenants.length === 0 && (
+                <option value="">Loading organizations...</option>
+              )}
               {tenants.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.name}
@@ -138,7 +133,6 @@ export function LoginForm() {
             </select>
           </div>
 
-          {/* Email */}
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -153,7 +147,6 @@ export function LoginForm() {
             )}
           </div>
 
-          {/* Password */}
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
             <Input
