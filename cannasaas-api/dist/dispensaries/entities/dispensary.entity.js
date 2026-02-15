@@ -54,15 +54,6 @@ __decorate([
     __metadata("design:type", String)
 ], Dispensary.prototype, "zipCode", void 0);
 __decorate([
-    (0, typeorm_1.Column)({
-        type: 'geography',
-        spatialFeatureType: 'Point',
-        srid: 4326,
-        nullable: true,
-    }),
-    __metadata("design:type", Object)
-], Dispensary.prototype, "location", void 0);
-__decorate([
     (0, typeorm_1.Column)({ type: 'decimal', precision: 10, scale: 7, nullable: true }),
     __metadata("design:type", Number)
 ], Dispensary.prototype, "latitude", void 0);

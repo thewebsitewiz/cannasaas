@@ -24,6 +24,10 @@ let TenantMiddleware = class TenantMiddleware {
         this.tenantService = tenantService;
     }
     async use(req, res, next) {
+        if (req.method === "OPTIONS") {
+            next();
+            return;
+        }
         const headerTenantId = req.headers['x-tenant-id'];
         const subdomain = this.extractSubdomain(req.hostname);
         console.log('🔍 Middleware hit:', { headerTenantId, subdomain });

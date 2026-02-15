@@ -26,10 +26,6 @@ let DispensariesService = class DispensariesService {
     async create(createDto) {
         const dispensary = this.dispensaryRepository.create({
             ...createDto,
-            location: {
-                type: 'Point',
-                coordinates: [createDto.longitude, createDto.latitude],
-            },
         });
         const savedDispensary = await this.dispensaryRepository.save(dispensary);
         const branding = this.brandingRepository.create({
@@ -56,34 +52,29 @@ let DispensariesService = class DispensariesService {
         return dispensary;
     }
     async findNearby(latitude, longitude, radiusMiles = 10) {
-        const radiusMeters = radiusMiles * 1609.34;
         const query = `
-      SELECT * FROM dispensaries
-      WHERE ST_DWithin(
-        location::geography,
-        ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,
-        $3
-      )
-      AND is_active = true
-      ORDER BY ST_Distance(
-        location::geography,
-        ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography
-      )
+      SELECT *, (
+        3959 * acos(
+          cos(radians($2)) * cos(radians(latitude)) *
+          cos(radians(longitude) - radians($1)) +
+          sin(radians($2)) * sin(radians(latitude))
+        )
+      ) AS distance
+      FROM dispensaries
+      WHERE is_active = true
+      HAVING distance < $3
+      ORDER BY distance
     `;
         return this.dispensaryRepository.query(query, [
             longitude,
             latitude,
-            radiusMeters,
+            radiusMiles,
         ]);
     }
     async update(id, updateDto) {
         const dispensary = await this.findOne(id);
         const updateData = { ...updateDto };
         if (updateDto.latitude && updateDto.longitude) {
-            updateData.location = {
-                type: 'Point',
-                coordinates: [updateDto.longitude, updateDto.latitude],
-            };
         }
         Object.assign(dispensary, updateData);
         await this.dispensaryRepository.save(dispensary);

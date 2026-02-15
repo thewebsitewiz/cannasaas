@@ -6,7 +6,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Order, OrderStatus } from './order.entity';
+import { Order } from './order.entity';
 
 @Entity('order_status_history')
 export class OrderStatusHistory {
@@ -16,23 +16,14 @@ export class OrderStatusHistory {
   @Column({ name: 'order_id', type: 'uuid' })
   orderId!: string;
 
-  @Column({
-    name: 'from_status',
-    type: 'enum',
-    enum: OrderStatus,
-    nullable: true,
-  })
-  fromStatus!: OrderStatus;
+  @Column({ name: 'from_status', length: 30, nullable: true })
+  fromStatus!: string;
 
-  @Column({
-    name: 'to_status',
-    type: 'enum',
-    enum: OrderStatus,
-  })
-  toStatus!: OrderStatus;
+  @Column({ name: 'to_status', length: 30 })
+  toStatus!: string;
 
   @Column({ name: 'changed_by', type: 'uuid', nullable: true })
-  changedBy!: string; // User ID who made the change
+  changedBy!: string;
 
   @Column({ type: 'text', nullable: true })
   notes!: string;

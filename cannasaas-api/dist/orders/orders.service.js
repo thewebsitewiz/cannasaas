@@ -195,18 +195,11 @@ let OrdersService = class OrdersService {
         return `ORD-${today}-${seq}`;
     }
     async hasUserPurchasedProduct(userId, productId) {
-        const order = await this.orderRepository.createQueryBuilder("order")
-            .innerJoin("order.items", "item")
-            .where("order.userId = :userId", { userId })
-            .andWhere("item.productId = :productId", { productId })
-            .getOne();
-        return !!order;
-    }
-    async hasUserPurchasedProduct(userId, productId) {
-        const order = await this.orderRepository.createQueryBuilder("order")
-            .innerJoin("order.items", "item")
-            .where("order.userId = :userId", { userId })
-            .andWhere("item.productId = :productId", { productId })
+        const order = await this.orderRepository
+            .createQueryBuilder('order')
+            .innerJoin('order.items', 'item')
+            .where('order.userId = :userId', { userId })
+            .andWhere('item.productId = :productId', { productId })
             .getOne();
         return !!order;
     }

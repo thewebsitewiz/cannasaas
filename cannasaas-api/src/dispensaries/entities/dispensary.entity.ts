@@ -48,14 +48,6 @@ export class Dispensary {
   @Column({ name: 'zip_code', length: 10 })
   zipCode!: string;
 
-  // Geospatial location
-  @Column({
-    type: 'geography',
-    spatialFeatureType: 'Point',
-    srid: 4326,
-    nullable: true,
-  })
-  location!: Point;
 
   @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
   latitude!: number;

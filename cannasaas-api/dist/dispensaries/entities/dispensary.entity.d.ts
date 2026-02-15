@@ -1,4 +1,3 @@
-import { Point } from 'typeorm';
 import { Company } from '../../companies/entities/company.entity';
 import { BrandingConfig } from './branding-config.entity';
 export interface OperatingHours {
@@ -48,7 +47,6 @@ export declare class Dispensary {
     city: string;
     state: string;
     zipCode: string;
-    location: Point;
     latitude: number;
     longitude: number;
     phoneNumber: string;

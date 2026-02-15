@@ -23,6 +23,7 @@ export class TenantMiddleware implements NestMiddleware {
   ) {}
 
   async use(req: Request, res: Response, next: NextFunction) {
+    if (req.method === "OPTIONS") { next(); return; }
     // Try x-tenant-id header first (dev), then subdomain (production)
     const headerTenantId = req.headers['x-tenant-id'] as string;
     const subdomain = this.extractSubdomain(req.hostname);

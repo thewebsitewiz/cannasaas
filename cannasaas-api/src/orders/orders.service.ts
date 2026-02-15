@@ -20,8 +20,7 @@ export interface CheckoutDto {
   customerPhone?: string;
   deliveryAddress?: string;
   notes?: string;
-
-  }
+}
 
 @Injectable()
 export class OrdersService {
@@ -259,22 +258,16 @@ export class OrdersService {
     return `ORD-${today}-${seq}`;
   }
 
-
-  async hasUserPurchasedProduct(userId: string, productId: string): Promise<boolean> {
-    const order = await this.orderRepository.createQueryBuilder("order")
-      .innerJoin("order.items", "item")
-      .where("order.userId = :userId", { userId })
-      .andWhere("item.productId = :productId", { productId })
+  async hasUserPurchasedProduct(
+    userId: string,
+    productId: string,
+  ): Promise<boolean> {
+    const order = await this.orderRepository
+      .createQueryBuilder('order')
+      .innerJoin('order.items', 'item')
+      .where('order.userId = :userId', { userId })
+      .andWhere('item.productId = :productId', { productId })
       .getOne();
     return !!order;
   }
-
-  async hasUserPurchasedProduct(userId: string, productId: string): Promise<boolean> {
-    const order = await this.orderRepository.createQueryBuilder("order")
-      .innerJoin("order.items", "item")
-      .where("order.userId = :userId", { userId })
-      .andWhere("item.productId = :productId", { productId })
-      .getOne();
-    return !!order;
-  }
-  }
+}

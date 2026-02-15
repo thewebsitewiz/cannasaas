@@ -24,20 +24,11 @@ __decorate([
     __metadata("design:type", String)
 ], OrderStatusHistory.prototype, "orderId", void 0);
 __decorate([
-    (0, typeorm_1.Column)({
-        name: 'from_status',
-        type: 'enum',
-        enum: order_entity_1.OrderStatus,
-        nullable: true,
-    }),
+    (0, typeorm_1.Column)({ name: 'from_status', length: 30, nullable: true }),
     __metadata("design:type", String)
 ], OrderStatusHistory.prototype, "fromStatus", void 0);
 __decorate([
-    (0, typeorm_1.Column)({
-        name: 'to_status',
-        type: 'enum',
-        enum: order_entity_1.OrderStatus,
-    }),
+    (0, typeorm_1.Column)({ name: 'to_status', length: 30 }),
     __metadata("design:type", String)
 ], OrderStatusHistory.prototype, "toStatus", void 0);
 __decorate([
