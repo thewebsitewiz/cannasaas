@@ -2,5 +2,9 @@
   "name": "@cannasaas/stores",
   "version": "0.0.1",
   "main": "src/index.ts",
-  "types": "src/index.ts"
+  "types": "src/index.ts",
+  "dependencies": {
+    "immer": "^11.1.4",
+    "zustand": "^5.0.11"
+  }
 }

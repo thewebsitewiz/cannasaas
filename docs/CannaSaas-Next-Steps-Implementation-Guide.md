@@ -1,9 +1,11 @@
 # CANNASAAS
+
 ## Multi-Tenant Cannabis E-Commerce Platform
 
 ---
 
 # Next Steps Implementation Guide
+
 ### React Frontend Monorepo + Backend Integration
 
 **Version 2.0 | February 2026**
@@ -35,20 +37,20 @@
 
 Your NestJS backend (cannasaas-api) is substantially built out through 12 sprints. Here is a summary of what is operational and ready for the frontend to consume:
 
-| Sprint | Module | What Was Built |
-|--------|--------|----------------|
-| 1 | Infrastructure | NestJS project, Docker (PostgreSQL + PostGIS, Redis), TypeORM config, environment setup, health checks |
-| 2 | Auth & Multi-Tenant | JWT authentication (access + refresh tokens), Passport strategies, User entity, RBAC guards, Tenant middleware (subdomain routing) |
-| 3 | Organizations | Org → Company → Dispensary hierarchy, BrandingConfig entity, S3 uploads, geospatial queries |
-| 4 | Product Catalog | Category, Product, ProductVariant, ProductImage entities, cannabis-specific fields (THC, CBD, terpenes, strain), filtering, search, low-stock alerts |
-| 5 | Cart & Orders | Cart (Redis + DB), checkout flow, Order entity, order status state machine, tax calculation, multi-step checkout |
-| 6 | Payments | Stripe integration (payment intents, webhooks), cash payment option, compliance event logging, purchase limits, daily sales reports |
-| 7 | Age Verification | ID scan integration (Veratad/Jumio stubs), medical card verification, customer verification status tracking |
-| 8 | Metrc/Compliance | Metrc integration (NY state), package tracking, purchase limit enforcement, compliance reporting, manifest generation |
-| 9 | Product Discovery | Elasticsearch with cannabis synonyms/analyzers, faceted filtering, autocomplete, product recommendations, Redis caching |
-| 10 | Delivery | PostGIS delivery zones, driver management, real-time location, closest-driver assignment, WebSocket tracking, Twilio SMS notifications |
-| 11 | POS Integration | Adapter pattern for Dutchie (GraphQL) and Treez (REST), product mapping, scheduled inventory sync, order push, audit logging |
-| 12 | Analytics & PWA | Event tracking pipeline, nightly aggregation cron, dashboard API (revenue, AOV, conversion), CSV export, PWA service worker, push notifications |
+| Sprint | Module              | What Was Built                                                                                                                                       |
+| ------ | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1      | Infrastructure      | NestJS project, Docker (PostgreSQL + PostGIS, Redis), TypeORM config, environment setup, health checks                                               |
+| 2      | Auth & Multi-Tenant | JWT authentication (access + refresh tokens), Passport strategies, User entity, RBAC guards, Tenant middleware (subdomain routing)                   |
+| 3      | Organizations       | Org → Company → Dispensary hierarchy, BrandingConfig entity, S3 uploads, geospatial queries                                                          |
+| 4      | Product Catalog     | Category, Product, ProductVariant, ProductImage entities, cannabis-specific fields (THC, CBD, terpenes, strain), filtering, search, low-stock alerts |
+| 5      | Cart & Orders       | Cart (Redis + DB), checkout flow, Order entity, order status state machine, tax calculation, multi-step checkout                                     |
+| 6      | Payments            | Stripe integration (payment intents, webhooks), cash payment option, compliance event logging, purchase limits, daily sales reports                  |
+| 7      | Age Verification    | ID scan integration (Veratad/Jumio stubs), medical card verification, customer verification status tracking                                          |
+| 8      | Metrc/Compliance    | Metrc integration (NY state), package tracking, purchase limit enforcement, compliance reporting, manifest generation                                |
+| 9      | Product Discovery   | Elasticsearch with cannabis synonyms/analyzers, faceted filtering, autocomplete, product recommendations, Redis caching                              |
+| 10     | Delivery            | PostGIS delivery zones, driver management, real-time location, closest-driver assignment, WebSocket tracking, Twilio SMS notifications               |
+| 11     | POS Integration     | Adapter pattern for Dutchie (GraphQL) and Treez (REST), product mapping, scheduled inventory sync, order push, audit logging                         |
+| 12     | Analytics & PWA     | Event tracking pipeline, nightly aggregation cron, dashboard API (revenue, AOV, conversion), CSV export, PWA service worker, push notifications      |
 
 > ⚠️ **Your backend APIs are the foundation.** Every frontend feature described below will call these existing endpoints. No backend rewrite is needed — only targeted additions as new frontend features reveal gaps.
 
@@ -62,11 +64,11 @@ According to the Project Guide, the React frontend is a monorepo containing thre
 
 The frontend consists of three React applications built on shared infrastructure:
 
-| Application | Directory | Purpose & Key Features |
-|-------------|-----------|------------------------|
-| Customer Storefront | `apps/storefront` | Public e-commerce: product browsing, search, cart, checkout, user accounts, order tracking. Mobile-first responsive design. |
-| Admin Portal | `apps/admin` | Store management: dashboard analytics, product/inventory CRUD, order processing, customer management, settings, compliance reports. |
-| Staff Portal | `apps/staff` | Simplified interface for budtenders: order fulfillment, customer lookup, inventory search, quick actions, delivery dispatch. |
+| Application         | Directory         | Purpose & Key Features                                                                                                              |
+| ------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Customer Storefront | `apps/storefront` | Public e-commerce: product browsing, search, cart, checkout, user accounts, order tracking. Mobile-first responsive design.         |
+| Admin Portal        | `apps/admin`      | Store management: dashboard analytics, product/inventory CRUD, order processing, customer management, settings, compliance reports. |
+| Staff Portal        | `apps/staff`      | Simplified interface for budtenders: order fulfillment, customer lookup, inventory search, quick actions, delivery dispatch.        |
 
 ### Shared Packages
 
@@ -80,20 +82,20 @@ All three apps import from these shared packages in the `packages/` directory:
 
 ### Technology Stack Summary
 
-| Category | Technology |
-|----------|------------|
-| Framework | React 18 + TypeScript 5.3 |
-| Build Tool | Vite 5 (per-app), Turborepo (monorepo orchestration) |
-| Package Manager | pnpm (workspace protocol) |
+| Category         | Technology                                                   |
+| ---------------- | ------------------------------------------------------------ |
+| Framework        | React 18 + TypeScript 5.3                                    |
+| Build Tool       | Vite 5 (per-app), Turborepo (monorepo orchestration)         |
+| Package Manager  | pnpm (workspace protocol)                                    |
 | State Management | Zustand 4.4 (client state) + TanStack Query 5 (server state) |
-| Routing | React Router v6 (per-app, lazy-loaded pages) |
-| Styling | Tailwind CSS 3.3 + shadcn/ui (Radix UI primitives) |
-| Forms | React Hook Form 7 + Zod validation |
-| HTTP Client | Axios 1.6 with auth interceptors + token refresh |
-| Charts | Recharts 2.10 (admin analytics dashboards) |
-| Icons | Lucide React |
-| Testing | Vitest + React Testing Library + Playwright (E2E) |
-| Linting | ESLint + Prettier + prettier-plugin-tailwindcss |
+| Routing          | React Router v6 (per-app, lazy-loaded pages)                 |
+| Styling          | Tailwind CSS 3.3 + shadcn/ui (Radix UI primitives)           |
+| Forms            | React Hook Form 7 + Zod validation                           |
+| HTTP Client      | Axios 1.6 with auth interceptors + token refresh             |
+| Charts           | Recharts 2.10 (admin analytics dashboards)                   |
+| Icons            | Lucide React                                                 |
+| Testing          | Vitest + React Testing Library + Playwright (E2E)            |
+| Linting          | ESLint + Prettier + prettier-plugin-tailwindcss              |
 
 ---
 
@@ -304,7 +306,11 @@ export interface Product {
   variants: ProductVariant[];
   media: { images: ProductImage[]; videos?: ProductVideo[] };
   seo: { metaTitle: string; metaDescription: string; keywords: string[] };
-  reviews: { count: number; averageRating: number; distribution: Record<number, number> };
+  reviews: {
+    count: number;
+    averageRating: number;
+    distribution: Record<number, number>;
+  };
   status: 'active' | 'inactive' | 'draft';
   featured: boolean;
   createdAt: string;
@@ -378,16 +384,22 @@ Standardize how every API response is typed:
 
 ```typescript
 // packages/types/src/api.ts
-export interface ApiResponse<T> { data: T; message?: string; }
+export interface ApiResponse<T> {
+  data: T;
+  message?: string;
+}
 export interface PaginatedResponse<T> {
   data: T[];
   pagination: {
-    page: number; limit: number;
-    total: number; totalPages: number;
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
   };
 }
 export interface ApiError {
-  statusCode: number; message: string;
+  statusCode: number;
+  message: string;
   errors?: Record<string, string[]>;
 }
 ```
@@ -565,8 +577,8 @@ import { QueryClient } from '@tanstack/react-query';
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000,     // 5 minutes
-      gcTime: 30 * 60 * 1000,        // 30 minutes (formerly cacheTime)
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 30 * 60 * 1000, // 30 minutes (formerly cacheTime)
       retry: 1,
       refetchOnWindowFocus: false,
     },
@@ -579,19 +591,19 @@ export const queryClient = new QueryClient({
 
 This table maps your existing NestJS endpoints to the TanStack Query hooks that each app will use:
 
-| Backend Endpoint | Hook Name | Used By | Query Key |
-|------------------|-----------|---------|-----------|
-| `GET /products` | `useProducts` | Storefront, Admin | `['products', filters]` |
-| `GET /products/:slug` | `useProduct` | Storefront | `['product', slug]` |
-| `POST /products` | `useCreateProduct` | Admin | Invalidates `['products']` |
-| `POST /auth/login` | `useLogin` | All apps | N/A (mutation) |
-| `GET /orders` | `useOrders` | Admin, Staff | `['orders', filters]` |
-| `POST /orders` | `useCreateOrder` | Storefront | Invalidates `['orders']` |
-| `GET /cart` | `useCart` | Storefront | `['cart']` |
-| `POST /cart/items` | `useAddToCart` | Storefront | Optimistic update |
-| `GET /users/me` | `useCurrentUser` | All apps | `['user', 'me']` |
-| `GET /analytics/overview` | `useAnalytics` | Admin | `['analytics', range]` |
-| `GET /reviews/:productId` | `useProductReviews` | Storefront | `['reviews', id]` |
+| Backend Endpoint          | Hook Name           | Used By           | Query Key                  |
+| ------------------------- | ------------------- | ----------------- | -------------------------- |
+| `GET /products`           | `useProducts`       | Storefront, Admin | `['products', filters]`    |
+| `GET /products/:slug`     | `useProduct`        | Storefront        | `['product', slug]`        |
+| `POST /products`          | `useCreateProduct`  | Admin             | Invalidates `['products']` |
+| `POST /auth/login`        | `useLogin`          | All apps          | N/A (mutation)             |
+| `GET /orders`             | `useOrders`         | Admin, Staff      | `['orders', filters]`      |
+| `POST /orders`            | `useCreateOrder`    | Storefront        | Invalidates `['orders']`   |
+| `GET /cart`               | `useCart`           | Storefront        | `['cart']`                 |
+| `POST /cart/items`        | `useAddToCart`      | Storefront        | Optimistic update          |
+| `GET /users/me`           | `useCurrentUser`    | All apps          | `['user', 'me']`           |
+| `GET /analytics/overview` | `useAnalytics`      | Admin             | `['analytics', range]`     |
+| `GET /reviews/:productId` | `useProductReviews` | Storefront        | `['reviews', id]`          |
 
 ### Optimistic Updates Pattern
 
@@ -713,12 +725,12 @@ Testing runs in parallel with development. The Project Guide specifies Vitest fo
 
 ### Testing Pyramid
 
-| Level | Tool | What to Test |
-|-------|------|-------------|
-| Unit Tests | Vitest | Zustand stores (addItem, removeItem, cart calculations), utility functions (formatCurrency, hexToHSL), Zod validation schemas |
-| Component Tests | RTL + Vitest | UI components (Button renders, disabled state, variants), ProductCard (displays name, price, handles add-to-cart click), CheckoutForm (validates required fields) |
-| Integration Tests | RTL + MSW | Full page renders with mocked API responses (Products page fetches and displays products, Checkout submits order), Auth flow (login, token refresh, logout) |
-| E2E Tests | Playwright | Complete user journeys: browse products → add to cart → checkout → order confirmation. Admin: create product → verify in storefront |
+| Level             | Tool         | What to Test                                                                                                                                                      |
+| ----------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Unit Tests        | Vitest       | Zustand stores (addItem, removeItem, cart calculations), utility functions (formatCurrency, hexToHSL), Zod validation schemas                                     |
+| Component Tests   | RTL + Vitest | UI components (Button renders, disabled state, variants), ProductCard (displays name, price, handles add-to-cart click), CheckoutForm (validates required fields) |
+| Integration Tests | RTL + MSW    | Full page renders with mocked API responses (Products page fetches and displays products, Checkout submits order), Auth flow (login, token refresh, logout)       |
+| E2E Tests         | Playwright   | Complete user journeys: browse products → add to cart → checkout → order confirmation. Admin: create product → verify in storefront                               |
 
 ### Vitest Configuration
 
@@ -824,17 +836,17 @@ jobs:
 
 This is the critical-path order. Each item depends on the ones above it:
 
-| Week | Phase | What to Build | Depends On |
-|------|-------|---------------|------------|
-| 1 | A: Monorepo | pnpm workspace, Turborepo, 3 Vite apps, Tailwind/shadcn | Nothing (start here) |
-| 1-2 | B: Packages | types, stores, api-client, ui components, utils | Phase A complete |
-| 2-3 | G: Auth | Login/Register pages, ProtectedRoute, tenant resolution, token refresh | api-client + stores built |
-| 2-4 | C: Storefront | Home, Products, Product Detail, Cart, Checkout, Account pages | Phase B + Phase G auth flow |
-| 4 | H: Theming | ThemeProvider, hexToHSL, per-tenant branding, dark mode | organizationStore + CSS vars |
-| 4-6 | D: Admin | Dashboard, Products CRUD, Orders, Customers, Analytics, Settings | Full api-client + ui library |
-| 6-7 | E: Staff | Order queue, customer lookup, inventory search, delivery dispatch | Admin patterns established |
-| 5-8 | I: Testing | Unit, component, integration, E2E tests across all apps | Pages exist to test |
-| 8 | J: Deploy | Vite builds, Cloudflare/Vercel, CI/CD, wildcard subdomains | All apps building cleanly |
+| Week | Phase         | What to Build                                                          | Depends On                   |
+| ---- | ------------- | ---------------------------------------------------------------------- | ---------------------------- |
+| 1    | A: Monorepo   | pnpm workspace, Turborepo, 3 Vite apps, Tailwind/shadcn                | Nothing (start here)         |
+| 1-2  | B: Packages   | types, stores, api-client, ui components, utils                        | Phase A complete             |
+| 2-3  | G: Auth       | Login/Register pages, ProtectedRoute, tenant resolution, token refresh | api-client + stores built    |
+| 2-4  | C: Storefront | Home, Products, Product Detail, Cart, Checkout, Account pages          | Phase B + Phase G auth flow  |
+| 4    | H: Theming    | ThemeProvider, hexToHSL, per-tenant branding, dark mode                | organizationStore + CSS vars |
+| 4-6  | D: Admin      | Dashboard, Products CRUD, Orders, Customers, Analytics, Settings       | Full api-client + ui library |
+| 6-7  | E: Staff      | Order queue, customer lookup, inventory search, delivery dispatch      | Admin patterns established   |
+| 5-8  | I: Testing    | Unit, component, integration, E2E tests across all apps                | Pages exist to test          |
+| 8    | J: Deploy     | Vite builds, Cloudflare/Vercel, CI/CD, wildcard subdomains             | All apps building cleanly    |
 
 > 💡 **TIP:** You do not need to finish one phase entirely before starting the next. For example, start building storefront pages (Phase C) as soon as you have the api-client and a few UI components from Phase B. The dependency map shows the minimum prerequisites.
 
@@ -845,6 +857,7 @@ This is the critical-path order. Each item depends on the ones above it:
 This is every file you need to create, organized by package.
 
 ### packages/types
+
 - [ ] `src/index.ts` — barrel export
 - [ ] `src/models/Product.ts` — Product, CannabisInfo, ProductVariant, ProductImage
 - [ ] `src/models/Order.ts` — Order, OrderItem, OrderStatus
@@ -858,6 +871,7 @@ This is every file you need to create, organized by package.
 - [ ] `src/api.ts` — ApiResponse, PaginatedResponse, ApiError
 
 ### packages/stores
+
 - [ ] `src/index.ts` — barrel export
 - [ ] `src/authStore.ts` — user, tokens, login/logout actions
 - [ ] `src/cartStore.ts` — items, add/remove/update, totals
@@ -865,6 +879,7 @@ This is every file you need to create, organized by package.
 - [ ] `src/themeStore.ts` — dark/light mode
 
 ### packages/api-client
+
 - [ ] `src/index.ts` — barrel export
 - [ ] `src/client.ts` — Axios instance + interceptors
 - [ ] `src/endpoints.ts` — typed endpoint map
@@ -877,6 +892,7 @@ This is every file you need to create, organized by package.
 - [ ] `src/hooks/useAnalytics.ts` — useAnalyticsOverview, useExportCsv
 
 ### packages/ui
+
 - [ ] `src/index.ts` — barrel export
 - [ ] `src/components/Button/Button.tsx`
 - [ ] `src/components/Input/Input.tsx`
@@ -893,6 +909,7 @@ This is every file you need to create, organized by package.
 - [ ] `src/components/Checkbox/Checkbox.tsx`
 
 ### packages/utils
+
 - [ ] `src/index.ts` — barrel export
 - [ ] `src/cn.ts` — clsx + tailwind-merge
 - [ ] `src/formatting.ts` — formatCurrency, formatDate, formatWeight
@@ -906,15 +923,15 @@ This is every file you need to create, organized by package.
 
 After the core frontend ships, features are released incrementally:
 
-| Release | Target | Features |
-|---------|--------|----------|
-| Release 1 (MVP) | Week 8 | Storefront (browse, cart, checkout), Admin (dashboard, products, orders), basic auth, single-tenant |
-| Release 2 | Week 12 | Multi-tenant branding, delivery tracking, age verification gate, compliance dashboard |
-| Release 3 | Week 16 | Elasticsearch search + autocomplete, product recommendations, POS sync status |
-| Release 4 | Week 20 | Staff portal, WebSocket live orders, inventory management, advanced analytics |
-| Release 5 | Week 24 | PWA + push notifications, loyalty program, AI recommendations, customer reviews |
+| Release         | Target  | Features                                                                                            |
+| --------------- | ------- | --------------------------------------------------------------------------------------------------- |
+| Release 1 (MVP) | Week 8  | Storefront (browse, cart, checkout), Admin (dashboard, products, orders), basic auth, single-tenant |
+| Release 2       | Week 12 | Multi-tenant branding, delivery tracking, age verification gate, compliance dashboard               |
+| Release 3       | Week 16 | Elasticsearch search + autocomplete, product recommendations, POS sync status                       |
+| Release 4       | Week 20 | Staff portal, WebSocket live orders, inventory management, advanced analytics                       |
+| Release 5       | Week 24 | PWA + push notifications, loyalty program, AI recommendations, customer reviews                     |
 
 ---
 
-*End of Implementation Guide*
-*CannaSaas — Building the future of cannabis commerce*
+_End of Implementation Guide_
+_CannaSaas — Building the future of cannabis commerce_
