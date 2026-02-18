@@ -1,36 +1,34 @@
-import { RouteObject } from 'react-router-dom';
-
-/* ── Layouts ─────────────────────────────────────────────── */
-import RootLayout from '@/layouts/RootLayout';
-import AuthLayout from '@/layouts/AuthLayout';
-
-/* ── Guards ──────────────────────────────────────────────── */
-import ProtectedRoute from '@/components/ProtectedRoute';
-
-/* ── Pages ──────────────────────────────────────────────── */
-import Home from '@/pages/Home';
-import Shop from '@/pages/Shop';
-import ProductDetail from '@/pages/ProductDetail';
-import Cart from '@/pages/Cart';
-import Checkout from '@/pages/Checkout';
-import Account from '@/pages/Account';
-import Login from '@/pages/Login';
-import Register from '@/pages/Register';
-import ForgotPassword from '@/pages/ForgotPassword';
-import ResetPassword from '@/pages/ResetPassword';
-import About from '@/pages/About';
-import Contact from '@/pages/Contact';
-import DispensaryLocator from '@/pages/DispensaryLocator';
-import NotFound from '@/pages/NotFound';
-
 /* ── Account Sub-sections ───────────────────────────────── */
 import {
-  ProfileSection,
-  OrderHistory,
-  SavedAddresses,
   LoyaltyDashboard,
   NotificationPreferences,
+  OrderHistory,
+  ProfileSection,
+  SavedAddresses,
 } from '@/components/account';
+
+import About from '@/pages/About';
+import Account from '@/pages/Account';
+import AuthLayout from '@/layouts/AuthLayout';
+import Cart from '@/pages/Cart';
+import Checkout from '@/pages/Checkout';
+import Contact from '@/pages/Contact';
+import DispensaryLocator from '@/pages/DispensaryLocator';
+import ForgotPassword from '@/pages/ForgotPassword';
+/* ── Pages ──────────────────────────────────────────────── */
+import Home from '@/pages/Home';
+import Login from '@/pages/Login';
+import NotFound from '@/pages/NotFound';
+import ProductDetail from '@/pages/ProductDetail';
+/* ── Guards ──────────────────────────────────────────────── */
+import ProtectedRoute from '@/components/ProtectedRoute';
+import { RecommendedProducts } from '@/components/products/detail';
+import Register from '@/pages/Register';
+import ResetPassword from '@/pages/ResetPassword';
+/* ── Layouts ─────────────────────────────────────────────── */
+import RootLayout from '@/layouts/RootLayout';
+import { RouteObject } from 'react-router-dom';
+import Shop from '@/pages/Shop';
 
 /* ── Route Tree ─────────────────────────────────────────── */
 export const routes: RouteObject[] = [
@@ -40,7 +38,7 @@ export const routes: RouteObject[] = [
     children: [
       /* ── Public ────────────────────────────────────────── */
       { index: true, element: <Home /> },
-      { path: 'shop', element: <Shop /> },
+      { path: 'product', element: <RecommendedProducts /> },
       { path: 'shop/:categorySlug', element: <Shop /> },
       { path: 'product/:productId', element: <ProductDetail /> },
       { path: 'dispensaries', element: <DispensaryLocator /> },
