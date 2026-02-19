@@ -8,11 +8,13 @@
  * Route tree:
  *
  *   /login                 → AuthLayout → Login
- *   /                      → AdminLayout (ProtectedRoute, requiredRole="admin")
+ *   /                      → ProtectedRoute (requiredRole="admin")
+ *                            → AdminLayout (sidebar + topbar)
+ *       index              → redirect to /dashboard
  *       /dashboard         → Dashboard
  *       /products          → ProductList
  *       /products/new      → ProductForm  (create mode)
- *       /products/:id/edit → ProductForm  (edit mode — detected via useParams)
+ *       /products/:id/edit → ProductForm  (edit mode)
  *       /orders            → OrderList
  *       /orders/:id        → OrderDetail
  *       /customers         → CustomerList
@@ -27,7 +29,7 @@
  *       /delivery/active   → ActiveDeliveries
  *       /pos               → POSConnections
  *       /pos/sync          → SyncStatus
- *       /settings/*        → SettingsPage  (tabs handled internally)
+ *       /settings/*        → SettingsPage  (tabs managed internally)
  *       *                  → NotFound
  */
 
@@ -39,22 +41,17 @@ import {
   Outlet,
 } from 'react-router-dom';
 
-// ─── Layouts ─────────────────────────────────────────────────────────────────
-
+// ── Layouts ───────────────────────────────────────────────────────────────────
 import AdminLayout    from '@/layouts/AdminLayout';
 import AuthLayout     from '@/layouts/AuthLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
-// ─── Eagerly loaded ───────────────────────────────────────────────────────────
-// Dashboard and Login are loaded immediately — no spinner on first render.
-
+// ── Eagerly loaded (no spinner on first paint) ────────────────────────────────
 import Login     from '@/pages/Auth/Login';
 import Dashboard from '@/pages/Dashboard/Dashboard';
 import NotFound  from '@/pages/NotFound';
 
-// ─── Lazily loaded (code-split per route) ────────────────────────────────────
-
-// Phase D — new pages
+// ── Phase D pages (lazily loaded) ─────────────────────────────────────────────
 const ProductList    = lazy(() => import('@/pages/Products/ProductList'));
 const ProductForm    = lazy(() => import('@/pages/Products/ProductForm'));
 const OrderList      = lazy(() => import('@/pages/Orders/OrderList'));
@@ -64,7 +61,7 @@ const CustomerDetail = lazy(() => import('@/pages/Customers/CustomerDetail'));
 const Analytics      = lazy(() => import('@/pages/Analytics/Analytics'));
 const SettingsPage   = lazy(() => import('@/pages/Settings'));
 
-// Existing scaffold stubs
+// ── Existing scaffold stubs (lazily loaded) ───────────────────────────────────
 const InventoryList    = lazy(() => import('@/pages/Inventory/InventoryList'));
 const StockAdjust      = lazy(() => import('@/pages/Inventory/StockAdjust'));
 const ComplianceLogs   = lazy(() => import('@/pages/Compliance/ComplianceLogs'));
@@ -75,28 +72,28 @@ const ActiveDeliveries = lazy(() => import('@/pages/Delivery/ActiveDeliveries'))
 const POSConnections   = lazy(() => import('@/pages/POS/POSConnections'));
 const SyncStatus       = lazy(() => import('@/pages/POS/SyncStatus'));
 
-// ─── Suspense Wrapper ─────────────────────────────────────────────────────────
-
-function PageLoader() {
+// ── Suspense wrapper ──────────────────────────────────────────────────────────
+function Lazy({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="flex flex-col items-center gap-3">
-        <div className="h-8 w-8 rounded-full border-2 border-amber-500 border-t-transparent animate-spin" />
-        <p className="text-sm text-slate-500">Loading…</p>
-      </div>
-    </div>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="h-8 w-8 rounded-full border-2 border-amber-500 border-t-transparent animate-spin" />
+        </div>
+      }
+    >
+      {children}
+    </Suspense>
   );
 }
 
-function Lazy({ children }: { children: React.ReactNode }) {
-  return <Suspense fallback={<PageLoader />}>{children}</Suspense>;
-}
-
-// ─── Router ───────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+// ROUTER
+// ═══════════════════════════════════════════════════════════════════
 
 export const router = createBrowserRouter([
 
-  // ── Auth (no sidebar, no guard) ──────────────────────────────────────────
+  // ── Auth (no sidebar, no guard) ──────────────────────────────────
   {
     element: <AuthLayout />,
     children: [
@@ -104,7 +101,7 @@ export const router = createBrowserRouter([
     ],
   },
 
-  // ── Admin app (sidebar layout + role guard) ──────────────────────────────
+  // ── Admin app (sidebar + role guard) ─────────────────────────────
   {
     path: '/',
     element: (
@@ -116,23 +113,24 @@ export const router = createBrowserRouter([
     ),
     children: [
 
-      // Default → dashboard
+      // Default → /dashboard
       { index: true, element: <Navigate to="/dashboard" replace /> },
 
-      // ── Dashboard ──────────────────────────────────────────────────────
+      // ── Dashboard ──────────────────────────────────────────────
       { path: 'dashboard', element: <Dashboard /> },
 
-      // ── Products ───────────────────────────────────────────────────────
+      // ── Products ───────────────────────────────────────────────
       {
         path: 'products',
         children: [
           { index: true,      element: <Lazy><ProductList /></Lazy> },
           { path: 'new',      element: <Lazy><ProductForm /></Lazy> },
+          // ProductForm detects edit mode via useParams() — id present = edit
           { path: ':id/edit', element: <Lazy><ProductForm /></Lazy> },
         ],
       },
 
-      // ── Orders ─────────────────────────────────────────────────────────
+      // ── Orders ─────────────────────────────────────────────────
       {
         path: 'orders',
         children: [
@@ -141,7 +139,7 @@ export const router = createBrowserRouter([
         ],
       },
 
-      // ── Customers ──────────────────────────────────────────────────────
+      // ── Customers ──────────────────────────────────────────────
       {
         path: 'customers',
         children: [
@@ -150,10 +148,10 @@ export const router = createBrowserRouter([
         ],
       },
 
-      // ── Analytics ──────────────────────────────────────────────────────
+      // ── Analytics ──────────────────────────────────────────────
       { path: 'analytics', element: <Lazy><Analytics /></Lazy> },
 
-      // ── Inventory ──────────────────────────────────────────────────────
+      // ── Inventory ──────────────────────────────────────────────
       {
         path: 'inventory',
         children: [
@@ -162,7 +160,7 @@ export const router = createBrowserRouter([
         ],
       },
 
-      // ── Compliance ─────────────────────────────────────────────────────
+      // ── Compliance ─────────────────────────────────────────────
       {
         path: 'compliance',
         children: [
@@ -171,7 +169,7 @@ export const router = createBrowserRouter([
         ],
       },
 
-      // ── Delivery ───────────────────────────────────────────────────────
+      // ── Delivery ───────────────────────────────────────────────
       {
         path: 'delivery',
         children: [
@@ -181,7 +179,7 @@ export const router = createBrowserRouter([
         ],
       },
 
-      // ── POS Integration ────────────────────────────────────────────────
+      // ── POS Integration ────────────────────────────────────────
       {
         path: 'pos',
         children: [
@@ -190,20 +188,19 @@ export const router = createBrowserRouter([
         ],
       },
 
-      // ── Settings (tabs managed internally by SettingsPage) ─────────────
+      // ── Settings (tabs managed internally) ─────────────────────
       { path: 'settings/*', element: <Lazy><SettingsPage /></Lazy> },
 
-      // ── 404 within admin ───────────────────────────────────────────────
+      // ── 404 ────────────────────────────────────────────────────
       { path: '*', element: <NotFound /> },
     ],
   },
 
-  // ── Top-level catch-all → redirect home ────────────────────────────────
+  // ── Top-level catch-all ───────────────────────────────────────────
   { path: '*', element: <Navigate to="/dashboard" replace /> },
 ]);
 
-// ─── App Entry ───────────────────────────────────────────────────────────────
-
+// ── App entry (used by admin/src/App.tsx) ─────────────────────────────────────
 export default function AdminRoutes() {
   return <RouterProvider router={router} />;
 }
