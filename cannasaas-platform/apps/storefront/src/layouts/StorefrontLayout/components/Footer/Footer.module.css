@@ -1,0 +1,412 @@
+/**
+ * @file Footer.module.css
+ * @path apps/storefront/src/layouts/StorefrontLayout/components/Footer/
+ *
+ * Styles for the CannaSaas storefront footer.
+ *
+ * LAYOUT: 5-column CSS Grid on desktop, 2-col on tablet, stacked on mobile.
+ *   [store-info] [Shop links] [Account links] [Info links] [Legal links]
+ *
+ * AESTHETIC: Deep forest green (#1B3A2D) background with warm ivory (#F5F0E8)
+ * text. Refined editorial tone — luxury dispensary, not a gas station.
+ * Section headings use the display serif font; body uses the sans-serif.
+ *
+ * WCAG:
+ *   • Age banner background/text contrast ≥ 4.5:1.
+ *   • All link focus rings visible in Windows High Contrast mode via
+ *     the forced-colors media query fallback.
+ *   • address element preserves semantic meaning (postal address).
+ */
+
+/* ─── Footer Root ────────────────────────────────────────────────────────── */
+
+.footer {
+  background: var(--cs-footer-bg, #1B3A2D);
+  color: var(--cs-footer-text, #D4C9B4);
+  font-family: var(--cs-font-body);
+}
+
+/* ─── Age Verification Banner ────────────────────────────────────────────── */
+
+.ageBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--cs-space-3);
+  padding: var(--cs-space-4) var(--cs-space-6);
+  background: rgba(var(--cs-accent-rgb, 45, 106, 79), 0.25);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+  /* High-contrast mode fallback */
+  @media (forced-colors: active) {
+    border: 1px solid ButtonText;
+  }
+}
+
+.ageBannerIcon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  line-height: 1.5;
+}
+
+.ageBannerText {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: var(--cs-footer-text-muted, #B0A898);
+  max-width: 80ch;
+}
+
+.ageBannerText strong {
+  color: var(--cs-footer-text, #D4C9B4);
+  font-weight: 700;
+}
+
+@media (max-width: 767px) {
+  .ageBanner {
+    padding: var(--cs-space-3) var(--cs-space-4);
+  }
+}
+
+/* ─── Main Footer Area ───────────────────────────────────────────────────── */
+
+.main {
+  padding: var(--cs-space-12) 0 var(--cs-space-10);
+}
+
+@media (max-width: 767px) {
+  .main {
+    padding: var(--cs-space-8) 0 var(--cs-space-6);
+  }
+}
+
+/* ─── Inner Grid ─────────────────────────────────────────────────────────── */
+
+.inner {
+  display: grid;
+  grid-template-columns: 1.6fr repeat(4, 1fr);
+  gap: var(--cs-space-8);
+  max-width: var(--cs-max-width, 1440px);
+  margin: 0 auto;
+  padding: 0 var(--cs-space-6);
+}
+
+@media (max-width: 1199px) {
+  .inner {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--cs-space-6);
+  }
+
+  /* Store column takes full width on tablet */
+  .storeColumn {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 639px) {
+  .inner {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--cs-space-5) var(--cs-space-4);
+    padding: 0 var(--cs-space-4);
+  }
+
+  .storeColumn {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 400px) {
+  .inner {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── Store Column ───────────────────────────────────────────────────────── */
+
+.storeColumn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cs-space-4);
+}
+
+/* ─── Store Name ─────────────────────────────────────────────────────────── */
+
+.storeName {
+  margin: 0;
+  font-family: var(--cs-font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #F5F0E8; /* Warm ivory — high contrast on dark green */
+  line-height: 1.2;
+}
+
+/* ─── Address ────────────────────────────────────────────────────────────── */
+
+.address {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-style: normal; /* Override browser italic for <address> */
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--cs-footer-text-muted, #B0A898);
+}
+
+/* ─── Contact Links ──────────────────────────────────────────────────────── */
+
+.contactLinks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cs-space-1-5);
+}
+
+.contactLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cs-space-1-5);
+  font-size: 0.875rem;
+  color: var(--cs-footer-text-muted, #B0A898);
+  text-decoration: none;
+  transition: color 150ms ease;
+  width: fit-content;
+}
+
+.contactLink:hover {
+  color: var(--cs-footer-accent, #6FCF97);
+}
+
+.contactLink:focus-visible {
+  outline: 2px solid var(--cs-footer-accent, #6FCF97);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* ─── Hours ──────────────────────────────────────────────────────────────── */
+
+.hours {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cs-space-2);
+}
+
+.hoursHeading {
+  display: flex;
+  align-items: center;
+  gap: var(--cs-space-2);
+  margin: 0;
+  font-family: var(--cs-font-body);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #F5F0E8;
+}
+
+.openStatus {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.openStatusOpen {
+  background: rgba(111, 207, 151, 0.2);
+  color: #6FCF97; /* Passes 4.5:1 on #1B3A2D */
+}
+
+.openStatusClosed {
+  background: rgba(235, 87, 87, 0.15);
+  color: #F28B82; /* Passes 4.5:1 on #1B3A2D */
+}
+
+.hoursList {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--cs-space-1) var(--cs-space-3);
+  margin: 0;
+}
+
+.hoursRow {
+  display: contents; /* Lets dt/dd participate in parent grid */
+}
+
+.hoursDay {
+  font-size: 0.78rem;
+  color: var(--cs-footer-text-muted, #B0A898);
+}
+
+.hoursTime {
+  font-size: 0.78rem;
+  color: var(--cs-footer-text, #D4C9B4);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.hoursClosed {
+  color: var(--cs-footer-text-muted, #B0A898);
+  font-style: italic;
+}
+
+/* ─── Social Nav ─────────────────────────────────────────────────────────── */
+
+.socialNav {
+  margin-top: var(--cs-space-1);
+}
+
+.socialList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cs-space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.socialLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px; /* ≥44px with padding — min touch target */
+  padding: 10px;
+
+  color: var(--cs-footer-text-muted, #B0A898);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  text-decoration: none;
+  transition: color 150ms ease, border-color 150ms ease, background 150ms ease;
+}
+
+.socialLink:hover {
+  color: var(--cs-footer-accent, #6FCF97);
+  border-color: var(--cs-footer-accent, #6FCF97);
+  background: rgba(111, 207, 151, 0.1);
+}
+
+.socialLink:focus-visible {
+  outline: 2px solid var(--cs-footer-accent, #6FCF97);
+  outline-offset: 3px;
+}
+
+/* ─── Quick Link Columns ─────────────────────────────────────────────────── */
+
+.linkColumn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cs-space-3);
+}
+
+.linkColumnHeading {
+  margin: 0;
+  font-family: var(--cs-font-body);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #F5F0E8;
+}
+
+.linkList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cs-space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.footerLink {
+  font-size: 0.875rem;
+  color: var(--cs-footer-text-muted, #B0A898);
+  text-decoration: none;
+  transition: color 140ms ease;
+
+  /* Minimum touch height via padding */
+  display: inline-block;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+}
+
+.footerLink:hover {
+  color: var(--cs-footer-accent, #6FCF97);
+}
+
+.footerLink:focus-visible {
+  outline: 2px solid var(--cs-footer-accent, #6FCF97);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* ─── Bottom Bar ─────────────────────────────────────────────────────────── */
+
+.bottomBar {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: var(--cs-space-5) 0;
+}
+
+.bottomInner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cs-space-1-5);
+  max-width: var(--cs-max-width, 1440px);
+  margin: 0 auto;
+  padding: 0 var(--cs-space-6);
+}
+
+@media (max-width: 767px) {
+  .bottomInner {
+    padding: 0 var(--cs-space-4);
+  }
+}
+
+.copyright {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--cs-footer-text-muted, #B0A898);
+}
+
+.legalLine {
+  margin: 0;
+  font-size: 0.72rem;
+  color: rgba(176, 168, 152, 0.65);
+  line-height: 1.5;
+}
+
+/* ─── High Contrast Mode ─────────────────────────────────────────────────── */
+
+@media (forced-colors: active) {
+  .footerLink,
+  .contactLink,
+  .socialLink {
+    forced-color-adjust: none;
+    color: LinkText;
+  }
+
+  .footerLink:hover,
+  .contactLink:hover {
+    color: ActiveText;
+  }
+
+  .socialLink {
+    border-color: ButtonText;
+  }
+}
+
+/* ─── Reduced Motion ─────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .footerLink,
+  .contactLink,
+  .socialLink,
+  .openStatus {
+    transition: none;
+  }
+}
+

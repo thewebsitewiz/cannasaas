@@ -126,3 +126,4 @@ export const useOrganizationContact = () =>
     social: s.organization?.social ?? {},
     minimumAge: s.organization?.minimumAge ?? 21,
   }));
+

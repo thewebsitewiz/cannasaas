@@ -1,0 +1,282 @@
+/**
+ * @file Header.module.css
+ * @path apps/storefront/src/layouts/StorefrontLayout/components/Header/
+ *
+ * Styles for the primary storefront header.
+ *
+ * LAYOUT ZONES (desktop, left → right):
+ *   [logo] ─── [navigation] ─── [search] ─── [cart | user]
+ *
+ * LAYOUT ZONES (mobile):
+ *   Row 1: [hamburger in nav] ─── [logo] ─── [search-toggle | cart | user]
+ *   Row 2: [expanded search bar] (conditional)
+ *
+ * STICKY BEHAVIOR:
+ *   Header is position:sticky with top:0. The background has a subtle
+ *   backdrop-filter blur that activates on scroll (via .headerScrolled).
+ *
+ * DESIGN TOKENS:
+ *   All colors use --cs-* custom properties defined in StorefrontLayout.module.css.
+ */
+
+/* ─── Scroll Sentinel ────────────────────────────────────────────────────── */
+
+.sentinel {
+  /* Zero-height element above the header used by IntersectionObserver */
+  position: absolute;
+  top: 0;
+  height: 1px;
+  width: 100%;
+  pointer-events: none;
+}
+
+/* ─── Header Root ────────────────────────────────────────────────────────── */
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: var(--cs-z-header);
+  width: 100%;
+
+  /* Height exposed as a CSS variable consumed by Navigation mobile menu
+     positioning and scroll-margin-top on section targets */
+  height: var(--cs-header-height, 72px);
+
+  background: var(--cs-header-bg);
+  border-bottom: 1px solid var(--cs-border);
+
+  /* Smooth shadow transition on scroll */
+  transition: box-shadow 220ms ease, background 220ms ease;
+
+  /* Enable GPU compositing for smooth sticky behavior */
+  will-change: box-shadow;
+}
+
+.headerScrolled {
+  box-shadow: var(--cs-shadow-header);
+  background: var(--cs-header-bg-scrolled);
+  /* Frosted glass when scrolled – gracefully degrades */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* ─── Skip Link ──────────────────────────────────────────────────────────── */
+
+/**
+ * WCAG 2.4.1 Bypass Blocks
+ * Visually hidden until it receives keyboard focus, then it appears
+ * as a high-contrast overlay at the top of the screen.
+ */
+.skipLink {
+  position: absolute;
+  top: var(--cs-space-2);
+  left: var(--cs-space-2);
+  z-index: calc(var(--cs-z-header) + 100);
+
+  padding: var(--cs-space-2) var(--cs-space-4);
+  background: var(--cs-accent);
+  color: var(--cs-accent-fg);
+  font-family: var(--cs-font-body);
+  font-size: 0.875rem;
+  font-weight: 700;
+  border-radius: var(--cs-radius-md);
+  text-decoration: none;
+
+  /* Hidden until focused */
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.skipLink:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+/* ─── Inner Layout Container ─────────────────────────────────────────────── */
+
+.inner {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  max-width: var(--cs-max-width, 1440px);
+  margin: 0 auto;
+  padding: 0 var(--cs-space-6);
+  gap: var(--cs-space-4);
+}
+
+@media (max-width: 767px) {
+  .inner {
+    padding: 0 var(--cs-space-4);
+    gap: var(--cs-space-2);
+  }
+}
+
+/* ─── Logo Area ──────────────────────────────────────────────────────────── */
+
+.logoArea {
+  flex-shrink: 0;
+}
+
+.logoLink {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  border-radius: var(--cs-radius-sm);
+  transition: opacity 150ms ease;
+}
+
+.logoLink:hover {
+  opacity: 0.85;
+}
+
+.logoLink:focus-visible {
+  outline: 2px solid var(--cs-accent);
+  outline-offset: 4px;
+}
+
+.logoImage {
+  display: block;
+  height: 40px;
+  width: auto;
+  max-width: 160px;
+  object-fit: contain;
+}
+
+.logoText {
+  font-family: var(--cs-font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--cs-text-primary);
+  /* Gradient text — luxury cannabis brand feel */
+  background: linear-gradient(
+    135deg,
+    var(--cs-text-primary) 0%,
+    var(--cs-accent) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  white-space: nowrap;
+}
+
+/* ─── Navigation Area ────────────────────────────────────────────────────── */
+
+.navArea {
+  /* Hidden on tablet and below – Navigation renders its own hamburger */
+  display: none;
+  flex-shrink: 0;
+}
+
+@media (min-width: 1024px) {
+  .navArea {
+    display: flex;
+  }
+}
+
+/* ─── Search Area ────────────────────────────────────────────────────────── */
+
+.searchArea {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 500px;
+
+  /* Hidden on mobile — shown via the toggle button instead */
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .searchArea {
+    display: flex;
+  }
+}
+
+/* ─── Actions Area ───────────────────────────────────────────────────────── */
+
+.actionsArea {
+  display: flex;
+  align-items: center;
+  gap: var(--cs-space-1);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* ─── Mobile Search Toggle ───────────────────────────────────────────────── */
+
+.mobileSearchToggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: var(--cs-space-1-5);
+  background: transparent;
+  border: none;
+  border-radius: var(--cs-radius-md);
+  color: var(--cs-text-primary);
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.mobileSearchToggle:hover {
+  background: var(--cs-surface-hover);
+}
+
+.mobileSearchToggle:focus-visible {
+  outline: 2px solid var(--cs-accent);
+  outline-offset: 2px;
+}
+
+/* Hide mobile search toggle on tablet and above (search bar is inline) */
+@media (min-width: 768px) {
+  .mobileSearchToggle {
+    display: none;
+  }
+}
+
+/* ─── Mobile Search Bar (expanded row) ───────────────────────────────────── */
+
+.mobileSearchBar {
+  padding: var(--cs-space-3) var(--cs-space-4);
+  border-top: 1px solid var(--cs-border);
+  background: var(--cs-header-bg);
+  animation: slideDown 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.mobileSearchInput {
+  max-width: 100%;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hide expanded mobile search row on tablet and above */
+@media (min-width: 768px) {
+  .mobileSearchBar {
+    display: none;
+  }
+}
+
+/* ─── Reduced Motion ─────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .header,
+  .skipLink,
+  .logoLink,
+  .mobileSearchBar {
+    transition: none;
+    animation: none;
+  }
+}
+

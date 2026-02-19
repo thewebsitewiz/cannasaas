@@ -1,0 +1,258 @@
+/**
+ * @file DataTable.module.css
+ * @path apps/admin/src/components/shared/DataTable/
+ *
+ * Styles for the generic DataTable component.
+ *
+ * DESIGN: Compact, information-dense table for admin use.
+ * Uses the --ca-* (CannaSaas Admin) design token prefix.
+ * Horizontal scroll on narrow viewports rather than collapsing columns —
+ * admin users are assumed to be on desktop, but tablets must still function.
+ *
+ * WCAG:
+ *   • Zebra striping uses a subtle tint, never color alone to convey meaning.
+ *   • Selected rows have both a background tint AND a left border indicator.
+ *   • Hover/focus states have 3:1 contrast against the row background.
+ *   • Skeleton rows are aria-hidden to prevent AT from reading them.
+ */
+
+/* ─── Wrapper ────────────────────────────────────────────────────────────── */
+
+.wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Scrollable Container ───────────────────────────────────────────────── */
+
+.tableContainer {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  /* Prevent layout jank when scrollbar appears */
+  scrollbar-gutter: stable;
+  border: 1px solid var(--ca-border);
+  border-radius: var(--ca-radius-lg);
+}
+
+/* ─── Table ──────────────────────────────────────────────────────────────── */
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--ca-font-body);
+  font-size: 0.875rem;
+  color: var(--ca-text-primary);
+  min-width: 600px; /* Forces horizontal scroll before collapsing */
+}
+
+/* Caption: accessible but visually hidden */
+.caption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ─── Table Head ─────────────────────────────────────────────────────────── */
+
+.thead {
+  background: var(--ca-surface-raised);
+  border-bottom: 2px solid var(--ca-border);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.th {
+  padding: var(--ca-space-3) var(--ca-space-4);
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ca-text-muted);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.thCheckbox {
+  padding: var(--ca-space-3) var(--ca-space-3) var(--ca-space-3) var(--ca-space-4);
+  width: 48px;
+}
+
+/* ─── Sort Button ────────────────────────────────────────────────────────── */
+
+.sortButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ca-space-1);
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ca-text-muted);
+  cursor: pointer;
+  transition: color 130ms ease;
+}
+
+.sortButton:hover {
+  color: var(--ca-text-primary);
+}
+
+.sortButton:focus-visible {
+  outline: 2px solid var(--ca-accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.sortIcon {
+  display: inline-flex;
+  align-items: center;
+  color: currentColor;
+}
+
+/* ─── Table Body ─────────────────────────────────────────────────────────── */
+
+.tbody {}
+
+/* ─── Table Row ──────────────────────────────────────────────────────────── */
+
+.tr {
+  border-bottom: 1px solid var(--ca-border);
+  transition: background 120ms ease;
+}
+
+.tr:last-child {
+  border-bottom: none;
+}
+
+/* Subtle zebra striping */
+.tr:nth-child(even) {
+  background: rgba(var(--ca-accent-rgb), 0.02);
+}
+
+.tr:hover {
+  background: var(--ca-surface-hover);
+}
+
+/* Clickable rows get pointer cursor and keyboard focus ring */
+.trClickable {
+  cursor: pointer;
+}
+
+.trClickable:focus-visible {
+  outline: 2px solid var(--ca-accent);
+  outline-offset: -2px;
+}
+
+/* Selected row: left border + tint */
+.trSelected {
+  background: rgba(var(--ca-accent-rgb), 0.06) !important;
+  box-shadow: inset 3px 0 0 var(--ca-accent);
+}
+
+/* ─── Table Cell ─────────────────────────────────────────────────────────── */
+
+.td {
+  padding: var(--ca-space-3) var(--ca-space-4);
+  vertical-align: middle;
+  color: var(--ca-text-primary);
+  line-height: 1.4;
+}
+
+.tdCheckbox {
+  padding: var(--ca-space-3) var(--ca-space-3) var(--ca-space-3) var(--ca-space-4);
+}
+
+/* ─── Alignment Modifiers ────────────────────────────────────────────────── */
+
+.align_left   { text-align: left; }
+.align_center { text-align: center; }
+.align_right  { text-align: right; }
+
+/* ─── Checkbox ───────────────────────────────────────────────────────────── */
+
+.checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--ca-accent);
+  cursor: pointer;
+  /* Ensure minimum touch target via surrounding cell padding */
+}
+
+/* ─── Empty State ────────────────────────────────────────────────────────── */
+
+.emptyCell {
+  padding: var(--ca-space-16) var(--ca-space-4);
+  text-align: center;
+}
+
+.emptyText {
+  margin: 0;
+  color: var(--ca-text-muted);
+  font-size: 0.9rem;
+}
+
+/* ─── Skeleton ───────────────────────────────────────────────────────────── */
+
+.trSkeleton .td {
+  padding-top: var(--ca-space-3-5);
+  padding-bottom: var(--ca-space-3-5);
+}
+
+.skeletonBlock {
+  display: block;
+  background: linear-gradient(
+    90deg,
+    var(--ca-skeleton-base) 25%,
+    var(--ca-skeleton-highlight) 50%,
+    var(--ca-skeleton-base) 75%
+  );
+  background-size: 200% 100%;
+  border-radius: var(--ca-radius-sm);
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ─── Screen Reader Utility ──────────────────────────────────────────────── */
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ─── Reduced Motion ─────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .skeletonBlock {
+    animation: none;
+    background: var(--ca-skeleton-base);
+  }
+  .tr,
+  .sortButton {
+    transition: none;
+  }
+}
+

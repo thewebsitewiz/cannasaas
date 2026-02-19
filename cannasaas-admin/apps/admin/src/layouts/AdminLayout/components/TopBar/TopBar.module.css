@@ -1,0 +1,56 @@
+/**
+ * @file TopBar.module.css
+ * @path apps/admin/src/layouts/AdminLayout/components/TopBar/
+ */
+
+.topBar {
+  position: sticky;
+  top: 0;
+  z-index: var(--ca-z-topbar);
+  height: var(--ca-topbar-height, 64px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--ca-space-4);
+  background: var(--ca-surface);
+  border-bottom: 1px solid var(--ca-border);
+}
+
+.left, .right {
+  display: flex;
+  align-items: center;
+  gap: var(--ca-space-1);
+}
+
+.iconBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: none;
+  border-radius: var(--ca-radius-md);
+  color: var(--ca-text-muted);
+  cursor: pointer;
+  transition: background 130ms ease, color 130ms ease;
+}
+
+.iconBtn:hover {
+  background: var(--ca-surface-hover);
+  color: var(--ca-text-primary);
+}
+
+.iconBtn:focus-visible {
+  outline: 2px solid var(--ca-accent);
+  outline-offset: 2px;
+}
+
+.desktopOnly {
+  @media (max-width: 1023px) { display: none; }
+}
+
+.mobileOnly {
+  @media (min-width: 1024px) { display: none; }
+}
+

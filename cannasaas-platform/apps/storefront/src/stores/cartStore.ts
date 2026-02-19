@@ -182,3 +182,4 @@ export const useCartSubtotal = () =>
   useCartStore((s) =>
     s.items.reduce((sum, item) => sum + item.unitPriceCents * item.quantity, 0),
   );
+

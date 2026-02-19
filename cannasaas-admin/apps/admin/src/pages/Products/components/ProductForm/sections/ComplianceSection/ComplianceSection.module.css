@@ -1,0 +1,14 @@
+/**
+ * @file ComplianceSection.module.css
+ * @path apps/admin/src/pages/Products/components/ProductForm/sections/ComplianceSection/
+ */
+.section { border: none; margin: 0; padding: 0; }
+.legend { font-family: var(--ca-font-body); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ca-text-muted); margin-bottom: var(--ca-space-4); display: block; width: 100%; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ca-space-4); }
+.input { width: 100%; padding: var(--ca-space-2-5) var(--ca-space-3); background: var(--ca-surface); border: 1.5px solid var(--ca-border-strong); border-radius: var(--ca-radius-md); color: var(--ca-text-primary); font-family: var(--ca-font-body); font-size: 0.875rem; outline: none; transition: border-color 150ms ease, box-shadow 150ms ease; }
+.input:focus { border-color: var(--ca-accent); box-shadow: 0 0 0 3px rgba(var(--ca-accent-rgb), 0.15); }
+.complianceNote { display: flex; align-items: flex-start; gap: var(--ca-space-2); margin: var(--ca-space-4) 0 0; padding: var(--ca-space-3) var(--ca-space-4); background: rgba(41,128,185,0.07); border: 1px solid rgba(41,128,185,0.2); border-radius: var(--ca-radius-md); font-size: 0.82rem; color: #1a5f8a; line-height: 1.5; }
+.complianceNote svg { flex-shrink: 0; margin-top: 1px; }
+@media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .input { transition: none; } }
+

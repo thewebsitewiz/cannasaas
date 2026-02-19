@@ -1,0 +1,41 @@
+/**
+ * @file StatusBadge.module.css
+ * @path apps/admin/src/components/shared/StatusBadge/
+ *
+ * Each variant uses a background tint + matching text color that passes
+ * WCAG 4.5:1 on both light and dark admin surfaces.
+ * The color dot reinforces the variant visually — never the sole indicator.
+ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ca-space-1-5);
+  padding: 2px 8px;
+  border-radius: var(--ca-radius-full);
+  font-family: var(--ca-font-body);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: currentColor;
+}
+
+/* ─── Variants ───────────────────────────────────────────────────────────── */
+
+.variant_green  { background: rgba(39, 174, 96, 0.12);  color: #1a7a42; }
+.variant_blue   { background: rgba(41, 128, 185, 0.12); color: #1a5f8a; }
+.variant_yellow { background: rgba(241, 196, 15, 0.15); color: #8a6000; }
+.variant_red    { background: rgba(192, 57, 43, 0.12);  color: #9a2315; }
+.variant_gray   { background: rgba(108, 117, 125, 0.1); color: #5a6068; }
+.variant_purple { background: rgba(142, 68, 173, 0.12); color: #6c3483; }
+.variant_orange { background: rgba(230, 126, 34, 0.12); color: #8a4800; }
+

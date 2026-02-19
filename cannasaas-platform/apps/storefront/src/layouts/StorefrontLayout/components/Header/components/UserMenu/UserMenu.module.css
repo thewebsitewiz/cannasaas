@@ -1,0 +1,263 @@
+/**
+ * @file UserMenu.module.css
+ * @path apps/storefront/src/layouts/StorefrontLayout/components/Header/components/UserMenu/
+ *
+ * Styles for the UserMenu compound component (trigger + dropdown panel).
+ *
+ * WCAG NOTES:
+ *   • .menuItem:focus-visible uses a high-contrast ring rather than relying
+ *     on color alone (§1.4.1).
+ *   • Minimum 44px height on all interactive items (§2.5.5).
+ *   • The dropdown panel uses box-shadow rather than border alone for
+ *     elevation (works on both light and high-contrast OS themes).
+ */
+
+/* ─── Container ─────────────────────────────────────────────────────────── */
+
+.userMenu {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* ─── Sign In Link (unauthenticated) ─────────────────────────────────────── */
+
+.signInLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cs-space-1-5);
+  padding: var(--cs-space-2) var(--cs-space-3);
+  border-radius: var(--cs-radius-full);
+  border: 1.5px solid var(--cs-accent);
+  color: var(--cs-accent);
+  font-family: var(--cs-font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  transition: background 150ms ease, color 150ms ease;
+  min-height: 44px;
+}
+
+.signInLink:hover {
+  background: var(--cs-accent);
+  color: var(--cs-accent-fg);
+}
+
+.signInLink:focus-visible {
+  outline: 2px solid var(--cs-accent);
+  outline-offset: 3px;
+}
+
+/* ─── Trigger Button ─────────────────────────────────────────────────────── */
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cs-space-1-5);
+  padding: var(--cs-space-1) var(--cs-space-2);
+  background: transparent;
+  border: none;
+  border-radius: var(--cs-radius-full);
+  cursor: pointer;
+  transition: background 150ms ease;
+  min-height: 44px;
+}
+
+.trigger:hover {
+  background: var(--cs-surface-hover);
+}
+
+.trigger:focus-visible {
+  outline: 2px solid var(--cs-accent);
+  outline-offset: 3px;
+}
+
+/* ─── Avatar ─────────────────────────────────────────────────────────────── */
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--cs-accent);
+  flex-shrink: 0;
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarInitials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--cs-accent-fg);
+  font-family: var(--cs-font-body);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* ─── Chevron ────────────────────────────────────────────────────────────── */
+
+.chevron {
+  color: var(--cs-text-muted);
+  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+/* ─── Menu Panel ─────────────────────────────────────────────────────────── */
+
+.menuPanel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: var(--cs-z-dropdown);
+
+  min-width: 220px;
+  background: var(--cs-surface-elevated);
+  border: 1px solid var(--cs-border);
+  border-radius: var(--cs-radius-lg);
+  box-shadow: var(--cs-shadow-lg);
+  overflow: hidden;
+
+  animation: panelIn 160ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes panelIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ─── Menu Header (user info) ────────────────────────────────────────────── */
+
+.menuHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--cs-space-3) var(--cs-space-4);
+}
+
+.menuHeaderName {
+  font-family: var(--cs-font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--cs-text-primary);
+  line-height: 1.2;
+}
+
+.menuHeaderEmail {
+  font-size: 0.78rem;
+  color: var(--cs-text-muted);
+  font-family: var(--cs-font-body);
+}
+
+.loyaltyBadge {
+  display: inline-flex;
+  align-items: center;
+  margin-top: var(--cs-space-1);
+  padding: 2px 8px;
+  background: rgba(var(--cs-accent-rgb), 0.12);
+  color: var(--cs-accent);
+  border-radius: var(--cs-radius-full);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  width: fit-content;
+}
+
+/* ─── Divider ────────────────────────────────────────────────────────────── */
+
+.divider {
+  margin: var(--cs-space-1) 0;
+  border: none;
+  border-top: 1px solid var(--cs-border);
+}
+
+/* ─── Menu List ──────────────────────────────────────────────────────────── */
+
+.menu {
+  list-style: none;
+  margin: 0;
+  padding: var(--cs-space-1) 0;
+}
+
+/* ─── Menu Item (shared by Link and Button variants) ─────────────────────── */
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: var(--cs-space-2-5);
+  width: 100%;
+  padding: var(--cs-space-2-5) var(--cs-space-4);
+  min-height: 44px;
+
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  color: var(--cs-text-primary);
+  font-family: var(--cs-font-body);
+  font-size: 0.875rem;
+  font-weight: 400;
+  text-decoration: none;
+  text-align: left;
+  cursor: pointer;
+
+  transition: background 120ms ease;
+}
+
+.menuItem:hover {
+  background: var(--cs-surface-hover);
+}
+
+.menuItem:focus-visible {
+  outline: none;
+  background: var(--cs-surface-hover);
+  box-shadow: inset 3px 0 0 var(--cs-accent);
+}
+
+.menuItemDanger {
+  color: var(--cs-error);
+}
+
+.menuItemDanger:hover {
+  background: rgba(var(--cs-error-rgb), 0.08);
+}
+
+.menuItemIcon {
+  display: flex;
+  align-items: center;
+  color: var(--cs-text-muted);
+  flex-shrink: 0;
+}
+
+.menuItemDanger .menuItemIcon {
+  color: var(--cs-error);
+}
+
+/* ─── Reduced Motion ─────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .menuPanel {
+    animation: none;
+  }
+  .chevron {
+    transition: none;
+  }
+}
+

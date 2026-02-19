@@ -1,0 +1,364 @@
+/**
+ * @file Navigation.module.css
+ * @path apps/storefront/src/layouts/StorefrontLayout/components/Header/components/Navigation/
+ *
+ * Styles for the primary storefront navigation component.
+ *
+ * LAYOUT STRATEGY:
+ *   • Desktop (≥1024px): Horizontal flex list, dropdowns on hover/focus.
+ *   • Tablet (640–1023px): Hamburger + slide-in drawer.
+ *   • Mobile (<640px): Same drawer, full-width.
+ *
+ * The hamburger button is always hidden on desktop via display:none
+ * (not visibility:hidden) so it is removed from the accessibility tree
+ * and tab order when not needed.
+ */
+
+/* ─── Shared Screen Reader Utility ───────────────────────────────────────── */
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ─── Nav Root ───────────────────────────────────────────────────────────── */
+
+.nav {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* ─── Desktop List ───────────────────────────────────────────────────────── */
+
+.desktopList {
+  display: none; /* Hidden on mobile, shown at ≥1024px */
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: var(--cs-space-1);
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .desktopList {
+    display: flex;
+  }
+}
+
+/* ─── Top-Level Item ─────────────────────────────────────────────────────── */
+
+.topItem {
+  position: relative;
+}
+
+/* ─── Top-Level Link / Button ────────────────────────────────────────────── */
+
+.topLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cs-space-1);
+  padding: var(--cs-space-2) var(--cs-space-3);
+  min-height: 44px;
+
+  background: transparent;
+  border: none;
+  border-radius: var(--cs-radius-md);
+  color: var(--cs-text-secondary);
+  font-family: var(--cs-font-body);
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  cursor: pointer;
+
+  transition: color 140ms ease, background 140ms ease;
+  white-space: nowrap;
+}
+
+.topLink:hover {
+  color: var(--cs-text-primary);
+  background: var(--cs-surface-hover);
+}
+
+.topLinkActive {
+  color: var(--cs-accent);
+  font-weight: 600;
+}
+
+.topLink:focus-visible {
+  outline: 2px solid var(--cs-accent);
+  outline-offset: 2px;
+}
+
+/* ─── Top Chevron ────────────────────────────────────────────────────────── */
+
+.topChevron {
+  color: var(--cs-text-muted);
+  transition: transform 200ms ease;
+  flex-shrink: 0;
+}
+
+.topChevronOpen {
+  transform: rotate(180deg);
+}
+
+/* ─── Dropdown Menu ──────────────────────────────────────────────────────── */
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: var(--cs-z-dropdown);
+
+  list-style: none;
+  margin: 0;
+  padding: var(--cs-space-1) 0;
+
+  min-width: 180px;
+  background: var(--cs-surface-elevated);
+  border: 1px solid var(--cs-border);
+  border-radius: var(--cs-radius-lg);
+  box-shadow: var(--cs-shadow-lg);
+
+  animation: dropIn 140ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes dropIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── Dropdown Item ──────────────────────────────────────────────────────── */
+
+.dropdownItem {
+  display: block;
+  padding: var(--cs-space-2-5) var(--cs-space-4);
+  min-height: 44px;
+
+  color: var(--cs-text-secondary);
+  font-family: var(--cs-font-body);
+  font-size: 0.875rem;
+  text-decoration: none;
+  transition: background 120ms ease, color 120ms ease;
+
+  display: flex;
+  align-items: center;
+}
+
+.dropdownItem:hover {
+  background: var(--cs-surface-hover);
+  color: var(--cs-text-primary);
+}
+
+.dropdownItemActive {
+  color: var(--cs-accent);
+  font-weight: 600;
+  background: rgba(var(--cs-accent-rgb), 0.06);
+}
+
+.dropdownItem:focus-visible {
+  outline: none;
+  background: var(--cs-surface-hover);
+  box-shadow: inset 3px 0 0 var(--cs-accent);
+}
+
+/* ─── Hamburger Button ───────────────────────────────────────────────────── */
+
+.hamburger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: var(--cs-space-1-5);
+  background: transparent;
+  border: none;
+  border-radius: var(--cs-radius-md);
+  cursor: pointer;
+  color: var(--cs-text-primary);
+  transition: background 150ms ease;
+}
+
+.hamburger:hover {
+  background: var(--cs-surface-hover);
+}
+
+.hamburger:focus-visible {
+  outline: 2px solid var(--cs-accent);
+  outline-offset: 2px;
+}
+
+/* Hidden on desktop */
+@media (min-width: 1024px) {
+  .hamburger {
+    display: none;
+  }
+}
+
+/* ─── Hamburger Icon Lines ────────────────────────────────────────────────── */
+
+.hamburgerIcon {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 22px;
+}
+
+.hamburgerIcon span {
+  display: block;
+  height: 2px;
+  background: currentColor;
+  border-radius: 2px;
+  transition: transform 240ms ease, opacity 240ms ease;
+  transform-origin: center;
+}
+
+/* Morphs to X when open */
+.hamburgerOpen span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.hamburgerOpen span:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0);
+}
+.hamburgerOpen span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* ─── Mobile Menu Panel ──────────────────────────────────────────────────── */
+
+.mobileMenu {
+  position: fixed;
+  top: var(--cs-header-height, 72px);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--cs-z-mobile-menu);
+
+  background: var(--cs-surface);
+  padding: var(--cs-space-4) var(--cs-space-4) var(--cs-space-8);
+  overflow-y: auto;
+
+  transform: translateX(-100%);
+  transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Hidden from AT when closed */
+  visibility: hidden;
+}
+
+.mobileMenuOpen {
+  transform: translateX(0);
+  visibility: visible;
+}
+
+/* Show only on mobile/tablet */
+@media (min-width: 1024px) {
+  .mobileMenu {
+    display: none;
+  }
+}
+
+/* ─── Mobile List ────────────────────────────────────────────────────────── */
+
+.mobileList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.mobileItem {
+  border-bottom: 1px solid var(--cs-border);
+}
+
+.mobileTopLink {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--cs-space-4) 0;
+  min-height: 56px;
+
+  background: transparent;
+  border: none;
+  color: var(--cs-text-primary);
+  font-family: var(--cs-font-body);
+  font-size: 1.05rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.mobileTopLinkActive {
+  color: var(--cs-accent);
+  font-weight: 700;
+}
+
+.mobileSubList {
+  list-style: none;
+  margin: 0 0 var(--cs-space-3);
+  padding: 0 0 0 var(--cs-space-4);
+}
+
+.mobileSubLink {
+  display: block;
+  padding: var(--cs-space-2-5) 0;
+  min-height: 44px;
+  color: var(--cs-text-secondary);
+  font-family: var(--cs-font-body);
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: color 120ms ease;
+  display: flex;
+  align-items: center;
+}
+
+.mobileSubLink:hover,
+.mobileSubLinkActive {
+  color: var(--cs-accent);
+}
+
+/* ─── Overlay ────────────────────────────────────────────────────────────── */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--cs-z-mobile-menu) - 1);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+
+  @media (min-width: 1024px) {
+    display: none;
+  }
+}
+
+/* ─── Reduced Motion ─────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .dropdown,
+  .mobileMenu {
+    animation: none;
+    transition: none;
+  }
+
+  .hamburgerIcon span,
+  .topChevron,
+  .topLink {
+    transition: none;
+  }
+}
+

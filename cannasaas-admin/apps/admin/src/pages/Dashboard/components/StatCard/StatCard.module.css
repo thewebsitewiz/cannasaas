@@ -1,0 +1,109 @@
+/**
+ * @file StatCard.module.css
+ * @path apps/admin/src/pages/Dashboard/components/StatCard/
+ */
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ca-space-1-5);
+  padding: var(--ca-space-5);
+  background: var(--ca-surface-elevated);
+  border: 1px solid var(--ca-border);
+  border-radius: var(--ca-radius-xl);
+  overflow: hidden;
+  transition: box-shadow 180ms ease, transform 180ms ease;
+}
+
+.card:hover {
+  box-shadow: var(--ca-shadow-md);
+  transform: translateY(-1px);
+}
+
+/* Subtle top-edge accent line */
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--ca-accent), transparent);
+  opacity: 0.6;
+}
+
+.iconSlot {
+  position: absolute;
+  top: var(--ca-space-4);
+  right: var(--ca-space-4);
+  color: var(--ca-accent);
+  opacity: 0.5;
+}
+
+.label {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ca-text-muted);
+}
+
+.value {
+  margin: 0;
+  font-family: var(--ca-font-display);
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ca-text-primary);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.change {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ca-space-1);
+  margin: var(--ca-space-1) 0 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.changeIcon {
+  display: flex;
+  align-items: center;
+}
+
+.changeGood {
+  color: var(--ca-success);
+}
+
+.changeBad {
+  color: var(--ca-error);
+}
+
+/* ─── Loading State ──────────────────────────────────────────────────────── */
+
+.cardLoading {
+  pointer-events: none;
+}
+
+.skeleton {
+  display: block;
+  background: linear-gradient(90deg, var(--ca-skeleton-base) 25%, var(--ca-skeleton-highlight) 50%, var(--ca-skeleton-base) 75%);
+  background-size: 200% 100%;
+  border-radius: var(--ca-radius-sm);
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card { transition: none; }
+  .skeleton { animation: none; background: var(--ca-skeleton-base); }
+}
+

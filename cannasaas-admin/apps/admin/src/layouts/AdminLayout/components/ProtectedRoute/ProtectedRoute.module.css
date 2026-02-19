@@ -1,0 +1,97 @@
+/**
+ * @file ProtectedRoute.module.css
+ * @path apps/admin/src/layouts/AdminLayout/components/ProtectedRoute/
+ */
+
+.fullScreen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  background: var(--ca-surface);
+  gap: var(--ca-space-3);
+}
+
+/* ─── Spinner ────────────────────────────────────────────────────────────── */
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--ca-border);
+  border-top-color: var(--ca-accent);
+  border-radius: 50%;
+  animation: spin 700ms linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loadingText {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--ca-text-muted);
+  font-family: var(--ca-font-body);
+}
+
+/* ─── Access Denied ──────────────────────────────────────────────────────── */
+
+.deniedCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ca-space-4);
+  text-align: center;
+  max-width: 400px;
+  padding: var(--ca-space-8);
+  background: var(--ca-surface-elevated);
+  border: 1px solid var(--ca-border);
+  border-radius: var(--ca-radius-xl);
+}
+
+.deniedIcon {
+  color: var(--ca-error);
+}
+
+.deniedTitle {
+  margin: 0;
+  font-family: var(--ca-font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ca-text-primary);
+}
+
+.deniedText {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--ca-text-secondary);
+  line-height: 1.6;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--ca-space-2-5) var(--ca-space-5);
+  background: var(--ca-accent);
+  color: var(--ca-accent-fg);
+  border-radius: var(--ca-radius-md);
+  font-family: var(--ca-font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 150ms ease;
+  min-height: 44px;
+}
+
+.backLink:hover { background: var(--ca-accent-hover); }
+
+.backLink:focus-visible {
+  outline: 2px solid var(--ca-accent);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation: none; border-top-color: var(--ca-accent); }
+}
+

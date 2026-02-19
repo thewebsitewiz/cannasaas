@@ -1,0 +1,119 @@
+/**
+ * @file PageHeader.module.css
+ * @path apps/admin/src/components/shared/PageHeader/
+ */
+
+.header {
+  padding: var(--ca-space-6) var(--ca-space-6) var(--ca-space-5);
+  border-bottom: 1px solid var(--ca-border);
+  background: var(--ca-surface);
+}
+
+/* ─── Breadcrumbs ────────────────────────────────────────────────────────── */
+
+.breadcrumbs {
+  margin-bottom: var(--ca-space-2);
+}
+
+.breadcrumbList {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.breadcrumbItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.breadcrumbLink {
+  font-size: 0.78rem;
+  color: var(--ca-text-muted);
+  text-decoration: none;
+  transition: color 130ms ease;
+}
+
+.breadcrumbLink:hover {
+  color: var(--ca-accent);
+}
+
+.breadcrumbLink:focus-visible {
+  outline: 2px solid var(--ca-accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.breadcrumbSep {
+  font-size: 0.78rem;
+  color: var(--ca-border-strong);
+}
+
+.breadcrumbCurrent {
+  font-size: 0.78rem;
+  color: var(--ca-text-secondary);
+  font-weight: 500;
+}
+
+/* ─── Title Row ──────────────────────────────────────────────────────────── */
+
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ca-space-4);
+  flex-wrap: wrap;
+}
+
+.titleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ca-space-1);
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--ca-font-display);
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ca-text-primary);
+  line-height: 1.2;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--ca-text-muted);
+  line-height: 1.5;
+}
+
+/* ─── Actions ────────────────────────────────────────────────────────────── */
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ca-space-2);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .header {
+    padding: var(--ca-space-4);
+  }
+
+  .titleRow {
+    flex-direction: column;
+  }
+
+  .actions {
+    width: 100%;
+  }
+}
+

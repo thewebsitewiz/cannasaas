@@ -1,0 +1,103 @@
+/**
+ * @file ProductsPage.module.css
+ * @path apps/admin/src/pages/Products/
+ */
+.page { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+.filterBar {
+  display: flex;
+  gap: var(--ca-space-2);
+  padding: var(--ca-space-3) var(--ca-space-6);
+  border-bottom: 1px solid var(--ca-border);
+  background: var(--ca-surface);
+  flex-wrap: wrap;
+}
+.searchInput {
+  flex: 1;
+  min-width: 200px;
+  padding: var(--ca-space-2) var(--ca-space-3);
+  background: var(--ca-surface-raised);
+  border: 1.5px solid var(--ca-border-strong);
+  border-radius: var(--ca-radius-md);
+  color: var(--ca-text-primary);
+  font-family: var(--ca-font-body);
+  font-size: 0.875rem;
+  outline: none;
+}
+.searchInput:focus { border-color: var(--ca-accent); box-shadow: 0 0 0 3px rgba(var(--ca-accent-rgb), 0.12); }
+.filterSelect {
+  padding: var(--ca-space-2) var(--ca-space-3);
+  background: var(--ca-surface-raised);
+  border: 1.5px solid var(--ca-border-strong);
+  border-radius: var(--ca-radius-md);
+  color: var(--ca-text-primary);
+  font-family: var(--ca-font-body);
+  font-size: 0.875rem;
+  cursor: pointer;
+  outline: none;
+}
+.filterSelect:focus { border-color: var(--ca-accent); }
+.tableWrapper { flex: 1; overflow: auto; }
+/* Table cell styles */
+.thumbnail { width: 40px; height: 40px; border-radius: var(--ca-radius-sm); object-fit: cover; display: block; }
+.thumbnailPlaceholder { width: 40px; height: 40px; border-radius: var(--ca-radius-sm); background: var(--ca-surface-raised); }
+.productName { font-weight: 600; font-size: 0.875rem; }
+.category { font-size: 0.82rem; color: var(--ca-text-muted); text-transform: capitalize; }
+.mono { font-variant-numeric: tabular-nums; font-size: 0.875rem; }
+.na { color: var(--ca-text-muted); }
+.stockOut { color: var(--ca-error); font-weight: 700; }
+.stockLow { color: var(--ca-warning); font-weight: 600; }
+/* New Product button */
+.newBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ca-space-1-5);
+  padding: var(--ca-space-2-5) var(--ca-space-4);
+  background: var(--ca-accent);
+  border: none;
+  border-radius: var(--ca-radius-md);
+  color: var(--ca-accent-fg);
+  font-family: var(--ca-font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 130ms ease;
+  min-height: 40px;
+}
+.newBtn:hover { background: var(--ca-accent-hover); }
+.newBtn:focus-visible { outline: 2px solid var(--ca-accent); outline-offset: 3px; }
+/* Empty state */
+.emptyState { display: flex; flex-direction: column; align-items: center; gap: var(--ca-space-3); }
+.emptyState p { margin: 0; color: var(--ca-text-muted); }
+.clearFiltersBtn { padding: var(--ca-space-1-5) var(--ca-space-3); background: var(--ca-surface-raised); border: 1px solid var(--ca-border-strong); border-radius: var(--ca-radius-md); color: var(--ca-text-secondary); font-family: var(--ca-font-body); font-size: 0.82rem; cursor: pointer; }
+.clearFiltersBtn:hover { background: var(--ca-surface-hover); }
+.clearFiltersBtn:focus-visible { outline: 2px solid var(--ca-accent); outline-offset: 2px; }
+/* Drawer */
+.drawerOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: calc(var(--ca-z-modal) - 1); }
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--ca-z-modal);
+  width: min(780px, 100vw);
+  background: var(--ca-surface);
+  border-left: 1px solid var(--ca-border);
+  box-shadow: var(--ca-shadow-xl);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.drawerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--ca-space-4) var(--ca-space-6);
+  border-bottom: 1px solid var(--ca-border);
+  flex-shrink: 0;
+}
+.drawerTitle { margin: 0; font-family: var(--ca-font-display); font-size: 1.2rem; font-weight: 700; color: var(--ca-text-primary); }
+.drawerClose { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: transparent; border: none; border-radius: var(--ca-radius-md); color: var(--ca-text-muted); cursor: pointer; }
+.drawerClose:hover { background: var(--ca-surface-hover); color: var(--ca-text-primary); }
+.drawerClose:focus-visible { outline: 2px solid var(--ca-accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .newBtn { transition: none; } }
+

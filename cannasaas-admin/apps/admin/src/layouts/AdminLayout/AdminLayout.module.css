@@ -1,0 +1,306 @@
+/**
+ * @file AdminLayout.module.css
+ * @path apps/admin/src/layouts/AdminLayout/
+ *
+ * Root admin layout styles and the complete --ca-* design token system.
+ *
+ * LAYOUT: CSS Grid with sidebar column + main column.
+ * The sidebar column width is controlled by --ca-sidebar-width / --ca-sidebar-width-collapsed
+ * and updates when the sidebar collapses, causing the main column to expand.
+ *
+ * TOKEN PREFIX: --ca- (CannaSaas Admin) to avoid collision with the
+ * storefront's --cs- token namespace.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300..700&display=swap');
+
+/* ─── Design Tokens ──────────────────────────────────────────────────────── */
+
+:root {
+  /* Typography */
+  --ca-font-display: 'DM Serif Display', Georgia, serif;
+  --ca-font-body:    'DM Sans', 'Helvetica Neue', Arial, sans-serif;
+  --ca-font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Surface layers */
+  --ca-surface:          #FAFAF8;
+  --ca-surface-raised:   #F4F1EC;
+  --ca-surface-elevated: #FFFFFF;
+  --ca-surface-hover:    rgba(27, 58, 45, 0.05);
+
+  /* Text */
+  --ca-text-primary:   #1A1A18;
+  --ca-text-secondary: #3D3D3A;
+  --ca-text-muted:     #6E6E69;
+
+  /* Borders */
+  --ca-border:        rgba(27, 58, 45, 0.10);
+  --ca-border-strong: rgba(27, 58, 45, 0.22);
+
+  /* Accent */
+  --ca-accent:        #2D6A4F;
+  --ca-accent-hover:  #245740;
+  --ca-accent-fg:     #FFFFFF;
+  --ca-accent-rgb:    45, 106, 79;
+
+  /* Semantic */
+  --ca-error:       #C0392B;
+  --ca-error-rgb:   192, 57, 43;
+  --ca-success:     #27AE60;
+  --ca-warning:     #D4691E;
+  --ca-info:        #2980B9;
+
+  /* Sidebar */
+  --ca-sidebar-bg:               #1B3A2D;
+  --ca-sidebar-text:             #D4C9B4;
+  --ca-sidebar-width:            240px;
+  --ca-sidebar-width-collapsed:  64px;
+
+  /* Layout */
+  --ca-topbar-height: 64px;
+
+  /* Spacing */
+  --ca-space-1:    4px;
+  --ca-space-1-5:  6px;
+  --ca-space-2:    8px;
+  --ca-space-2-5:  10px;
+  --ca-space-3:    12px;
+  --ca-space-3-5:  14px;
+  --ca-space-4:    16px;
+  --ca-space-5:    20px;
+  --ca-space-6:    24px;
+  --ca-space-8:    32px;
+  --ca-space-10:   40px;
+  --ca-space-12:   48px;
+  --ca-space-16:   64px;
+
+  /* Border radius */
+  --ca-radius-sm:   4px;
+  --ca-radius-md:   8px;
+  --ca-radius-lg:   12px;
+  --ca-radius-xl:   16px;
+  --ca-radius-full: 9999px;
+
+  /* Shadows */
+  --ca-shadow-sm:  0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --ca-shadow-md:  0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  --ca-shadow-lg:  0 8px 24px rgba(0,0,0,0.10), 0 4px 8px rgba(0,0,0,0.04);
+  --ca-shadow-xl:  0 16px 40px rgba(0,0,0,0.14);
+
+  /* Skeleton */
+  --ca-skeleton-base:      rgba(27,58,45,0.06);
+  --ca-skeleton-highlight: rgba(27,58,45,0.02);
+
+  /* Z-index stack */
+  --ca-z-base:     1;
+  --ca-z-toolbar:  50;
+  --ca-z-topbar:   100;
+  --ca-z-sidebar:  200;
+  --ca-z-modal:    300;
+  --ca-z-toast:    400;
+}
+
+/* ─── Dark Mode ──────────────────────────────────────────────────────────── */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ca-surface:          #0F1E16;
+    --ca-surface-raised:   #162A1E;
+    --ca-surface-elevated: #1E3828;
+    --ca-surface-hover:    rgba(111,207,151,0.06);
+
+    --ca-text-primary:   #F0EDE8;
+    --ca-text-secondary: #C8C4BC;
+    --ca-text-muted:     #8A8880;
+
+    --ca-border:        rgba(111,207,151,0.10);
+    --ca-border-strong: rgba(111,207,151,0.22);
+
+    --ca-accent:       #52B788;
+    --ca-accent-hover: #6FCF97;
+    --ca-accent-fg:    #0F1E16;
+    --ca-accent-rgb:   82,183,136;
+
+    --ca-skeleton-base:      rgba(111,207,151,0.06);
+    --ca-skeleton-highlight: rgba(111,207,151,0.02);
+  }
+}
+
+/* ─── Skip Link ──────────────────────────────────────────────────────────── */
+
+.skipLink {
+  position: fixed;
+  top: var(--ca-space-2);
+  left: var(--ca-space-2);
+  z-index: 9999;
+  padding: var(--ca-space-2) var(--ca-space-4);
+  background: var(--ca-accent);
+  color: var(--ca-accent-fg);
+  border-radius: var(--ca-radius-md);
+  font-family: var(--ca-font-body);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: none;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.skipLink:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+/* ─── Layout Grid ────────────────────────────────────────────────────────── */
+
+.layout {
+  display: grid;
+  grid-template-columns: var(--ca-sidebar-width) 1fr;
+  grid-template-rows: 1fr;
+  min-height: 100dvh;
+  background: var(--ca-surface);
+  color: var(--ca-text-primary);
+  font-family: var(--ca-font-body);
+  transition: grid-template-columns 220ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.layoutCollapsed {
+  grid-template-columns: var(--ca-sidebar-width-collapsed) 1fr;
+}
+
+/* Mobile: sidebar is overlay, not a grid column */
+@media (max-width: 1023px) {
+  .layout,
+  .layoutCollapsed {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── Main Column ────────────────────────────────────────────────────────── */
+
+.mainColumn {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  min-width: 0; /* Prevents flex children from overflowing */
+  overflow: hidden;
+}
+
+/* ─── Page Content ───────────────────────────────────────────────────────── */
+
+.pageContent {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Allow child pages to set their own padding */
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Toast Region ───────────────────────────────────────────────────────── */
+
+.toastRegion {
+  position: fixed;
+  bottom: var(--ca-space-6);
+  right: var(--ca-space-6);
+  z-index: var(--ca-z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ca-space-2);
+  max-width: 360px;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ca-space-3);
+  padding: var(--ca-space-3) var(--ca-space-4);
+  border-radius: var(--ca-radius-lg);
+  border: 1px solid transparent;
+  box-shadow: var(--ca-shadow-lg);
+  font-family: var(--ca-font-body);
+  font-size: 0.875rem;
+  font-weight: 500;
+  pointer-events: auto;
+  animation: toastIn 280ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(20px) scale(0.97); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+.toast_success {
+  background: rgba(39, 174, 96, 0.12);
+  border-color: rgba(39, 174, 96, 0.25);
+  color: #1a7a42;
+}
+
+.toast_error {
+  background: rgba(192, 57, 43, 0.1);
+  border-color: rgba(192, 57, 43, 0.25);
+  color: #9a2315;
+}
+
+.toast_warning {
+  background: rgba(212, 105, 30, 0.1);
+  border-color: rgba(212, 105, 30, 0.25);
+  color: #8a4800;
+}
+
+.toast_info {
+  background: rgba(41, 128, 185, 0.1);
+  border-color: rgba(41, 128, 185, 0.25);
+  color: #1a5f8a;
+}
+
+.toastMessage {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.toastDismiss {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  color: currentColor;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 130ms ease, background 130ms ease;
+}
+
+.toastDismiss:hover {
+  opacity: 1;
+  background: rgba(0,0,0,0.07);
+}
+
+.toastDismiss:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+@media (max-width: 639px) {
+  .toastRegion {
+    right: var(--ca-space-4);
+    left: var(--ca-space-4);
+    bottom: var(--ca-space-4);
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .layout, .layoutCollapsed { transition: none; }
+  .toast { animation: none; }
+  .skipLink { transition: none; }
+}
+

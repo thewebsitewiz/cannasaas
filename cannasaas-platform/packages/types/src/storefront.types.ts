@@ -148,3 +148,4 @@ export interface SearchSuggestion {
   /** Price in cents (for product suggestions) */
   priceCents?: number;
 }
+

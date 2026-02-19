@@ -1,0 +1,32 @@
+/**
+ * @file CannabisInfoSection.module.css
+ * @path apps/admin/src/pages/Products/components/ProductForm/sections/CannabisInfoSection/
+ */
+.section { border: none; margin: 0; padding: 0; }
+.legend { font-family: var(--ca-font-body); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ca-text-muted); margin-bottom: var(--ca-space-4); display: block; width: 100%; }
+.grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--ca-space-4); }
+.fullWidth { grid-column: 1 / -1; }
+.input { width: 100%; padding: var(--ca-space-2-5) var(--ca-space-3); background: var(--ca-surface); border: 1.5px solid var(--ca-border-strong); border-radius: var(--ca-radius-md); color: var(--ca-text-primary); font-family: var(--ca-font-body); font-size: 0.875rem; outline: none; transition: border-color 150ms ease, box-shadow 150ms ease; }
+.input:focus { border-color: var(--ca-accent); box-shadow: 0 0 0 3px rgba(var(--ca-accent-rgb), 0.15); }
+.select { width: 100%; padding: var(--ca-space-2-5) var(--ca-space-3); background: var(--ca-surface); border: 1.5px solid var(--ca-border-strong); border-radius: var(--ca-radius-md); color: var(--ca-text-primary); font-family: var(--ca-font-body); font-size: 0.875rem; cursor: pointer; outline: none; }
+.select:focus { border-color: var(--ca-accent); box-shadow: 0 0 0 3px rgba(var(--ca-accent-rgb), 0.15); }
+.percentWrapper { position: relative; }
+.percentSuffix { position: absolute; right: var(--ca-space-3); top: 50%; transform: translateY(-50%); color: var(--ca-text-muted); font-size: 0.875rem; pointer-events: none; }
+.checkboxGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: var(--ca-space-2); padding: var(--ca-space-3); background: var(--ca-surface); border: 1.5px solid var(--ca-border-strong); border-radius: var(--ca-radius-md); }
+.checkboxLabel { display: flex; align-items: center; gap: var(--ca-space-2); font-size: 0.85rem; color: var(--ca-text-secondary); cursor: pointer; padding: var(--ca-space-1) 0; min-height: 32px; }
+.checkboxLabel:hover { color: var(--ca-text-primary); }
+.checkbox { width: 15px; height: 15px; accent-color: var(--ca-accent); flex-shrink: 0; cursor: pointer; }
+/* Tag Input */
+.tagInputWrapper { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ca-space-1-5); padding: var(--ca-space-2); background: var(--ca-surface); border: 1.5px solid var(--ca-border-strong); border-radius: var(--ca-radius-md); min-height: 44px; transition: border-color 150ms ease, box-shadow 150ms ease; }
+.tagInputWrapper:focus-within { border-color: var(--ca-accent); box-shadow: 0 0 0 3px rgba(var(--ca-accent-rgb), 0.15); }
+.tagList { display: contents; list-style: none; margin: 0; padding: 0; }
+.tag { display: inline-flex; align-items: center; gap: var(--ca-space-1); padding: 2px 8px; background: rgba(var(--ca-accent-rgb), 0.1); color: var(--ca-accent); border-radius: var(--ca-radius-full); font-size: 0.78rem; font-weight: 500; }
+.tagRemove { background: none; border: none; color: currentColor; cursor: pointer; font-size: 1rem; line-height: 1; padding: 0; margin-left: 2px; display: flex; align-items: center; }
+.tagRemove:focus-visible { outline: 2px solid var(--ca-accent); outline-offset: 1px; border-radius: 2px; }
+.tagTextInput { flex: 1 1 120px; min-width: 120px; border: none; background: transparent; outline: none; font-family: var(--ca-font-body); font-size: 0.875rem; color: var(--ca-text-primary); padding: var(--ca-space-1); }
+.tagTextInput::placeholder { color: var(--ca-text-muted); }
+.srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+@media (max-width: 768px) { .grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .input, .select, .tagInputWrapper { transition: none; } }
+

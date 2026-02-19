@@ -1,0 +1,21 @@
+/**
+ * @file CustomersPage.module.css
+ * @path apps/admin/src/pages/Customers/
+ */
+.page { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+.filterBar { display: flex; gap: var(--ca-space-2); padding: var(--ca-space-3) var(--ca-space-6); border-bottom: 1px solid var(--ca-border); background: var(--ca-surface); flex-wrap: wrap; }
+.searchInput { flex: 1; min-width: 200px; padding: var(--ca-space-2) var(--ca-space-3); background: var(--ca-surface-raised); border: 1.5px solid var(--ca-border-strong); border-radius: var(--ca-radius-md); color: var(--ca-text-primary); font-family: var(--ca-font-body); font-size: 0.875rem; outline: none; }
+.searchInput:focus { border-color: var(--ca-accent); box-shadow: 0 0 0 3px rgba(var(--ca-accent-rgb), 0.12); }
+.filterSelect { padding: var(--ca-space-2) var(--ca-space-3); background: var(--ca-surface-raised); border: 1.5px solid var(--ca-border-strong); border-radius: var(--ca-radius-md); color: var(--ca-text-primary); font-family: var(--ca-font-body); font-size: 0.875rem; cursor: pointer; outline: none; }
+.filterSelect:focus { border-color: var(--ca-accent); }
+.tableWrapper { flex: 1; overflow: auto; }
+/* Cell styles */
+.nameCell { display: flex; align-items: center; gap: var(--ca-space-2-5); }
+.avatar { width: 32px; height: 32px; border-radius: 50%; background: rgba(var(--ca-accent-rgb), 0.15); color: var(--ca-accent); display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 700; flex-shrink: 0; }
+.nameInfo { display: flex; flex-direction: column; gap: 1px; }
+.name { font-size: 0.875rem; font-weight: 600; color: var(--ca-text-primary); }
+.email { font-size: 0.75rem; color: var(--ca-text-muted); }
+.mono { font-variant-numeric: tabular-nums; font-size: 0.875rem; }
+.date { font-size: 0.82rem; color: var(--ca-text-muted); }
+.emptyText { margin: 0; color: var(--ca-text-muted); }
+

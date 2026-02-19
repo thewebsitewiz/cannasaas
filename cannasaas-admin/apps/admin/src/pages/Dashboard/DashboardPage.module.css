@@ -1,0 +1,85 @@
+/**
+ * @file DashboardPage.module.css
+ * @path apps/admin/src/pages/Dashboard/
+ *
+ * RESPONSIVE GRID STRATEGY:
+ *   Desktop (≥1280px): 4-col stats, full-width chart, 3-col bottom grid
+ *   Tablet (768–1279px): 2-col stats, full-width chart, 2-col bottom grid
+ *   Mobile (<768px): 1-col everything
+ */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ca-space-6);
+  padding: var(--ca-space-6);
+  flex: 1;
+}
+
+/* ─── Stats Grid ─────────────────────────────────────────────────────────── */
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--ca-space-4);
+}
+
+@media (max-width: 1279px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 639px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── Revenue Chart ──────────────────────────────────────────────────────── */
+
+.revenueChart {
+  /* Full width — just sits in the flex column */
+}
+
+/* ─── Bottom Grid ────────────────────────────────────────────────────────── */
+
+.bottomGrid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr;
+  gap: var(--ca-space-4);
+  align-items: start;
+}
+
+@media (max-width: 1279px) {
+  .bottomGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Top products takes full width on tablet */
+  .bottomGrid > :first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 767px) {
+  .content {
+    padding: var(--ca-space-4);
+    gap: var(--ca-space-4);
+  }
+
+  .bottomGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .bottomGrid > :first-child {
+    grid-column: auto;
+  }
+}
+

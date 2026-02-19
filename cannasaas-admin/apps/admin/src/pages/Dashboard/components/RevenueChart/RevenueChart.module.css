@@ -1,0 +1,192 @@
+/**
+ * @file RevenueChart.module.css
+ * @path apps/admin/src/pages/Dashboard/components/RevenueChart/
+ */
+
+.section {
+  background: var(--ca-surface-elevated);
+  border: 1px solid var(--ca-border);
+  border-radius: var(--ca-radius-xl);
+  padding: var(--ca-space-5);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ca-space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--ca-space-5);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--ca-font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--ca-text-primary);
+}
+
+.totalLabel {
+  margin: var(--ca-space-1) 0 0;
+  font-size: 0.82rem;
+  color: var(--ca-text-muted);
+}
+
+/* ─── Range Selector ─────────────────────────────────────────────────────── */
+
+.rangeGroup {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.rangeButtons {
+  display: flex;
+  gap: 2px;
+  background: var(--ca-surface-raised);
+  border: 1px solid var(--ca-border);
+  border-radius: var(--ca-radius-md);
+  padding: 3px;
+}
+
+.rangeBtn {
+  padding: var(--ca-space-1-5) var(--ca-space-3);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--ca-text-muted);
+  font-family: var(--ca-font-body);
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 130ms ease, color 130ms ease;
+  min-height: 32px;
+  white-space: nowrap;
+}
+
+.rangeBtn:hover {
+  color: var(--ca-text-primary);
+  background: var(--ca-surface-hover);
+}
+
+.rangeBtnActive {
+  background: var(--ca-surface-elevated) !important;
+  color: var(--ca-accent) !important;
+  font-weight: 600;
+  box-shadow: var(--ca-shadow-sm);
+}
+
+.rangeBtn:focus-visible {
+  outline: 2px solid var(--ca-accent);
+  outline-offset: 1px;
+}
+
+/* ─── Chart ──────────────────────────────────────────────────────────────── */
+
+.chartWrapper {
+  min-height: 280px;
+}
+
+.skeleton {
+  height: 280px;
+  background: linear-gradient(90deg, var(--ca-skeleton-base) 25%, var(--ca-skeleton-highlight) 50%, var(--ca-skeleton-base) 75%);
+  background-size: 200% 100%;
+  border-radius: var(--ca-radius-lg);
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ─── Custom Tooltip ─────────────────────────────────────────────────────── */
+
+.tooltip {
+  background: var(--ca-surface-elevated);
+  border: 1px solid var(--ca-border-strong);
+  border-radius: var(--ca-radius-md);
+  padding: var(--ca-space-2-5) var(--ca-space-3);
+  box-shadow: var(--ca-shadow-md);
+}
+
+.tooltipDate {
+  margin: 0 0 var(--ca-space-1);
+  font-size: 0.72rem;
+  color: var(--ca-text-muted);
+}
+
+.tooltipRevenue {
+  margin: 0;
+  font-family: var(--ca-font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--ca-accent);
+}
+
+.tooltipOrders {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  color: var(--ca-text-secondary);
+}
+
+/* ─── Data Table Fallback ────────────────────────────────────────────────── */
+
+.dataTableDetails {
+  margin-top: var(--ca-space-4);
+}
+
+.dataTableSummary {
+  font-size: 0.78rem;
+  color: var(--ca-text-muted);
+  cursor: pointer;
+  padding: var(--ca-space-1) 0;
+}
+
+.dataTableSummary:focus-visible {
+  outline: 2px solid var(--ca-accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.dataTableWrapper {
+  overflow-x: auto;
+  margin-top: var(--ca-space-3);
+}
+
+.dataTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  font-family: var(--ca-font-body);
+}
+
+.dataTable th, .dataTable td {
+  padding: var(--ca-space-2) var(--ca-space-3);
+  text-align: left;
+  border-bottom: 1px solid var(--ca-border);
+}
+
+.dataTable th {
+  font-weight: 600;
+  color: var(--ca-text-muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ─── Screen Reader Utility ──────────────────────────────────────────────── */
+
+.srOnly {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0);
+  white-space: nowrap; border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; background: var(--ca-skeleton-base); }
+}
+

@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+Z#!/usr/bin/env bash
 # ═══════════════════════════════════════════════════════════════════════════════
 # scaffold-api-hooks.sh
 # Scaffolds storefront + admin component files with @cannasaas/api-client hooks

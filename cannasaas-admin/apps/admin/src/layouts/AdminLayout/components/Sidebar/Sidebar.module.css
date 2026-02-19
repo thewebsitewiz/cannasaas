@@ -1,0 +1,307 @@
+/**
+ * @file Sidebar.module.css
+ * @path apps/admin/src/layouts/AdminLayout/components/Sidebar/
+ *
+ * LAYOUT:
+ *   Desktop: Fixed-height, width transitions between 240px (expanded)
+ *   and 64px (collapsed). Width change animates smoothly.
+ *   Mobile: Position:fixed slide-in drawer from the left.
+ *
+ * DESIGN: Deep forest green (#1B3A2D) sidebar, warm ivory text.
+ * Active items highlighted with a left-border + background tint.
+ */
+
+/* ─── Sidebar Shell ──────────────────────────────────────────────────────── */
+
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: var(--ca-z-sidebar);
+
+  width: var(--ca-sidebar-width, 240px);
+  display: flex;
+  flex-direction: column;
+
+  background: var(--ca-sidebar-bg, #1B3A2D);
+  color: var(--ca-sidebar-text, #D4C9B4);
+  border-right: 1px solid rgba(255,255,255,0.06);
+
+  transition: width 220ms cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.sidebarCollapsed {
+  width: var(--ca-sidebar-width-collapsed, 64px);
+}
+
+/* Mobile: off-screen by default, slides in */
+@media (max-width: 1023px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 260ms cubic-bezier(0.4, 0, 0.2, 1);
+    width: 260px;
+  }
+
+  .sidebarMobileOpen {
+    transform: translateX(0);
+  }
+}
+
+/* ─── Mobile Overlay ─────────────────────────────────────────────────────── */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--ca-z-sidebar) - 1);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+
+  @media (min-width: 1024px) { display: none; }
+}
+
+/* ─── Logo Area ──────────────────────────────────────────────────────────── */
+
+.logoArea {
+  display: flex;
+  align-items: center;
+  gap: var(--ca-space-3);
+  padding: var(--ca-space-5) var(--ca-space-4);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+  min-height: var(--ca-topbar-height, 64px);
+}
+
+.logoMark {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  width: 28px;
+  text-align: center;
+}
+
+.logoText {
+  font-family: var(--ca-font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #F5F0E8;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* ─── Nav Content ────────────────────────────────────────────────────────── */
+
+.navContent {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--ca-space-3) 0;
+
+  /* Thin scrollbar to not crowd the collapsed sidebar */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+/* ─── Nav Section ────────────────────────────────────────────────────────── */
+
+.section {
+  padding: 0 0 var(--ca-space-2);
+}
+
+.sectionLabel {
+  margin: 0;
+  padding: var(--ca-space-3) var(--ca-space-4) var(--ca-space-1);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(212, 201, 180, 0.45);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* ─── Nav List ───────────────────────────────────────────────────────────── */
+
+.navList {
+  list-style: none;
+  margin: 0;
+  padding: 0 var(--ca-space-2);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* ─── Nav Link ───────────────────────────────────────────────────────────── */
+
+.navLink {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--ca-space-3);
+  padding: var(--ca-space-2-5) var(--ca-space-3);
+  min-height: 44px;
+  border-radius: var(--ca-radius-md);
+  color: rgba(212, 201, 180, 0.75);
+  text-decoration: none;
+  font-family: var(--ca-font-body);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background 130ms ease, color 130ms ease;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.navLink:hover {
+  background: rgba(255,255,255,0.07);
+  color: #F5F0E8;
+}
+
+/* Active state: left indicator + tint */
+.navLink[aria-current="page"] {
+  background: rgba(var(--ca-accent-rgb, 45,106,79), 0.35);
+  color: #6FCF97;
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 #6FCF97;
+}
+
+.navLink:focus-visible {
+  outline: 2px solid #6FCF97;
+  outline-offset: -2px;
+}
+
+.navLinkCollapsed {
+  justify-content: center;
+  padding: var(--ca-space-2-5);
+}
+
+/* ─── Nav Icon ───────────────────────────────────────────────────────────── */
+
+.navIcon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 18px;
+}
+
+/* ─── Nav Label ──────────────────────────────────────────────────────────── */
+
+.navLabel {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─── Badge ──────────────────────────────────────────────────────────────── */
+
+.badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  background: var(--ca-accent, #2D6A4F);
+  color: #fff;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* ─── Collapsed Tooltip ──────────────────────────────────────────────────── */
+
+.tooltip {
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(15,30,22,0.95);
+  color: #F5F0E8;
+  padding: var(--ca-space-1-5) var(--ca-space-2-5);
+  border-radius: var(--ca-radius-md);
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 150ms ease;
+  z-index: 10;
+  box-shadow: var(--ca-shadow-md);
+}
+
+.navLink:hover .tooltip {
+  opacity: 1;
+}
+
+/* ─── User Area ──────────────────────────────────────────────────────────── */
+
+.userArea {
+  display: flex;
+  align-items: center;
+  gap: var(--ca-space-2-5);
+  padding: var(--ca-space-3) var(--ca-space-4);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+
+.userAreaCollapsed {
+  justify-content: center;
+  padding: var(--ca-space-3);
+}
+
+.userAvatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--ca-accent, #2D6A4F);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.userAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.userName {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #D4C9B4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.userRole {
+  font-size: 0.68rem;
+  color: rgba(212, 201, 180, 0.5);
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+/* ─── Reduced Motion ─────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar { transition: none; }
+  .tooltip { transition: none; }
+}
+
