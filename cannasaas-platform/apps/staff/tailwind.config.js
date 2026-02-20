@@ -1,12 +1,14 @@
-/** @type {import('tailwindcss').Config} */
+/** @type {import("tailwindcss").Config} */
 export default {
-  content: [
-    './index.html',
-    './src/**/*.{ts,tsx,js,jsx}',
-    '../../packages/ui/**/*.{ts,tsx,js,jsx}',
-  ],
+  content: ["./index.html", "./**/*.{js,jsx}"],
   theme: {
-    extend: {},
+    extend: {
+      colors: { brand: { primary: "#15803d", secondary: "#d1fae5", dark: "#14532d" } },
+      fontFamily: { sans: ["Inter Variable", "Inter", "system-ui", "sans-serif"] },
+      spacing: { sidebar: "16rem" },
+      minHeight: { touch: "44px" },
+      minWidth:  { touch: "44px" },
+    },
   },
   plugins: [],
 };
