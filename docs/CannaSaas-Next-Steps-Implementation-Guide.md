@@ -442,7 +442,7 @@ This is the bridge between your frontend and your NestJS API. It contains:
 
 - **client.ts** — Axios instance with base URL, auth interceptor (adds JWT), tenant header interceptor (adds `X-Organization-Id`), and automatic token refresh on 401
 - **endpoints.ts** — Typed endpoint map for every API route
-- **hooks/** — TanStack Query hooks: `useProducts(filters)`, `useProduct(slug)`, `useCreateProduct()` , `useOrders(filters)`, `useCart()`, `useAddToCart()`, `useLogin()`, `useCurrentUser()`, `useAnalytics(range)`, `useProductReviews(id)`
+- **hooks/** — TanStack Query hooks: `useProducts(filters)`, `useProduct(slug)`, `useCreateProduct()`, `useOrders(filters)`, `useCart()`, `useAddToCart()`, `useLogin()`, `useCurrentUser()`, `useAnalytics(range)`, `useProductReviews(id)`
 
 ### Step B.4: packages/ui — Shared Component Library
 
@@ -640,78 +640,82 @@ This mirrors your Sprint 2 backend tenant middleware:
 5. `ThemeProvider` reads `organizationStore` and applies branding (colors, fonts, logo, favicon, page title)
 6. If no organization is found, renders a 404-style "Store not found" page
 
-> ⚠️ **IMPORTANT:** Every API request must include the `organizationId`. The Axios request interceptor should add an `X-Organization-Id` header (or the backend resolves it from the subdomain). This ensures tenant data isolation. ## 10. Phase H: Theming & Dynamic Branding (Week 4)
+> ⚠️ **IMPORTANT:** Every API request must include the `organizationId`. The Axios request interceptor should add an `X-Organization-Id` header (or the backend resolves it from the subdomain). This ensures tenant data isolation.
 
-Each dispensary tenant gets their own branding. The `ThemeProvider` component from the Project Guide handles this by dynamically setting CSS custom properties on the document root element.
+---
 
-### How It Works
+    ## 10. Phase H: Theming & Dynamic Branding (Week 4)
 
-1. Organization branding data is fetched during app initialization (Phase G above)
-2. `ThemeProvider` reads `organization.branding.colors` (primary, secondary, accent)
-3. Each hex color is converted to HSL using the `hexToHSL` utility function
-4. HSL values are set as CSS custom properties: `--primary`, `--secondary`, `--accent`
-5. Tailwind CSS references these variables via the theme config (`hsl(var(--primary))`)
-6. All shadcn/ui components automatically use the tenant's colors with zero component changes
-7. Fonts are applied similarly via `--font-heading` and `--font-body` CSS properties
-8. Custom CSS and favicon are injected for advanced per-tenant customization
-9. Dark/light mode is toggled via the `themeStore`, adding/removing the `dark` class on document root
+    Each dispensary tenant gets their own branding. The `ThemeProvider` component from the Project Guide handles this by dynamically setting CSS custom properties on the document root element.
 
-```typescript
-// components/providers/ThemeProvider.tsx
-import { useEffect } from 'react';
-import { useOrganizationStore } from '@cannasaas/stores';
-import { useThemeStore } from '@cannasaas/stores';
+    ### How It Works
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const organization = useOrganizationStore((state) => state.organization);
-  const mode = useThemeStore((state) => state.mode);
+    1. Organization branding data is fetched during app initialization (Phase G above)
+    2. `ThemeProvider` reads `organization.branding.colors` (primary, secondary, accent)
+    3. Each hex color is converted to HSL using the `hexToHSL` utility function
+    4. HSL values are set as CSS custom properties: `--primary`, `--secondary`, `--accent`
+    5. Tailwind CSS references these variables via the theme config (`hsl(var(--primary))`)
+    6. All shadcn/ui components automatically use the tenant's colors with zero component changes
+    7. Fonts are applied similarly via `--font-heading` and `--font-body` CSS properties
+    8. Custom CSS and favicon are injected for advanced per-tenant customization
+    9. Dark/light mode is toggled via the `themeStore`, adding/removing the `dark` class on document root
 
-  useEffect(() => {
+    ```typescript
+    // components/providers/ThemeProvider.tsx
+    import { useEffect } from 'react';
+    import { useOrganizationStore } from '@cannasaas/stores';
+    import { useThemeStore } from '@cannasaas/stores';
+
+    export function ThemeProvider({ children }: { children: React.ReactNode }) {
+    const organization = useOrganizationStore((state) => state.organization);
+    const mode = useThemeStore((state) => state.mode);
+
+    useEffect(() => {
     if (!organization?.branding) return;
     const { colors, fonts, customCSS } = organization.branding;
 
     if (colors) {
-      const root = document.documentElement;
-      if (colors.primary) root.style.setProperty('--primary', hexToHSL(colors.primary));
-      if (colors.secondary) root.style.setProperty('--secondary', hexToHSL(colors.secondary));
-      if (colors.accent) root.style.setProperty('--accent', hexToHSL(colors.accent));
+    const root = document.documentElement;
+    if (colors.primary) root.style.setProperty('--primary', hexToHSL(colors.primary));
+    if (colors.secondary) root.style.setProperty('--secondary', hexToHSL(colors.secondary));
+    if (colors.accent) root.style.setProperty('--accent', hexToHSL(colors.accent));
     }
 
     if (fonts) {
-      const root = document.documentElement;
-      if (fonts.heading) root.style.setProperty('--font-heading', fonts.heading);
-      if (fonts.body) root.style.setProperty('--font-body', fonts.body);
+    const root = document.documentElement;
+    if (fonts.heading) root.style.setProperty('--font-heading', fonts.heading);
+    if (fonts.body) root.style.setProperty('--font-body', fonts.body);
     }
 
     if (customCSS) {
-      let styleEl = document.getElementById('custom-org-styles');
-      if (!styleEl) {
-        styleEl = document.createElement('style');
-        styleEl.id = 'custom-org-styles';
-        document.head.appendChild(styleEl);
-      }
-      styleEl.innerHTML = customCSS;
+    let styleEl = document.getElementById('custom-org-styles');
+    if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = 'custom-org-styles';
+    document.head.appendChild(styleEl);
+    }
+    styleEl.innerHTML = customCSS;
     }
 
     if (organization.branding.logo?.favicon) {
-      const link = document.querySelector<HTMLLinkElement>("link[rel='icon']");
-      if (link) link.href = organization.branding.logo.favicon;
+    const link = document.querySelector<HTMLLinkElement>("link[rel='icon']");
+    if (link) link.href = organization.branding.logo.favicon;
     }
 
     document.title = organization.name || 'Cannabis Dispensary';
-  }, [organization]);
+    }, [organization]);
 
-  useEffect(() => {
+    useEffect(() => {
     const root = document.documentElement;
     if (mode === 'dark') root.classList.add('dark');
-    else root.classList.remove('dark');
-  }, [mode]);
+    else r                         |oot.classList.remove('dark');
+    }, [mode]);
 
-  return <>{children}</>;
-}
-```
+    return <>{children}</>;
+    }
+    ```
 
-> 💡 **TIP:** Test branding with at least two different tenant configurations during development. Set up `greenleaf.localhost:5173` and `blueleaf.localhost:5173` with different color schemes to verify the dynamic theming works correctly.
+    > 💡 **TIP:** Test branding with at least two different tenant configurations during development. Set up `greenleaf.localhost:5173` and `blueleaf.localhost:5173` with different color schemes to verify the dynamic theming works correctly.
 
 ---
 
