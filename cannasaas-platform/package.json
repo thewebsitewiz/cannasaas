@@ -1,0 +1,21 @@
+{
+  "author": "",
+  "description": "",
+  "devDependencies": {
+    "@axe-core/playwright": "^4.11.1",
+    "@playwright/test": "^1.58.2",
+    "turbo": "^2.8.9"
+  },
+  "keywords": [],
+  "license": "ISC",
+  "main": "index.js",
+  "name": "cannasaas-platform",
+  "packageManager": "pnpm@10.29.3",
+  "scripts": {
+    "test": "turbo run test",
+    "test:coverage": "turbo run test:coverage",
+    "test:e2e": "playwright test",
+    "test:run": "turbo run test:run"
+  },
+  "version": "1.0.0"
+}

@@ -21,11 +21,12 @@
  *   - Arrow keys navigate suggestions; Home/End jump to first/last
  */
 
-import { useState, useRef, useEffect, useId, useCallback } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
+
+import { ROUTES } from '../../routes';
+import { useDebounce } from '../../hooks/useDebounce';
 import { useNavigate } from 'react-router-dom';
 import { useSearchSuggestions } from '@cannasaas/api-client';
-import { useDebounce } from '../../hooks/useDebounce';
-import { ROUTES } from '../../routes';
 
 interface SearchBarProps {
   fullWidth?: boolean;
@@ -64,11 +65,14 @@ export function SearchBar({ fullWidth = false }: SearchBarProps) {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const navigateToSearch = useCallback((q: string) => {
-    if (!q.trim()) return;
-    setIsOpen(false);
-    navigate(`${ROUTES.products}?search=${encodeURIComponent(q.trim())}`);
-  }, [navigate]);
+  const navigateToSearch = useCallback(
+    (q: string) => {
+      if (!q.trim()) return;
+      setIsOpen(false);
+      navigate(`${ROUTES.products}?search=${encodeURIComponent(q.trim())}`);
+    },
+    [navigate],
+  );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!isOpen) {
@@ -191,8 +195,16 @@ export function SearchBar({ fullWidth = false }: SearchBarProps) {
                   : 'text-stone-700 hover:bg-stone-50',
               ].join(' ')}
             >
-              <svg aria-hidden="true" className="w-3.5 h-3.5 text-stone-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+              <svg
+                aria-hidden="true"
+                className="w-3.5 h-3.5 text-stone-400 flex-shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
               </svg>
               {suggestion}
             </li>

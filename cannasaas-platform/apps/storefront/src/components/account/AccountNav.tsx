@@ -14,11 +14,11 @@ import { NavLink } from 'react-router-dom';
 import { ROUTES } from '../../routes';
 
 const NAV_ITEMS = [
-  { href: ROUTES.accountProfile,    label: 'Profile',        icon: '👤' },
-  { href: ROUTES.accountOrders,     label: 'Orders',         icon: '📦' },
-  { href: ROUTES.accountAddresses,  label: 'Addresses',      icon: '📍' },
-  { href: ROUTES.accountLoyalty,    label: 'Loyalty Points', icon: '⭐' },
-  { href: ROUTES.accountPreferences,label: 'Preferences',    icon: '⚙️' },
+  { href: ROUTES.accountProfile, label: 'Profile', icon: '👤' },
+  { href: ROUTES.accountOrders, label: 'Orders', icon: '📦' },
+  { href: ROUTES.accountAddresses, label: 'Addresses', icon: '📍' },
+  { href: ROUTES.accountLoyalty, label: 'Loyalty Points', icon: '⭐' },
+  { href: ROUTES.accountPreferences, label: 'Preferences', icon: '⚙️' },
 ];
 
 export function AccountNav() {
@@ -33,16 +33,18 @@ export function AccountNav() {
             <NavLink
               to={item.href}
               end
-              aria-current={({ isActive }) => isActive ? 'page' : undefined}
-              className={({ isActive }) => [
-                'flex items-center gap-3 px-4 py-3.5',
-                'text-sm font-medium border-l-2 transition-all',
-                isActive
-                  ? 'border-l-[hsl(var(--primary))] bg-[hsl(var(--primary)/0.04)] text-[hsl(var(--primary))]'
-                  : 'border-l-transparent text-stone-600 hover:bg-stone-50 hover:text-stone-900',
-                'focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2',
-                'focus-visible:ring-[hsl(var(--primary))]',
-              ].join(' ')}
+              aria-current={({ isActive }) => (isActive ? 'page' : undefined)}
+              className={({ isActive }) =>
+                [
+                  'flex items-center gap-3 px-4 py-3.5',
+                  'text-sm font-medium border-l-2 transition-all',
+                  isActive
+                    ? 'border-l-[hsl(var(--primary))] bg-[hsl(var(--primary)/0.04)] text-[hsl(var(--primary))]'
+                    : 'border-l-transparent text-stone-600 hover:bg-stone-50 hover:text-stone-900',
+                  'focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2',
+                  'focus-visible:ring-[hsl(var(--primary))]',
+                ].join(' ')
+              }
             >
               <span aria-hidden="true">{item.icon}</span>
               {item.label}

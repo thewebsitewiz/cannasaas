@@ -13,24 +13,26 @@
  */
 
 import { Link } from 'react-router-dom';
-import { useProducts } from '@cannasaas/api-client';
 import { ProductCarousel } from '../product/ProductCarousel';
 import { ROUTES } from '../../routes';
+import { useProducts } from '@cannasaas/api-client';
 
 export function FeaturedSection() {
   const { data, isLoading } = useProducts({ limit: 12 } as any);
 
   return (
-    <section
-      aria-labelledby="featured-heading"
-      className="py-8 lg:py-10"
-    >
+    <section aria-labelledby="featured-heading" className="py-8 lg:py-10">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 id="featured-heading" className="text-2xl font-bold text-stone-900">
+          <h2
+            id="featured-heading"
+            className="text-2xl font-bold text-stone-900"
+          >
             Featured Products
           </h2>
-          <p className="text-sm text-stone-500 mt-0.5">Hand-picked by our budtenders</p>
+          <p className="text-sm text-stone-500 mt-0.5">
+            Hand-picked by our budtenders
+          </p>
         </div>
         <Link
           to={ROUTES.products}

@@ -26,14 +26,15 @@
  *   - Active nav links: aria-current="page"
  */
 
-import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { HeaderLogo } from './HeaderLogo';
-import { SearchBar } from './SearchBar';
+import { useEffect, useRef, useState } from 'react';
+
 import { CartButton } from './CartButton';
-import { UserMenu } from './UserMenu';
+import { HeaderLogo } from './HeaderLogo';
 import { NavMenu } from './NavMenu';
 import { ROUTES } from '../../routes';
+import { SearchBar } from './SearchBar';
+import { UserMenu } from './UserMenu';
 
 export function Header() {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
@@ -56,7 +57,9 @@ export function Header() {
   // Prevent body scroll when mobile nav is open
   useEffect(() => {
     document.body.style.overflow = isMobileNavOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [isMobileNavOpen]);
 
   // Trap focus inside mobile nav drawer when open
@@ -86,14 +89,11 @@ export function Header() {
           'sticky top-0 z-40 w-full',
           'border-b border-stone-200/80',
           'transition-all duration-200',
-          isScrolled
-            ? 'bg-white/90 backdrop-blur-md shadow-sm'
-            : 'bg-white',
+          isScrolled ? 'bg-white/90 backdrop-blur-md shadow-sm' : 'bg-white',
         ].join(' ')}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center h-16 gap-3 lg:gap-6">
-
             {/* Mobile hamburger */}
             <button
               type="button"
@@ -109,8 +109,19 @@ export function Header() {
               ].join(' ')}
             >
               {/* Hamburger icon */}
-              <svg aria-hidden="true" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              <svg
+                aria-hidden="true"
+                className="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
               </svg>
             </button>
 
@@ -124,7 +135,10 @@ export function Header() {
             </Link>
 
             {/* Desktop navigation */}
-            <nav aria-label="Primary navigation" className="hidden lg:flex items-center gap-1 ml-2">
+            <nav
+              aria-label="Primary navigation"
+              className="hidden lg:flex items-center gap-1 ml-2"
+            >
               <NavMenu />
             </nav>
 
@@ -189,8 +203,19 @@ export function Header() {
               'transition-colors',
             ].join(' ')}
           >
-            <svg aria-hidden="true" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            <svg
+              aria-hidden="true"
+              className="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>

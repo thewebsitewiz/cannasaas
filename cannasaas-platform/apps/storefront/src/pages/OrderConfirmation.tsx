@@ -20,10 +20,11 @@
  *   - aria-live region for order status polling
  */
 
-import { useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { useOrder } from '@cannasaas/api-client';
+
 import { ROUTES } from '../routes';
+import { useEffect } from 'react';
+import { useOrder } from '@cannasaas/api-client';
 
 export function OrderConfirmationPage() {
   const { id } = useParams<{ id: string }>();
@@ -40,24 +41,45 @@ export function OrderConfirmationPage() {
         aria-hidden="true"
         className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6"
       >
-        <svg className="w-10 h-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+        <svg
+          className="w-10 h-10 text-green-600"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2.5}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M5 13l4 4L19 7"
+          />
         </svg>
       </div>
 
       <div role="status">
-        <h1 className="text-3xl font-extrabold text-stone-900 mb-3">Order Confirmed!</h1>
+        <h1 className="text-3xl font-extrabold text-stone-900 mb-3">
+          Order Confirmed!
+        </h1>
         <p className="text-stone-500 mb-2">
           Thank you for your order.
           {!isLoading && order?.orderNumber && (
-            <> Your order number is <strong className="text-stone-900 font-mono">#{order.orderNumber}</strong>.</>
+            <>
+              {' '}
+              Your order number is{' '}
+              <strong className="text-stone-900 font-mono">
+                #{order.orderNumber}
+              </strong>
+              .
+            </>
           )}
         </p>
 
         {!isLoading && order && (
           <div className="mt-4 p-4 bg-stone-50 rounded-2xl border border-stone-100 text-left">
             <p className="text-sm font-semibold text-stone-800 mb-1">
-              {order.fulfillmentMethod === 'delivery' ? '🚚 Delivery' : '🏪 In-Store Pickup'}
+              {order.fulfillmentMethod === 'delivery'
+                ? '🚚 Delivery'
+                : '🏪 In-Store Pickup'}
             </p>
             <p className="text-sm text-stone-600">
               {order.fulfillmentMethod === 'delivery'

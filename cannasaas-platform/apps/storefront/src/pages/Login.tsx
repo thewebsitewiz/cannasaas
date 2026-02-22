@@ -15,16 +15,17 @@
  *   - "Show password" toggle (WCAG 1.4.10)
  */
 
-import { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useLogin } from '@cannasaas/api-client';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+
 import { ROUTES } from '../routes';
+import { useForm } from 'react-hook-form';
+import { useLogin } from '@cannasaas/api-client';
+import { useState } from 'react';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 const loginSchema = z.object({
-  email:    z.string().email('Please enter a valid email address'),
+  email: z.string().email('Please enter a valid email address'),
   password: z.string().min(1, 'Password is required'),
 });
 
@@ -59,21 +60,36 @@ export function LoginPage() {
       <div className="w-full max-w-sm">
         {/* Logo / heading */}
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-extrabold text-stone-900 mt-4">Sign In</h1>
+          <h1 className="text-2xl font-extrabold text-stone-900 mt-4">
+            Sign In
+          </h1>
           <p className="text-stone-500 text-sm mt-1">Welcome back</p>
         </div>
 
         <div className="bg-white rounded-2xl border border-stone-100 p-7 shadow-sm">
           {errorMessage && (
-            <div role="alert" className="mb-5 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+            <div
+              role="alert"
+              className="mb-5 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700"
+            >
               {errorMessage}
             </div>
           )}
 
-          <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            noValidate
+            className="space-y-4"
+          >
             <div>
-              <label htmlFor="login-email" className="block text-sm font-medium text-stone-700 mb-1">
-                Email <span aria-hidden="true" className="text-red-500">*</span>
+              <label
+                htmlFor="login-email"
+                className="block text-sm font-medium text-stone-700 mb-1"
+              >
+                Email{' '}
+                <span aria-hidden="true" className="text-red-500">
+                  *
+                </span>
               </label>
               <input
                 id="login-email"
@@ -85,15 +101,28 @@ export function LoginPage() {
                 aria-invalid={errors.email ? 'true' : 'false'}
                 className="w-full px-3 py-2.5 text-sm border border-stone-200 rounded-xl focus:outline-none focus:ring-1 focus:border-[hsl(var(--primary)/0.4)] focus:ring-[hsl(var(--primary)/0.2)]"
               />
-              {errors.email && <p role="alert" className="text-xs text-red-600 mt-1">{errors.email.message}</p>}
+              {errors.email && (
+                <p role="alert" className="text-xs text-red-600 mt-1">
+                  {errors.email.message}
+                </p>
+              )}
             </div>
 
             <div>
               <div className="flex justify-between mb-1">
-                <label htmlFor="login-password" className="text-sm font-medium text-stone-700">
-                  Password <span aria-hidden="true" className="text-red-500">*</span>
+                <label
+                  htmlFor="login-password"
+                  className="text-sm font-medium text-stone-700"
+                >
+                  Password{' '}
+                  <span aria-hidden="true" className="text-red-500">
+                    *
+                  </span>
                 </label>
-                <Link to={ROUTES.forgotPassword} className="text-xs text-[hsl(var(--primary))] hover:underline focus-visible:outline-none focus-visible:underline">
+                <Link
+                  to={ROUTES.forgotPassword}
+                  className="text-xs text-[hsl(var(--primary))] hover:underline focus-visible:outline-none focus-visible:underline"
+                >
                   Forgot password?
                 </Link>
               </div>
@@ -114,11 +143,25 @@ export function LoginPage() {
                   aria-label={showPw ? 'Hide password' : 'Show password'}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 focus-visible:outline-none"
                 >
-                  <svg aria-hidden="true" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    {showPw
-                      ? <><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></>
-                      : <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>
-                    }
+                  <svg
+                    aria-hidden="true"
+                    className="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    {showPw ? (
+                      <>
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                        <line x1="1" y1="1" x2="23" y2="23" />
+                      </>
+                    ) : (
+                      <>
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </>
+                    )}
                   </svg>
                 </button>
               </div>
@@ -136,7 +179,10 @@ export function LoginPage() {
 
           <p className="text-xs text-center text-stone-500 mt-5">
             Don't have an account?{' '}
-            <Link to={ROUTES.register} className="text-[hsl(var(--primary))] font-medium hover:underline focus-visible:outline-none focus-visible:underline">
+            <Link
+              to={ROUTES.register}
+              className="text-[hsl(var(--primary))] font-medium hover:underline focus-visible:outline-none focus-visible:underline"
+            >
               Create one
             </Link>
           </p>

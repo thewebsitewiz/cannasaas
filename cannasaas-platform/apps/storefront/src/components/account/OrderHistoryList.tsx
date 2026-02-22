@@ -16,9 +16,9 @@
  */
 
 import { Link } from 'react-router-dom';
-import { useOrders } from '@cannasaas/api-client';
 import { OrderStatusBadge } from '../order/OrderStatusBadge';
 import { ROUTES } from '../../routes';
+import { useOrders } from '@cannasaas/api-client';
 
 export function OrderHistoryList() {
   const { data, isLoading } = useOrders({});
@@ -28,7 +28,10 @@ export function OrderHistoryList() {
     return (
       <div aria-busy="true" className="space-y-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-16 bg-stone-100 rounded-xl animate-pulse motion-reduce:animate-none" />
+          <div
+            key={i}
+            className="h-16 bg-stone-100 rounded-xl animate-pulse motion-reduce:animate-none"
+          />
         ))}
       </div>
     );
@@ -37,10 +40,19 @@ export function OrderHistoryList() {
   if (orders.length === 0) {
     return (
       <div role="status" className="text-center py-12">
-        <p className="text-3xl mb-3" aria-hidden="true">📦</p>
-        <h3 className="text-base font-semibold text-stone-800 mb-1">No orders yet</h3>
-        <p className="text-sm text-stone-500 mb-4">Your order history will appear here.</p>
-        <Link to={ROUTES.products} className="text-sm text-[hsl(var(--primary))] hover:underline focus-visible:outline-none focus-visible:underline">
+        <p className="text-3xl mb-3" aria-hidden="true">
+          📦
+        </p>
+        <h3 className="text-base font-semibold text-stone-800 mb-1">
+          No orders yet
+        </h3>
+        <p className="text-sm text-stone-500 mb-4">
+          Your order history will appear here.
+        </p>
+        <Link
+          to={ROUTES.products}
+          className="text-sm text-[hsl(var(--primary))] hover:underline focus-visible:outline-none focus-visible:underline"
+        >
           Start Shopping →
         </Link>
       </div>
@@ -53,16 +65,29 @@ export function OrderHistoryList() {
         <caption className="sr-only">Your order history</caption>
         <thead>
           <tr className="text-left text-xs uppercase tracking-wider text-stone-500 border-b border-stone-100">
-            <th scope="col" className="pb-3 pr-4 font-semibold">Order</th>
-            <th scope="col" className="pb-3 pr-4 font-semibold">Date</th>
-            <th scope="col" className="pb-3 pr-4 font-semibold">Status</th>
-            <th scope="col" className="pb-3 pr-4 font-semibold">Items</th>
-            <th scope="col" className="pb-3 font-semibold text-right">Total</th>
+            <th scope="col" className="pb-3 pr-4 font-semibold">
+              Order
+            </th>
+            <th scope="col" className="pb-3 pr-4 font-semibold">
+              Date
+            </th>
+            <th scope="col" className="pb-3 pr-4 font-semibold">
+              Status
+            </th>
+            <th scope="col" className="pb-3 pr-4 font-semibold">
+              Items
+            </th>
+            <th scope="col" className="pb-3 font-semibold text-right">
+              Total
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-stone-50">
           {orders.map((order: any) => (
-            <tr key={order.id} className="hover:bg-stone-50 transition-colors group">
+            <tr
+              key={order.id}
+              className="hover:bg-stone-50 transition-colors group"
+            >
               <td className="py-3.5 pr-4">
                 <Link
                   to={ROUTES.accountOrderDetail(order.id)}
@@ -80,7 +105,9 @@ export function OrderHistoryList() {
               <td className="py-3.5 pr-4 text-stone-600">
                 <time dateTime={order.createdAt}>
                   {new Date(order.createdAt).toLocaleDateString('en-US', {
-                    month: 'short', day: 'numeric', year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
                   })}
                 </time>
               </td>

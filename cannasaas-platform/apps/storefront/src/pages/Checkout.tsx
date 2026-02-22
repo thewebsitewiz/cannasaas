@@ -25,16 +25,17 @@
  *   - Redirect guard: if cart is empty, redirect to /cart
  */
 
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useCreateOrder } from '@cannasaas/api-client';
-import { useCartStore, selectIsCartEmpty } from '@cannasaas/stores';
-import { StepIndicator } from '../components/checkout/StepIndicator';
-import { FulfillmentStep } from '../components/checkout/FulfillmentStep';
-import { PaymentStep } from '../components/checkout/PaymentStep';
-import { OrderReviewStep } from '../components/checkout/OrderReviewStep';
-import { ROUTES } from '../routes';
+import { selectIsCartEmpty, useCartStore } from '@cannasaas/stores';
+import { useEffect, useRef, useState } from 'react';
+
 import type { FulfillmentFormValues } from '../components/checkout/FulfillmentStep';
+import { FulfillmentStep } from '../components/checkout/FulfillmentStep';
+import { OrderReviewStep } from '../components/checkout/OrderReviewStep';
+import { PaymentStep } from '../components/checkout/PaymentStep';
+import { ROUTES } from '../routes';
+import { StepIndicator } from '../components/checkout/StepIndicator';
+import { useCreateOrder } from '@cannasaas/api-client';
+import { useNavigate } from 'react-router-dom';
 
 const CHECKOUT_STEPS = [
   { number: 1, label: 'Delivery' },
@@ -49,7 +50,8 @@ export function CheckoutPage() {
   const formTopRef = useRef<HTMLDivElement>(null);
 
   const [currentStep, setCurrentStep] = useState(1);
-  const [fulfillmentData, setFulfillmentData] = useState<FulfillmentFormValues | null>(null);
+  const [fulfillmentData, setFulfillmentData] =
+    useState<FulfillmentFormValues | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'cash'>('card');
   const [placeOrderError, setPlaceOrderError] = useState<string | null>(null);
 
@@ -84,9 +86,10 @@ export function CheckoutPage() {
     createOrder(
       {
         fulfillmentMethod: fulfillmentData.method,
-        deliveryAddress: fulfillmentData.method === 'delivery' && 'address' in fulfillmentData
-          ? fulfillmentData.address
-          : undefined,
+        deliveryAddress:
+          fulfillmentData.method === 'delivery' && 'address' in fulfillmentData
+            ? fulfillmentData.address
+            : undefined,
         paymentMethod,
       },
       {
@@ -95,7 +98,9 @@ export function CheckoutPage() {
           navigate(ROUTES.orderConfirmation(order.id));
         },
         onError: (err: any) => {
-          const msg = err?.response?.data?.error?.message ?? 'Failed to place order. Please try again.';
+          const msg =
+            err?.response?.data?.error?.message ??
+            'Failed to place order. Please try again.';
           setPlaceOrderError(msg);
           window.scrollTo({ top: 0, behavior: 'smooth' });
         },

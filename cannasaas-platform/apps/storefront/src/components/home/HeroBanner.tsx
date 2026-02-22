@@ -23,8 +23,8 @@
  */
 
 import { Link } from 'react-router-dom';
-import { useOrganizationStore } from '@cannasaas/stores';
 import { ROUTES } from '../../routes';
+import { useOrganizationStore } from '@cannasaas/stores';
 
 interface HeroBannerProps {
   promotionText?: string;
@@ -33,7 +33,10 @@ interface HeroBannerProps {
 export function HeroBanner({ promotionText }: HeroBannerProps) {
   const { dispensary, organization } = useOrganizationStore();
   const name = dispensary?.name ?? organization?.name ?? 'Welcome';
-  const tagline = dispensary?.tagline ?? organization?.tagline ?? 'Premium cannabis, expertly curated';
+  const tagline =
+    dispensary?.tagline ??
+    organization?.tagline ??
+    'Premium cannabis, expertly curated';
 
   return (
     <section
@@ -55,8 +58,14 @@ export function HeroBanner({ promotionText }: HeroBannerProps) {
       />
 
       {/* Decorative circle accents */}
-      <div aria-hidden="true" className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-[hsl(var(--primary,154_40%_30%))] opacity-20 blur-3xl" />
-      <div aria-hidden="true" className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-[hsl(var(--secondary,154_40%_50%))] opacity-10 blur-3xl" />
+      <div
+        aria-hidden="true"
+        className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-[hsl(var(--primary,154_40%_30%))] opacity-20 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-[hsl(var(--secondary,154_40%_50%))] opacity-10 blur-3xl"
+      />
 
       {/* Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
@@ -64,7 +73,9 @@ export function HeroBanner({ promotionText }: HeroBannerProps) {
           {/* Promo badge */}
           {promotionText && (
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-400/20 border border-amber-400/40 mb-6">
-              <span aria-hidden="true" className="text-xs">🔥</span>
+              <span aria-hidden="true" className="text-xs">
+                🔥
+              </span>
               <span className="text-xs font-semibold text-amber-300 tracking-wide">
                 {promotionText}
               </span>
@@ -97,8 +108,19 @@ export function HeroBanner({ promotionText }: HeroBannerProps) {
               ].join(' ')}
             >
               Shop Now
-              <svg aria-hidden="true" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              <svg
+                aria-hidden="true"
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </Link>
 
@@ -125,7 +147,10 @@ export function HeroBanner({ promotionText }: HeroBannerProps) {
               { icon: '🚚', text: 'Same-Day Delivery' },
               { icon: '🔞', text: 'Must be 21+' },
             ].map((item) => (
-              <div key={item.text} className="flex items-center gap-1.5 text-stone-400 text-xs">
+              <div
+                key={item.text}
+                className="flex items-center gap-1.5 text-stone-400 text-xs"
+              >
                 <span aria-hidden="true">{item.icon}</span>
                 <span>{item.text}</span>
               </div>

@@ -24,15 +24,23 @@
  *   - Warning banner: role="alert" (WCAG 4.1.3)
  */
 
+import { selectIsCartEmpty, useCartStore } from '@cannasaas/stores';
+
 import { Link } from 'react-router-dom';
-import { useCartStore, selectIsCartEmpty } from '@cannasaas/stores';
-import { usePurchaseLimit } from '@cannasaas/api-client';
-import { useAuthStore } from '@cannasaas/stores';
 import { PromoCodeInput } from './PromoCodeInput';
 import { ROUTES } from '../../routes';
+import { useAuthStore } from '@cannasaas/stores';
+import { usePurchaseLimit } from '@cannasaas/api-client';
 
 export function CartSummary() {
-  const { subtotal, promoDiscount, tax, deliveryFee, total, exceedsPurchaseLimit } = useCartStore();
+  const {
+    subtotal,
+    promoDiscount,
+    tax,
+    deliveryFee,
+    total,
+    exceedsPurchaseLimit,
+  } = useCartStore();
   const isEmpty = useCartStore(selectIsCartEmpty);
   const { isAuthenticated } = useAuthStore();
   const { data: limits } = usePurchaseLimit();
@@ -54,14 +62,18 @@ export function CartSummary() {
         {promoDiscount > 0 && (
           <div className="flex justify-between text-sm">
             <dt className="text-green-600">Promo Discount</dt>
-            <dd className="font-medium text-green-600">−${promoDiscount.toFixed(2)}</dd>
+            <dd className="font-medium text-green-600">
+              −${promoDiscount.toFixed(2)}
+            </dd>
           </div>
         )}
 
         <div className="flex justify-between text-sm">
           <dt className="text-stone-600">
             Estimated Tax
-            <span className="text-xs text-stone-400 block">Calculated at checkout</span>
+            <span className="text-xs text-stone-400 block">
+              Calculated at checkout
+            </span>
           </dt>
           <dd className="font-medium text-stone-900">
             {tax > 0 ? `$${tax.toFixed(2)}` : '—'}
@@ -112,8 +124,8 @@ export function CartSummary() {
         >
           <p className="font-semibold mb-0.5">⚠ Purchase Limit Exceeded</p>
           <p>
-            Your cart exceeds your state-mandated daily purchase limit.
-            Please reduce quantities to proceed.
+            Your cart exceeds your state-mandated daily purchase limit. Please
+            reduce quantities to proceed.
             {limits?.remaining && (
               <> Remaining today: {limits.remaining.total.toFixed(1)}g</>
             )}

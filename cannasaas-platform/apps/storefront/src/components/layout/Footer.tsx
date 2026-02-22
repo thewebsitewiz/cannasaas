@@ -23,8 +23,8 @@
  */
 
 import { Link } from 'react-router-dom';
-import { useOrganizationStore } from '@cannasaas/stores';
 import { ROUTES } from '../../routes';
+import { useOrganizationStore } from '@cannasaas/stores';
 
 export function Footer() {
   const { organization, dispensary } = useOrganizationStore();
@@ -32,20 +32,25 @@ export function Footer() {
   const name = dispensary?.name ?? organization?.name ?? 'CannaSaas';
 
   return (
-    <footer className="bg-stone-900 text-stone-300 mt-auto" aria-label="Site footer">
+    <footer
+      className="bg-stone-900 text-stone-300 mt-auto"
+      aria-label="Site footer"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
-
           {/* ── Column 1: Brand ─────────────────────────────────────────────── */}
           <div className="sm:col-span-2 lg:col-span-1">
             <p className="text-lg font-bold text-white mb-2">{name}</p>
             <p className="text-sm text-stone-400 leading-relaxed mb-4">
-              Premium cannabis products sourced with care. Serving our community with quality and integrity.
+              Premium cannabis products sourced with care. Serving our community
+              with quality and integrity.
             </p>
             {dispensary?.address && (
               <address className="text-xs text-stone-500 not-italic leading-relaxed">
-                {dispensary.address.street}<br />
-                {dispensary.address.city}, {dispensary.address.state} {dispensary.address.zip}
+                {dispensary.address.street}
+                <br />
+                {dispensary.address.city}, {dispensary.address.state}{' '}
+                {dispensary.address.zip}
               </address>
             )}
           </div>
@@ -57,12 +62,21 @@ export function Footer() {
             </h3>
             <ul className="space-y-2.5">
               {[
-                { label: 'All Products',  href: ROUTES.products },
-                { label: 'Flower',        href: `${ROUTES.products}?category=flower` },
-                { label: 'Edibles',       href: `${ROUTES.products}?category=edibles` },
-                { label: 'Concentrates',  href: `${ROUTES.products}?category=concentrates` },
-                { label: 'Vape',          href: `${ROUTES.products}?category=vape` },
-                { label: 'Accessories',   href: `${ROUTES.products}?category=accessories` },
+                { label: 'All Products', href: ROUTES.products },
+                { label: 'Flower', href: `${ROUTES.products}?category=flower` },
+                {
+                  label: 'Edibles',
+                  href: `${ROUTES.products}?category=edibles`,
+                },
+                {
+                  label: 'Concentrates',
+                  href: `${ROUTES.products}?category=concentrates`,
+                },
+                { label: 'Vape', href: `${ROUTES.products}?category=vape` },
+                {
+                  label: 'Accessories',
+                  href: `${ROUTES.products}?category=accessories`,
+                },
               ].map((link) => (
                 <li key={link.href}>
                   <Link
@@ -83,10 +97,10 @@ export function Footer() {
             </h3>
             <ul className="space-y-2.5">
               {[
-                { label: 'About Us',        href: '/about' },
-                { label: 'FAQ',             href: '/faq' },
-                { label: 'Contact Us',      href: '/contact' },
-                { label: 'Accessibility',   href: '/accessibility' },
+                { label: 'About Us', href: '/about' },
+                { label: 'FAQ', href: '/faq' },
+                { label: 'Contact Us', href: '/contact' },
+                { label: 'Accessibility', href: '/accessibility' },
                 { label: 'Loyalty Program', href: ROUTES.accountLoyalty },
               ].map((link) => (
                 <li key={link.href}>
@@ -108,9 +122,9 @@ export function Footer() {
             </h3>
             <ul className="space-y-2.5 mb-6">
               {[
-                { label: 'Terms of Service',  href: '/terms' },
-                { label: 'Privacy Policy',    href: '/privacy' },
-                { label: 'Cookie Policy',     href: '/cookies' },
+                { label: 'Terms of Service', href: '/terms' },
+                { label: 'Privacy Policy', href: '/privacy' },
+                { label: 'Cookie Policy', href: '/cookies' },
               ].map((link) => (
                 <li key={link.href}>
                   <Link
@@ -147,7 +161,8 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="mt-12 pt-6 border-t border-stone-800 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-stone-500">
-            © {currentYear} {name}. All rights reserved. Licensed cannabis retailer.
+            © {currentYear} {name}. All rights reserved. Licensed cannabis
+            retailer.
           </p>
           <p className="text-xs text-stone-600">
             Powered by{' '}

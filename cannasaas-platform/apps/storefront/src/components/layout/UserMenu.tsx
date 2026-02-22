@@ -18,11 +18,12 @@
  *   - Focus returns to trigger on close (WCAG 2.1.2)
  */
 
-import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+
+import { ROUTES } from '../../routes';
 import { useAuthStore } from '@cannasaas/stores';
 import { useLogout } from '@cannasaas/api-client';
-import { ROUTES } from '../../routes';
 
 export function UserMenu() {
   const { user, isAuthenticated } = useAuthStore();
@@ -36,8 +37,10 @@ export function UserMenu() {
   useEffect(() => {
     if (!isOpen) return;
     const handler = (e: MouseEvent) => {
-      if (!menuRef.current?.contains(e.target as Node) &&
-          !triggerRef.current?.contains(e.target as Node)) {
+      if (
+        !menuRef.current?.contains(e.target as Node) &&
+        !triggerRef.current?.contains(e.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -135,9 +138,9 @@ export function UserMenu() {
 
           {/* Menu items */}
           {[
-            { label: 'My Account',    href: ROUTES.account },
-            { label: 'My Orders',     href: ROUTES.accountOrders },
-            { label: 'Loyalty Points',href: ROUTES.accountLoyalty },
+            { label: 'My Account', href: ROUTES.account },
+            { label: 'My Orders', href: ROUTES.accountOrders },
+            { label: 'Loyalty Points', href: ROUTES.accountLoyalty },
           ].map((item) => (
             <Link
               key={item.href}
@@ -155,7 +158,11 @@ export function UserMenu() {
             </Link>
           ))}
 
-          <div role="separator" aria-hidden="true" className="border-t border-stone-100 my-1" />
+          <div
+            role="separator"
+            aria-hidden="true"
+            className="border-t border-stone-100 my-1"
+          />
 
           <button
             role="menuitem"

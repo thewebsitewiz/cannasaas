@@ -19,9 +19,10 @@
  *   - CSS-only, no JS timer needed (driven by the key prop trick)
  */
 
-import { useRef, useEffect } from 'react';
+import { selectCartItemCount, useCartStore } from '@cannasaas/stores';
+import { useEffect, useRef } from 'react';
+
 import { Link } from 'react-router-dom';
-import { useCartStore, selectCartItemCount } from '@cannasaas/stores';
 import { ROUTES } from '../../routes';
 
 export function CartButton() {
@@ -73,7 +74,7 @@ export function CartButton() {
       {/* Item count badge */}
       {itemCount > 0 && (
         <span
-          key={badgeKey.current}  // Re-trigger animation on count increase
+          key={badgeKey.current} // Re-trigger animation on count increase
           aria-hidden="true"
           className={[
             'absolute -top-1 -right-1',

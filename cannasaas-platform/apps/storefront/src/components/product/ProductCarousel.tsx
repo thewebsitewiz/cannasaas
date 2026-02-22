@@ -19,10 +19,11 @@
  *   - Reduced motion: disables scroll animation (WCAG 2.3.3)
  */
 
-import { useRef, useState, useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+import type { Product } from '../../types/storefront';
 import { ProductCard } from './ProductCard';
 import { SkeletonCard } from '../ui/SkeletonCard';
-import type { Product } from '../../types/storefront';
 
 interface ProductCarouselProps {
   title: string;
@@ -67,7 +68,9 @@ export function ProductCarousel({
   const scroll = (dir: 'left' | 'right') => {
     const el = scrollRef.current;
     if (!el) return;
-    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const prefersReduced = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches;
     el.scrollBy({
       left: dir === 'left' ? -SCROLL_AMOUNT : SCROLL_AMOUNT,
       behavior: prefersReduced ? 'instant' : 'smooth',
@@ -83,7 +86,11 @@ export function ProductCarousel({
         <h2 id={sectionId} className="text-xl font-bold text-stone-900">
           {title}
         </h2>
-        <div className="flex items-center gap-1" role="group" aria-label="Carousel navigation">
+        <div
+          className="flex items-center gap-1"
+          role="group"
+          aria-label="Carousel navigation"
+        >
           <button
             type="button"
             onClick={() => scroll('left')}
@@ -101,8 +108,19 @@ export function ProductCarousel({
               'focus-visible:ring-[hsl(var(--primary))]',
             ].join(' ')}
           >
-            <svg aria-hidden="true" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            <svg
+              aria-hidden="true"
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
           </button>
           <button
@@ -122,8 +140,19 @@ export function ProductCarousel({
               'focus-visible:ring-[hsl(var(--primary))]',
             ].join(' ')}
           >
-            <svg aria-hidden="true" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            <svg
+              aria-hidden="true"
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </button>
         </div>
@@ -146,16 +175,25 @@ export function ProductCarousel({
       >
         {isLoading
           ? Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} role="listitem" className="flex-shrink-0 w-[272px]" style={{ scrollSnapAlign: 'start' }}>
+              <div
+                key={i}
+                role="listitem"
+                className="flex-shrink-0 w-[272px]"
+                style={{ scrollSnapAlign: 'start' }}
+              >
                 <SkeletonCard />
               </div>
             ))
           : products?.map((product, i) => (
-              <div key={product.id} role="listitem" className="flex-shrink-0 w-[272px]" style={{ scrollSnapAlign: 'start' }}>
+              <div
+                key={product.id}
+                role="listitem"
+                className="flex-shrink-0 w-[272px]"
+                style={{ scrollSnapAlign: 'start' }}
+              >
                 <ProductCard product={product} priority={i < 3} />
               </div>
-            ))
-        }
+            ))}
       </div>
     </section>
   );

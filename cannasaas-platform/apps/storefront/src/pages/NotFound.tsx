@@ -7,8 +7,8 @@
  */
 
 import { Link } from 'react-router-dom';
-import { useEffect } from 'react';
 import { ROUTES } from '../routes';
+import { useEffect } from 'react';
 
 export function NotFoundPage() {
   useEffect(() => {
@@ -17,7 +17,9 @@ export function NotFoundPage() {
 
   return (
     <div className="max-w-xl mx-auto px-4 py-24 text-center">
-      <p className="text-6xl font-black text-stone-200 mb-4" aria-hidden="true">404</p>
+      <p className="text-6xl font-black text-stone-200 mb-4" aria-hidden="true">
+        404
+      </p>
       <h1 className="text-2xl font-bold text-stone-900 mb-2">Page Not Found</h1>
       <p className="text-stone-500 mb-8">
         The page you're looking for doesn't exist or has been moved.

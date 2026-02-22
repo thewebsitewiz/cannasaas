@@ -22,9 +22,9 @@
  *   - Result count announced via aria-live region
  */
 
+import type { Product } from '../../types/storefront';
 import { ProductCard } from '../product/ProductCard';
 import { SkeletonCard } from '../ui/SkeletonCard';
-import type { Product } from '../../types/storefront';
 
 interface ProductGridProps {
   products: Product[] | undefined;
@@ -43,7 +43,8 @@ export function ProductGrid({
   onRetry,
   onClearFilters,
 }: ProductGridProps) {
-  const gridClasses = 'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-5';
+  const gridClasses =
+    'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-5';
 
   // ── Loading state ───────────────────────────────────────────────────────────
   if (isLoading) {
@@ -64,9 +65,15 @@ export function ProductGrid({
   if (isError) {
     return (
       <div role="alert" className="text-center py-16">
-        <p className="text-3xl mb-3" aria-hidden="true">⚠️</p>
-        <h3 className="text-lg font-semibold text-stone-800 mb-2">Something went wrong</h3>
-        <p className="text-sm text-stone-500 mb-5">We couldn't load the products. Please try again.</p>
+        <p className="text-3xl mb-3" aria-hidden="true">
+          ⚠️
+        </p>
+        <h3 className="text-lg font-semibold text-stone-800 mb-2">
+          Something went wrong
+        </h3>
+        <p className="text-sm text-stone-500 mb-5">
+          We couldn't load the products. Please try again.
+        </p>
         {onRetry && (
           <button
             type="button"
@@ -84,9 +91,15 @@ export function ProductGrid({
   if (!products || products.length === 0) {
     return (
       <div role="status" className="text-center py-16">
-        <p className="text-4xl mb-4" aria-hidden="true">🌿</p>
-        <h3 className="text-lg font-semibold text-stone-800 mb-2">No products found</h3>
-        <p className="text-sm text-stone-500 mb-5">Try adjusting your filters or search term.</p>
+        <p className="text-4xl mb-4" aria-hidden="true">
+          🌿
+        </p>
+        <h3 className="text-lg font-semibold text-stone-800 mb-2">
+          No products found
+        </h3>
+        <p className="text-sm text-stone-500 mb-5">
+          Try adjusting your filters or search term.
+        </p>
         {onClearFilters && (
           <button
             type="button"

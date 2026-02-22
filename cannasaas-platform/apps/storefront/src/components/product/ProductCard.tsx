@@ -41,14 +41,15 @@
  *   - Memoized with shallow prop comparison
  */
 
-import { memo, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { ProductBadge, formatStrainType } from './ProductBadge';
+import { memo, useCallback } from 'react';
+
+import type { Product } from '../../types/storefront';
+import { ROUTES } from '../../routes';
 import { useAddToCart } from '@cannasaas/api-client';
 import { useCartStore } from '@cannasaas/stores';
 import { usePurchaseLimitCheck } from '../../hooks/usePurchaseLimitCheck';
-import { ProductBadge, formatStrainType } from './ProductBadge';
-import { ROUTES } from '../../routes';
-import type { Product } from '../../types/storefront';
 
 interface ProductCardProps {
   product: Product;
@@ -67,17 +68,20 @@ export const ProductCard = memo(function ProductCard({
   const addItemOptimistic = useCartStore((s) => s.addItem);
 
   // Get the cheapest variant for display price
-  const cheapestVariant = product.variants
-    ?.sort((a, b) => a.price - b.price)[0];
+  const cheapestVariant = product.variants?.sort(
+    (a, b) => a.price - b.price,
+  )[0];
 
-  const isOutOfStock = !cheapestVariant || product.variants.every((v) => v.quantity === 0);
+  const isOutOfStock =
+    !cheapestVariant || product.variants.every((v) => v.quantity === 0);
 
   const { canAdd, warning } = usePurchaseLimitCheck({
     variantWeightGrams: cheapestVariant?.weight ?? 0,
     quantity: 1,
   });
 
-  const primaryImage = product.images?.find((i) => i.isPrimary) ?? product.images?.[0];
+  const primaryImage =
+    product.images?.find((i) => i.isPrimary) ?? product.images?.[0];
 
   const handleAddToCart = useCallback(
     (e: React.MouseEvent) => {
@@ -106,13 +110,21 @@ export const ProductCard = memo(function ProductCard({
           onError: () => {
             // Rollback optimistic update on failure
             useCartStore.getState().removeItem(
-              `${product.id}-${cheapestVariant.id}-` // will match the composite ID
+              `${product.id}-${cheapestVariant.id}-`, // will match the composite ID
             );
           },
         },
       );
     },
-    [product, cheapestVariant, isOutOfStock, canAdd, addItemOptimistic, addToCartServer, primaryImage],
+    [
+      product,
+      cheapestVariant,
+      isOutOfStock,
+      canAdd,
+      addItemOptimistic,
+      addToCartServer,
+      primaryImage,
+    ],
   );
 
   const isCarousel = variant === 'carousel';
@@ -160,7 +172,10 @@ export const ProductCard = memo(function ProductCard({
 
         {/* Badge overlays on image */}
         {!isCarousel && (
-          <div className="absolute top-2 left-2 flex flex-wrap gap-1" aria-hidden="true">
+          <div
+            className="absolute top-2 left-2 flex flex-wrap gap-1"
+            aria-hidden="true"
+          >
             {product.isNew && <ProductBadge variant="new" label="New" />}
             {product.onSale && <ProductBadge variant="sale" label="Sale" />}
           </div>
@@ -168,14 +183,24 @@ export const ProductCard = memo(function ProductCard({
       </Link>
 
       {/* ── Content ───────────────────────────────────────────────────────── */}
-      <div className={['flex flex-col min-w-0', isCarousel ? 'flex-1 p-3' : 'p-4 flex-1'].join(' ')}>
+      <div
+        className={[
+          'flex flex-col min-w-0',
+          isCarousel ? 'flex-1 p-3' : 'p-4 flex-1',
+        ].join(' ')}
+      >
         {/* Category */}
         <p className="text-[10px] font-semibold uppercase tracking-wider text-stone-400 mb-1">
           {product.category}
         </p>
 
         {/* Product name — primary tab stop for keyboard navigation */}
-        <h3 className={['font-semibold text-stone-900 leading-snug mb-1', isCarousel ? 'text-sm line-clamp-1' : 'text-sm line-clamp-2'].join(' ')}>
+        <h3
+          className={[
+            'font-semibold text-stone-900 leading-snug mb-1',
+            isCarousel ? 'text-sm line-clamp-1' : 'text-sm line-clamp-2',
+          ].join(' ')}
+        >
           <Link
             to={ROUTES.productDetail(product.id)}
             className={[
@@ -191,20 +216,34 @@ export const ProductCard = memo(function ProductCard({
 
         {/* Brand */}
         {product.brand && !isCarousel && (
-          <p className="text-[11px] text-stone-400 mb-2 truncate">{product.brand}</p>
+          <p className="text-[11px] text-stone-400 mb-2 truncate">
+            {product.brand}
+          </p>
         )}
 
         {/* Attribute badges */}
         {!isCarousel && (
-          <div className="flex flex-wrap gap-1 mb-3" aria-label="Product attributes">
+          <div
+            className="flex flex-wrap gap-1 mb-3"
+            aria-label="Product attributes"
+          >
             {product.thcContent != null && (
-              <ProductBadge variant="thc" label={`THC ${product.thcContent}%`} />
+              <ProductBadge
+                variant="thc"
+                label={`THC ${product.thcContent}%`}
+              />
             )}
             {product.cbdContent != null && product.cbdContent > 0 && (
-              <ProductBadge variant="cbd" label={`CBD ${product.cbdContent}%`} />
+              <ProductBadge
+                variant="cbd"
+                label={`CBD ${product.cbdContent}%`}
+              />
             )}
             {product.strainType && (
-              <ProductBadge variant="strain" label={formatStrainType(product.strainType)} />
+              <ProductBadge
+                variant="strain"
+                label={formatStrainType(product.strainType)}
+              />
             )}
           </div>
         )}
@@ -213,7 +252,14 @@ export const ProductCard = memo(function ProductCard({
         <div className="flex-1" />
 
         {/* Price + Add to Cart */}
-        <div className={['flex items-center', isCarousel ? 'flex-col items-start gap-1.5 mt-auto' : 'justify-between'].join(' ')}>
+        <div
+          className={[
+            'flex items-center',
+            isCarousel
+              ? 'flex-col items-start gap-1.5 mt-auto'
+              : 'justify-between',
+          ].join(' ')}
+        >
           <div>
             <p className="text-xs text-stone-400 leading-none mb-0.5">
               {product.variants?.length > 1 ? 'From' : ''}
@@ -249,7 +295,9 @@ export const ProductCard = memo(function ProductCard({
             ].join(' ')}
           >
             {isPending ? (
-              <span aria-live="polite" className="sr-only">Adding to cart…</span>
+              <span aria-live="polite" className="sr-only">
+                Adding to cart…
+              </span>
             ) : null}
             {isOutOfStock ? 'Sold Out' : isPending ? '…' : '+ Add'}
           </button>
