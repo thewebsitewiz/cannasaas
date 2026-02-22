@@ -1,142 +1,125 @@
 /**
- * ═══════════════════════════════════════════════════════════════════
- * CannaSaas Storefront — Cart Page (Orchestrator)
- * ═══════════════════════════════════════════════════════════════════
+ * @file Cart.tsx
+ * @app apps/storefront
  *
- * File:   apps/storefront/src/pages/Cart.tsx
- * Route:  /cart
+ * Shopping cart page.
  *
- * Thin orchestrator that reads from the Zustand cartStore, computes
- * derived totals via useCartTotals, and composes the cart UI.
+ * URL: /cart
  *
- * ─── DATA FLOW ─────────────────────────────────────────────────
+ * Layout:
+ *   Desktop (lg+): two-column
+ *     Left (flex-1):  heading + CartLineItem list
+ *     Right (w-80):   CartSummary (sticky)
+ *   Mobile (<lg):     heading + items + CartSummary stacked
  *
- *   cartStore (Zustand)
- *       │
- *       ├─→ items[]                → CartItemList → CartItemRow[]
- *       ├─→ appliedCoupon          → CouponInput (applied state)
- *       └─→ dispensaryTaxRate      ─┐
- *                                    ├→ useCartTotals() ─→ OrderSummary
- *       items + coupon + taxRate  ──┘                   ─→ PurchaseLimitWarning
+ * Data sources:
+ *   - cartStore (Zustand): items, totals (client-state, instant)
+ *   - useCart() (TanStack Query): server-sync for accurate tax/limits
  *
- *   User actions flow back INTO the store:
- *     CartItemRow  → updateQuantity(), removeItem()
- *     CouponInput  → setCoupon(), removeCoupon()
- *     CartItemList → clearCart()
- *     OrderSummary → navigate('/checkout')
+ * On mount, the cart is synced with the server if the user is authenticated.
+ * Guests see local cart — they'll be prompted to log in at checkout.
  *
- * ─── LAYOUT ────────────────────────────────────────────────────
- *
- *   Desktop (lg+):
- *   ┌─────────────────────────────────────────────────────┐
- *   │ 🛒 Your Cart                                        │
- *   ├─────────────────────────────┬───────────────────────┤
- *   │                             │                       │
- *   │  [Purchase Limit Warning]   │  Order Summary        │
- *   │                             │  (sticky sidebar)     │
- *   │  Product  Price  Qty  Total │                       │
- *   │  ────────────────────────── │  Subtotal     $135.00 │
- *   │  [CartItemRow]              │  Discount     −$27.00 │
- *   │  [CartItemRow]              │  Est. Tax      $14.04 │
- *   │  [CartItemRow]              │  ──────────────────── │
- *   │                             │  Total        $122.04 │
- *   │                             │                       │
- *   │                             │  [Promo code?]        │
- *   │                             │  [Proceed to Checkout]│
- *   │                             │  or Continue Shopping  │
- *   └─────────────────────────────┴───────────────────────┘
- *
- *   Mobile (< lg): Same content stacked vertically.
- *   Warning → Items → Summary. Summary has the CTA.
- *
- * ─── EMPTY STATE ───────────────────────────────────────────────
- *
- *   When items.length === 0, the entire page is replaced by
- *   EmptyCart (illustration + "Browse Products" CTA).
- *
- * ─── SEO / HEAD ────────────────────────────────────────────────
- *
- *   <title>Cart — {dispensary.name}</title>
- *   noindex: cart pages should not be indexed.
- *
- * ─── FILE MAP ──────────────────────────────────────────────────
- *
- *   hooks/
- *     useCartTotals.ts              Derived totals + purchase limits
- *
- *   components/cart/
- *     EmptyCart.tsx                  Empty state illustration + CTA
- *     CartItemRow.tsx               Single line item with qty adjuster
- *     CartItemList.tsx              Sectioned list + Clear All + headers
- *     CouponInput.tsx               Expandable promo code (Sprint 5 API)
- *     PurchaseLimitWarning.tsx      Compliance alert banner
- *     OrderSummary.tsx              Totals sidebar + Checkout CTA
+ * Accessibility:
+ *   - <h1> "Shopping Cart" with live item count (WCAG 2.4.2)
+ *   - Items list: <ul> with role="list" (WCAG 1.3.1)
+ *   - Empty state: role="status" (WCAG 4.1.3)
+ *   - "Continue Shopping" link (WCAG 2.4.6)
+ *   - All totals use aria-live for real-time updates
  */
 
-import { useCartStore } from '@cannasaas/stores';
-import { useCartTotals } from '@/hooks/useCartTotals';
-import {
-  EmptyCart,
-  CartItemList,
-  PurchaseLimitWarning,
-  OrderSummary,
-} from '@/components/cart';
+import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useCartStore, selectCartItemCount } from '@cannasaas/stores';
+import { useCart } from '@cannasaas/api-client';
+import { CartLineItem } from '../components/cart/CartLineItem';
+import { CartSummary } from '../components/cart/CartSummary';
+import { CartEmpty } from '../components/cart/CartEmpty';
+import { ROUTES } from '../routes';
 
-export default function Cart() {
-  const items = useCartStore((s) => s.items);
-  const totals = useCartTotals();
+export function CartPage() {
+  const { items, syncFromServer } = useCartStore();
+  const itemCount = useCartStore(selectCartItemCount);
 
-  // ── Empty State ──
-  if (items.length === 0) {
-    return (
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        <EmptyCart />
-      </main>
-    );
-  }
+  // Sync with server cart on mount — gets accurate tax, purchase limits
+  const { data: serverCart } = useCart();
+
+  useEffect(() => {
+    if (serverCart) {
+      syncFromServer(serverCart);
+    }
+  }, [serverCart, syncFromServer]);
+
+  // Update page title
+  useEffect(() => {
+    document.title = itemCount > 0
+      ? `Cart (${itemCount}) | CannaSaas`
+      : 'Cart | CannaSaas';
+  }, [itemCount]);
 
   return (
-    <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-      {/* ══════════════════════════════════════════════════
-          PAGE HEADER
-          ══════════════════════════════════════════════════ */}
-      <div className="flex items-center justify-between mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-          Your Cart
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Page header */}
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-2xl font-bold text-stone-900">
+          Shopping Cart
+          {itemCount > 0 && (
+            <span
+              aria-live="polite"
+              className="ml-2 text-base font-normal text-stone-500"
+            >
+              ({itemCount} {itemCount === 1 ? 'item' : 'items'})
+            </span>
+          )}
         </h1>
-        <span className="text-sm text-muted-foreground">
-          {totals.itemCount} item{totals.itemCount !== 1 ? 's' : ''}
-        </span>
+
+        {items.length > 0 && (
+          <Link
+            to={ROUTES.products}
+            className="text-sm text-[hsl(var(--primary))] hover:underline focus-visible:outline-none focus-visible:underline"
+          >
+            ← Continue Shopping
+          </Link>
+        )}
       </div>
 
-      {/* ══════════════════════════════════════════════════
-          PURCHASE LIMIT WARNING
-          ══════════════════════════════════════════════════
-          Full-width above the 2-column layout so it's
-          impossible to miss. Uses role="alert" for
-          immediate screen reader announcement. */}
-      {totals.exceedsLimits && (
-        <div className="mb-6">
-          <PurchaseLimitWarning warnings={totals.limitWarnings} />
+      {items.length === 0 ? (
+        <CartEmpty />
+      ) : (
+        <div className="flex flex-col lg:flex-row gap-8 items-start">
+          {/* ── Cart items list ──────────────────────────────────────────────── */}
+          <div className="flex-1 min-w-0 space-y-3">
+            <ul role="list" aria-label="Cart items">
+              {items.map((item) => (
+                <li key={item.id}>
+                  <CartLineItem item={item} />
+                </li>
+              ))}
+            </ul>
+
+            {/* Cart actions */}
+            <div className="flex items-center justify-between pt-2">
+              <Link
+                to={ROUTES.products}
+                className={[
+                  'flex items-center gap-1.5 text-sm text-stone-600',
+                  'hover:text-stone-900 transition-colors',
+                  'focus-visible:outline-none focus-visible:underline',
+                ].join(' ')}
+              >
+                <svg aria-hidden="true" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+                Continue Shopping
+              </Link>
+            </div>
+          </div>
+
+          {/* ── Order summary sidebar ────────────────────────────────────────── */}
+          <div className="w-full lg:w-80 xl:w-96 lg:sticky lg:top-24">
+            <CartSummary />
+          </div>
         </div>
       )}
-
-      {/* ══════════════════════════════════════════════════
-          MAIN LAYOUT — Items + Summary
-          ══════════════════════════════════════════════════
-          2-column on lg+: items left (flex-1), summary
-          right (w-[360px] sticky). Stacked on mobile. */}
-      <div className="flex flex-col lg:flex-row gap-8 lg:gap-10">
-        {/* ── Left: Cart Items ── */}
-        <div className="flex-1 min-w-0">
-          <CartItemList />
-        </div>
-
-        {/* ── Right: Order Summary (sticky on lg+) ── */}
-        <div className="w-full lg:w-[360px] flex-shrink-0">
-          <OrderSummary totals={totals} />
-        </div>
-      </div>
-    </main>
+    </div>
   );
 }

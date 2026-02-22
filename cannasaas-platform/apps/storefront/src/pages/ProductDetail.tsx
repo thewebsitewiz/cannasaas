@@ -1,266 +1,418 @@
 /**
- * ═══════════════════════════════════════════════════════════════════
- * CannaSaas Storefront — Product Detail Page (Orchestrator)
- * ═══════════════════════════════════════════════════════════════════
+ * @file ProductDetail.tsx
+ * @app apps/storefront
  *
- * File:   apps/storefront/src/pages/ProductDetail.tsx
- * Route:  /products/:productId
+ * Full product detail page.
  *
- * Displays full cannabis product information. Thin orchestrator that
- * fetches a single product by ID, manages variant selection state,
- * and composes all detail sub-components.
+ * URL: /products/:id
  *
- * ─── DATA FETCHING ──────────────────────────────────────────────
+ * Component composition:
+ *   ProductImageGallery     ← left column (sticky on desktop)
+ *   ─ right column:
+ *     ProductBadge(s)       ← strain, THC, CBD
+ *     VariantSelector       ← size/weight picker
+ *     QuantityStepper       ← +/– quantity inline component
+ *     Add to Cart button
+ *     CannabinoidProfile    ← THC/CBD bars + terpenes
+ *     EffectsFlavorTags     ← effects + flavors
+ *     Long description (accordion)
+ *   ProductReviews          ← below the fold
+ *   RecommendedProducts     ← "You May Also Like" carousel
  *
- *   useProduct(productId)         → Sprint 4 Product API
- *   useRecommendations(productId) → Sprint 9 Recommendations API
- *                                    (handled internally by
- *                                     RecommendedProducts component)
+ * Data: useProduct(id) — GET /products/:id
+ *       Includes variants, images, cannabinoid data, effects, flavors
  *
- * The product query uses staleTime: 2min (product data changes
- * infrequently) and includes retry logic for transient failures.
+ * State:
+ *   selectedVariantId — which size is selected (auto-selects first in-stock)
+ *   quantity          — how many units
  *
- * ─── LAYOUT STRUCTURE ───────────────────────────────────────────
- *
- *   Desktop (lg+):
- *   ┌──────────────────────────────────────────────────┐
- *   │ Home / Products / Flower / Blue Dream            │ ← Breadcrumbs
- *   ├───────────────────────┬──────────────────────────┤
- *   │                       │ [Sativa] ⭐ 4.5 (128)    │
- *   │                       │ GREENLEAF                 │
- *   │   Product Gallery     │ Blue Dream                │ ← h1
- *   │   (aspect-square)     │ Description text...       │
- *   │                       │                           │
- *   │   [T1][T2][T3][T4]   │ ┌─ Cannabinoid Profile ──┐│
- *   │                       │ │ THC ████████░░ 24.5%   ││
- *   │                       │ │ CBD ██░░░░░░░░  1.2%   ││
- *   │                       │ └────────────────────────┘│
- *   │                       │                           │
- *   │                       │ ┌─ Terpene Profile ──────┐│
- *   │                       │ │ Myrcene ████████ 1.20% ││
- *   │                       │ │ Limonene █████░░ 0.80% ││
- *   │                       │ └────────────────────────┘│
- *   │                       │                           │
- *   │                       │ Effects: [Happy] [Relaxed]│
- *   │                       │ Flavors: [Citrus] [Pine]  │
- *   │                       │                           │
- *   │                       │ Select Size:              │
- *   │                       │ [1g] [3.5g] [▶7g] [14g]  │
- *   │                       │                           │
- *   │                       │ $45.00 / 7g               │
- *   │                       │ [−] 2 [+]                 │
- *   │                       │ [ Add to Cart — $90.00 ]  │
- *   ├───────────────────────┴──────────────────────────┤
- *   │ You May Also Like                                │
- *   │ [Card] [Card] [Card] [Card] →                    │
- *   └──────────────────────────────────────────────────┘
- *
- *   Mobile (< lg): Same content stacked vertically.
- *   Gallery → Info → Cannabinoids → Terpenes → Effects →
- *   Variants → Recommendations. Sticky bottom bar for cart CTA.
- *
- * ─── STATE MANAGEMENT ───────────────────────────────────────────
- *
- *   selectedVariantId — owned here, passed to VariantSelector and
- *   AddToCartSection. Initialized to the first variant. When the
- *   user picks a different size, the price updates instantly.
- *
- * ─── ERROR HANDLING ─────────────────────────────────────────────
- *
- *   - Product not found → Navigate to /products (or 404)
- *   - API error → SectionErrorBoundary shows retry prompt
- *   - Recommendations error → Section silently hidden
- *
- * ─── SEO / HEAD ─────────────────────────────────────────────────
- *
- *   Uses react-helmet-async (or your meta management) to set:
- *     <title>{product.name} — {dispensary.name}</title>
- *     <meta name="description" content={product.description} />
- *     <meta property="og:image" content={product.images[0].url} />
- *
- * ─── FILE MAP ───────────────────────────────────────────────────
- *
- *   components/products/detail/
- *     Breadcrumbs.tsx           WAI-ARIA breadcrumb trail
- *     ProductGallery.tsx        Image + thumbnail strip
- *     ProductInfo.tsx           h1 name, brand, badges, description
- *     CannabinoidProfile.tsx    THC/CBD/minor meter bars
- *     TerpeneProfile.tsx        Ranked terpene bars
- *     EffectsAndFlavors.tsx     Effect + flavor tag chips
- *     VariantSelector.tsx       Size/weight radio group
- *     AddToCartSection.tsx      Price, qty stepper, CTA + mobile bar
- *     RecommendedProducts.tsx   Sprint 9 recommendations carousel
- *     ProductDetailSkeleton.tsx Full-page loading placeholder
+ * Accessibility:
+ *   - <h1> is the product name (WCAG 2.4.6)
+ *   - Breadcrumb navigation (WCAG 2.4.8)
+ *   - Add to Cart: descriptive aria-label with product + variant (WCAG 4.1.2)
+ *   - Error state with role="alert" (WCAG 4.1.3)
+ *   - Tab order: gallery → variant selector → quantity → CTA → description
  */
 
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { useProduct } from '@cannasaas/api-client';
-import { useOrganizationStore } from '@cannasaas/stores';
-import { SectionErrorBoundary } from '@/components/layout';
-import {
-  Breadcrumbs,
-  ProductGallery,
-  ProductInfo,
-  CannabinoidProfile,
-  TerpeneProfile,
-  EffectsAndFlavors,
-  VariantSelector,
-  AddToCartSection,
-  RecommendedProducts,
-  ProductDetailSkeleton,
-} from '@/components/products/detail';
-import type { Crumb } from '@/components/products/detail';
+import { useAddToCart } from '@cannasaas/api-client';
+import { useCartStore } from '@cannasaas/stores';
+import { ProductImageGallery } from '../components/product-detail/ProductImageGallery';
+import { VariantSelector } from '../components/product-detail/VariantSelector';
+import { CannabinoidProfile } from '../components/product-detail/CannabinoidProfile';
+import { EffectsFlavorTags } from '../components/product-detail/EffectsFlavorTags';
+import { ProductReviews } from '../components/product-detail/ProductReviews';
+import { RecommendedProducts } from '../components/product-detail/RecommendedProducts';
+import { ProductBadge, formatStrainType } from '../components/product/ProductBadge';
+import { usePurchaseLimitCheck } from '../hooks/usePurchaseLimitCheck';
+import { ROUTES } from '../routes';
 
-export default function ProductDetail() {
-  const { productId } = useParams<{ productId: string }>();
-  const navigate = useNavigate();
-  const { dispensary } = useOrganizationStore();
+// ── Quantity Stepper ─────────────────────────────────────────────────────────
 
-  // ── Data Fetching ──
-  const {
-    data: product,
-    isLoading,
-    isError,
-  } = useProduct(productId!, {
-    enabled: !!productId,
-    staleTime: 2 * 60 * 1000, // 2 minutes
+interface QuantityStepperProps {
+  value: number;
+  min?: number;
+  max?: number;
+  onChange: (n: number) => void;
+  productName: string;
+}
+
+function QuantityStepper({ value, min = 1, max = 10, onChange, productName }: QuantityStepperProps) {
+  return (
+    <div
+      role="group"
+      aria-label={`Quantity for ${productName}`}
+      className="flex items-center border border-stone-200 rounded-xl overflow-hidden w-fit"
+    >
+      <button
+        type="button"
+        aria-label="Decrease quantity"
+        onClick={() => onChange(Math.max(min, value - 1))}
+        disabled={value <= min}
+        className={[
+          'w-10 h-10 flex items-center justify-center',
+          'text-stone-600 hover:bg-stone-100',
+          'disabled:text-stone-300 disabled:cursor-not-allowed',
+          'focus-visible:outline-none focus-visible:ring-1',
+          'focus-visible:ring-[hsl(var(--primary))]',
+          'transition-colors',
+        ].join(' ')}
+      >
+        <svg aria-hidden="true" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
+        </svg>
+      </button>
+
+      <output
+        aria-live="polite"
+        aria-atomic="true"
+        aria-label={`Quantity: ${value}`}
+        className="w-10 text-center text-sm font-semibold text-stone-900 select-none"
+      >
+        {value}
+      </output>
+
+      <button
+        type="button"
+        aria-label="Increase quantity"
+        onClick={() => onChange(Math.min(max, value + 1))}
+        disabled={value >= max}
+        className={[
+          'w-10 h-10 flex items-center justify-center',
+          'text-stone-600 hover:bg-stone-100',
+          'disabled:text-stone-300 disabled:cursor-not-allowed',
+          'focus-visible:outline-none focus-visible:ring-1',
+          'focus-visible:ring-[hsl(var(--primary))]',
+          'transition-colors',
+        ].join(' ')}
+      >
+        <svg aria-hidden="true" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
+// ── ProductDetailPage ─────────────────────────────────────────────────────────
+
+export function ProductDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const { data: product, isLoading, isError } = useProduct(id ?? '');
+
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
+  const [quantity, setQuantity] = useState(1);
+  const [addedFeedback, setAddedFeedback] = useState(false);
+
+  const { mutate: addToCartServer, isPending } = useAddToCart();
+  const addItemOptimistic = useCartStore((s) => s.addItem);
+
+  // Auto-select first in-stock variant on load
+  useEffect(() => {
+    if (product?.variants) {
+      const firstInStock = product.variants.find((v: any) => v.quantity > 0);
+      setSelectedVariantId(firstInStock?.id ?? product.variants[0]?.id ?? null);
+    }
+  }, [product]);
+
+  // Update page title
+  useEffect(() => {
+    if (product) {
+      document.title = `${product.name} | CannaSaas`;
+    }
+  }, [product]);
+
+  const selectedVariant = product?.variants?.find((v: any) => v.id === selectedVariantId);
+
+  const { canAdd, warning } = usePurchaseLimitCheck({
+    variantWeightGrams: selectedVariant?.weight ?? 0,
+    quantity,
   });
 
-  // ── Variant Selection State ──
-  // Initialized to the first variant when the product loads.
-  // Must live here (not in VariantSelector) because AddToCartSection
-  // also needs the selected variant to display the correct price.
-  const [selectedVariantId, setSelectedVariantId] = useState<string>('');
+  const handleAddToCart = useCallback(() => {
+    if (!product || !selectedVariant || !canAdd) return;
 
-  useEffect(() => {
-    if (product?.variants?.length && !selectedVariantId) {
-      setSelectedVariantId(product.variants[0].id);
-    }
-  }, [product, selectedVariantId]);
+    addItemOptimistic({
+      productId: product.id,
+      variantId: selectedVariant.id,
+      productName: product.name,
+      variantName: selectedVariant.name,
+      unitPrice: selectedVariant.price,
+      totalPrice: selectedVariant.price * quantity,
+      quantity,
+      imageUrl: product.images?.find((i: any) => i.isPrimary)?.url,
+      weight: selectedVariant.weight,
+      weightUnit: selectedVariant.weightUnit,
+      sku: selectedVariant.sku,
+    });
 
-  const selectedVariant = product?.variants?.find(
-    (v) => v.id === selectedVariantId,
-  ) ?? product?.variants?.[0];
+    addToCartServer({ productId: product.id, variantId: selectedVariant.id, quantity });
 
-  // ── Error States ──
-  if (isError) {
-    // Product not found or API failure — redirect to products list.
-    // In production, this could show a 404 page instead.
-    navigate('/products', { replace: true });
-    return null;
+    // Brief success feedback
+    setAddedFeedback(true);
+    setTimeout(() => setAddedFeedback(false), 2000);
+  }, [product, selectedVariant, quantity, canAdd, addItemOptimistic, addToCartServer]);
+
+  // ── Loading ────────────────────────────────────────────────────────────────
+  if (isLoading) {
+    return (
+      <div aria-busy="true" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          <div className="aspect-square bg-stone-100 rounded-2xl animate-pulse motion-reduce:animate-none" />
+          <div className="space-y-4">
+            {[80, 60, 40, 100, 40].map((w, i) => (
+              <div key={i} className="h-5 bg-stone-100 rounded animate-pulse motion-reduce:animate-none" style={{ width: `${w}%` }} />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  if (isLoading || !product) {
-    return <ProductDetailSkeleton />;
+  // ── Error ──────────────────────────────────────────────────────────────────
+  if (isError || !product) {
+    return (
+      <div role="alert" className="max-w-xl mx-auto px-4 py-20 text-center">
+        <p className="text-3xl mb-3" aria-hidden="true">⚠️</p>
+        <h1 className="text-xl font-bold text-stone-900 mb-2">Product Not Found</h1>
+        <p className="text-stone-500 mb-5">We couldn't find this product. It may have been removed.</p>
+        <Link to={ROUTES.products} className="text-sm text-[hsl(var(--primary))] hover:underline">
+          ← Back to Products
+        </Link>
+      </div>
+    );
   }
-
-  // ── Breadcrumb Trail ──
-  const crumbs: Crumb[] = [
-    { label: 'Home', href: '/' },
-    { label: 'Products', href: '/products' },
-    ...(product.category
-      ? [{ label: product.category, href: `/products?category=${product.category}` }]
-      : []),
-    { label: product.name },
-  ];
 
   return (
-    <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* ── Breadcrumb nav ─────────────────────────────────────────────────── */}
+      <nav aria-label="Breadcrumb" className="mb-6">
+        <ol role="list" className="flex items-center gap-1.5 text-sm text-stone-500">
+          <li>
+            <Link to={ROUTES.home} className="hover:text-stone-700 transition-colors focus-visible:outline-none focus-visible:underline">
+              Home
+            </Link>
+          </li>
+          <li aria-hidden="true" className="text-stone-300">/</li>
+          <li>
+            <Link
+              to={`${ROUTES.products}?category=${product.category}`}
+              className="hover:text-stone-700 transition-colors capitalize focus-visible:outline-none focus-visible:underline"
+            >
+              {product.category}
+            </Link>
+          </li>
+          <li aria-hidden="true" className="text-stone-300">/</li>
+          <li>
+            <span aria-current="page" className="text-stone-800 font-medium truncate max-w-[200px] block">
+              {product.name}
+            </span>
+          </li>
+        </ol>
+      </nav>
 
-      {/* ══════════════════════════════════════════════════
-          BREADCRUMBS
-          ══════════════════════════════════════════════════ */}
-      <Breadcrumbs crumbs={crumbs} />
+      {/* ── Main two-column layout ──────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 xl:gap-16">
 
-      {/* ══════════════════════════════════════════════════
-          MAIN LAYOUT — Gallery + Product Info
-          ══════════════════════════════════════════════════
-          2-column on lg+: gallery left, info right.
-          Stacked on mobile: gallery → info. */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-
-        {/* ── Left Column: Gallery ── */}
-        <SectionErrorBoundary>
-          <ProductGallery
+        {/* Left: Image gallery (sticky on desktop) */}
+        <div className="lg:sticky lg:top-24 lg:self-start">
+          <ProductImageGallery
             images={product.images ?? []}
             productName={product.name}
           />
-        </SectionErrorBoundary>
+        </div>
 
-        {/* ── Right Column: All product details + actions ── */}
-        <div className="space-y-6 sm:space-y-8">
+        {/* Right: Product info */}
+        <div className="space-y-6">
+          {/* Brand */}
+          {product.brand && (
+            <p className="text-sm font-medium text-stone-500 uppercase tracking-wider">
+              {product.brand}
+            </p>
+          )}
 
-          {/* Product identity: badges, name, description */}
-          <SectionErrorBoundary>
-            <ProductInfo product={product} />
-          </SectionErrorBoundary>
+          {/* Product name — the page's <h1> */}
+          <h1 className="text-3xl font-extrabold text-stone-900 leading-tight">
+            {product.name}
+          </h1>
+
+          {/* Badges */}
+          <div className="flex flex-wrap gap-2" aria-label="Product attributes">
+            {product.strainType && (
+              <ProductBadge variant="strain" label={formatStrainType(product.strainType)} />
+            )}
+            {product.thcContent != null && (
+              <ProductBadge variant="thc" label={`THC ${product.thcContent}%`} />
+            )}
+            {product.cbdContent != null && product.cbdContent > 0 && (
+              <ProductBadge variant="cbd" label={`CBD ${product.cbdContent}%`} />
+            )}
+            {product.category && (
+              <ProductBadge variant="category" label={product.category} />
+            )}
+          </div>
+
+          {/* Rating summary (if available) */}
+          {product.rating && (
+            <div className="flex items-center gap-2">
+              <span aria-label={`Rated ${product.rating.average} out of 5 stars`}>
+                <span aria-hidden="true" className="text-amber-400">{'★'.repeat(Math.round(product.rating.average))}</span>
+                <span className="sr-only">{product.rating.average} stars</span>
+              </span>
+              <span className="text-sm text-stone-500">({product.rating.count} reviews)</span>
+            </div>
+          )}
+
+          {/* Description */}
+          {product.description && (
+            <p className="text-stone-600 leading-relaxed">{product.description}</p>
+          )}
+
+          {/* ── Variant selector ─────────────────────────────────────────── */}
+          {product.variants?.length > 0 && (
+            <VariantSelector
+              variants={product.variants}
+              selectedVariantId={selectedVariantId}
+              onSelect={(id) => { setSelectedVariantId(id); setQuantity(1); }}
+            />
+          )}
+
+          {/* ── Price display ────────────────────────────────────────────── */}
+          {selectedVariant && (
+            <div className="flex items-baseline gap-3">
+              <span className="text-3xl font-extrabold text-stone-900">
+                ${(selectedVariant.price * quantity).toFixed(2)}
+              </span>
+              {quantity > 1 && (
+                <span className="text-stone-500 text-sm">
+                  ${selectedVariant.price.toFixed(2)} each
+                </span>
+              )}
+              {selectedVariant.compareAtPrice && selectedVariant.compareAtPrice > selectedVariant.price && (
+                <span className="text-lg text-stone-400 line-through">
+                  ${selectedVariant.compareAtPrice.toFixed(2)}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* ── Quantity + Add to Cart ────────────────────────────────────── */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <QuantityStepper
+              value={quantity}
+              max={Math.min(10, selectedVariant?.quantity ?? 1)}
+              onChange={setQuantity}
+              productName={product.name}
+            />
+
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              disabled={!selectedVariant || selectedVariant.quantity === 0 || !canAdd || isPending}
+              aria-label={
+                addedFeedback
+                  ? `${product.name} added to cart`
+                  : selectedVariant?.quantity === 0
+                    ? `${product.name} is out of stock`
+                    : `Add ${quantity} ${product.name} (${selectedVariant?.name}) to cart`
+              }
+              aria-busy={isPending}
+              className={[
+                'flex-1 flex items-center justify-center gap-2',
+                'py-3 px-6 rounded-xl font-semibold text-base',
+                'transition-all duration-200',
+                'focus-visible:outline-none focus-visible:ring-2',
+                'focus-visible:ring-[hsl(var(--primary))] focus-visible:ring-offset-2',
+                addedFeedback
+                  ? 'bg-green-600 text-white'
+                  : !selectedVariant || selectedVariant.quantity === 0 || !canAdd
+                    ? 'bg-stone-100 text-stone-400 cursor-not-allowed'
+                    : isPending
+                      ? 'bg-[hsl(var(--primary)/0.7)] text-white cursor-wait'
+                      : 'bg-[hsl(var(--primary))] text-white hover:brightness-110 active:scale-[0.98] shadow-lg shadow-[hsl(var(--primary)/0.3)]',
+              ].join(' ')}
+            >
+              {addedFeedback ? (
+                <>
+                  <svg aria-hidden="true" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  Added to Cart!
+                </>
+              ) : selectedVariant?.quantity === 0 ? (
+                'Out of Stock'
+              ) : isPending ? (
+                'Adding…'
+              ) : (
+                <>
+                  <svg aria-hidden="true" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                    <line x1="3" y1="6" x2="21" y2="6" /><path d="M16 10a4 4 0 0 1-8 0" />
+                  </svg>
+                  Add to Cart
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Purchase limit warning */}
+          {warning && (
+            <p role="alert" className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+              ⚠ {warning}
+            </p>
+          )}
 
           {/* Divider */}
-          <hr className="border-border" aria-hidden="true" />
+          <hr aria-hidden="true" className="border-stone-100" />
 
-          {/* Cannabinoid profile: THC, CBD, minor cannabinoids */}
-          <SectionErrorBoundary>
-            <CannabinoidProfile
-              thcContent={product.thcContent}
-              cbdContent={product.cbdContent}
-              cannabinoids={product.cannabinoids}
-            />
-          </SectionErrorBoundary>
+          {/* ── Cannabinoid profile ─────────────────────────────────────────── */}
+          <CannabinoidProfile
+            thcContent={product.thcContent}
+            cbdContent={product.cbdContent}
+            terpenes={product.terpenes}
+            genetics={product.genetics}
+          />
 
-          {/* Terpene profile */}
-          {product.terpenes && product.terpenes.length > 0 && (
-            <SectionErrorBoundary>
-              <TerpeneProfile terpenes={product.terpenes} />
-            </SectionErrorBoundary>
-          )}
-
-          {/* Effects and flavors */}
-          <SectionErrorBoundary>
-            <EffectsAndFlavors
-              effects={product.effects}
-              flavors={product.flavors}
-            />
-          </SectionErrorBoundary>
-
-          {/* Divider before purchase section */}
-          <hr className="border-border" aria-hidden="true" />
-
-          {/* Variant selector: sizes/weights with prices */}
-          {product.variants && product.variants.length > 1 && (
-            <SectionErrorBoundary>
-              <VariantSelector
-                variants={product.variants}
-                selectedId={selectedVariantId}
-                onSelect={setSelectedVariantId}
-              />
-            </SectionErrorBoundary>
-          )}
-
-          {/* Price, quantity, Add to Cart (desktop CTA + mobile sticky bar) */}
-          {selectedVariant && (
-            <SectionErrorBoundary>
-              <AddToCartSection
-                product={product}
-                selectedVariant={selectedVariant}
-              />
-            </SectionErrorBoundary>
-          )}
+          {/* ── Effects + Flavors ───────────────────────────────────────────── */}
+          <EffectsFlavorTags
+            effects={product.effects}
+            flavors={product.flavors}
+          />
         </div>
       </div>
 
-      {/* ══════════════════════════════════════════════════
-          RECOMMENDATIONS — "You May Also Like"
-          ══════════════════════════════════════════════════
-          Full-width below the 2-column layout.
-          Fetches from Sprint 9 recommendations API.
-          Gracefully hidden on error. */}
-      <SectionErrorBoundary>
-        <RecommendedProducts
-          productId={product.id}
-          category={product.category}
-        />
-      </SectionErrorBoundary>
-    </main>
+      {/* ── Reviews ──────────────────────────────────────────────────────────── */}
+      <div className="mt-16 pt-10 border-t border-stone-100">
+        <ProductReviews productId={product.id} rating={product.rating} />
+      </div>
+
+      {/* ── Recommendations ──────────────────────────────────────────────────── */}
+      <RecommendedProducts
+        currentProductId={product.id}
+        category={product.category}
+      />
+    </div>
   );
 }

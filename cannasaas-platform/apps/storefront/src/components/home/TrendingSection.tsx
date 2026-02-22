@@ -1,63 +1,25 @@
 /**
- * ═══════════════════════════════════════════════════════════════════
- * TrendingSection — Lazy-Loaded
- * ═══════════════════════════════════════════════════════════════════
+ * @file TrendingSection.tsx
+ * @app apps/storefront
  *
- * File: apps/storefront/src/components/home/TrendingSection.tsx
- *
- * Below-the-fold optimization: the TanStack Query API call is
- * deferred via the `enabled` flag until the IntersectionObserver
- * fires. rootMargin "200px" means the observer triggers 200px
- * before the section enters the viewport, so data usually arrives
- * by the time the user scrolls there.
- *
- * This saves one API round-trip and its payload on initial page
- * load for users who never scroll past "Featured Products".
- *
- * Once visible, TanStack Query caches the result — scrolling away
- * and back doesn't re-fetch (cache is still warm).
+ * "New Arrivals" carousel section.
+ * Calls useProducts({ sort: 'newest', limit: 10 })
  */
 
 import { useProducts } from '@cannasaas/api-client';
-import { useIntersectionObserver } from '@/hooks';
-import { Section } from '@/components/layout/Section';
-import { ProductCarousel } from './ProductCarousel';
-import { ProductCarouselSkeleton } from './ProductCarouselSkeleton';
-import { TrendingProductCard } from './cards/TrendingProductCard';
+import { ProductCarousel } from '../product/ProductCarousel';
 
 export function TrendingSection() {
-  const [ref, isVisible] = useIntersectionObserver({ rootMargin: '200px' });
-
-  // `enabled: isVisible` prevents the query from firing until the
-  // IntersectionObserver triggers.
-  const { data: trending = [], isLoading } = useProducts({
-    sort: 'trending',
-    limit: 10,
-    enabled: isVisible,
-  });
+  const { data, isLoading } = useProducts({ sort: 'newest', limit: 10 } as any);
 
   return (
-    <div ref={ref}>
-      <Section>
-        <Section.Content>
-          <Section.Header
-            title="Trending Now 🔥"
-            subtitle="Most popular this week"
-            viewAllHref="/products?sort=trending"
-          />
-          {isLoading ? (
-            <ProductCarouselSkeleton />
-          ) : (
-            <ProductCarousel
-              products={trending}
-              ariaLabel="Trending products"
-              renderItem={(product, index) => (
-                <TrendingProductCard product={product} rank={index + 1} />
-              )}
-            />
-          )}
-        </Section.Content>
-      </Section>
-    </div>
+    <section aria-labelledby="new-arrivals-heading" className="py-8 lg:py-10">
+      <ProductCarousel
+        title="New Arrivals"
+        products={data?.data}
+        isLoading={isLoading}
+        ariaLabel="New arrivals carousel"
+      />
+    </section>
   );
 }

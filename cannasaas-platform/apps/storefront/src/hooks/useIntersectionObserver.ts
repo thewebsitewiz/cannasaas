@@ -1,74 +1,54 @@
 /**
- * ═══════════════════════════════════════════════════════════════════
- * useIntersectionObserver
- * ═══════════════════════════════════════════════════════════════════
+ * @file useIntersectionObserver.ts
+ * @app apps/storefront
  *
- * File: apps/storefront/src/hooks/useIntersectionObserver.ts
+ * Scroll-triggered visibility hook using the IntersectionObserver API.
  *
- * Returns a [ref callback, isVisible] tuple. Once the observed element
- * enters the viewport, `isVisible` flips to `true` and the observer
- * disconnects (fire-once pattern to avoid wasted CPU).
+ * Used by:
+ *   - HomePage sections (fade-in-on-scroll entrance animations)
+ *   - ProductCard (lazy-load images only when visible)
+ *   - Infinite scroll trigger (fire useInfiniteProducts.fetchNextPage)
  *
- * Uses a ref callback (not useRef) so it works correctly with elements
- * that mount conditionally or inside Suspense boundaries — the observer
- * attaches whenever the DOM node appears, not just on initial mount.
- *
- * Used for:
- *   1. Scroll-triggered entrance animations on <Section> components
- *   2. Lazy-loading the TrendingSection API call (defer fetch until
- *      the section enters the viewport)
- *
- * @param options.threshold  — fraction of element visible to trigger
- *                              (default 0.1 = 10%)
- * @param options.rootMargin — expand/shrink the trigger zone, e.g.
- *                              "200px" fires 200px before element
- *                              is visible (useful for prefetching)
- *
- * @returns [ref, isVisible]
- *   - ref: callback ref to attach to the target element
- *   - isVisible: boolean, true once the element has been seen
+ * @param options - IntersectionObserver options (threshold, rootMargin)
+ * @returns [ref, isIntersecting] — attach ref to target element
  *
  * @example
- *   const [ref, isVisible] = useIntersectionObserver({ rootMargin: '200px' });
- *   return <div ref={ref}>{isVisible && <ExpensiveComponent />}</div>;
+ *   const [ref, isVisible] = useIntersectionObserver({ threshold: 0.1 });
+ *   <section ref={ref} className={isVisible ? 'opacity-100' : 'opacity-0'}>
  */
 
-import { useCallback, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export function useIntersectionObserver(
   options: IntersectionObserverInit = {},
-): [ref: (node: HTMLElement | null) => void, isVisible: boolean] {
-  const [isVisible, setIsVisible] = useState(false);
-  const observerRef = useRef<IntersectionObserver | null>(null);
+): [React.RefObject<HTMLElement>, boolean] {
+  const ref = useRef<HTMLElement>(null);
+  const [isIntersecting, setIsIntersecting] = useState(false);
 
-  // Destructure with defaults so the callback's dependency array
-  // references stable primitives, not the options object itself.
-  const { threshold = 0.1, rootMargin = '0px' } = options;
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
 
-  const setRef = useCallback(
-    (node: HTMLElement | null) => {
-      // Teardown: disconnect previous observer before creating a new one.
-      // This handles cases where the observed element remounts (e.g.,
-      // React strict mode double-mount in development).
-      if (observerRef.current) observerRef.current.disconnect();
-      if (!node) return;
+    // Graceful degradation — not supported in all environments (e.g. SSR)
+    if (!('IntersectionObserver' in window)) {
+      setIsIntersecting(true);
+      return;
+    }
 
-      observerRef.current = new IntersectionObserver(
-        ([entry]) => {
-          if (entry.isIntersecting) {
-            setIsVisible(true);
-            // Fire-once: stop observing after first intersection.
-            // The element has been "seen" — no need to keep watching.
-            observerRef.current?.disconnect();
-          }
-        },
-        { threshold, rootMargin },
-      );
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsIntersecting(entry.isIntersecting);
+        // Once visible, stop observing (for one-shot reveal animations)
+        if (entry.isIntersecting && options.threshold !== 0) {
+          observer.unobserve(el);
+        }
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -40px 0px', ...options },
+    );
 
-      observerRef.current.observe(node);
-    },
-    [threshold, rootMargin],
-  );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [options.threshold, options.rootMargin]);
 
-  return [setRef, isVisible];
+  return [ref, isIntersecting];
 }

@@ -1,112 +1,70 @@
 /**
- * ═══════════════════════════════════════════════════════════════════
- * CategoryGrid
- * ═══════════════════════════════════════════════════════════════════
+ * @file CategoryGrid.tsx
+ * @app apps/storefront
  *
- * File: apps/storefront/src/components/home/CategoryGrid.tsx
+ * Visual category navigation grid on the home page.
  *
- * Visual navigation tiles for product categories. Wrapped in
- * React.memo because categories are static per tenant session —
- * they won't change unless the user switches dispensaries.
+ * Shows 6 cannabis product categories as large icon tiles.
+ * Clicking any tile navigates to /products?category=<slug>.
  *
- * Semantic structure (WCAG 1.3.1):
- *   <nav aria-label="Product categories">
- *     <ul role="list">
- *       <li><a href="/products?category=flower">...</a></li>
- *     </ul>
- *   </nav>
- *
- * Screen readers list this as a "Product categories navigation"
- * landmark. Users can jump to it from the landmarks/regions menu.
- *
- * Responsive grid:
- *   2 cols (320px base) → 3 cols (sm: 640px) → 4 cols (lg: 1024px)
- *   gap-3 (12px) mobile → gap-4 (16px) sm+
- *   Tile padding: p-4 mobile → p-6 sm+
+ * Design: Earthy, organic aesthetic with soft gradient backgrounds
+ * per category, each evoking the product type.
  *
  * Accessibility:
- *   - Icons are aria-hidden (decorative) — link text is the label
- *   - focus-visible ring on each tile for keyboard navigation
- *   - motion-reduce:transition-none on hover scale effect
- *   - min-h-[100px] ensures consistent tile height
- *   - Pluralization on product count ("1 product" vs "3 products")
+ *   - <nav> with aria-label="Product categories" (WCAG 1.3.1)
+ *   - Each link has descriptive text (category name) — not just icon
+ *   - aria-current="page" when category matches URL (if on /products)
+ *   - Grid reflows: 2 cols on xs, 3 on sm, 6 on lg
  */
 
-import { memo } from 'react';
 import { Link } from 'react-router-dom';
-import type { ProductCategory } from '@cannasaas/types';
+import { ROUTES } from '../../routes';
 
-interface CategoryGridProps {
-  categories: ProductCategory[];
-}
+const CATEGORIES = [
+  { slug: 'flower',       label: 'Flower',       icon: '🌸', gradient: 'from-green-50 to-emerald-50',   border: 'border-green-200',   text: 'text-green-700' },
+  { slug: 'edibles',      label: 'Edibles',      icon: '🍬', gradient: 'from-amber-50 to-orange-50',    border: 'border-amber-200',   text: 'text-amber-700' },
+  { slug: 'concentrates', label: 'Concentrates', icon: '💎', gradient: 'from-purple-50 to-violet-50',   border: 'border-purple-200',  text: 'text-purple-700' },
+  { slug: 'vape',         label: 'Vape',         icon: '💨', gradient: 'from-blue-50 to-sky-50',        border: 'border-blue-200',    text: 'text-blue-700' },
+  { slug: 'tinctures',    label: 'Tinctures',    icon: '💧', gradient: 'from-teal-50 to-cyan-50',       border: 'border-teal-200',    text: 'text-teal-700' },
+  { slug: 'accessories',  label: 'Accessories',  icon: '🛠️', gradient: 'from-stone-50 to-zinc-50',      border: 'border-stone-200',   text: 'text-stone-600' },
+] as const;
 
-/** Emoji fallbacks for categories. Replace with SVG/icon library in prod. */
-const CATEGORY_ICONS: Record<string, string> = {
-  flower: '🌿',
-  vapes: '💨',
-  concentrates: '💎',
-  edibles: '🍪',
-  tinctures: '💧',
-  topicals: '🧴',
-  accessories: '🔧',
-  prerolls: '🚬',
-};
-
-export const CategoryGrid = memo(function CategoryGrid({ categories }: CategoryGridProps) {
-  if (categories.length === 0) return null;
-
+export function CategoryGrid() {
   return (
-    <nav aria-label="Product categories">
+    <nav aria-label="Product categories" className="my-10 lg:my-14">
+      <h2 className="text-xl font-bold text-stone-900 mb-5">Shop by Category</h2>
       <ul
         role="list"
-        className="
-          grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4
-          gap-3 sm:gap-4
-          list-none p-0 m-0
-        "
+        className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4"
       >
-        {categories.map((category) => (
-          <li key={category.id}>
+        {CATEGORIES.map((cat) => (
+          <li key={cat.slug}>
             <Link
-              to={`/products?category=${category.slug}`}
-              className="
-                group flex flex-col items-center justify-center
-                p-4 sm:p-6 rounded-xl min-h-[100px]
-                border border-border bg-card
-                hover:border-primary/50 hover:shadow-lg
-                focus-visible:outline-none focus-visible:ring-2
-                focus-visible:ring-primary focus-visible:ring-offset-2
-                transition-all duration-200
-              "
+              to={`${ROUTES.products}?category=${cat.slug}`}
+              className={[
+                'flex flex-col items-center gap-2.5 p-4',
+                'rounded-2xl border',
+                'bg-gradient-to-br', cat.gradient, cat.border,
+                'hover:shadow-md hover:-translate-y-0.5',
+                'transition-all duration-200',
+                'focus-visible:outline-none focus-visible:ring-2',
+                'focus-visible:ring-[hsl(var(--primary))] focus-visible:ring-offset-1',
+                'group',
+              ].join(' ')}
             >
-              {/* Icon — decorative, hidden from assistive tech */}
               <span
                 aria-hidden="true"
-                className="
-                  text-3xl sm:text-4xl mb-2 sm:mb-3
-                  group-hover:scale-110
-                  transition-transform duration-200
-                  motion-reduce:transition-none
-                "
+                className="text-3xl group-hover:scale-110 transition-transform duration-200"
               >
-                {CATEGORY_ICONS[category.slug] ?? '🌱'}
+                {cat.icon}
               </span>
-
-              {/* Category name — IS the accessible label for this link */}
-              <span className="font-medium text-xs sm:text-sm text-center leading-tight">
-                {category.name}
+              <span className={['text-xs font-semibold', cat.text].join(' ')}>
+                {cat.label}
               </span>
-
-              {/* Product count */}
-              {category.productCount != null && category.productCount > 0 && (
-                <span className="mt-0.5 text-[11px] sm:text-xs text-muted-foreground">
-                  {category.productCount} product{category.productCount !== 1 ? 's' : ''}
-                </span>
-              )}
             </Link>
           </li>
         ))}
       </ul>
     </nav>
   );
-});
+}

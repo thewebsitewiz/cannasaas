@@ -1,150 +1,124 @@
 /**
- * ═══════════════════════════════════════════════════════════════════
- * CannaSaas Storefront — Account Page (Orchestrator)
- * ═══════════════════════════════════════════════════════════════════
+ * @file Account.tsx
+ * @app apps/storefront
  *
- * File:   apps/storefront/src/pages/Account.tsx
- * Route:  /account/*
+ * Account shell page — layout with sidebar nav + nested route outlet.
  *
- * Layout shell for all account sub-pages. Renders the AccountSidebar
- * alongside a nested <Outlet> that React Router populates with the
- * active child route.
+ * URL: /account/*
+ * Requires authentication (ProtectedRoute wrapper in App.tsx)
  *
- * ─── ROUTE STRUCTURE ───────────────────────────────────────────
+ * Nested routes (rendered via <Outlet />):
+ *   /account/profile      — ProfileForm
+ *   /account/orders       — OrderHistoryList
+ *   /account/orders/:id   — Order detail (TODO: Sprint 5)
+ *   /account/addresses    — Saved addresses (TODO)
+ *   /account/loyalty      — LoyaltyDashboard
+ *   /account/preferences  — Notification preferences (TODO)
  *
- *   /account             → ProfileSection (index route)
- *   /account/orders      → OrderHistory
- *   /account/orders/:id  → (future: OrderDetail)
- *   /account/addresses   → SavedAddresses
- *   /account/loyalty     → LoyaltyDashboard
- *   /account/notifications → NotificationPreferences
+ * Layout:
+ *   Desktop (lg+): Left sidebar (AccountNav) + right main (Outlet)
+ *   Mobile (<lg):  Horizontal tab strip (AccountNav) + content below
  *
- *   These are defined as child routes in the router config (see
- *   below). This component is the layout parent.
- *
- * ─── PROTECTED ROUTE ───────────────────────────────────────────
- *
- *   Per the Project Guide, the Account page is wrapped in
- *   <ProtectedRoute> at the router level:
- *
- *     {
- *       path: 'account/*',
- *       element: (
- *         <ProtectedRoute>
- *           <Suspense fallback={<LoadingSpinner />}>
- *             <AccountPage />
- *           </Suspense>
- *         </ProtectedRoute>
- *       ),
- *       children: [
- *         { index: true, element: <ProfileSection /> },
- *         { path: 'orders', element: <OrderHistory /> },
- *         { path: 'addresses', element: <SavedAddresses /> },
- *         { path: 'loyalty', element: <LoyaltyDashboard /> },
- *         { path: 'notifications', element: <NotificationPreferences /> },
- *       ],
- *     }
- *
- *   The ProtectedRoute (from components/ProtectedRoute.tsx) checks
- *   isAuthenticated from useAuthStore. If not authenticated, it
- *   redirects to /login with the current location in state (so the
- *   user returns to /account after login).
- *
- * ─── LAYOUT ────────────────────────────────────────────────────
- *
- *   Desktop (lg+):
- *   ┌────────────┬──────────────────────────────────┐
- *   │            │                                  │
- *   │  Sidebar   │  <Outlet />                      │
- *   │  (sticky)  │  (ProfileSection / OrderHistory  │
- *   │            │   / SavedAddresses / etc.)       │
- *   │  👤 Profile│                                  │
- *   │  📦 Orders │                                  │
- *   │  📍 Addrs  │                                  │
- *   │  ⭐ Loyalty│                                  │
- *   │  🔔 Notif. │                                  │
- *   │  ───────── │                                  │
- *   │  🚪 Sign   │                                  │
- *   │     Out    │                                  │
- *   │            │                                  │
- *   └────────────┴──────────────────────────────────┘
- *
- *   Mobile (< lg):
- *   ┌────────────────────────────────────────┐
- *   │ [Profile] [Orders] [Addrs] [Loyalty]   │  ← scroll
- *   ├────────────────────────────────────────┤
- *   │                                        │
- *   │  <Outlet />                            │
- *   │                                        │
- *   └────────────────────────────────────────┘
- *
- * ─── FILE MAP ──────────────────────────────────────────────────
- *
- *   components/account/
- *     AccountSidebar.tsx            Nav links (vertical lg, pills mobile)
- *     ProfileSection.tsx            Profile editing (RHF + Zod)
- *     OrderHistory.tsx              Order list with status filters
- *     OrderCard.tsx                 Single order card
- *     OrderStatusBadge.tsx          Status pill + step tracker
- *     SavedAddresses.tsx            Address list + add/edit/delete
- *     AddressCard.tsx               Single address card
- *     AddressFormDialog.tsx         <dialog> modal for address CRUD
- *     LoyaltyDashboard.tsx          Points, tier, progress, referral
- *     NotificationPreferences.tsx   Toggle switches for channels/types
- *     index.ts                      Barrel export
- *
- * ─── SEO / HEAD ────────────────────────────────────────────────
- *
- *   <title>Account — {dispensary.name}</title>
- *   noindex: account pages should not be indexed.
- *
- * Accessibility (WCAG):
- *   - <main> landmark wraps all content (1.3.1)
- *   - Sidebar: <nav aria-label="Account navigation"> (1.3.1)
- *   - Page heading: h1 "My Account" (only heading at this level)
- *   - Sub-pages provide h2 headings (Profile, Orders, etc.)
- *   - Skip link target: main content area
- *
- * Responsive:
- *   - Sidebar: sticky left column on lg+, horizontal pills on mobile
- *   - Content area: flex-1, min-w-0 to prevent overflow
- *   - Page padding: px-4 mobile → px-6 sm → px-8 lg
+ * Accessibility:
+ *   - <h1> "My Account" as page heading (WCAG 2.4.6)
+ *   - <nav> landmark in AccountNav (WCAG 1.3.1)
+ *   - <main> equivalent is the route content area
  */
 
-import { Outlet } from 'react-router-dom';
-import { AccountSidebar } from '@/components/account';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuthStore } from '@cannasaas/stores';
+import { AccountNav } from '../components/account/AccountNav';
+import { ProfileForm } from '../components/account/ProfileForm';
+import { OrderHistoryList } from '../components/account/OrderHistoryList';
+import { LoyaltyDashboard } from '../components/account/LoyaltyDashboard';
+import { ROUTES } from '../routes';
 
-export default function Account() {
+export function AccountPage() {
+  const { user } = useAuthStore();
+
   return (
-    <main className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-      {/* ══════════════════════════════════════════════════
-          PAGE HEADER
-          ══════════════════════════════════════════════════ */}
-      <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-6 sm:mb-8">
-        My Account
-      </h1>
-
-      {/* ══════════════════════════════════════════════════
-          MOBILE NAV — horizontal pill bar (below h1)
-          ══════════════════════════════════════════════════ */}
-      <div className="lg:hidden mb-6">
-        <AccountSidebar />
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Page header */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-stone-900">My Account</h1>
+        <p className="text-sm text-stone-500 mt-0.5">
+          Welcome back, {user?.firstName ?? 'friend'}
+        </p>
       </div>
 
-      {/* ══════════════════════════════════════════════════
-          MAIN LAYOUT — Sidebar + Content
-          ══════════════════════════════════════════════════ */}
-      <div className="flex gap-8 lg:gap-12">
-        {/* ── Desktop sidebar ── */}
-        <div className="hidden lg:block flex-shrink-0">
-          <AccountSidebar />
+      <div className="flex flex-col lg:flex-row gap-8 items-start">
+        {/* Sidebar navigation */}
+        <div className="w-full lg:w-56 flex-shrink-0 lg:sticky lg:top-24">
+          <AccountNav />
         </div>
 
-        {/* ── Content area — nested route renders here ── */}
-        <div className="flex-1 min-w-0">
-          <Outlet />
+        {/* Main content area */}
+        <div className="flex-1 min-w-0 bg-white rounded-2xl border border-stone-100 p-6">
+          <Routes>
+            {/* Default → profile */}
+            <Route index element={<Navigate to="profile" replace />} />
+
+            <Route
+              path="profile"
+              element={
+                <>
+                  <h2 className="text-lg font-bold text-stone-900 mb-6">Profile</h2>
+                  <ProfileForm />
+                </>
+              }
+            />
+
+            <Route
+              path="orders"
+              element={
+                <>
+                  <h2 className="text-lg font-bold text-stone-900 mb-6">Order History</h2>
+                  <OrderHistoryList />
+                </>
+              }
+            />
+
+            <Route
+              path="orders/:id"
+              element={
+                <div className="text-center py-8">
+                  <p className="text-stone-500 text-sm">Order detail page — Sprint 5</p>
+                </div>
+              }
+            />
+
+            <Route
+              path="addresses"
+              element={
+                <>
+                  <h2 className="text-lg font-bold text-stone-900 mb-6">Saved Addresses</h2>
+                  <p className="text-stone-500 text-sm">Address management — Sprint 5</p>
+                </>
+              }
+            />
+
+            <Route
+              path="loyalty"
+              element={
+                <>
+                  <h2 className="text-lg font-bold text-stone-900 mb-6">Loyalty Points</h2>
+                  <LoyaltyDashboard />
+                </>
+              }
+            />
+
+            <Route
+              path="preferences"
+              element={
+                <>
+                  <h2 className="text-lg font-bold text-stone-900 mb-6">Preferences</h2>
+                  <p className="text-stone-500 text-sm">Notification preferences — Sprint 10</p>
+                </>
+              }
+            />
+          </Routes>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

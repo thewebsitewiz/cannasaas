@@ -1,273 +1,290 @@
 /**
- * ═══════════════════════════════════════════════════════════════════
- * CannaSaas Storefront — Products Page (Orchestrator)
- * ═══════════════════════════════════════════════════════════════════
+ * @file Products.tsx
+ * @app apps/storefront
  *
- * File:   apps/storefront/src/pages/Products.tsx
- * Route:  /products
+ * Products listing page — the core product browsing experience.
  *
- * The most complex storefront page. Thin orchestrator that:
- *   1. Reads all filter/sort/page state from URL search params
- *   2. Passes filters to the useProducts TanStack Query hook
- *   3. Composes the sidebar, toolbar, grid, and pagination
+ * Architecture: URL-driven state
+ * All filter and pagination state lives in the URL search params.
+ * This means:
+ *   ✅ Shareable URLs: "Browse Flower under $60" → copy link
+ *   ✅ Browser back/forward works correctly
+ *   ✅ Page refresh preserves filters
+ *   ✅ SEO-friendly (crawlers see filtered results)
  *
- * ─── URL-DRIVEN STATE ───────────────────────────────────────────
+ * URL params used:
+ *   q          — text search query
+ *   category   — product category slug
+ *   strainType — cannabis strain type
+ *   minPrice   — minimum price in dollars
+ *   maxPrice   — maximum price in dollars
+ *   minThc     — minimum THC percentage
+ *   maxThc     — maximum THC percentage
+ *   inStock    — "true" to show only in-stock items
+ *   sort       — sort order key
+ *   page       — current page number (1-indexed)
  *
- * All filter state lives in URL search params via useProductFilters:
+ * Component tree:
+ *   ProductsPage
+ *   ├── (desktop) FilterSidebar     ← sticky left panel, lg+
+ *   ├── (mobile)  MobileFilterDrawer ← bottom sheet, <lg
+ *   ├── Toolbar row
+ *   │   ├── Result count + search echo
+ *   │   ├── SortDropdown
+ *   │   └── FilterChips (active filter pills)
+ *   ├── ProductGrid                 ← main content
+ *   └── Pagination                  ← page nav
  *
- *   /products?search=blue&category=flower&strainType=sativa,hybrid
- *   &priceMin=20&priceMax=80&thcMin=15&thcMax=30&sort=price_asc&page=2
- *
- * Benefits: shareable links, browser back/forward, bookmarkable,
- * SSR-compatible, no state duplication.
- *
- * ─── LAYOUT STRUCTURE ───────────────────────────────────────────
- *
- *   Desktop (lg+):
- *   ┌──────────────────────────────────────────────┐
- *   │ Search Input                                  │
- *   ├──────────┬───────────────────────────────────┤
- *   │          │ Active Filters  |  Sort  | Count  │
- *   │  Filter  ├───────────────────────────────────┤
- *   │  Sidebar │                                   │
- *   │  (260px) │     Product Grid (3 col)          │
- *   │          │                                   │
- *   │          ├───────────────────────────────────┤
- *   │          │         Pagination                │
- *   └──────────┴───────────────────────────────────┘
- *
- *   Mobile (< lg):
- *   ┌──────────────────────┐
- *   │ Search Input          │
- *   ├──────────────────────┤
- *   │ [Filters] | Sort     │   ← "Filters" opens MobileFilterDrawer
- *   ├──────────────────────┤
- *   │ Active Filter Chips   │
- *   ├──────────────────────┤
- *   │ Product Grid (2 col)  │
- *   ├──────────────────────┤
- *   │     Pagination        │
- *   └──────────────────────┘
- *
- * ─── DATA FLOW ──────────────────────────────────────────────────
- *
- *   useProductFilters() → { filters, actions }
- *        │
- *        ├─→ useProducts(filters)  → { products, totalPages, totalCount }
- *        ├─→ FilterSidebar(filters, actions)
- *        ├─→ ActiveFilters(filters, actions)
- *        ├─→ SortDropdown(filters.sort, actions.setSort)
- *        ├─→ ProductGrid(products)
- *        └─→ Pagination(filters.page, totalPages, actions.setPage)
- *
- * ─── ERROR HANDLING ─────────────────────────────────────────────
- *
- * The grid and sidebar are wrapped in SectionErrorBoundary from the
- * layout components. A failed product fetch shows an error state
- * inside the grid area; the filters remain functional.
- *
- * ─── FILE MAP ───────────────────────────────────────────────────
- *
- *   hooks/
- *     useDebounce.ts           Delays value updates (search input)
- *     useProductFilters.ts     URL ↔ filter state bridge
- *
- *   components/products/
- *     SearchInput.tsx           Debounced search with clear button
- *     FilterAccordionItem.tsx   Collapsible <details>/<summary>
- *     CategoryFilter.tsx        Radio-style category selection
- *     RangeSlider.tsx           Dual-thumb slider (price & THC)
- *     StrainTypeFilter.tsx      Multi-select checkbox group
- *     ActiveFilters.tsx         Removable filter chip bar
- *     FilterSidebar.tsx         Composes all filter controls
- *     MobileFilterDrawer.tsx    <dialog>-based slide-in panel
- *     SortDropdown.tsx          Native <select> for sort order
- *     ProductCard.tsx           Grid card with Add to Cart
- *     ProductGrid.tsx           Responsive 2/3-col grid + empty state
- *     ProductGridSkeleton.tsx   Shimmer loading placeholder
- *     Pagination.tsx            Smart pagination with ellipsis
+ * Accessibility:
+ *   - document.title updated with filter context (WCAG 2.4.2)
+ *   - <main> heading is <h1> ("Products" or "Results for X") (WCAG 2.4.6)
+ *   - Filter changes: aria-live "polite" announces new result count
+ *   - Loading state: aria-busy on grid (WCAG 4.1.3)
  */
 
-import { useState } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useProducts } from '@cannasaas/api-client';
-import { useProductFilters } from '@/hooks';
-import { SectionErrorBoundary } from '@/components/layout';
-import {
-  SearchInput,
-  ActiveFilters,
-  FilterSidebar,
-  MobileFilterDrawer,
-  SortDropdown,
-  ProductGrid,
-  Pagination,
-} from '@/components/products';
+import { useDebounce } from '../hooks/useDebounce';
+import { FilterSidebar } from '../components/products/FilterSidebar';
+import { MobileFilterDrawer } from '../components/products/MobileFilterDrawer';
+import { FilterChips } from '../components/products/FilterChips';
+import { SortDropdown } from '../components/products/SortDropdown';
+import { ProductGrid } from '../components/products/ProductGrid';
+import { Pagination } from '../components/ui/Pagination';
+import type { ProductQueryParams } from '@cannasaas/api-client';
 
-/** Products per page */
-const PAGE_SIZE = 12;
+// ── URL param ↔ filter state helpers ─────────────────────────────────────────
 
-export default function Products() {
-  const { filters, actions } = useProductFilters();
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+/** Read all filter values from URL search params */
+function readFiltersFromUrl(params: URLSearchParams): Partial<ProductQueryParams> {
+  return {
+    search:    params.get('q') ?? undefined,
+    category:  params.get('category') ?? undefined,
+    strainType: params.get('strainType') as any ?? undefined,
+    minPrice:  params.get('minPrice') ? Number(params.get('minPrice')) : undefined,
+    maxPrice:  params.get('maxPrice') ? Number(params.get('maxPrice')) : undefined,
+    minThc:    params.get('minThc')   ? Number(params.get('minThc'))   : undefined,
+    maxThc:    params.get('maxThc')   ? Number(params.get('maxThc'))   : undefined,
+    inStock:   params.get('inStock')  === 'true' ? true : undefined,
+    sort:      params.get('sort') as any ?? 'popularity_desc',
+    page:      params.get('page') ? Number(params.get('page')) : 1,
+    limit:     20,
+  };
+}
 
-  // ── Data Fetching ──
-  // TanStack Query hook — auto-injects tenant headers and refetches
-  // whenever `filters` changes (URL params change → new object →
-  // new query key → automatic refetch).
-  const {
-    data,
-    isLoading,
-  } = useProducts({
-    search: filters.search,
-    category: filters.category,
-    strainTypes: filters.strainTypes,
-    priceMin: filters.priceMin,
-    priceMax: filters.priceMax,
-    thcMin: filters.thcMin,
-    thcMax: filters.thcMax,
-    sort: filters.sort,
-    page: filters.page,
-    limit: PAGE_SIZE,
-  });
+/** Write filter values to URL search params */
+function writeFiltersToUrl(filters: Partial<ProductQueryParams>): URLSearchParams {
+  const params = new URLSearchParams();
+  if (filters.search)    params.set('q',          filters.search);
+  if (filters.category)  params.set('category',   filters.category);
+  if (filters.strainType)params.set('strainType',  filters.strainType as string);
+  if (filters.minPrice != null) params.set('minPrice', String(filters.minPrice));
+  if (filters.maxPrice != null) params.set('maxPrice', String(filters.maxPrice));
+  if (filters.minThc   != null) params.set('minThc',   String(filters.minThc));
+  if (filters.maxThc   != null) params.set('maxThc',   String(filters.maxThc));
+  if (filters.inStock)   params.set('inStock', 'true');
+  if (filters.sort && filters.sort !== 'popularity_desc') params.set('sort', filters.sort as string);
+  if (filters.page && filters.page > 1) params.set('page', String(filters.page));
+  return params;
+}
 
-  const products = data?.products ?? [];
-  const totalPages = data?.totalPages ?? 1;
-  const totalCount = data?.totalCount ?? 0;
+// ── ProductsPage ──────────────────────────────────────────────────────────────
 
-  // Categories for the sidebar filter
-  const { data: categories = [] } = useProducts.categories();
+export function ProductsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+
+  // Derive filter state from URL params
+  const filters = useMemo(() => readFiltersFromUrl(searchParams), [searchParams]);
+
+  // Local search input value (debounced before updating URL)
+  const [searchInput, setSearchInput] = useState(filters.search ?? '');
+  const debouncedSearch = useDebounce(searchInput, 500);
+
+  // Sync debounced search to URL
+  useEffect(() => {
+    const current = searchParams.get('q') ?? '';
+    if (debouncedSearch !== current) {
+      updateFilters({ search: debouncedSearch || undefined, page: 1 });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch]);
+
+  // Build query for the API
+  const queryFilters: ProductQueryParams = {
+    ...filters,
+    limit: 20,
+  };
+
+  const { data, isLoading, isError, refetch } = useProducts(queryFilters);
+  const products   = data?.data ?? [];
+  const pagination = data?.pagination;
+  const totalCount = pagination?.total ?? 0;
+
+  // WCAG 2.4.2 — Update page title with filter context
+  useEffect(() => {
+    const ctx = filters.search
+      ? `"${filters.search}" — `
+      : filters.category
+        ? `${filters.category} — `
+        : '';
+    document.title = `${ctx}Products | CannaSaas`;
+  }, [filters.search, filters.category]);
+
+  // ── Filter mutation helpers ─────────────────────────────────────────────────
+
+  const updateFilters = useCallback(
+    (patch: Partial<ProductQueryParams>) => {
+      const next = { ...filters, ...patch };
+      // Reset to page 1 on any filter change (except explicit page change)
+      if (!('page' in patch)) next.page = 1;
+      setSearchParams(writeFiltersToUrl(next), { replace: true });
+    },
+    [filters, setSearchParams],
+  );
+
+  const clearAllFilters = useCallback(() => {
+    setSearchInput('');
+    setSearchParams(new URLSearchParams(), { replace: true });
+  }, [setSearchParams]);
+
+  // ── Active filter chips ─────────────────────────────────────────────────────
+
+  const activeChips = useMemo(() => {
+    const chips = [];
+    if (filters.search)    chips.push({ key: 'search',    label: `"${filters.search}"`, onRemove: () => { setSearchInput(''); updateFilters({ search: undefined }); } });
+    if (filters.category)  chips.push({ key: 'category',  label: filters.category,      onRemove: () => updateFilters({ category: undefined }) });
+    if (filters.strainType)chips.push({ key: 'strain',    label: String(filters.strainType), onRemove: () => updateFilters({ strainType: undefined }) });
+    if (filters.minPrice != null || filters.maxPrice != null) {
+      const label = [filters.minPrice ? `$${filters.minPrice}` : '$0', filters.maxPrice ? `$${filters.maxPrice}` : '+'].join('–');
+      chips.push({ key: 'price', label, onRemove: () => updateFilters({ minPrice: undefined, maxPrice: undefined }) });
+    }
+    if (filters.minThc != null || filters.maxThc != null) {
+      const label = [filters.minThc ? `${filters.minThc}%` : '0%', filters.maxThc ? `${filters.maxThc}%` : '+'].join('–') + ' THC';
+      chips.push({ key: 'thc', label, onRemove: () => updateFilters({ minThc: undefined, maxThc: undefined }) });
+    }
+    if (filters.inStock) chips.push({ key: 'inStock', label: 'In Stock', onRemove: () => updateFilters({ inStock: undefined }) });
+    return chips;
+  }, [filters, updateFilters]);
 
   return (
-    <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Page heading row */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-stone-900">
+            {filters.search ? `Results for "${filters.search}"` : 'Products'}
+          </h1>
+          <p aria-live="polite" className="text-sm text-stone-500 mt-0.5">
+            {isLoading ? 'Loading…' : `${totalCount.toLocaleString()} products`}
+          </p>
+        </div>
 
-      {/* ════════════════════════════════════════════════════════
-          SEARCH BAR
-          ════════════════════════════════════════════════════════
-          Full width above the sidebar/grid split. Debounced at
-          500ms — updates URL params after the user stops typing. */}
-      <div className="py-6 sm:py-8">
-        <SearchInput
-          value={filters.search}
-          onSearch={actions.setSearch}
-        />
+        <div className="flex items-center gap-3">
+          {/* Mobile filter button */}
+          <button
+            type="button"
+            onClick={() => setIsFilterDrawerOpen(true)}
+            aria-label={`Open filters${activeChips.length > 0 ? `, ${activeChips.length} active` : ''}`}
+            className={[
+              'lg:hidden flex items-center gap-2 px-3 py-2',
+              'border border-stone-200 rounded-lg text-sm font-medium',
+              'text-stone-700 hover:bg-stone-50',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--primary))]',
+              'transition-colors',
+            ].join(' ')}
+          >
+            <svg aria-hidden="true" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M7 12h10M11 18h2" />
+            </svg>
+            Filters
+            {activeChips.length > 0 && (
+              <span className="ml-1 w-5 h-5 flex items-center justify-center rounded-full bg-[hsl(var(--primary))] text-white text-[10px] font-bold">
+                {activeChips.length}
+              </span>
+            )}
+          </button>
+
+          {/* Sort dropdown — always visible */}
+          <SortDropdown
+            value={filters.sort ?? 'popularity_desc'}
+            onChange={(sort) => updateFilters({ sort: sort as any })}
+          />
+        </div>
       </div>
 
-      {/* ════════════════════════════════════════════════════════
-          MAIN LAYOUT — Sidebar + Content
-          ════════════════════════════════════════════════════════
-          Desktop: flex row with fixed-width sidebar
-          Mobile: single column (sidebar hidden behind drawer) */}
-      <div className="flex gap-8 pb-12">
-
-        {/* ── Desktop Sidebar (hidden below lg) ── */}
-        <aside
-          aria-label="Product filters"
-          className="hidden lg:block w-[260px] flex-shrink-0"
+      {/* Search input */}
+      <div className="relative mb-5">
+        <label htmlFor="product-search" className="sr-only">Search products</label>
+        <svg
+          aria-hidden="true"
+          className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400"
+          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
         >
-          <div className="sticky top-24">
-            <SectionErrorBoundary>
-              <FilterSidebar
-                filters={filters}
-                actions={actions}
-                categories={categories}
-              />
-            </SectionErrorBoundary>
-          </div>
-        </aside>
-
-        {/* ── Content Area ── */}
-        <div className="flex-1 min-w-0">
-
-          {/* ── Toolbar: Mobile filter button + Active filters + Sort + Count ── */}
-          <div className="flex flex-col gap-3 sm:gap-4 mb-6">
-
-            {/* Top row: filter button (mobile) + sort + count */}
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                {/* Mobile "Filters" button — opens MobileFilterDrawer.
-                    Hidden on lg+ where the sidebar is visible. */}
-                <button
-                  onClick={() => setMobileFiltersOpen(true)}
-                  aria-label="Open filters"
-                  className="
-                    lg:hidden
-                    inline-flex items-center gap-1.5
-                    px-3 py-2 min-h-[44px]
-                    text-sm font-medium
-                    border border-border rounded-lg
-                    hover:border-primary/50 hover:bg-muted
-                    focus-visible:outline-none focus-visible:ring-2
-                    focus-visible:ring-primary focus-visible:ring-offset-2
-                    transition-colors
-                  "
-                >
-                  <span aria-hidden="true">☰</span>
-                  Filters
-                  {/* Badge showing active filter count */}
-                  {actions.hasActiveFilters && (
-                    <span className="
-                      inline-flex items-center justify-center
-                      min-w-[20px] h-5 px-1
-                      text-[11px] font-semibold
-                      bg-primary text-primary-foreground
-                      rounded-full
-                    ">
-                      {/* Count all active individual filters */}
-                      {[
-                        filters.search ? 1 : 0,
-                        filters.category ? 1 : 0,
-                        filters.strainTypes.length,
-                        (filters.priceMin !== null || filters.priceMax !== null) ? 1 : 0,
-                        (filters.thcMin !== null || filters.thcMax !== null) ? 1 : 0,
-                      ].reduce((a, b) => a + b, 0)}
-                    </span>
-                  )}
-                </button>
-
-                {/* Result count */}
-                <p
-                  className="text-sm text-muted-foreground"
-                  aria-live="polite"
-                  aria-atomic="true"
-                >
-                  {isLoading ? (
-                    <span className="animate-pulse">Searching…</span>
-                  ) : (
-                    <>
-                      <span className="font-medium text-foreground">{totalCount}</span>
-                      {' '}product{totalCount !== 1 ? 's' : ''}
-                    </>
-                  )}
-                </p>
-              </div>
-
-              {/* Sort dropdown */}
-              <SortDropdown value={filters.sort} onChange={actions.setSort} />
-            </div>
-
-            {/* Active filter chips */}
-            <ActiveFilters filters={filters} actions={actions} />
-          </div>
-
-          {/* ── Product Grid ── */}
-          <SectionErrorBoundary
-            fallback={
-              <div role="alert" className="py-12 text-center text-muted-foreground">
-                Something went wrong loading products. Please try refreshing.
-              </div>
-            }
+          <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+        </svg>
+        <input
+          id="product-search"
+          type="search"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          placeholder="Search by name, strain, effect…"
+          autoComplete="off"
+          className={[
+            'w-full pl-9 pr-4 py-2.5 text-sm',
+            'bg-white border border-stone-200 rounded-xl',
+            'placeholder:text-stone-400 text-stone-900',
+            'focus:outline-none focus:border-[hsl(var(--primary)/0.4)]',
+            'focus:ring-1 focus:ring-[hsl(var(--primary)/0.3)]',
+            'transition-all',
+          ].join(' ')}
+        />
+        {searchInput && (
+          <button
+            type="button"
+            onClick={() => { setSearchInput(''); updateFilters({ search: undefined }); }}
+            aria-label="Clear search"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 focus-visible:outline-none"
           >
-            <ProductGrid products={products} isLoading={isLoading} />
-          </SectionErrorBoundary>
+            <svg aria-hidden="true" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
+      </div>
 
-          {/* ── Pagination ── */}
-          {!isLoading && totalPages > 1 && (
-            <div className="mt-8 sm:mt-10">
+      {/* Active filter chips */}
+      <FilterChips chips={activeChips} onClearAll={clearAllFilters} />
+
+      {/* Main content: sidebar + grid */}
+      <div className="flex gap-8">
+        {/* Desktop filter sidebar — sticky */}
+        <div className="hidden lg:block w-64 flex-shrink-0">
+          <div className="sticky top-24">
+            <FilterSidebar filters={filters} onChange={updateFilters} />
+          </div>
+        </div>
+
+        {/* Product grid */}
+        <div className="flex-1 min-w-0">
+          <ProductGrid
+            products={products}
+            isLoading={isLoading}
+            isError={isError}
+            totalCount={totalCount}
+            onRetry={refetch}
+            onClearFilters={clearAllFilters}
+          />
+
+          {/* Pagination */}
+          {pagination && pagination.totalPages > 1 && (
+            <div className="mt-10">
               <Pagination
-                currentPage={filters.page}
-                totalPages={totalPages}
+                currentPage={pagination.page}
+                totalPages={pagination.totalPages}
                 onPageChange={(page) => {
-                  actions.setPage(page);
-                  // Scroll to top of the grid on page change
+                  updateFilters({ page });
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
               />
@@ -276,22 +293,14 @@ export default function Products() {
         </div>
       </div>
 
-      {/* ════════════════════════════════════════════════════════
-          MOBILE FILTER DRAWER
-          ════════════════════════════════════════════════════════
-          Native <dialog> with slide-in animation. Reuses the
-          same FilterSidebar component as the desktop sidebar. */}
+      {/* Mobile filter drawer */}
       <MobileFilterDrawer
-        isOpen={mobileFiltersOpen}
-        onClose={() => setMobileFiltersOpen(false)}
-        resultCount={totalCount}
-      >
-        <FilterSidebar
-          filters={filters}
-          actions={actions}
-          categories={categories}
-        />
-      </MobileFilterDrawer>
-    </main>
+        isOpen={isFilterDrawerOpen}
+        onClose={() => setIsFilterDrawerOpen(false)}
+        filters={filters}
+        onChange={(patch) => { updateFilters(patch); }}
+        activeFilterCount={activeChips.length}
+      />
+    </div>
   );
 }
