@@ -442,7 +442,7 @@ This is the bridge between your frontend and your NestJS API. It contains:
 
 - **client.ts** — Axios instance with base URL, auth interceptor (adds JWT), tenant header interceptor (adds `X-Organization-Id`), and automatic token refresh on 401
 - **endpoints.ts** — Typed endpoint map for every API route
-- **hooks/** — TanStack Query hooks: `useProducts(filters)`, `useProduct(slug)`, `useCreateProduct()`, `useOrders(filters)`, `useCart()`, `useAddToCart()`, `useLogin()`, `useCurrentUser()`, `useAnalytics(range)`, `useProductReviews(id)`
+- **hooks/** — TanStack Query hooks: `useProducts(filters)`, `useProduct(slug)`, `useCreateProduct()` , `useOrders(filters)`, `useCart()`, `useAddToCart()`, `useLogin()`, `useCurrentUser()`, `useAnalytics(range)`, `useProductReviews(id)`
 
 ### Step B.4: packages/ui — Shared Component Library
 
@@ -640,11 +640,7 @@ This mirrors your Sprint 2 backend tenant middleware:
 5. `ThemeProvider` reads `organizationStore` and applies branding (colors, fonts, logo, favicon, page title)
 6. If no organization is found, renders a 404-style "Store not found" page
 
-> ⚠️ **IMPORTANT:** Every API request must include the `organizationId`. The Axios request interceptor should add an `X-Organization-Id` header (or the backend resolves it from the subdomain). This ensures tenant data isolation.
-
----
-
-## 10. Phase H: Theming & Dynamic Branding (Week 4)
+> ⚠️ **IMPORTANT:** Every API request must include the `organizationId`. The Axios request interceptor should add an `X-Organization-Id` header (or the backend resolves it from the subdomain). This ensures tenant data isolation. ## 10. Phase H: Theming & Dynamic Branding (Week 4)
 
 Each dispensary tenant gets their own branding. The `ThemeProvider` component from the Project Guide handles this by dynamically setting CSS custom properties on the document root element.
 
