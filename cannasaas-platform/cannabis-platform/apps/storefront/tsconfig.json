@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src"],
+  "references": [
+    { "path": "../../packages/types" },
+    { "path": "../../packages/stores" },
+    { "path": "../../packages/api-client" },
+    { "path": "../../packages/ui" },
+    { "path": "../../packages/utils" }
+  ]
+}

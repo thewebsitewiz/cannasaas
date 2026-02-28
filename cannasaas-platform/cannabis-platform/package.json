@@ -1,0 +1,36 @@
+{
+  "name": "cannabis-platform",
+  "version": "0.0.1",
+  "private": true,
+  "description": "CannaSaas multi-tenant cannabis e-commerce monorepo",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev":        "turbo dev",
+    "dev:store":  "turbo dev --filter=storefront",
+    "dev:admin":  "turbo dev --filter=admin",
+    "dev:staff":  "turbo dev --filter=staff",
+    "build":      "turbo build",
+    "lint":       "turbo lint",
+    "type-check": "turbo type-check",
+    "test":       "turbo test",
+    "test:e2e":   "turbo e2e",
+    "a11y":       "turbo a11y",
+    "clean":      "turbo clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "turbo":                       "^2.0.0",
+    "typescript":                  "^5.4.0",
+    "@types/node":                 "^20.0.0",
+    "eslint":                      "^8.57.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser":   "^7.0.0",
+    "eslint-plugin-react-hooks":   "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "eslint-plugin-jsx-a11y":      "^6.8.0",
+    "prettier":                    "^3.2.0",
+    "prettier-plugin-tailwindcss": "^0.5.14"
+  }
+}

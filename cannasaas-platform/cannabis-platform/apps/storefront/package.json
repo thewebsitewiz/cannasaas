@@ -1,0 +1,49 @@
+{
+  "name": "@cannasaas/storefront",
+  "version": "0.0.1",
+  "private": true,
+  "description": "CannaSaas storefront application",
+  "type": "module",
+  "scripts": {
+    "dev":        "vite --port 5173",
+    "build":      "tsc && vite build",
+    "preview":    "vite preview --port 5173",
+    "lint":       "eslint src --ext .ts,.tsx",
+    "type-check": "tsc --noEmit",
+    "test":       "vitest run",
+    "e2e":        "playwright test"
+  },
+  "dependencies": {
+    "react":                     "^18.3.0",
+    "react-dom":                 "^18.3.0",
+    "react-router-dom":          "^6.23.0",
+    "@tanstack/react-query":     "^5.40.0",
+    "@tanstack/react-query-devtools": "^5.40.0",
+    "react-helmet-async":        "^2.0.4",
+    "react-hook-form":           "^7.51.0",
+    "@hookform/resolvers":       "^3.4.0",
+    "axios":                     "^1.7.0",
+    "@stripe/stripe-js":         "^3.0.0",
+    "@stripe/react-stripe-js":   "^2.7.0",
+    "@cannasaas/types":          "workspace:*",
+    "@cannasaas/stores":         "workspace:*",
+    "@cannasaas/api-client":     "workspace:*",
+    "@cannasaas/ui":             "workspace:*",
+    "@cannasaas/utils":          "workspace:*"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react":      "^4.3.0",
+    "vite":                      "^5.2.0",
+    "typescript":                "*",
+    "@types/react":              "*",
+    "@types/react-dom":          "*",
+    "tailwindcss":               "^3.4.0",
+    "autoprefixer":              "^10.4.0",
+    "postcss":                   "^8.4.0",
+    "vitest":                    "^1.6.0",
+    "@testing-library/react":    "*",
+    "@testing-library/jest-dom": "*",
+    "@axe-core/react":           "*",
+    "@playwright/test":          "^1.44.0"
+  }
+}
