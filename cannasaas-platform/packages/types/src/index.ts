@@ -1,10 +1,12 @@
-/**
- * @file index.ts
- * @package @cannasaas/types
- *
- * Barrel export for all shared CannaSaas type definitions.
- * Import from this file in consuming packages:
- *   import type { Organization, CartSummary } from '@cannasaas/types';
- */
-export * from './storefront.types';
+// ── Shared TypeScript contracts ───────────────────────────────────────────────
+// Re-export all types from this barrel file.
+// Apps and packages import from '@cannasaas/types', never from deep paths.
 
+export * from './models/Product';
+export * from './models/Order';
+export * from './models/User';
+export * from './models/Compliance';
+export * from './models/Cart';
+export * from './models/Analytics';
+export * from './models/Delivery';
+export * from './api';

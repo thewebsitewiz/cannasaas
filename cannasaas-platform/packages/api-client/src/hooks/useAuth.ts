@@ -1,154 +1,98 @@
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-  UseMutationOptions,
-} from '@tanstack/react-query';
-import { apiClient, tokenStore } from '../client';
-import { endpoints } from '../endpoints';
-import type {
-  AuthResponse,
-  LoginRequest,
-  RegisterRequest,
-  User,
-} from '../types';
+// packages/api-client/src/hooks/useAuth.ts
+// Consumed by Part 5: LoginPage imports useLogin from '@cannasaas/api-client'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '../client';
+import { useAuthStore } from '@cannasaas/stores';
+import type { User, LoginFormValues } from '@cannasaas/types';
 
-// ── Query Keys ──────────────────────────────────────────────────────────────
-export const authKeys = {
-  all: ['auth'] as const,
-  currentUser: () => [...authKeys.all, 'currentUser'] as const,
-};
-
-// ── Queries ─────────────────────────────────────────────────────────────────
-
-/** Fetch the currently-authenticated user's profile */
-export function useCurrentUser() {
-  return useQuery({
-    queryKey: authKeys.currentUser(),
-    queryFn: async () => {
-      const { data } = await apiClient.get<User>(endpoints.auth.profile);
-      return data;
-    },
-    // Only run if we have a token stored
-    enabled: !!tokenStore.getAccessToken(),
-    staleTime: 5 * 60 * 1000, // 5 min
-    retry: false, // don't retry 401s endlessly
-  });
+// ── Login ─────────────────────────────────────────────────────────────────────
+interface LoginResponse {
+  accessToken: string;
+  user: User;
 }
 
-// ── Mutations ───────────────────────────────────────────────────────────────
-
-/** Log in — stores tokens and invalidates user query */
-export function useLogin(
-  options?: UseMutationOptions<AuthResponse, Error, LoginRequest>,
-) {
-  const queryClient = useQueryClient();
-
+/**
+ * useLogin — Mutation that exchanges credentials for an access token.
+ *
+ * On success:
+ *  - Populates authStore (user + accessToken)
+ *  - The httpOnly refresh token cookie is set automatically by the API
+ *
+ * On failure:
+ *  - Throws so LoginPage.onSubmit can catch and display a root form error
+ */
+export function useLogin() {
   return useMutation({
-    mutationFn: async (credentials: LoginRequest) => {
-      const { data } = await apiClient.post<AuthResponse>(
-        endpoints.auth.login,
+    mutationFn: async (credentials: LoginFormValues) => {
+      const { data } = await apiClient.post<LoginResponse>(
+        '/auth/login',
         credentials,
       );
       return data;
     },
-    onSuccess: (data, ...rest) => {
-      tokenStore.setAccessToken(data.accessToken);
-      tokenStore.setRefreshToken(data.refreshToken);
-      // Cache the user so useCurrentUser() returns immediately
-      queryClient.setQueryData(authKeys.currentUser(), data.user);
-      options?.onSuccess?.(data, ...rest);
+    onSuccess: ({ user, accessToken }) => {
+      useAuthStore.getState().setAuth(user, accessToken);
     },
-    ...options,
   });
 }
 
-/** Register a new account — stores tokens on success */
-export function useRegister(
-  options?: UseMutationOptions<AuthResponse, Error, RegisterRequest>,
-) {
-  const queryClient = useQueryClient();
+// ── Register ──────────────────────────────────────────────────────────────────
+interface RegisterPayload {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+}
 
+export function useRegister() {
   return useMutation({
-    mutationFn: async (payload: RegisterRequest) => {
-      const { data } = await apiClient.post<AuthResponse>(
-        endpoints.auth.register,
+    mutationFn: async (payload: RegisterPayload) => {
+      const { data } = await apiClient.post<LoginResponse>(
+        '/auth/register',
         payload,
       );
       return data;
     },
-    onSuccess: (data, ...rest) => {
-      tokenStore.setAccessToken(data.accessToken);
-      tokenStore.setRefreshToken(data.refreshToken);
-      queryClient.setQueryData(authKeys.currentUser(), data.user);
-      options?.onSuccess?.(data, ...rest);
+    onSuccess: ({ user, accessToken }) => {
+      useAuthStore.getState().setAuth(user, accessToken);
     },
-    ...options,
   });
 }
 
-/** Log out — clears tokens and all cached queries */
-export function useLogout(options?: UseMutationOptions<void, Error, void>) {
+// ── Logout ────────────────────────────────────────────────────────────────────
+export function useLogout() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async () => {
-      try {
-        await apiClient.post(endpoints.auth.logout);
-      } catch {
-        // Server-side logout is best-effort — we always clear locally
-      }
+      // Tell the API to invalidate the httpOnly refresh token cookie
+      await apiClient.post('/auth/logout');
     },
-    onSettled: (...rest) => {
-      tokenStore.clear();
+    onSettled: () => {
+      // Always clear local state regardless of API response
+      useAuthStore.getState().clearAuth();
+      // Wipe all cached server data — prevents data leakage between sessions
       queryClient.clear();
-      options?.onSettled?.(...rest);
     },
-    ...options,
   });
 }
 
-/** Request a password-reset email */
-export function useForgotPassword(
-  options?: UseMutationOptions<void, Error, { email: string }>,
-) {
-  return useMutation({
-    mutationFn: async (payload) => {
-      await apiClient.post(endpoints.auth.forgotPassword, payload);
+// ── Current User (server-side re-validation) ──────────────────────────────────
+export function useCurrentUserQuery() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
+  return useQuery({
+    queryKey: ['auth', 'me'],
+    queryFn: async () => {
+      const { data } = await apiClient.get<{ data: User }>('/auth/me');
+      return data.data;
     },
-    ...options,
-  });
-}
-
-/** Reset password with token */
-export function useResetPassword(
-  options?: UseMutationOptions<
-    void,
-    Error,
-    { token: string; password: string }
-  >,
-) {
-  return useMutation({
-    mutationFn: async (payload) => {
-      await apiClient.post(endpoints.auth.resetPassword, payload);
+    enabled: isAuthenticated,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    // On success keep the store in sync if profile data changed server-side
+    select: (user) => {
+      useAuthStore.getState().updateUser(user);
+      return user;
     },
-    ...options,
   });
-}
-
-/** Restore session on app load */
-export async function restoreSession(): Promise<boolean> {
-  const refreshToken = tokenStore.getRefreshToken();
-  if (!refreshToken) return false;
-
-  try {
-    const { data } = await apiClient.post<{ accessToken: string }>(
-      endpoints.auth.refresh,
-    );
-    tokenStore.setAccessToken(data.accessToken);
-    return true;
-  } catch {
-    tokenStore.clear();
-    return false;
-  }
 }

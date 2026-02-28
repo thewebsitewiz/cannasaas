@@ -1,208 +1,177 @@
 import {
   useQuery,
   useMutation,
-  useQueryClient,
   useInfiniteQuery,
-  UseMutationOptions,
-  keepPreviousData,
+  useQueryClient,
+  type UseQueryOptions,
 } from '@tanstack/react-query';
 import { apiClient } from '../client';
-import { endpoints } from '../endpoints';
-import type {
-  Product,
-  ProductFilters,
-  PaginatedResponse,
-} from '../types';
+import type { Product, PaginatedResponse } from '@cannasaas/types';
 
-// ── Query Keys ──────────────────────────────────────────────────────────────
+// ── Query Key Factory ─────────────────────────────────────────────────────────
+// Centralized key management prevents stale data and makes
+// invalidation surgical and predictable.
 export const productKeys = {
-  all: ['products'] as const,
-  lists: () => [...productKeys.all, 'list'] as const,
-  list: (filters: ProductFilters) =>
-    [...productKeys.lists(), filters] as const,
-  details: () => [...productKeys.all, 'detail'] as const,
-  detail: (id: string) => [...productKeys.details(), id] as const,
-  search: (q: string) => [...productKeys.all, 'search', q] as const,
-  byDispensary: (dispensaryId: string, filters?: ProductFilters) =>
-    [...productKeys.all, 'dispensary', dispensaryId, filters] as const,
+  all:      ['products'] as const,
+  lists:    () => [...productKeys.all,    'list']          as const,
+  list:     (filters: ProductFilters) =>
+              [...productKeys.lists(),    filters]         as const,
+  details:  () => [...productKeys.all,    'detail']        as const,
+  detail:   (id: string) =>
+              [...productKeys.details(),  id]              as const,
+  featured: () => [...productKeys.all,    'featured']      as const,
+  lowStock: () => [...productKeys.all,    'low-stock']     as const,
 };
 
-// ── Queries ─────────────────────────────────────────────────────────────────
+export interface ProductFilters {
+  category?:    string;
+  strainType?:  string;
+  minThc?:      number;
+  maxThc?:      number;
+  minPrice?:    number;
+  maxPrice?:    number;
+  sort?:        'price_asc' | 'price_desc' | 'thc_desc' | 'newest';
+  page?:        number;
+  limit?:       number;
+  search?:      string;
+  dispensaryId?: string;
+}
 
-/** Paginated product list with filters */
+// ── List Products ─────────────────────────────────────────────────────────────
 export function useProducts(filters: ProductFilters = {}) {
   return useQuery({
     queryKey: productKeys.list(filters),
     queryFn: async () => {
       const { data } = await apiClient.get<PaginatedResponse<Product>>(
-        endpoints.products.list,
+        '/products',
         { params: filters },
       );
       return data;
     },
-    placeholderData: keepPreviousData,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 1000 * 60 * 5, // 5 minutes — aligns with Redis TTL
+    placeholderData: (previousData) => previousData, // Keeps previous results while refetching
   });
 }
 
-/** Single product by ID or slug */
-export function useProduct(id: string) {
-  return useQuery({
-    queryKey: productKeys.detail(id),
-    queryFn: async () => {
-      const { data } = await apiClient.get<Product>(
-        endpoints.products.detail(id),
-      );
-      return data;
-    },
-    enabled: !!id,
-    staleTime: 5 * 60 * 1000,
-  });
-}
-
-/** Search products (GET /products/search?q=...) */
-export function useProductSearch(query: string) {
-  return useQuery({
-    queryKey: productKeys.search(query),
-    queryFn: async () => {
-      const { data } = await apiClient.get<PaginatedResponse<Product>>(
-        endpoints.products.search,
-        { params: { q: query } },
-      );
-      return data;
-    },
-    enabled: query.length >= 2,
-    staleTime: 30 * 1000,
-  });
-}
-
-/** Products for a specific dispensary */
-export function useDispensaryProducts(
-  dispensaryId: string,
-  filters: ProductFilters = {},
-) {
-  return useQuery({
-    queryKey: productKeys.byDispensary(dispensaryId, filters),
-    queryFn: async () => {
-      const { data } = await apiClient.get<PaginatedResponse<Product>>(
-        endpoints.products.byDispensary(dispensaryId),
-        { params: filters },
-      );
-      return data;
-    },
-    enabled: !!dispensaryId,
-    placeholderData: keepPreviousData,
-  });
-}
-
-/** Infinite-scroll product list */
-export function useInfiniteProducts(filters: Omit<ProductFilters, 'page'> = {}) {
+// ── Infinite Scroll Variant ───────────────────────────────────────────────────
+export function useInfiniteProducts(filters: Omit<ProductFilters, 'page'>) {
   return useInfiniteQuery({
     queryKey: [...productKeys.lists(), 'infinite', filters],
     queryFn: async ({ pageParam = 1 }) => {
       const { data } = await apiClient.get<PaginatedResponse<Product>>(
-        endpoints.products.list,
-        { params: { ...filters, page: pageParam } },
+        '/products',
+        { params: { ...filters, page: pageParam, limit: 20 } },
       );
       return data;
+    },
+    getNextPageParam: (lastPage) => {
+      const { page, totalPages } = lastPage.pagination;
+      return page < totalPages ? page + 1 : undefined;
     },
     initialPageParam: 1,
-    getNextPageParam: (lastPage) =>
-      lastPage.meta.page < lastPage.meta.totalPages
-        ? lastPage.meta.page + 1
-        : undefined,
+    staleTime: 1000 * 60 * 5,
   });
 }
 
-// ── Mutations ───────────────────────────────────────────────────────────────
-
-export function useCreateProduct(
-  options?: UseMutationOptions<Product, Error, Partial<Product>>,
+// ── Single Product ────────────────────────────────────────────────────────────
+export function useProduct(
+  id: string,
+  options?: Partial<UseQueryOptions<Product>>,
 ) {
+  return useQuery({
+    queryKey: productKeys.detail(id),
+    queryFn: async () => {
+      const { data } = await apiClient.get<{ data: Product }>(
+        `/products/${id}`,
+      );
+      return data.data;
+    },
+    enabled: !!id,
+    staleTime: 1000 * 60 * 5,
+    ...options,
+  });
+}
+
+// ── Create Product Mutation ───────────────────────────────────────────────────
+export function useCreateProduct() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (payload) => {
-      const { data } = await apiClient.post<Product>(
-        endpoints.products.create,
+    mutationFn: async (payload: Partial<Product>) => {
+      const { data } = await apiClient.post<{ data: Product }>(
+        '/products',
         payload,
       );
-      return data;
+      return data.data;
     },
-    onSuccess: (...args) => {
+    onSuccess: (newProduct) => {
+      // Invalidate all product lists so they refetch with the new item
       queryClient.invalidateQueries({ queryKey: productKeys.lists() });
-      options?.onSuccess?.(...args);
+      // Pre-populate the detail cache to avoid a network request on navigation
+      queryClient.setQueryData(productKeys.detail(newProduct.id), newProduct);
     },
-    ...options,
   });
 }
 
-export function useUpdateProduct(
-  options?: UseMutationOptions<
-    Product,
-    Error,
-    { id: string; payload: Partial<Product> }
-  >,
-) {
+// ── Update Product Mutation with Optimistic Update ────────────────────────────
+export function useUpdateProduct() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, payload }) => {
-      const { data } = await apiClient.patch<Product>(
-        endpoints.products.update(id),
+    mutationFn: async ({
+      id,
+      ...payload
+    }: Partial<Product> & { id: string }) => {
+      const { data } = await apiClient.put<{ data: Product }>(
+        `/products/${id}`,
         payload,
       );
-      return data;
+      return data.data;
     },
-    onSuccess: (product, ...rest) => {
-      queryClient.setQueryData(productKeys.detail(product.id), product);
-      queryClient.invalidateQueries({ queryKey: productKeys.lists() });
-      options?.onSuccess?.(product, ...rest);
-    },
-    ...options,
-  });
-}
+    onMutate: async ({ id, ...updates }) => {
+      // Cancel any outgoing refetches for this product
+      await queryClient.cancelQueries({ queryKey: productKeys.detail(id) });
 
-export function useDeleteProduct(
-  options?: UseMutationOptions<void, Error, string>,
-) {
-  const queryClient = useQueryClient();
+      // Snapshot the current value for rollback
+      const previous = queryClient.getQueryData<Product>(
+        productKeys.detail(id),
+      );
 
-  return useMutation({
-    mutationFn: async (id) => {
-      await apiClient.delete(endpoints.products.delete(id));
-    },
-    onSuccess: (...args) => {
-      queryClient.invalidateQueries({ queryKey: productKeys.lists() });
-      options?.onSuccess?.(...args);
-    },
-    ...options,
-  });
-}
+      // Optimistically update the cache
+      queryClient.setQueryData<Product>(productKeys.detail(id), (old) =>
+        old ? { ...old, ...updates } : old,
+      );
 
-/** Fetch all product categories */
-export function useProductCategories() {
-  return useQuery({
-    queryKey: [...productKeys.all, 'categories'],
-    queryFn: async () => {
-      const { data } = await apiClient.get(endpoints.products.categories);
-      return data;
+      return { previous, id };
     },
-    staleTime: 10 * 60 * 1000,
-  });
-}
-
-/** Autocomplete search suggestions */
-export function useSearchSuggestions(query: string) {
-  return useQuery({
-    queryKey: [...productKeys.all, 'suggestions', query],
-    queryFn: async () => {
-      const { data } = await apiClient.get(endpoints.search.suggest, {
-        params: { q: query },
+    onError: (_err, _variables, context) => {
+      // Rollback on error
+      if (context?.previous && context.id) {
+        queryClient.setQueryData(
+          productKeys.detail(context.id),
+          context.previous,
+        );
+      }
+    },
+    onSettled: (_data, _err, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: productKeys.detail(variables.id),
       });
-      return data;
     },
-    enabled: query.length >= 2,
-    staleTime: 30 * 1000,
+  });
+}
+
+// ── Low Stock Alert ───────────────────────────────────────────────────────────
+export function useLowStockProducts() {
+  return useQuery({
+    queryKey: productKeys.lowStock(),
+    queryFn: async () => {
+      const { data } = await apiClient.get<{ data: Product[] }>(
+        '/products/low-stock',
+      );
+      return data.data;
+    },
+    staleTime: 1000 * 60 * 2,      // 2 minutes — stock changes frequently
+    refetchInterval: 1000 * 60 * 5, // Poll every 5 minutes
   });
 }

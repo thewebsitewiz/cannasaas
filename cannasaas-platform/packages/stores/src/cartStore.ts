@@ -1,164 +1,119 @@
-import {
-  UseMutationOptions,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query';
-import { apiClient, cartKeys, endpoints } from '../../api-client'; // Update the import path as needed
-
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-export interface CartItem {
-  id: string;
-  productId: string;
-  variantId: string;
-  productName: string;
-  variantName: string;
-  price: number;
-  quantity: number;
-  weight?: number;
-  weightUnit?: string;
-  imageUrl?: string;
-  maxQuantity?: number;
-}
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { immer } from 'zustand/middleware/immer';
+import type { CartItem, Product, ProductVariant } from '@cannasaas/types';
 
 interface CartState {
   items: CartItem[];
   promoCode: string | null;
   promoDiscount: number;
-  addItem: (item: Omit<CartItem, 'id'>) => void;
-  removeItem: (id: string) => void;
-  updateQuantity: (id: string, quantity: number) => void;
+  isSyncing: boolean;
+
+  // Derived values (computed)
+  itemCount: () => number;
+  subtotal: () => number;
+
+  // Actions
+  addItem: (product: Product, variant: ProductVariant, qty: number) => void;
+  removeItem: (itemId: string) => void;
+  updateQuantity: (itemId: string, qty: number) => void;
   applyPromo: (code: string, discount: number) => void;
   removePromo: () => void;
   clearCart: () => void;
+  setSyncing: (syncing: boolean) => void;
 }
 
-// -------------------------------------------------------
-// Store
-// -------------------------------------------------------
-
-export const useCartStore = create(
-  persist<CartState>(
-    (set) => ({
+export const useCartStore = create<CartState>()(
+  persist(
+    immer((set, get) => ({
       items: [],
       promoCode: null,
       promoDiscount: 0,
+      isSyncing: false,
 
-      addItem: (item) =>
+      itemCount: () =>
+        get().items.reduce((sum, item) => sum + item.quantity, 0),
+      subtotal: () =>
+        get().items.reduce(
+          (sum, item) => sum + item.variant.price * item.quantity,
+          0,
+        ),
+
+      addItem: (product, variant, qty) => {
         set((state) => {
-          const existing = state.items.find(
-            (i) =>
-              i.productId === item.productId && i.variantId === item.variantId,
-          );
+          const existing = state.items.find((i) => i.variantId === variant.id);
           if (existing) {
-            return {
-              items: state.items.map((i) =>
-                i.productId === item.productId && i.variantId === item.variantId
-                  ? {
-                      ...i,
-                      quantity: i.maxQuantity
-                        ? Math.min(i.quantity + item.quantity, i.maxQuantity)
-                        : i.quantity + item.quantity,
-                    }
-                  : i,
-              ),
-            };
+            existing.quantity += qty;
+          } else {
+            state.items.push({
+              id: `local-${Date.now()}`,
+              productId: product.id,
+              variantId: variant.id,
+              productName: product.name,
+              variantName: variant.name,
+              quantity: qty,
+              unitPrice: variant.price,
+              totalPrice: variant.price * qty,
+              weight: variant.weight ?? 0,
+              weightUnit: variant.weightUnit ?? 'g',
+              product,
+              variant,
+            });
           }
-          return {
-            items: [
-              ...state.items,
-              {
-                ...item,
-                id: `${item.productId}-${item.variantId}-${Date.now()}`,
-              },
-            ],
-          };
-        }),
+        });
+      },
 
-      removeItem: (id) =>
-        set((state) => ({ items: state.items.filter((i) => i.id !== id) })),
+      removeItem: (itemId) => {
+        set((state) => {
+          state.items = state.items.filter((i) => i.id !== itemId);
+        });
+      },
 
-      updateQuantity: (id, quantity) =>
-        set((state) => ({
-          items:
-            quantity <= 0
-              ? state.items.filter((i) => i.id !== id)
-              : state.items.map((i) =>
-                  i.id === id
-                    ? {
-                        ...i,
-                        quantity: i.maxQuantity
-                          ? Math.min(quantity, i.maxQuantity)
-                          : quantity,
-                      }
-                    : i,
-                ),
-        })),
+      updateQuantity: (itemId, qty) => {
+        set((state) => {
+          const item = state.items.find((i) => i.id === itemId);
+          if (item) {
+            if (qty <= 0) {
+              state.items = state.items.filter((i) => i.id !== itemId);
+            } else {
+              item.quantity = qty;
+              item.totalPrice = item.unitPrice * qty;
+            }
+          }
+        });
+      },
 
-      applyPromo: (code, discount) =>
-        set({ promoCode: code, promoDiscount: discount }),
+      applyPromo: (code, discount) => {
+        set((state) => {
+          state.promoCode = code;
+          state.promoDiscount = discount;
+        });
+      },
 
-      removePromo: () => set({ promoCode: null, promoDiscount: 0 }),
+      removePromo: () => {
+        set((state) => {
+          state.promoCode = null;
+          state.promoDiscount = 0;
+        });
+      },
 
-      clearCart: () => set({ items: [], promoCode: null, promoDiscount: 0 }),
-    }),
-    { name: 'cannasaas-cart' },
+      clearCart: () => {
+        set((state) => {
+          state.items = [];
+          state.promoCode = null;
+          state.promoDiscount = 0;
+        });
+      },
+
+      setSyncing: (syncing) => {
+        set((state) => {
+          state.isSyncing = syncing;
+        });
+      },
+    })),
+    {
+      name: 'cannasaas-cart',
+      storage: createJSONStorage(() => localStorage),
+    },
   ),
 );
-
-// ----------------------------------------------------------
-// Selectors
-// Used as: const count = useCartStore(selectCartItemCount)
-// ----------------------------------------------------------
-
-export const selectCartItemCount = (state: CartState) =>
-  state.items.reduce((sum, item) => sum + item.quantity, 0);
-
-export const selectIsCartEmpty = (state: CartState) => state.items.length === 0;
-
-export const selectSubtotal = (state: CartState) =>
-  state.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-export const selectPromoDiscount = (state: CartState) => state.promoDiscount;
-
-export const selectPromoCode = (state: CartState) => state.promoCode;
-
-/** Remove an applied promo code */
-export function useRemovePromo(
-  options?: UseMutationOptions<Cart, Error, void>,
-) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async () => {
-      const { data } = await apiClient.delete<Cart>(endpoints.cart.removePromo);
-      return data;
-    },
-    onSuccess: (updatedCart, ...rest) => {
-      queryClient.setQueryData(cartKeys.detail(), updatedCart);
-      options?.onSuccess?.(updatedCart, ...rest);
-    },
-    ...options,
-  });
-}
-
-/** Check remaining purchase limits for the current customer */
-export function usePurchaseLimit(customerId?: string) {
-  return useQuery({
-    queryKey: ['compliance', 'purchase-limit', customerId],
-    queryFn: async () => {
-      const { data } = await apiClient.get(endpoints.compliance.purchaseLimit, {
-        params: customerId ? { customerId } : undefined,
-      });
-      return data;
-    },
-    enabled: true,
-    staleTime: 60 * 1000,
-  });
-}

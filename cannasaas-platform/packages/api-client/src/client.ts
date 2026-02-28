@@ -1,142 +1,106 @@
-import axios, {
-  AxiosError,
-  AxiosInstance,
-  InternalAxiosRequestConfig,
-} from 'axios';
+import axios, { type AxiosError, type AxiosInstance } from 'axios';
+import { useAuthStore } from '@cannasaas/stores';
+import { useOrganizationStore } from '@cannasaas/stores';
 
-// ---------------------------------------------------------------------------
-// Token storage helpers — swap these out if you move to cookies / secure store
-// ---------------------------------------------------------------------------
-const TOKEN_KEY = 'cannasaas_access_token';
-const REFRESH_KEY = 'cannasaas_refresh_token';
-const TENANT_KEY = 'cannasaas_tenant_id';
-
-export const tokenStore = {
-  getAccessToken: () => localStorage.getItem(TOKEN_KEY),
-  setAccessToken: (t: string) => localStorage.setItem(TOKEN_KEY, t),
-  getRefreshToken: () => localStorage.getItem(REFRESH_KEY),
-  setRefreshToken: (t: string) => localStorage.setItem(REFRESH_KEY, t),
-  getTenantId: () => localStorage.getItem(TENANT_KEY),
-  setTenantId: (id: string) => localStorage.setItem(TENANT_KEY, id),
-  clear: () => {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(REFRESH_KEY);
-    localStorage.removeItem(TENANT_KEY);
-  },
-};
-
-// ---------------------------------------------------------------------------
-// Create Axios instance
-// ---------------------------------------------------------------------------
-export const apiClient: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1',
-  headers: { 'Content-Type': 'application/json' },
-  timeout: 30_000,
-});
-
-// ---------------------------------------------------------------------------
-// Request interceptor — attach JWT + tenant header
-// ---------------------------------------------------------------------------
-apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const token = tokenStore.getAccessToken();
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-
-  const tenantId = tokenStore.getTenantId();
-  if (tenantId) {
-    config.headers['x-tenant-id'] = tenantId;
-  }
-
-  return config;
-});
-
-// ---------------------------------------------------------------------------
-// Response interceptor — automatic 401 → refresh → retry
-// ---------------------------------------------------------------------------
 let isRefreshing = false;
 let failedQueue: Array<{
   resolve: (token: string) => void;
   reject: (error: unknown) => void;
 }> = [];
 
-function processQueue(error: unknown, token: string | null) {
-  failedQueue.forEach((p) => {
+const processQueue = (error: unknown, token: string | null) => {
+  failedQueue.forEach((prom) => {
     if (error) {
-      p.reject(error);
-    } else {
-      p.resolve(token!);
+      prom.reject(error);
+    } else if (token) {
+      prom.resolve(token);
     }
   });
   failedQueue = [];
+};
+
+export function createApiClient(): AxiosInstance {
+  const client = axios.create({
+    baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:3000/v1',
+    timeout: 15000,
+    withCredentials: true, // Sends httpOnly cookie for refresh token
+  });
+
+  // Request interceptor — attach auth + tenant headers
+  client.interceptors.request.use((config) => {
+    const { accessToken } = useAuthStore.getState();
+    const { tenant } = useOrganizationStore.getState();
+
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
+    }
+    if (tenant?.organizationId) {
+      config.headers['X-Organization-Id'] = tenant.organizationId;
+    }
+    if (tenant?.dispensaryId) {
+      config.headers['X-Dispensary-Id'] = tenant.dispensaryId;
+    }
+
+    return config;
+  });
+
+  // Response interceptor — transparent token refresh
+  client.interceptors.response.use(
+    (response) => response,
+    async (error: AxiosError) => {
+      const originalRequest = error.config as typeof error.config & {
+        _retry?: boolean;
+      };
+
+      if (error.response?.status === 401 && !originalRequest._retry) {
+        if (isRefreshing) {
+          // Queue this request until the refresh completes
+          return new Promise((resolve, reject) => {
+            failedQueue.push({
+              resolve: (token: string) => {
+                if (originalRequest.headers) {
+                  originalRequest.headers.Authorization = `Bearer ${token}`;
+                }
+                resolve(client(originalRequest));
+              },
+              reject,
+            });
+          });
+        }
+
+        originalRequest._retry = true;
+        isRefreshing = true;
+
+        try {
+          // Refresh token is in httpOnly cookie; send empty body
+          const { data } = await client.post<{ accessToken: string }>(
+            '/auth/refresh',
+          );
+          const { accessToken } = data;
+          useAuthStore
+            .getState()
+            .setAuth(useAuthStore.getState().user!, accessToken);
+          processQueue(null, accessToken);
+          if (originalRequest.headers) {
+            originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          }
+          return client(originalRequest);
+        } catch (refreshError) {
+          processQueue(refreshError, null);
+          useAuthStore.getState().clearAuth();
+          // Redirect to login
+          window.location.href = '/auth/login?session=expired';
+          return Promise.reject(refreshError);
+        } finally {
+          isRefreshing = false;
+        }
+      }
+
+      return Promise.reject(error);
+    },
+  );
+
+  return client;
 }
 
-apiClient.interceptors.response.use(
-  (response) => response,
-  async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & {
-      _retry?: boolean;
-    };
-
-    // Only attempt refresh on 401, and not on the refresh endpoint itself
-    if (
-      error.response?.status !== 401 ||
-      originalRequest._retry ||
-      originalRequest.url?.includes('/auth/refresh') ||
-      originalRequest.url?.includes('/auth/login')
-    ) {
-      return Promise.reject(error);
-    }
-
-    // If a refresh is already in-flight, queue this request
-    if (isRefreshing) {
-      return new Promise<string>((resolve, reject) => {
-        failedQueue.push({ resolve, reject });
-      }).then((newToken) => {
-        originalRequest.headers.Authorization = `Bearer ${newToken}`;
-        return apiClient(originalRequest);
-      });
-    }
-
-    originalRequest._retry = true;
-    isRefreshing = true;
-
-    try {
-      const refreshToken = tokenStore.getRefreshToken();
-      if (!refreshToken) {
-        throw new Error('No refresh token available');
-      }
-
-      const { data } = await axios.post(
-        `${apiClient.defaults.baseURL}/auth/refresh`,
-        { refreshToken },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'x-tenant-id': tokenStore.getTenantId() ?? '',
-          },
-        },
-      );
-
-      const newAccessToken: string = data.accessToken;
-      tokenStore.setAccessToken(newAccessToken);
-
-      if (data.refreshToken) {
-        tokenStore.setRefreshToken(data.refreshToken);
-      }
-
-      processQueue(null, newAccessToken);
-
-      originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-      return apiClient(originalRequest);
-    } catch (refreshError) {
-      processQueue(refreshError, null);
-      tokenStore.clear();
-      // Emit a custom event so your auth provider can redirect to login
-      window.dispatchEvent(new CustomEvent('cannasaas:session-expired'));
-      return Promise.reject(refreshError);
-    } finally {
-      isRefreshing = false;
-    }
-  },
-);
+export const apiClient = createApiClient();

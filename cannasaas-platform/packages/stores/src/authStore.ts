@@ -1,75 +1,75 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-
-// -------------------------------------------------
-// Types
-// -------------------------------------------------
-
-export interface AuthUser {
-  id: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  organizationId?: string;
-  roles: string[];
-  permissions: string[];
-}
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { immer } from 'zustand/middleware/immer';
+import type { User } from '@cannasaas/types';
 
 interface AuthState {
-  user: AuthUser | null;
-  refreshToken: string | null;
-  // NOTE: accessToken is intentionally NOT persisted
+  user: User | null;
   accessToken: string | null;
   isAuthenticated: boolean;
-  setAuth: (user: AuthUser, accessToken: string, refreshToken: string) => void;
-  setAccessToken: (accessToken: string) => void;
+  isLoading: boolean;
+
+  // Actions
+  setAuth: (user: User, accessToken: string) => void;
+  updateUser: (updates: Partial<User>) => void;
   clearAuth: () => void;
+  setLoading: (loading: boolean) => void;
 }
 
-// ---------------------------------------------------
-// Store
-// ---------------------------------------------------
-
-export const useAuthStore = create(
-  persist<AuthState>(
-    (set) => ({
+export const useAuthStore = create<AuthState>()(
+  persist(
+    immer((set) => ({
       user: null,
-      refreshToken: null,
       accessToken: null,
       isAuthenticated: false,
+      isLoading: true,
 
-      setAuth: (user, accessToken, refreshToken) =>
-        set({ user, accessToken, refreshToken, isAuthenticated: true }),
+      setAuth: (user, accessToken) => {
+        set((state) => {
+          state.user = user;
+          state.accessToken = accessToken;
+          state.isAuthenticated = true;
+          state.isLoading = false;
+        });
+      },
 
-      setAccessToken: (accessToken) => set({ accessToken }),
+      updateUser: (updates) => {
+        set((state) => {
+          if (state.user) {
+            Object.assign(state.user, updates);
+          }
+        });
+      },
 
-      clearAuth: () =>
-        set({
-          user: null,
-          accessToken: null,
-          refreshToken: null,
-          isAuthenticated: false,
-        }),
-    }),
+      clearAuth: () => {
+        set((state) => {
+          state.user = null;
+          state.accessToken = null;
+          state.isAuthenticated = false;
+          state.isLoading = false;
+        });
+      },
+
+      setLoading: (loading) => {
+        set((state) => {
+          state.isLoading = loading;
+        });
+      },
+    })),
     {
       name: 'cannasaas-auth',
-      // Only persist user and refreshToken — never the accessToken
-      partialize: (state) =>
-        ({
-          user: state.user,
-          refreshToken: state.refreshToken,
-        }) as AuthState,
+      // sessionStorage clears on browser close — appropriate for shared POS devices
+      storage: createJSONStorage(() => sessionStorage),
+      partialize: (state) => ({
+        user: state.user,
+        accessToken: state.accessToken,
+        isAuthenticated: state.isAuthenticated,
+      }),
     },
   ),
 );
 
-// --------------------------------------------------------
-// Selectors
-// ----------------------------------------------------------
-
-export const selectUser = (state: AuthState) => state.user;
-export const selectIsAuthenticated = (state: AuthState) =>
-  state.isAuthenticated;
-export const selectUserRoles = (state: AuthState) => state.user?.roles ?? [];
-export const selectHasRole = (role: string) => (state: AuthState) =>
-  state.user?.roles.includes(role) ?? false;
+// Convenience selector hooks — prevents re-renders when unrelated state changes
+export const useCurrentUser     = () => useAuthStore((s) => s.user);
+export const useIsAuthenticated = () => useAuthStore((s) => s.isAuthenticated);
+export const useAccessToken     = () => useAuthStore((s) => s.accessToken);
