@@ -11,6 +11,11 @@
   "main": "index.js",
   "name": "cannasaas-platform",
   "packageManager": "pnpm@10.29.3",
+  "pnpm": {
+    "overrides": {
+      "zustand": "^4.5.2"
+    }
+  },
   "scripts": {
     "test": "turbo run test",
     "test:coverage": "turbo run test:coverage",

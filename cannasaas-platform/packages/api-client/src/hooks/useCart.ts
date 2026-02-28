@@ -185,3 +185,36 @@ export function useClearCart(
     ...options,
   });
 }
+
+/** Remove an applied promo code */
+export function useRemovePromo(
+  options?: UseMutationOptions<Cart, Error, void>,
+) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const { data } = await apiClient.delete<Cart>(endpoints.cart.removePromo);
+      return data;
+    },
+    onSuccess: (updatedCart, ...rest) => {
+      queryClient.setQueryData(cartKeys.detail(), updatedCart);
+      options?.onSuccess?.(updatedCart, ...rest);
+    },
+    ...options,
+  });
+}
+
+/** Check remaining purchase limits for the current customer */
+export function usePurchaseLimit(customerId?: string) {
+  return useQuery({
+    queryKey: ['compliance', 'purchase-limit', customerId],
+    queryFn: async () => {
+      const { data } = await apiClient.get(endpoints.compliance.purchaseLimit, {
+        params: customerId ? { customerId } : undefined,
+      });
+      return data;
+    },
+    staleTime: 60 * 1000,
+  });
+}

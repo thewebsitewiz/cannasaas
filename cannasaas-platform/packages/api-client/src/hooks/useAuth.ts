@@ -135,3 +135,20 @@ export function useResetPassword(
     ...options,
   });
 }
+
+/** Restore session on app load */
+export async function restoreSession(): Promise<boolean> {
+  const refreshToken = tokenStore.getRefreshToken();
+  if (!refreshToken) return false;
+
+  try {
+    const { data } = await apiClient.post<{ accessToken: string }>(
+      endpoints.auth.refresh,
+    );
+    tokenStore.setAccessToken(data.accessToken);
+    return true;
+  } catch {
+    tokenStore.clear();
+    return false;
+  }
+}

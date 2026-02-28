@@ -179,3 +179,30 @@ export function useDeleteProduct(
     ...options,
   });
 }
+
+/** Fetch all product categories */
+export function useProductCategories() {
+  return useQuery({
+    queryKey: [...productKeys.all, 'categories'],
+    queryFn: async () => {
+      const { data } = await apiClient.get(endpoints.products.categories);
+      return data;
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+}
+
+/** Autocomplete search suggestions */
+export function useSearchSuggestions(query: string) {
+  return useQuery({
+    queryKey: [...productKeys.all, 'suggestions', query],
+    queryFn: async () => {
+      const { data } = await apiClient.get(endpoints.search.suggest, {
+        params: { q: query },
+      });
+      return data;
+    },
+    enabled: query.length >= 2,
+    staleTime: 30 * 1000,
+  });
+}

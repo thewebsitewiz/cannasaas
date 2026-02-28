@@ -63,8 +63,9 @@ export const useThemeStore = create<ThemeState>()(
   ),
 );
 
-// Listen for system theme changes when in 'system' mode
-if (typeof window !== 'undefined') {
+// Exported function so main.tsx can call it explicitly
+export function initSystemThemeListener() {
+  if (typeof window === 'undefined') return;
   window
     .matchMedia('(prefers-color-scheme: dark)')
     .addEventListener('change', () => {
