@@ -6,8 +6,6 @@
 
 ---
 
-<a name="top"></a>
-
 ## Table of Contents
 
 1. [Where We Are: State of the Platform](#1-where-we-are-state-of-the-platform)
@@ -20,7 +18,7 @@
    - 4.4 [packages/ui — WCAG-First Component Library](#44-packagesui--wcag-first-component-library)
    - 4.5 [packages/utils — Formatters, Validators, Helpers](#45-packagesutils--formatters-validators-helpers)
 5. [Authentication & Multi-Tenant Wiring](#5-authentication--multi-tenant-wiring)
-6. [Design System & Theming Engine](#6-design-system--theming-engine)
+6. [Design System & Theming Engine](#6-design-system-and-theming-engine)
 7. [Customer Storefront — Full Implementation](#7-customer-storefront--full-implementation)
    - 7.1 [App Shell & Routing](#71-app-shell--routing)
    - 7.2 [Age Gate Component](#72-age-gate-component)
@@ -53,32 +51,34 @@
 
 ---
 
+[↑ Back to top](#Table-of-Contents)
+
 ## 1. Where We Are: State of the Platform
 
 Your NestJS backend is production-ready through 12 completed sprints. Every API surface described in `api-reference.md` is operational and ready for the frontend to consume. No backend rewrite is needed — only targeted additions as frontend features expose gaps.
 
 ### What is Complete
 
-| Layer | Status | Notes |
-|---|---|---|
-| Auth (JWT + refresh) | ✅ Done | S2 — access + refresh tokens, bcrypt, Passport |
-| Multi-tenant middleware | ✅ Done | S2 — schema-per-org, X-Organization-Id headers |
-| Org / Company / Dispensary hierarchy | ✅ Done | S3 — full CRUD, PostGIS geospatial |
-| Product catalog + variants | ✅ Done | S4 — THC/CBD fields, images, categories |
-| Cart (Redis + DB) + Orders | ✅ Done | S5 — state machine, tax calculation |
-| Stripe Payments | ✅ Done | S6 — payment intents, webhooks |
-| Age verification stubs | ✅ Done | S7 — Veratad/Jumio integration hooks |
-| Metrc compliance | ✅ Done | S8 — NY seed-to-sale, purchase limits |
-| Elasticsearch product search | ✅ Done | S9 — cannabis synonyms, autocomplete, facets |
-| Delivery + WebSocket tracking | ✅ Done | S10 — PostGIS zones, Twilio SMS |
-| POS integration (Dutchie/Treez) | ✅ Done | S11 — adapter pattern |
-| Analytics + PWA service worker | ✅ Done | S12 — nightly aggregation, CSV export |
+| Layer                                | Status  | Notes                                          |
+| ------------------------------------ | ------- | ---------------------------------------------- |
+| Auth (JWT + refresh)                 | ✅ Done | S2 — access + refresh tokens, bcrypt, Passport |
+| Multi-tenant middleware              | ✅ Done | S2 — schema-per-org, X-Organization-Id headers |
+| Org / Company / Dispensary hierarchy | ✅ Done | S3 — full CRUD, PostGIS geospatial             |
+| Product catalog + variants           | ✅ Done | S4 — THC/CBD fields, images, categories        |
+| Cart (Redis + DB) + Orders           | ✅ Done | S5 — state machine, tax calculation            |
+| Stripe Payments                      | ✅ Done | S6 — payment intents, webhooks                 |
+| Age verification stubs               | ✅ Done | S7 — Veratad/Jumio integration hooks           |
+| Metrc compliance                     | ✅ Done | S8 — NY seed-to-sale, purchase limits          |
+| Elasticsearch product search         | ✅ Done | S9 — cannabis synonyms, autocomplete, facets   |
+| Delivery + WebSocket tracking        | ✅ Done | S10 — PostGIS zones, Twilio SMS                |
+| POS integration (Dutchie/Treez)      | ✅ Done | S11 — adapter pattern                          |
+| Analytics + PWA service worker       | ✅ Done | S12 — nightly aggregation, CSV export          |
 
 ### What Remains for Public Beta
 
 The frontend monorepo is the primary remaining deliverable. This document is the implementation blueprint covering every file, component, pattern, and test needed to reach the public beta milestone defined in Section 2.
 
-[↑ Back to top](#top)
+[↑ Back to top](#Table-of-Contents)
 
 ---
 
@@ -88,19 +88,19 @@ Public beta targets **5 pilot dispensaries** in New York (the most complex compl
 
 ### Beta Feature Gate
 
-| Feature | Must Have | Nice to Have |
-|---|---|---|
-| Age gate + ID verification flow | ✅ | |
-| Product browsing + search | ✅ | |
-| Cart + checkout (Stripe) | ✅ | |
-| Order tracking (WebSocket) | ✅ | |
-| Admin: products, orders, customers | ✅ | |
-| Compliance dashboard | ✅ | |
-| Staff portal (order queue + ID verify) | ✅ | |
-| Multi-tenant branding | ✅ | |
-| AI product descriptions | | ✅ |
-| Loyalty program | | ✅ |
-| PWA push notifications | | ✅ |
+| Feature                                | Must Have | Nice to Have |
+| -------------------------------------- | --------- | ------------ |
+| Age gate + ID verification flow        | ✅        |              |
+| Product browsing + search              | ✅        |              |
+| Cart + checkout (Stripe)               | ✅        |              |
+| Order tracking (WebSocket)             | ✅        |              |
+| Admin: products, orders, customers     | ✅        |              |
+| Compliance dashboard                   | ✅        |              |
+| Staff portal (order queue + ID verify) | ✅        |              |
+| Multi-tenant branding                  | ✅        |              |
+| AI product descriptions                |           | ✅           |
+| Loyalty program                        |           | ✅           |
+| PWA push notifications                 |           | ✅           |
 
 ### Performance Targets
 
@@ -110,9 +110,9 @@ Public beta targets **5 pilot dispensaries** in New York (the most complex compl
 - API error rate < 0.1% under normal load
 - Mobile-first responsive: 320px → 1920px
 
-[↑ Back to top](#top)
-
 ---
+
+[↑ Back to top](#Table-of-Contents)
 
 ## 3. Monorepo Foundation & Tooling
 
@@ -141,13 +141,15 @@ cannabis-platform/           ← monorepo root
 ### 3.2 Root Configuration Files
 
 #### `pnpm-workspace.yaml`
+
 ```yaml
 packages:
-  - "apps/*"
-  - "packages/*"
+  - 'apps/*'
+  - 'packages/*'
 ```
 
 #### `turbo.json`
+
 ```json
 {
   "$schema": "https://turbo.build/schema.json",
@@ -174,6 +176,7 @@ packages:
 ```
 
 #### `tsconfig.base.json`
+
 ```json
 {
   "compilerOptions": {
@@ -206,7 +209,7 @@ The token system is the backbone of white-label theming. All component styles re
 /* ── LAYER 1: PRIMITIVES ─────────────────────────────────────────── */
 :root {
   /* Brand defaults — overridden per-dispensary by ThemeProvider */
-  --p-brand-50:  #f0fdf4;
+  --p-brand-50: #f0fdf4;
   --p-brand-100: #dcfce7;
   --p-brand-300: #86efac;
   --p-brand-500: #22c55e;
@@ -214,8 +217,8 @@ The token system is the backbone of white-label theming. All component styles re
   --p-brand-900: #14532d;
 
   /* Neutrals */
-  --p-neutral-0:   #ffffff;
-  --p-neutral-50:  #f8fafc;
+  --p-neutral-0: #ffffff;
+  --p-neutral-50: #f8fafc;
   --p-neutral-100: #f1f5f9;
   --p-neutral-200: #e2e8f0;
   --p-neutral-300: #cbd5e1;
@@ -225,35 +228,35 @@ The token system is the backbone of white-label theming. All component styles re
   --p-neutral-900: #0f172a;
 
   /* Semantic status */
-  --p-success:  #16a34a;
-  --p-warning:  #d97706;
-  --p-error:    #dc2626;
-  --p-info:     #2563eb;
+  --p-success: #16a34a;
+  --p-warning: #d97706;
+  --p-error: #dc2626;
+  --p-info: #2563eb;
 
   /* Type scale — 16px minimum base for WCAG body text */
-  --p-text-xs:   0.75rem;
-  --p-text-sm:   0.875rem;
+  --p-text-xs: 0.75rem;
+  --p-text-sm: 0.875rem;
   --p-text-base: 1rem;
-  --p-text-lg:   1.125rem;
-  --p-text-xl:   1.25rem;
-  --p-text-2xl:  1.5rem;
-  --p-text-3xl:  1.875rem;
-  --p-text-4xl:  2.25rem;
+  --p-text-lg: 1.125rem;
+  --p-text-xl: 1.25rem;
+  --p-text-2xl: 1.5rem;
+  --p-text-3xl: 1.875rem;
+  --p-text-4xl: 2.25rem;
 
   /* Spacing (4px base grid) */
-  --p-space-1:  0.25rem;
-  --p-space-2:  0.5rem;
-  --p-space-3:  0.75rem;
-  --p-space-4:  1rem;
-  --p-space-6:  1.5rem;
-  --p-space-8:  2rem;
+  --p-space-1: 0.25rem;
+  --p-space-2: 0.5rem;
+  --p-space-3: 0.75rem;
+  --p-space-4: 1rem;
+  --p-space-6: 1.5rem;
+  --p-space-8: 2rem;
   --p-space-12: 3rem;
   --p-space-16: 4rem;
 
   /* Radii */
-  --p-radius-sm:   0.25rem;
-  --p-radius-md:   0.5rem;
-  --p-radius-lg:   0.75rem;
+  --p-radius-sm: 0.25rem;
+  --p-radius-md: 0.5rem;
+  --p-radius-lg: 0.75rem;
   --p-radius-full: 9999px;
 
   /* Shadows */
@@ -262,65 +265,65 @@ The token system is the backbone of white-label theming. All component styles re
   --p-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
 
   /* Motion */
-  --p-dur-fast:   150ms;
+  --p-dur-fast: 150ms;
   --p-dur-normal: 250ms;
-  --p-dur-slow:   400ms;
-  --p-ease:       cubic-bezier(0.4, 0, 0.2, 1);
+  --p-dur-slow: 400ms;
+  --p-ease: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ── LAYER 2: SEMANTIC ALIASES — LIGHT MODE ─────────────────────── */
 :root,
-[data-color-scheme="light"] {
-  --color-brand:          var(--p-brand-500);
-  --color-brand-hover:    var(--p-brand-700);
-  --color-brand-subtle:   var(--p-brand-50);
-  --color-brand-text:     var(--p-brand-900);
+[data-color-scheme='light'] {
+  --color-brand: var(--p-brand-500);
+  --color-brand-hover: var(--p-brand-700);
+  --color-brand-subtle: var(--p-brand-50);
+  --color-brand-text: var(--p-brand-900);
 
-  --color-bg:             var(--p-neutral-0);
-  --color-bg-secondary:   var(--p-neutral-50);
-  --color-bg-tertiary:    var(--p-neutral-100);
-  --color-surface:        var(--p-neutral-0);
+  --color-bg: var(--p-neutral-0);
+  --color-bg-secondary: var(--p-neutral-50);
+  --color-bg-tertiary: var(--p-neutral-100);
+  --color-surface: var(--p-neutral-0);
   --color-surface-raised: var(--p-neutral-50);
 
-  --color-border:         var(--p-neutral-200);
-  --color-border-strong:  var(--p-neutral-300);
+  --color-border: var(--p-neutral-200);
+  --color-border-strong: var(--p-neutral-300);
 
-  --color-text:           var(--p-neutral-900);
+  --color-text: var(--p-neutral-900);
   --color-text-secondary: var(--p-neutral-500);
-  --color-text-disabled:  var(--p-neutral-400);
-  --color-text-inverse:   var(--p-neutral-0);
-  --color-text-on-brand:  #ffffff;
+  --color-text-disabled: var(--p-neutral-400);
+  --color-text-inverse: var(--p-neutral-0);
+  --color-text-on-brand: #ffffff;
 
-  --color-success:  var(--p-success);
-  --color-warning:  var(--p-warning);
-  --color-error:    var(--p-error);
-  --color-info:     var(--p-info);
+  --color-success: var(--p-success);
+  --color-warning: var(--p-warning);
+  --color-error: var(--p-error);
+  --color-info: var(--p-info);
 
   --color-focus-ring: var(--p-brand-500);
   --focus-ring: 0 0 0 3px var(--color-focus-ring);
 }
 
 /* ── LAYER 2: SEMANTIC ALIASES — DARK MODE ──────────────────────── */
-[data-color-scheme="dark"] {
-  --color-brand:          var(--p-brand-300);
-  --color-brand-hover:    var(--p-brand-100);
-  --color-brand-subtle:   var(--p-brand-900);
-  --color-brand-text:     var(--p-brand-100);
+[data-color-scheme='dark'] {
+  --color-brand: var(--p-brand-300);
+  --color-brand-hover: var(--p-brand-100);
+  --color-brand-subtle: var(--p-brand-900);
+  --color-brand-text: var(--p-brand-100);
 
-  --color-bg:             #0d1117;
-  --color-bg-secondary:   #161b22;
-  --color-bg-tertiary:    #21262d;
-  --color-surface:        #1c2128;
+  --color-bg: #0d1117;
+  --color-bg-secondary: #161b22;
+  --color-bg-tertiary: #21262d;
+  --color-surface: #1c2128;
   --color-surface-raised: #2d333b;
 
-  --color-border:         #30363d;
-  --color-border-strong:  #484f58;
+  --color-border: #30363d;
+  --color-border-strong: #484f58;
 
-  --color-text:           #e6edf3;
+  --color-text: #e6edf3;
   --color-text-secondary: #8b949e;
-  --color-text-disabled:  #484f58;
-  --color-text-inverse:   #0f172a;
-  --color-text-on-brand:  #0f172a;
+  --color-text-disabled: #484f58;
+  --color-text-inverse: #0f172a;
+  --color-text-on-brand: #0f172a;
 
   --color-focus-ring: var(--p-brand-300);
 }
@@ -393,6 +396,8 @@ The token system is the backbone of white-label theming. All component styles re
 
 ---
 
+[↑ Back to top](#Table-of-Contents)
+
 ## 4. Shared Packages — Deep Implementation
 
 ### 4.1 `packages/types` — The Contract Layer
@@ -413,17 +418,17 @@ export type StrainType =
 
 /** Terpene profile entry */
 export interface Terpene {
-  name: string;       // e.g., "Myrcene"
+  name: string; // e.g., "Myrcene"
   percentage: number; // 0-100
 }
 
 /** Cannabis-specific product metadata */
 export interface CannabisInfo {
   strainType: StrainType;
-  thcContent: number;     // percentage, e.g., 24.5
+  thcContent: number; // percentage, e.g., 24.5
   cbdContent: number;
   terpenes: Terpene[];
-  effects: string[];      // e.g., ["relaxing", "euphoric"]
+  effects: string[]; // e.g., ["relaxing", "euphoric"]
   flavors: string[];
   growMethod?: 'indoor' | 'outdoor' | 'greenhouse';
   originState?: string;
@@ -433,13 +438,13 @@ export interface CannabisInfo {
 export interface ProductVariant {
   id: string;
   productId: string;
-  name: string;       // e.g., "1/8 oz", "1g", "500mg"
+  name: string; // e.g., "1/8 oz", "1g", "500mg"
   sku: string;
   weight?: number;
   weightUnit?: 'g' | 'oz' | 'mg' | 'ml';
   price: number;
   compareAtPrice?: number; // Original price for sale display
-  quantity: number;        // Current stock level
+  quantity: number; // Current stock level
   lowStockThreshold: number;
   isActive: boolean;
   metrcPackageId?: string; // Metrc seed-to-sale tracking ID
@@ -680,8 +685,6 @@ export interface BrandingConfig {
 }
 ```
 
-[↑ Back to top](#top)
-
 ---
 
 ### 4.2 `packages/stores` — Zustand State Architecture
@@ -746,7 +749,9 @@ export const useAuthStore = create<AuthState>()(
       },
 
       setLoading: (loading) => {
-        set((state) => { state.isLoading = loading; });
+        set((state) => {
+          state.isLoading = loading;
+        });
       },
     })),
     {
@@ -758,8 +763,8 @@ export const useAuthStore = create<AuthState>()(
         accessToken: state.accessToken,
         isAuthenticated: state.isAuthenticated,
       }),
-    }
-  )
+    },
+  ),
 );
 
 // Convenience selector hooks — prevents re-renders when unrelated state changes
@@ -806,7 +811,8 @@ export const useCartStore = create<CartState>()(
       promoDiscount: 0,
       isSyncing: false,
 
-      itemCount: () => get().items.reduce((sum, item) => sum + item.quantity, 0),
+      itemCount: () =>
+        get().items.reduce((sum, item) => sum + item.quantity, 0),
       subtotal: () =>
         get().items.reduce(
           (sum, item) => sum + item.variant.price * item.quantity,
@@ -815,9 +821,7 @@ export const useCartStore = create<CartState>()(
 
       addItem: (product, variant, qty) => {
         set((state) => {
-          const existing = state.items.find(
-            (i) => i.variantId === variant.id,
-          );
+          const existing = state.items.find((i) => i.variantId === variant.id);
           if (existing) {
             existing.quantity += qty;
           } else {
@@ -882,14 +886,16 @@ export const useCartStore = create<CartState>()(
       },
 
       setSyncing: (syncing) => {
-        set((state) => { state.isSyncing = syncing; });
+        set((state) => {
+          state.isSyncing = syncing;
+        });
       },
     })),
     {
       name: 'cannasaas-cart',
       storage: createJSONStorage(() => localStorage),
-    }
-  )
+    },
+  ),
 );
 ```
 
@@ -915,7 +921,9 @@ export const useOrganizationStore = create<OrganizationState>()(
     isResolving: true,
 
     setTenant: (tenant) => {
-      set((state) => { state.tenant = tenant; });
+      set((state) => {
+        state.tenant = tenant;
+      });
     },
 
     updateBranding: (branding) => {
@@ -927,13 +935,17 @@ export const useOrganizationStore = create<OrganizationState>()(
     },
 
     clearTenant: () => {
-      set((state) => { state.tenant = null; });
+      set((state) => {
+        state.tenant = null;
+      });
     },
 
     setResolving: (resolving) => {
-      set((state) => { state.isResolving = resolving; });
+      set((state) => {
+        state.isResolving = resolving;
+      });
     },
-  }))
+  })),
 );
 
 export const useCurrentTenant = () => useOrganizationStore((s) => s.tenant);
@@ -1031,10 +1043,9 @@ export function createApiClient(): AxiosInstance {
             '/auth/refresh',
           );
           const { accessToken } = data;
-          useAuthStore.getState().setAuth(
-            useAuthStore.getState().user!,
-            accessToken,
-          );
+          useAuthStore
+            .getState()
+            .setAuth(useAuthStore.getState().user!, accessToken);
           processQueue(null, accessToken);
           if (originalRequest.headers) {
             originalRequest.headers.Authorization = `Bearer ${accessToken}`;
@@ -1072,11 +1083,7 @@ import {
   type UseQueryOptions,
 } from '@tanstack/react-query';
 import { apiClient } from '../client';
-import type {
-  Product,
-  PaginatedResponse,
-  ApiError,
-} from '@cannasaas/types';
+import type { Product, PaginatedResponse, ApiError } from '@cannasaas/types';
 
 // ── Query Key Factory ─────────────────────────────────────────────
 // Centralized key management prevents stale data and makes
@@ -1084,8 +1091,7 @@ import type {
 export const productKeys = {
   all: ['products'] as const,
   lists: () => [...productKeys.all, 'list'] as const,
-  list: (filters: ProductFilters) =>
-    [...productKeys.lists(), filters] as const,
+  list: (filters: ProductFilters) => [...productKeys.lists(), filters] as const,
   details: () => [...productKeys.all, 'detail'] as const,
   detail: (id: string) => [...productKeys.details(), id] as const,
   featured: () => [...productKeys.all, 'featured'] as const,
@@ -1150,7 +1156,9 @@ export function useProduct(
   return useQuery({
     queryKey: productKeys.detail(id),
     queryFn: async () => {
-      const { data } = await apiClient.get<{ data: Product }>(`/products/${id}`);
+      const { data } = await apiClient.get<{ data: Product }>(
+        `/products/${id}`,
+      );
       return data.data;
     },
     enabled: !!id,
@@ -1313,15 +1321,15 @@ const buttonVariants = cva(
         ],
       },
       size: {
-        sm:   'h-8  px-3 text-[var(--p-text-sm)]',
-        md:   'h-10 px-4 text-[var(--p-text-base)]',
-        lg:   'h-12 px-6 text-[var(--p-text-lg)]',
+        sm: 'h-8  px-3 text-[var(--p-text-sm)]',
+        md: 'h-10 px-4 text-[var(--p-text-base)]',
+        lg: 'h-12 px-6 text-[var(--p-text-lg)]',
         // WCAG 2.5.5 Target Size: minimum 44x44px on touch devices
         touch: 'min-h-[44px] min-w-[44px] px-4 text-[var(--p-text-base)]',
-        icon:  'h-10 w-10 p-0',
+        icon: 'h-10 w-10 p-0',
       },
       fullWidth: {
-        true:  'w-full',
+        true: 'w-full',
         false: 'w-auto',
       },
     },
@@ -1334,7 +1342,8 @@ const buttonVariants = cva(
 );
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends
+    React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   isLoading?: boolean;
   loadingText?: string; // Announced to screen readers during loading
@@ -1384,15 +1393,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {isLoading ? (
           <>
-            <Loader2
-              className="animate-spin"
-              size={16}
-              aria-hidden="true"
-            />
+            <Loader2 className="animate-spin" size={16} aria-hidden="true" />
             {/* Screen reader hears the loading text, sighted users see the spinner */}
-            <span aria-live="polite">
-              {loadingText ?? children}
-            </span>
+            <span aria-live="polite">{loadingText ?? children}</span>
           </>
         ) : (
           <>
@@ -1444,7 +1447,8 @@ interface ProductImageProps {
 
 const ProductImage: React.FC<ProductImageProps> = ({ product, className }) => {
   const [imgError, setImgError] = useState(false);
-  const primaryImage = product.images.find((img) => img.isPrimary) ?? product.images[0];
+  const primaryImage =
+    product.images.find((img) => img.isPrimary) ?? product.images[0];
 
   if (!primaryImage || imgError) {
     return (
@@ -1526,7 +1530,11 @@ const StockIndicator: React.FC<{ variant: ProductVariant }> = ({ variant }) => {
   }
   if (variant.quantity <= variant.lowStockThreshold) {
     return (
-      <Badge variant="warning" size="sm" aria-label={`Low stock: ${variant.quantity} remaining`}>
+      <Badge
+        variant="warning"
+        size="sm"
+        aria-label={`Low stock: ${variant.quantity} remaining`}
+      >
         Only {variant.quantity} left
       </Badge>
     );
@@ -1591,7 +1599,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     >
       {/* Image container */}
       <div className="relative aspect-square overflow-hidden bg-[var(--color-bg-tertiary)]">
-        <ProductImage product={product} className="transition-transform duration-300 hover:scale-105" />
+        <ProductImage
+          product={product}
+          className="transition-transform duration-300 hover:scale-105"
+        />
 
         {/* Strain type badge — overlaid on image */}
         <div className="absolute top-2 left-2">
@@ -1601,7 +1612,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {/* Featured badge */}
         {product.isFeatured && (
           <div className="absolute top-2 right-2">
-            <Badge variant="brand" size="sm">Featured</Badge>
+            <Badge variant="brand" size="sm">
+              Featured
+            </Badge>
           </div>
         )}
 
@@ -1658,9 +1671,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Effects chips */}
         {!compact && product.cannabisInfo.effects.length > 0 && (
-          <EffectsChips
-            effects={product.cannabisInfo.effects.slice(0, 3)}
-          />
+          <EffectsChips effects={product.cannabisInfo.effects.slice(0, 3)} />
         )}
 
         {/* Variant selector (if multiple variants exist) */}
@@ -1694,12 +1705,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Price + stock */}
         <div className="flex items-center justify-between mt-auto pt-2">
-          {selectedVariant && (
-            <ProductPricing variant={selectedVariant} />
-          )}
-          {selectedVariant && (
-            <StockIndicator variant={selectedVariant} />
-          )}
+          {selectedVariant && <ProductPricing variant={selectedVariant} />}
+          {selectedVariant && <StockIndicator variant={selectedVariant} />}
         </div>
 
         {/* Add to cart */}
@@ -1849,7 +1856,11 @@ export function formatWeight(grams: number): string {
 }
 
 /** Pluralize a word based on count */
-export function pluralize(count: number, word: string, plural?: string): string {
+export function pluralize(
+  count: number,
+  word: string,
+  plural?: string,
+): string {
   return count === 1 ? word : (plural ?? `${word}s`);
 }
 
@@ -1909,9 +1920,9 @@ export type LoginFormValues = z.infer<typeof loginSchema>;
 export type RegisterFormValues = z.infer<typeof registerSchema>;
 ```
 
-[↑ Back to top](#top)
-
 ---
+
+[↑ Back to top](#Table-of-Contents)
 
 ## 5. Authentication & Multi-Tenant Wiring
 
@@ -1923,10 +1934,7 @@ When the storefront loads, it must determine which dispensary's data to show. Th
 // apps/storefront/src/providers/TenantProvider.tsx
 import React, { useEffect, type ReactNode } from 'react';
 import { apiClient } from '@cannasaas/api-client';
-import {
-  useOrganizationStore,
-  useCurrentTenant,
-} from '@cannasaas/stores';
+import { useOrganizationStore, useCurrentTenant } from '@cannasaas/stores';
 import type { TenantContext } from '@cannasaas/types';
 import { FullPageLoader } from '@cannasaas/ui';
 
@@ -2039,11 +2047,7 @@ export function ProtectedRoute({
   // Not logged in — preserve intended destination for post-login redirect
   if (!isAuthenticated) {
     return (
-      <Navigate
-        to={redirectTo}
-        state={{ from: location.pathname }}
-        replace
-      />
+      <Navigate to={redirectTo} state={{ from: location.pathname }} replace />
     );
   }
 
@@ -2100,7 +2104,9 @@ export function LoginPage() {
       navigate(from, { replace: true });
     } catch {
       // Set a root-level form error — displayed in a live region
-      setError('root', { message: 'Invalid email or password. Please try again.' });
+      setError('root', {
+        message: 'Invalid email or password. Please try again.',
+      });
     }
   };
 
@@ -2160,7 +2166,12 @@ export function LoginPage() {
                 className="block text-[var(--p-text-sm)] font-semibold text-[var(--color-text)] mb-1.5"
               >
                 Email address
-                <span className="text-[var(--color-error)] ml-1" aria-hidden="true">*</span>
+                <span
+                  className="text-[var(--color-error)] ml-1"
+                  aria-hidden="true"
+                >
+                  *
+                </span>
               </label>
               <input
                 id="email"
@@ -2201,7 +2212,12 @@ export function LoginPage() {
                   className="text-[var(--p-text-sm)] font-semibold text-[var(--color-text)]"
                 >
                   Password
-                  <span className="text-[var(--color-error)] ml-1" aria-hidden="true">*</span>
+                  <span
+                    className="text-[var(--color-error)] ml-1"
+                    aria-hidden="true"
+                  >
+                    *
+                  </span>
                 </label>
                 <Link
                   to="/auth/forgot-password"
@@ -2216,7 +2232,9 @@ export function LoginPage() {
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
                   aria-required="true"
-                  aria-describedby={errors.password ? 'password-error' : undefined}
+                  aria-describedby={
+                    errors.password ? 'password-error' : undefined
+                  }
                   aria-invalid={!!errors.password}
                   className={[
                     'w-full h-11 pl-4 pr-12 rounded-[var(--p-radius-md)]',
@@ -2246,7 +2264,11 @@ export function LoginPage() {
                 </button>
               </div>
               {errors.password && (
-                <p id="password-error" role="alert" className="mt-1.5 text-[var(--p-text-sm)] text-[var(--color-error)]">
+                <p
+                  id="password-error"
+                  role="alert"
+                  className="mt-1.5 text-[var(--p-text-sm)] text-[var(--color-error)]"
+                >
                   {errors.password.message}
                 </p>
               )}
@@ -2281,11 +2303,11 @@ export function LoginPage() {
 }
 ```
 
-[↑ Back to top](#top)
-
 ---
 
-## 6. Design System & Theming Engine
+[↑ Back to top](#Table-of-Contents)
+
+## 6. Design System and Theming Engine
 
 The `ThemeProvider` reads branding config from the organization store and injects CSS custom properties at the `:root` level. This means **zero component rewrites** are needed for white-label support — every dispensary gets its own colors, fonts, and logo through a single runtime injection.
 
@@ -2342,7 +2364,9 @@ export function ThemeProvider({
   useEffect(() => {
     const root = document.documentElement;
     if (colorScheme === 'system') {
-      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const systemDark = window.matchMedia(
+        '(prefers-color-scheme: dark)',
+      ).matches;
       root.setAttribute('data-color-scheme', systemDark ? 'dark' : 'light');
     } else {
       root.setAttribute('data-color-scheme', colorScheme);
@@ -2372,12 +2396,18 @@ export function ThemeProvider({
     if (branding.headingFont) {
       // Inject Google Font link if not already present
       injectGoogleFont(branding.headingFont);
-      root.style.setProperty('--font-heading', `'${branding.headingFont}', sans-serif`);
+      root.style.setProperty(
+        '--font-heading',
+        `'${branding.headingFont}', sans-serif`,
+      );
     }
 
     if (branding.bodyFont) {
       injectGoogleFont(branding.bodyFont);
-      root.style.setProperty('--font-body', `'${branding.bodyFont}', sans-serif`);
+      root.style.setProperty(
+        '--font-body',
+        `'${branding.bodyFont}', sans-serif`,
+      );
     }
   }, [branding]);
 
@@ -2429,9 +2459,9 @@ function injectGoogleFont(fontFamily: string) {
 }
 ```
 
-[↑ Back to top](#top)
-
 ---
+
+[↑ Back to top](#Table-of-Contents)
 
 ## 7. Customer Storefront — Full Implementation
 
@@ -2484,17 +2514,21 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { PageLoader } from '@cannasaas/ui';
 
 // Lazy-loaded routes — code split at the route level
-const HomePage         = lazy(() => import('./pages/Home/HomePage'));
-const ProductsPage     = lazy(() => import('./pages/Products/ProductsPage'));
-const ProductDetailPage = lazy(() => import('./pages/Products/ProductDetailPage'));
-const CartPage         = lazy(() => import('./pages/Cart/CartPage'));
-const CheckoutPage     = lazy(() => import('./pages/Checkout/CheckoutPage'));
+const HomePage = lazy(() => import('./pages/Home/HomePage'));
+const ProductsPage = lazy(() => import('./pages/Products/ProductsPage'));
+const ProductDetailPage = lazy(
+  () => import('./pages/Products/ProductDetailPage'),
+);
+const CartPage = lazy(() => import('./pages/Cart/CartPage'));
+const CheckoutPage = lazy(() => import('./pages/Checkout/CheckoutPage'));
 const OrderSuccessPage = lazy(() => import('./pages/Orders/OrderSuccessPage'));
-const OrderTrackingPage = lazy(() => import('./pages/Orders/OrderTrackingPage'));
-const AccountPage      = lazy(() => import('./pages/Account/AccountPage'));
-const LoginPage        = lazy(() => import('./pages/Auth/LoginPage'));
-const RegisterPage     = lazy(() => import('./pages/Auth/RegisterPage'));
-const NotFoundPage     = lazy(() => import('./pages/NotFoundPage'));
+const OrderTrackingPage = lazy(
+  () => import('./pages/Orders/OrderTrackingPage'),
+);
+const AccountPage = lazy(() => import('./pages/Account/AccountPage'));
+const LoginPage = lazy(() => import('./pages/Auth/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/Auth/RegisterPage'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 export default function App() {
   return (
@@ -2574,11 +2608,7 @@ The age gate is the most legally critical component in the entire application. I
 
 ```tsx
 // apps/storefront/src/components/AgeGate/AgeGate.tsx
-import React, {
-  useState,
-  useEffect,
-  type ReactNode,
-} from 'react';
+import React, { useState, useEffect, type ReactNode } from 'react';
 import { Shield, AlertTriangle } from 'lucide-react';
 import { Button } from '@cannasaas/ui';
 import { useCurrentTenant } from '@cannasaas/stores';
@@ -2762,12 +2792,7 @@ export function AgeGate({ children }: AgeGateProps) {
             >
               I am 21 or Older
             </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              fullWidth
-              onClick={handleDeny}
-            >
+            <Button variant="outline" size="lg" fullWidth onClick={handleDeny}>
               I am Under 21
             </Button>
           </div>
@@ -2833,7 +2858,11 @@ import {
   Moon,
   LogOut,
 } from 'lucide-react';
-import { useCartStore, useAuthStore, useCurrentTenant } from '@cannasaas/stores';
+import {
+  useCartStore,
+  useAuthStore,
+  useCurrentTenant,
+} from '@cannasaas/stores';
 import { useTheme } from '@cannasaas/ui';
 import { Button } from '@cannasaas/ui';
 import { MobileNav } from './MobileNav';
@@ -2945,7 +2974,11 @@ export function StorefrontHeader() {
                 onClick={() =>
                   setColorScheme(colorScheme === 'dark' ? 'light' : 'dark')
                 }
-                aria-label={colorScheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                aria-label={
+                  colorScheme === 'dark'
+                    ? 'Switch to light mode'
+                    : 'Switch to dark mode'
+                }
                 aria-pressed={colorScheme === 'dark'}
                 className="p-2 rounded-[var(--p-radius-md)] text-[var(--color-text-secondary)] hover:text-[var(--color-text)] hover:bg-[var(--color-bg-tertiary)] transition-colors hidden sm:flex"
               >
@@ -3036,10 +3069,7 @@ export function StorefrontHeader() {
       />
 
       {/* Search modal */}
-      <SearchModal
-        isOpen={searchOpen}
-        onClose={() => setSearchOpen(false)}
-      />
+      <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   );
 }
@@ -3081,7 +3111,10 @@ export default function HomePage() {
       {/* WCAG: sections are semantic landmarks */}
       <HeroSection />
 
-      <section aria-labelledby="categories-heading" className="py-12 md:py-16 bg-[var(--color-bg-secondary)]">
+      <section
+        aria-labelledby="categories-heading"
+        className="py-12 md:py-16 bg-[var(--color-bg-secondary)]"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2
             id="categories-heading"
@@ -3144,8 +3177,12 @@ export default function ProductsPage() {
   const filters: ProductFilters = {
     category: searchParams.get('category') ?? undefined,
     strainType: searchParams.get('strainType') ?? undefined,
-    minThc: searchParams.get('minThc') ? Number(searchParams.get('minThc')) : undefined,
-    maxPrice: searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined,
+    minThc: searchParams.get('minThc')
+      ? Number(searchParams.get('minThc'))
+      : undefined,
+    maxPrice: searchParams.get('maxPrice')
+      ? Number(searchParams.get('maxPrice'))
+      : undefined,
     sort: (searchParams.get('sort') as ProductFilters['sort']) ?? 'newest',
     search: searchParams.get('q') ?? undefined,
   };
@@ -3195,7 +3232,8 @@ export default function ProductsPage() {
         <title>
           {filters.category
             ? `${filters.category.charAt(0).toUpperCase() + filters.category.slice(1)} Products`
-            : 'All Products'} | Shop
+            : 'All Products'}{' '}
+          | Shop
         </title>
       </Helmet>
 
@@ -3205,7 +3243,8 @@ export default function ProductsPage() {
           <div>
             <h1 className="text-[var(--p-text-3xl)] font-bold text-[var(--color-text)]">
               {filters.category
-                ? filters.category.charAt(0).toUpperCase() + filters.category.slice(1)
+                ? filters.category.charAt(0).toUpperCase() +
+                  filters.category.slice(1)
                 : 'All Products'}
             </h1>
             {!isLoading && (
@@ -3430,7 +3469,9 @@ const STEPS: { id: CheckoutStep; label: string }[] = [
 export default function CheckoutPage() {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<CheckoutStep>('review');
-  const [fulfillmentType, setFulfillmentType] = useState<'pickup' | 'delivery'>('pickup');
+  const [fulfillmentType, setFulfillmentType] = useState<'pickup' | 'delivery'>(
+    'pickup',
+  );
   const [deliveryAddress, setDeliveryAddress] = useState(null);
   const { items, subtotal, promoDiscount } = useCartStore();
   const { data: limitCheck } = usePurchaseLimitCheck(items);
@@ -3475,7 +3516,9 @@ export default function CheckoutPage() {
               role="alert"
               className="mb-6 p-4 bg-amber-50 border border-amber-300 rounded-[var(--p-radius-md)]"
             >
-              <p className="font-semibold text-amber-800 mb-1">Purchase Limit Warning</p>
+              <p className="font-semibold text-amber-800 mb-1">
+                Purchase Limit Warning
+              </p>
               <ul className="text-sm text-amber-700 list-disc list-inside">
                 {limitCheck.violations.map((v, i) => (
                   <li key={i}>{v}</li>
@@ -3488,9 +3531,7 @@ export default function CheckoutPage() {
             {/* Main checkout flow */}
             <div className="flex-1 min-w-0">
               {currentStep === 'review' && (
-                <ReviewStep
-                  onComplete={() => handleStepComplete('review')}
-                />
+                <ReviewStep onComplete={() => handleStepComplete('review')} />
               )}
               {currentStep === 'fulfillment' && (
                 <FulfillmentStep
@@ -3559,10 +3600,7 @@ export function CheckoutProgress({
   const currentIndex = steps.findIndex((s) => s.id === currentStep);
 
   return (
-    <nav
-      aria-label="Checkout steps"
-      className={className}
-    >
+    <nav aria-label="Checkout steps" className={className}>
       <ol className="flex items-center">
         {steps.map((step, index) => {
           const isCompleted = index < currentIndex;
@@ -3585,15 +3623,15 @@ export function CheckoutProgress({
                     isCompleted
                       ? 'bg-[var(--color-success)] text-white'
                       : isCurrent
-                      ? 'bg-[var(--color-brand)] text-[var(--color-text-on-brand)]'
-                      : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] border-2 border-[var(--color-border)]',
+                        ? 'bg-[var(--color-brand)] text-[var(--color-text-on-brand)]'
+                        : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] border-2 border-[var(--color-border)]',
                   )}
                   aria-label={
                     isCompleted
                       ? `${step.label}: completed`
                       : isCurrent
-                      ? `${step.label}: current step`
-                      : `${step.label}: upcoming`
+                        ? `${step.label}: current step`
+                        : `${step.label}: upcoming`
                   }
                 >
                   {isCompleted ? (
@@ -3608,8 +3646,8 @@ export function CheckoutProgress({
                     isCurrent
                       ? 'text-[var(--color-brand)]'
                       : isCompleted
-                      ? 'text-[var(--color-success)]'
-                      : 'text-[var(--color-text-secondary)]',
+                        ? 'text-[var(--color-success)]'
+                        : 'text-[var(--color-text-secondary)]',
                   )}
                 >
                   {step.label}
@@ -3728,15 +3766,23 @@ export default function OrderTrackingPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]" aria-busy="true">
-        <p className="text-[var(--color-text-secondary)]">Loading order details...</p>
+      <div
+        className="flex items-center justify-center min-h-[60vh]"
+        aria-busy="true"
+      >
+        <p className="text-[var(--color-text-secondary)]">
+          Loading order details...
+        </p>
       </div>
     );
   }
 
   if (!order) {
     return (
-      <div role="alert" className="flex items-center justify-center min-h-[60vh]">
+      <div
+        role="alert"
+        className="flex items-center justify-center min-h-[60vh]"
+      >
         <p className="text-[var(--color-error)]">Order not found.</p>
       </div>
     );
@@ -3761,10 +3807,15 @@ export default function OrderTrackingPage() {
           aria-live="polite"
           aria-atomic="true"
         >
-          <Clock className="text-[var(--color-brand)] flex-shrink-0" aria-hidden="true" />
+          <Clock
+            className="text-[var(--color-brand)] flex-shrink-0"
+            aria-hidden="true"
+          />
           <p className="font-semibold text-[var(--color-brand-text)]">
             Estimated arrival in{' '}
-            <strong>{etaMinutes} {etaMinutes === 1 ? 'minute' : 'minutes'}</strong>
+            <strong>
+              {etaMinutes} {etaMinutes === 1 ? 'minute' : 'minutes'}
+            </strong>
           </p>
         </div>
       )}
@@ -3777,15 +3828,26 @@ export default function OrderTrackingPage() {
       />
 
       {/* Order items summary */}
-      <section aria-labelledby="items-heading" className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--p-radius-lg)] p-6">
-        <h2 id="items-heading" className="font-bold text-[var(--color-text)] mb-4">
+      <section
+        aria-labelledby="items-heading"
+        className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--p-radius-lg)] p-6"
+      >
+        <h2
+          id="items-heading"
+          className="font-bold text-[var(--color-text)] mb-4"
+        >
           Order Summary
         </h2>
         <ul className="divide-y divide-[var(--color-border)]">
           {order.items.map((item) => (
-            <li key={item.id} className="flex items-center justify-between py-3">
+            <li
+              key={item.id}
+              className="flex items-center justify-between py-3"
+            >
               <div>
-                <p className="font-semibold text-[var(--color-text)]">{item.productName}</p>
+                <p className="font-semibold text-[var(--color-text)]">
+                  {item.productName}
+                </p>
                 <p className="text-[var(--p-text-sm)] text-[var(--color-text-secondary)]">
                   {item.variantName} × {item.quantity}
                 </p>
@@ -3808,9 +3870,9 @@ export default function OrderTrackingPage() {
 }
 ```
 
-[↑ Back to top](#top)
-
 ---
+
+[↑ Back to top](#Table-of-Contents)
 
 ## 8. Admin Portal — Full Implementation
 
@@ -3823,8 +3885,17 @@ The admin portal uses a collapsible sidebar layout with secondary navigation tab
 import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard, Package, ShoppingBag, Users, BarChart3,
-  Settings, Shield, Truck, LogOut, ChevronLeft, Bell,
+  LayoutDashboard,
+  Package,
+  ShoppingBag,
+  Users,
+  BarChart3,
+  Settings,
+  Shield,
+  Truck,
+  LogOut,
+  ChevronLeft,
+  Bell,
 } from 'lucide-react';
 import { useAuthStore } from '@cannasaas/stores';
 import { useCurrentUser } from '@cannasaas/stores';
@@ -3839,14 +3910,24 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard',   href: '/dashboard',   icon: LayoutDashboard },
-  { label: 'Products',    href: '/products',    icon: Package },
-  { label: 'Orders',      href: '/orders',      icon: ShoppingBag },
-  { label: 'Customers',   href: '/customers',   icon: Users },
-  { label: 'Analytics',   href: '/analytics',   icon: BarChart3 },
-  { label: 'Delivery',    href: '/delivery',    icon: Truck },
-  { label: 'Compliance',  href: '/compliance',  icon: Shield, roles: ['admin', 'manager', 'owner'] },
-  { label: 'Settings',    href: '/settings',    icon: Settings, roles: ['admin', 'owner'] },
+  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { label: 'Products', href: '/products', icon: Package },
+  { label: 'Orders', href: '/orders', icon: ShoppingBag },
+  { label: 'Customers', href: '/customers', icon: Users },
+  { label: 'Analytics', href: '/analytics', icon: BarChart3 },
+  { label: 'Delivery', href: '/delivery', icon: Truck },
+  {
+    label: 'Compliance',
+    href: '/compliance',
+    icon: Shield,
+    roles: ['admin', 'manager', 'owner'],
+  },
+  {
+    label: 'Settings',
+    href: '/settings',
+    icon: Settings,
+    roles: ['admin', 'owner'],
+  },
 ];
 
 export function AdminLayout() {
@@ -3888,7 +3969,9 @@ export function AdminLayout() {
           <button
             type="button"
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            aria-label={
+              sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'
+            }
             aria-expanded={!sidebarCollapsed}
             className="ml-auto p-1.5 rounded text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]"
           >
@@ -4022,14 +4105,23 @@ The dashboard aggregates live data from the analytics API and renders multiple c
 // apps/admin/src/pages/Dashboard/DashboardPage.tsx
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
+import { DollarSign, ShoppingBag, Users, TrendingUp } from 'lucide-react';
 import {
-  DollarSign, ShoppingBag, Users, TrendingUp,
-} from 'lucide-react';
-import {
-  LineChart, Line, BarChart, Bar, XAxis, YAxis,
-  CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
 } from 'recharts';
-import { useAnalyticsDashboard, useLowStockProducts } from '@cannasaas/api-client';
+import {
+  useAnalyticsDashboard,
+  useLowStockProducts,
+} from '@cannasaas/api-client';
 import { StatCard } from './components/StatCard';
 import { TopProductsTable } from './components/TopProductsTable';
 import { Skeleton } from '@cannasaas/ui';
@@ -4041,7 +4133,9 @@ export default function DashboardPage() {
 
   return (
     <>
-      <Helmet><title>Dashboard | CannaSaas Admin</title></Helmet>
+      <Helmet>
+        <title>Dashboard | CannaSaas Admin</title>
+      </Helmet>
 
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -4128,7 +4222,10 @@ export default function DashboardPage() {
                     tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
                   />
                   <Tooltip
-                    formatter={(value: number) => [formatCurrency(value), 'Revenue']}
+                    formatter={(value: number) => [
+                      formatCurrency(value),
+                      'Revenue',
+                    ]}
                     contentStyle={{
                       background: 'var(--color-surface)',
                       border: '1px solid var(--color-border)',
@@ -4160,7 +4257,10 @@ export default function DashboardPage() {
             >
               Top Products
             </h2>
-            <TopProductsTable products={analytics?.topProducts ?? []} isLoading={isLoading} />
+            <TopProductsTable
+              products={analytics?.topProducts ?? []}
+              isLoading={isLoading}
+            />
           </section>
         </div>
 
@@ -4178,7 +4278,10 @@ export default function DashboardPage() {
             </h2>
             <ul className="space-y-2">
               {lowStock.slice(0, 5).map((product) => (
-                <li key={product.id} className="text-sm text-amber-700 dark:text-amber-400 flex justify-between">
+                <li
+                  key={product.id}
+                  className="text-sm text-amber-700 dark:text-amber-400 flex justify-between"
+                >
                   <span>{product.name}</span>
                   <span className="font-bold">
                     {product.variants[0]?.quantity ?? 0} remaining
@@ -4260,17 +4363,28 @@ export function StatCard({
       {change !== 0 && (
         <div className="flex items-center gap-1 mt-3">
           {isPositive ? (
-            <TrendingUp size={14} className="text-[var(--color-success)]" aria-hidden="true" />
+            <TrendingUp
+              size={14}
+              className="text-[var(--color-success)]"
+              aria-hidden="true"
+            />
           ) : (
-            <TrendingDown size={14} className="text-[var(--color-error)]" aria-hidden="true" />
+            <TrendingDown
+              size={14}
+              className="text-[var(--color-error)]"
+              aria-hidden="true"
+            />
           )}
           <span
             className={cn(
               'text-[var(--p-text-sm)] font-bold',
-              isPositive ? 'text-[var(--color-success)]' : 'text-[var(--color-error)]',
+              isPositive
+                ? 'text-[var(--color-success)]'
+                : 'text-[var(--color-error)]',
             )}
           >
-            {isPositive ? '+' : ''}{change.toFixed(1)}%
+            {isPositive ? '+' : ''}
+            {change.toFixed(1)}%
           </span>
           <span className="text-[var(--p-text-xs)] text-[var(--color-text-secondary)]">
             vs last period
@@ -4298,7 +4412,11 @@ The compliance dashboard is the most legally sensitive part of the admin portal.
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Shield, FileText, AlertTriangle, RefreshCw } from 'lucide-react';
-import { useComplianceLogs, useMetrcSyncStatus, useGenerateDailyReport } from '@cannasaas/api-client';
+import {
+  useComplianceLogs,
+  useMetrcSyncStatus,
+  useGenerateDailyReport,
+} from '@cannasaas/api-client';
 import { Button, DataTable } from '@cannasaas/ui';
 import { ComplianceLogRow } from './components/ComplianceLogRow';
 import { PurchaseLimitChart } from './components/PurchaseLimitChart';
@@ -4414,7 +4532,8 @@ export default function ComplianceDashboard() {
             Audit Log
           </h2>
           <p className="text-[var(--p-text-sm)] text-[var(--color-text-secondary)] mb-4">
-            All compliance events are retained for 7 years per state regulatory requirements.
+            All compliance events are retained for 7 years per state regulatory
+            requirements.
           </p>
 
           {/* WCAG 1.3.1: table is used for tabular compliance data */}
@@ -4461,7 +4580,10 @@ export default function ComplianceDashboard() {
                   ? Array.from({ length: 8 }).map((_, i) => (
                       <tr key={i}>
                         <td colSpan={4} className="py-3 px-4">
-                          <div className="h-5 bg-[var(--color-bg-tertiary)] rounded animate-pulse" aria-hidden="true" />
+                          <div
+                            className="h-5 bg-[var(--color-bg-tertiary)] rounded animate-pulse"
+                            aria-hidden="true"
+                          />
                         </td>
                       </tr>
                     ))
@@ -4478,9 +4600,9 @@ export default function ComplianceDashboard() {
 }
 ```
 
-[↑ Back to top](#top)
-
 ---
+
+[↑ Back to top](#Table-of-Contents)
 
 ## 9. Staff Portal — Full Implementation
 
@@ -4586,7 +4708,8 @@ export default function OrderQueuePage() {
               aria-hidden="true"
             />
             <span className="text-[var(--p-text-sm)] text-[var(--color-text-secondary)]">
-              Live — {orders.length} active order{orders.length !== 1 ? 's' : ''}
+              Live — {orders.length} active order
+              {orders.length !== 1 ? 's' : ''}
             </span>
           </div>
         </div>
@@ -4639,8 +4762,13 @@ export default function OrderQueuePage() {
                     <div key={order.id} role="listitem">
                       <OrderQueueCard
                         order={order}
-                        actionLabel={lane.nextStatus === 'confirmed' ? 'Confirm' :
-                          lane.nextStatus === 'ready_for_pickup' ? 'Mark Ready' : 'Complete'}
+                        actionLabel={
+                          lane.nextStatus === 'confirmed'
+                            ? 'Confirm'
+                            : lane.nextStatus === 'ready_for_pickup'
+                              ? 'Mark Ready'
+                              : 'Complete'
+                        }
                         onAction={() =>
                           updateStatus({
                             orderId: order.id,
@@ -4661,9 +4789,9 @@ export default function OrderQueuePage() {
 }
 ```
 
-[↑ Back to top](#top)
-
 ---
+
+[↑ Back to top](#Table-of-Contents)
 
 ## 10. Cannabis-Specific Components
 
@@ -4679,12 +4807,12 @@ const STRAIN_CONFIG: Record<
   StrainType,
   { label: string; bg: string; text: string }
 > = {
-  indica:                  { label: 'Indica',    bg: '#7c3aed', text: '#ffffff' },
-  sativa:                  { label: 'Sativa',    bg: '#dc2626', text: '#ffffff' },
-  hybrid:                  { label: 'Hybrid',    bg: '#16a34a', text: '#ffffff' },
-  indica_dominant_hybrid:  { label: 'Indica-H',  bg: '#6d28d9', text: '#ffffff' },
-  sativa_dominant_hybrid:  { label: 'Sativa-H',  bg: '#b91c1c', text: '#ffffff' },
-  cbd_dominant:            { label: 'CBD',        bg: '#0891b2', text: '#ffffff' },
+  indica: { label: 'Indica', bg: '#7c3aed', text: '#ffffff' },
+  sativa: { label: 'Sativa', bg: '#dc2626', text: '#ffffff' },
+  hybrid: { label: 'Hybrid', bg: '#16a34a', text: '#ffffff' },
+  indica_dominant_hybrid: { label: 'Indica-H', bg: '#6d28d9', text: '#ffffff' },
+  sativa_dominant_hybrid: { label: 'Sativa-H', bg: '#b91c1c', text: '#ffffff' },
+  cbd_dominant: { label: 'CBD', bg: '#0891b2', text: '#ffffff' },
 };
 
 interface StrainTypeBadgeProps {
@@ -4705,7 +4833,9 @@ export function StrainTypeBadge({
       className={cn(
         'inline-flex items-center font-bold uppercase tracking-wider',
         'rounded-[var(--p-radius-sm)]',
-        size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-3 py-1 text-[var(--p-text-xs)]',
+        size === 'sm'
+          ? 'px-2 py-0.5 text-[10px]'
+          : 'px-3 py-1 text-[var(--p-text-xs)]',
         className,
       )}
       style={{
@@ -4750,11 +4880,12 @@ interface PurchaseLimitMeterProps {
 export function PurchaseLimitMeter({ limitCheck }: PurchaseLimitMeterProps) {
   const { allowed, violations, remaining, state } = limitCheck;
 
-  const STATE_LIMITS: Record<string, { flower: number; concentrate: number }> = {
-    NY: { flower: 3,   concentrate: 24 },
-    NJ: { flower: 1,   concentrate: 28 },
-    CT: { flower: 1.5, concentrate: 28 },
-  };
+  const STATE_LIMITS: Record<string, { flower: number; concentrate: number }> =
+    {
+      NY: { flower: 3, concentrate: 24 },
+      NJ: { flower: 1, concentrate: 28 },
+      CT: { flower: 1.5, concentrate: 28 },
+    };
 
   const limits = STATE_LIMITS[state] ?? STATE_LIMITS.NY;
   const flowerUsed = limits.flower - remaining.flowerOz;
@@ -4787,7 +4918,9 @@ export function PurchaseLimitMeter({ limitCheck }: PurchaseLimitMeterProps) {
           className="mb-4 p-3 bg-red-50 dark:bg-red-950/20 rounded-[var(--p-radius-md)] border border-[var(--color-error)]"
         >
           <ul className="text-[var(--p-text-sm)] text-[var(--color-error)] list-disc list-inside space-y-1">
-            {violations.map((v, i) => <li key={i}>{v}</li>)}
+            {violations.map((v, i) => (
+              <li key={i}>{v}</li>
+            ))}
           </ul>
         </div>
       )}
@@ -4796,7 +4929,9 @@ export function PurchaseLimitMeter({ limitCheck }: PurchaseLimitMeterProps) {
       <div className="space-y-3">
         <div>
           <div className="flex justify-between text-[var(--p-text-sm)] mb-1.5">
-            <span className="font-semibold text-[var(--color-text)]">Flower</span>
+            <span className="font-semibold text-[var(--color-text)]">
+              Flower
+            </span>
             <span className="text-[var(--color-text-secondary)]">
               {flowerUsed.toFixed(2)}oz / {limits.flower}oz used
             </span>
@@ -4815,10 +4950,12 @@ export function PurchaseLimitMeter({ limitCheck }: PurchaseLimitMeterProps) {
                 flowerUsed / limits.flower > 0.9
                   ? 'bg-[var(--color-error)]'
                   : flowerUsed / limits.flower > 0.7
-                  ? 'bg-[var(--color-warning)]'
-                  : 'bg-[var(--color-brand)]',
+                    ? 'bg-[var(--color-warning)]'
+                    : 'bg-[var(--color-brand)]',
               ].join(' ')}
-              style={{ width: `${Math.min((flowerUsed / limits.flower) * 100, 100)}%` }}
+              style={{
+                width: `${Math.min((flowerUsed / limits.flower) * 100, 100)}%`,
+              }}
             />
           </div>
           <p className="text-[var(--p-text-xs)] text-[var(--color-text-secondary)] mt-1">
@@ -4829,7 +4966,9 @@ export function PurchaseLimitMeter({ limitCheck }: PurchaseLimitMeterProps) {
         {/* Concentrate meter */}
         <div>
           <div className="flex justify-between text-[var(--p-text-sm)] mb-1.5">
-            <span className="font-semibold text-[var(--color-text)]">Concentrate</span>
+            <span className="font-semibold text-[var(--color-text)]">
+              Concentrate
+            </span>
             <span className="text-[var(--color-text-secondary)]">
               {concentrateUsed.toFixed(1)}g / {limits.concentrate}g used
             </span>
@@ -4849,7 +4988,9 @@ export function PurchaseLimitMeter({ limitCheck }: PurchaseLimitMeterProps) {
                   ? 'bg-[var(--color-error)]'
                   : 'bg-[var(--color-info)]',
               ].join(' ')}
-              style={{ width: `${Math.min((concentrateUsed / limits.concentrate) * 100, 100)}%` }}
+              style={{
+                width: `${Math.min((concentrateUsed / limits.concentrate) * 100, 100)}%`,
+              }}
             />
           </div>
         </div>
@@ -4859,9 +5000,9 @@ export function PurchaseLimitMeter({ limitCheck }: PurchaseLimitMeterProps) {
 }
 ```
 
-[↑ Back to top](#top)
-
 ---
+
+[↑ Back to top](#Table-of-Contents)
 
 ## 11. Real-Time Features — WebSocket Architecture
 
@@ -4976,9 +5117,9 @@ export function useWebSocketEvent<T>(
 }
 ```
 
-[↑ Back to top](#top)
-
 ---
+
+[↑ Back to top](#Table-of-Contents)
 
 ## 12. Elasticsearch Search & AI Recommendations
 
@@ -5003,7 +5144,9 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [query, setQuery] = useState('');
   const [recentSearches, setRecentSearches] = useState<string[]>(() => {
     try {
-      return JSON.parse(localStorage.getItem('cannasaas-recent-searches') ?? '[]') as string[];
+      return JSON.parse(
+        localStorage.getItem('cannasaas-recent-searches') ?? '[]',
+      ) as string[];
     } catch {
       return [];
     }
@@ -5040,20 +5183,26 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  const handleSearch = useCallback((searchQuery: string) => {
-    if (!searchQuery.trim()) return;
+  const handleSearch = useCallback(
+    (searchQuery: string) => {
+      if (!searchQuery.trim()) return;
 
-    // Save to recent searches
-    const updated = [
-      searchQuery,
-      ...recentSearches.filter((s) => s !== searchQuery),
-    ].slice(0, 5);
-    setRecentSearches(updated);
-    localStorage.setItem('cannasaas-recent-searches', JSON.stringify(updated));
+      // Save to recent searches
+      const updated = [
+        searchQuery,
+        ...recentSearches.filter((s) => s !== searchQuery),
+      ].slice(0, 5);
+      setRecentSearches(updated);
+      localStorage.setItem(
+        'cannasaas-recent-searches',
+        JSON.stringify(updated),
+      );
 
-    navigate(`/products?q=${encodeURIComponent(searchQuery)}`);
-    onClose();
-  }, [recentSearches, navigate, onClose]);
+      navigate(`/products?q=${encodeURIComponent(searchQuery)}`);
+      onClose();
+    },
+    [recentSearches, navigate, onClose],
+  );
 
   if (!isOpen) return null;
 
@@ -5139,7 +5288,11 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                   onClick={() => handleSearch(search)}
                   className="flex items-center gap-3 w-full px-2 py-2 rounded-[var(--p-radius-md)] hover:bg-[var(--color-bg-tertiary)] text-left"
                 >
-                  <Clock size={14} className="text-[var(--color-text-secondary)]" aria-hidden="true" />
+                  <Clock
+                    size={14}
+                    className="text-[var(--color-text-secondary)]"
+                    aria-hidden="true"
+                  />
                   <span className="text-[var(--p-text-sm)] text-[var(--color-text)]">
                     {search}
                   </span>
@@ -5163,7 +5316,11 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                   onClick={() => handleSearch(suggestion)}
                   className="flex items-center gap-3 w-full px-2 py-2 rounded-[var(--p-radius-md)] hover:bg-[var(--color-bg-tertiary)] text-left"
                 >
-                  <Search size={14} className="text-[var(--color-text-secondary)]" aria-hidden="true" />
+                  <Search
+                    size={14}
+                    className="text-[var(--color-text-secondary)]"
+                    aria-hidden="true"
+                  />
                   <span
                     className="text-[var(--p-text-sm)] text-[var(--color-text)]"
                     // Highlight matched portion
@@ -5206,8 +5363,14 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                         className="w-10 h-10 rounded-[var(--p-radius-sm)] object-cover flex-shrink-0"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-[var(--p-radius-sm)] bg-[var(--color-bg-tertiary)] flex items-center justify-center flex-shrink-0" aria-hidden="true">
-                        <Leaf size={16} className="text-[var(--color-text-secondary)]" />
+                      <div
+                        className="w-10 h-10 rounded-[var(--p-radius-sm)] bg-[var(--color-bg-tertiary)] flex items-center justify-center flex-shrink-0"
+                        aria-hidden="true"
+                      >
+                        <Leaf
+                          size={16}
+                          className="text-[var(--color-text-secondary)]"
+                        />
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
@@ -5215,7 +5378,8 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                         {product.name}
                       </p>
                       <p className="text-[var(--p-text-xs)] text-[var(--color-text-secondary)]">
-                        {product.category} · {product.cannabisInfo.thcContent}% THC
+                        {product.category} · {product.cannabisInfo.thcContent}%
+                        THC
                       </p>
                     </div>
                   </button>
@@ -5242,9 +5406,9 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
 }
 ```
 
-[↑ Back to top](#top)
-
 ---
+
+[↑ Back to top](#Table-of-Contents)
 
 ## 13. Testing Strategy — Unit, Integration & E2E
 
@@ -5475,7 +5639,9 @@ test.describe('Purchase Flow', () => {
 
     // Go to cart
     await cartLink.click();
-    await expect(page.getByRole('heading', { name: /your cart/i })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /your cart/i }),
+    ).toBeVisible();
 
     // Proceed to checkout (requires login)
     await page.getByRole('button', { name: /proceed to checkout/i }).click();
@@ -5493,8 +5659,8 @@ test.describe('Purchase Flow', () => {
     // Continue tabbing until we reach an add-to-cart button
     let attempts = 0;
     while (attempts < 20) {
-      const focused = await page.evaluate(
-        () => document.activeElement?.getAttribute('aria-label'),
+      const focused = await page.evaluate(() =>
+        document.activeElement?.getAttribute('aria-label'),
       );
       if (focused?.includes('Add') && focused?.includes('to cart')) break;
       await page.keyboard.press('Tab');
@@ -5505,7 +5671,9 @@ test.describe('Purchase Flow', () => {
     await page.keyboard.press('Enter');
 
     // Cart count should increase
-    await expect(page.getByRole('link', { name: /cart with 1 item/i })).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: /cart with 1 item/i }),
+    ).toBeVisible();
   });
 
   test('accessibility: page has no critical violations', async () => {
@@ -5521,9 +5689,9 @@ test.describe('Purchase Flow', () => {
 });
 ```
 
-[↑ Back to top](#top)
-
 ---
+
+[↑ Back to top](#Table-of-Contents)
 
 ## 14. CI/CD & Beta Deployment
 
@@ -5734,7 +5902,11 @@ export default defineConfig({
           // Split vendor chunks for optimal caching
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'query-vendor': ['@tanstack/react-query'],
-          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-select', 'lucide-react'],
+          'ui-vendor': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-select',
+            'lucide-react',
+          ],
           'chart-vendor': ['recharts'],
           'stripe-vendor': ['@stripe/stripe-js', '@stripe/react-stripe-js'],
         },
@@ -5754,39 +5926,39 @@ export default defineConfig({
 });
 ```
 
-[↑ Back to top](#top)
-
 ---
+
+[↑ Back to top](#Table-of-Contents)
 
 ## 15. WCAG 2.1 AA Compliance Checklist
 
 Every page and component must pass this checklist before the beta release. Use this as your PR review template.
 
-| Criterion | Guideline | Check |
-|---|---|---|
-| Text alternatives | 1.1.1 | All `<img>` tags have `alt` text; decorative images use `alt=""` |
-| Info via color | 1.3.3 | Status (stock, trend) conveyed by icon/text AND color |
-| Contrast (normal text) | 1.4.3 | ≥ 4.5:1 ratio — verified via token system + axe scan |
-| Contrast (large text) | 1.4.3 | ≥ 3:1 ratio for text ≥18px/14px bold |
-| Contrast (UI components) | 1.4.11 | ≥ 3:1 for input borders, button outlines, focus rings |
-| Text resize | 1.4.4 | All text resizes to 200% without horizontal scroll |
-| Reflow | 1.4.10 | Single-column layout at 320px viewport width |
-| Non-text contrast | 1.4.11 | Icons, charts, form controls ≥ 3:1 |
-| Keyboard accessible | 2.1.1 | Every interactive element reachable and operable via keyboard |
-| No keyboard trap | 2.1.2 | Modals trap focus correctly; Escape closes them |
-| Skip links | 2.4.1 | "Skip to main content" link at top of each page |
-| Page titles | 2.4.2 | Every page has a unique, descriptive `<title>` |
-| Focus order | 2.4.3 | Tab order follows visual reading order |
-| Link purpose | 2.4.4 | Link text makes purpose clear without surrounding context |
-| Focus visible | 2.4.7 | All focused elements show a visible, high-contrast ring |
-| Motion respect | 2.3.3 | All animations honor `prefers-reduced-motion` |
-| Target size | 2.5.5 | Touch targets minimum 44×44px |
-| Language | 3.1.1 | `<html lang="en">` set on all pages |
-| Labels | 3.3.2 | All form inputs have visible, associated labels |
-| Error identification | 3.3.1 | Form errors identify the field and describe the problem |
-| Error suggestion | 3.3.3 | Error messages provide correction guidance |
-| Name/Role/Value | 4.1.2 | Custom components use correct ARIA roles and states |
-| Status messages | 4.1.3 | Async updates announced via `aria-live` regions |
+| Criterion                | Guideline | Check                                                            |
+| ------------------------ | --------- | ---------------------------------------------------------------- |
+| Text alternatives        | 1.1.1     | All `<img>` tags have `alt` text; decorative images use `alt=""` |
+| Info via color           | 1.3.3     | Status (stock, trend) conveyed by icon/text AND color            |
+| Contrast (normal text)   | 1.4.3     | ≥ 4.5:1 ratio — verified via token system + axe scan             |
+| Contrast (large text)    | 1.4.3     | ≥ 3:1 ratio for text ≥18px/14px bold                             |
+| Contrast (UI components) | 1.4.11    | ≥ 3:1 for input borders, button outlines, focus rings            |
+| Text resize              | 1.4.4     | All text resizes to 200% without horizontal scroll               |
+| Reflow                   | 1.4.10    | Single-column layout at 320px viewport width                     |
+| Non-text contrast        | 1.4.11    | Icons, charts, form controls ≥ 3:1                               |
+| Keyboard accessible      | 2.1.1     | Every interactive element reachable and operable via keyboard    |
+| No keyboard trap         | 2.1.2     | Modals trap focus correctly; Escape closes them                  |
+| Skip links               | 2.4.1     | "Skip to main content" link at top of each page                  |
+| Page titles              | 2.4.2     | Every page has a unique, descriptive `<title>`                   |
+| Focus order              | 2.4.3     | Tab order follows visual reading order                           |
+| Link purpose             | 2.4.4     | Link text makes purpose clear without surrounding context        |
+| Focus visible            | 2.4.7     | All focused elements show a visible, high-contrast ring          |
+| Motion respect           | 2.3.3     | All animations honor `prefers-reduced-motion`                    |
+| Target size              | 2.5.5     | Touch targets minimum 44×44px                                    |
+| Language                 | 3.1.1     | `<html lang="en">` set on all pages                              |
+| Labels                   | 3.3.2     | All form inputs have visible, associated labels                  |
+| Error identification     | 3.3.1     | Form errors identify the field and describe the problem          |
+| Error suggestion         | 3.3.3     | Error messages provide correction guidance                       |
+| Name/Role/Value          | 4.1.2     | Custom components use correct ARIA roles and states              |
+| Status messages          | 4.1.3     | Async updates announced via `aria-live` regions                  |
 
 ### Automated Testing Commands
 
@@ -5802,9 +5974,9 @@ npx pa11y https://beta.cannasaas.com/products --reporter=cli
 npx pa11y https://beta.cannasaas.com/cart
 ```
 
-[↑ Back to top](#top)
-
 ---
+
+[↑ Back to top](#Table-of-Contents)
 
 ## 16. Suggested Advanced Features Beyond Current Docs
 
