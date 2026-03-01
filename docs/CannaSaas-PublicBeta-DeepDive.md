@@ -37,7 +37,7 @@
    - 8.5 [Compliance Dashboard](#85-compliance-dashboard)
    - 8.6 [Tenant Onboarding Wizard](#86-tenant-onboarding-wizard)
 9. [Staff Portal — Full Implementation](#9-staff-portal--full-implementation)
-   - 9.1 [Staff Layout and Live Order Queue](#91-staff-layout-and-live-order-queue)
+   - 9.1 [Staff-Layout-and-Live-Order-Queue](#91-Staff-Layout-and-Live-Order-Queue)
    - 9.2 [Customer Lookup and ID Verification](#92-customer-lookup-√-id-verification)
    - 9.3 [Inventory Quick-Search](#93-inventory-quick-search)
    - 9.4 [Delivery Dispatch Interface](#94-delivery-dispatch-interface)
@@ -4620,7 +4620,7 @@ export default function ComplianceDashboard() {
 
 ## 9. Staff Portal — Full Implementation
 
-### 9.1 Staff Layout & Live Order Queue
+### 9.1 Staff Layout and Live Order Queue
 
 The staff portal is intentionally minimal — budtenders need to act fast under real-world conditions. It uses large touch targets, high contrast, and live-updating order queues.
 
@@ -5520,11 +5520,9 @@ const schema = z.object({
   idType: z.enum(['drivers_license', 'state_id', 'passport', 'military_id'], {
     errorMap: () => ({ message: 'Select an ID type' }),
   }),
-  confirmed: z
-    .boolean()
-    .refine((v) => v === true, {
-      message: 'You must confirm the ID check was completed',
-    }),
+  confirmed: z.boolean().refine((v) => v === true, {
+    message: 'You must confirm the ID check was completed',
+  }),
 });
 
 type FormValues = z.infer<typeof schema>;
