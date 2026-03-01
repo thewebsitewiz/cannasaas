@@ -3876,7 +3876,9 @@ export default function OrderTrackingPage() {
 
 ## 8. Admin Portal — Full Implementation
 
-### 8.1 Admin Layout & Navigation
+[↑ Back to top](#Table-of-Contents)
+
+### 8.1 Admin Layout and Navigation
 
 The admin portal uses a collapsible sidebar layout with secondary navigation tabs within each section. Role-based items are hidden when the user lacks permissions.
 
@@ -4093,9 +4095,9 @@ export function AdminLayout() {
 }
 ```
 
-[↑ Back to top](#top)
-
 ---
+
+[↑ Back to top](#Table-of-Contents)
 
 ### 8.2 Analytics Dashboard
 
@@ -4399,9 +4401,9 @@ export function StatCard({
 }
 ```
 
-[↑ Back to top](#top)
-
 ---
+
+[↑ Back to top](#Table-of-Contents)
 
 ### 8.5 Compliance Dashboard
 
