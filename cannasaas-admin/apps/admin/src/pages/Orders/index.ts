@@ -1,2 +1,0 @@
-export { OrdersPage } from './OrdersPage';
-

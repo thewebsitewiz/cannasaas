@@ -1,2 +1,0 @@
-export { ProductsPage } from './ProductsPage';
-

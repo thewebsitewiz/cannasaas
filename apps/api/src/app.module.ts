@@ -18,6 +18,9 @@ import { DispensariesModule } from './modules/dispensaries/dispensaries.module';
 import { ProductsModule } from './modules/products/products.module';
 import { BrandsModule } from './modules/brands/brands.module';
 import { ManufacturersModule } from './modules/manufacturers/manufacturers.module';
+import { OrdersModule } from './modules/orders/orders.module';
+import { PaymentsModule } from './modules/payments/payments.module';
+import { PromotionsModule } from './modules/promotions/promotions.module';
 
 @Module({
   imports: [
@@ -39,6 +42,9 @@ import { ManufacturersModule } from './modules/manufacturers/manufacturers.modul
     ProductsModule,
     BrandsModule,
     ManufacturersModule,
+    OrdersModule,
+    PaymentsModule,
+    PromotionsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
