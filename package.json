@@ -1,12 +1,76 @@
 {
-  "dependencies": {
-    "@anthropic-ai/sdk": "^0.74.0",
-    "@cannasaas/api-client": "workspace:*",
-    "axios": "^1.13.5",
-    "cacheable": "^2.3.2",
-    "nanoid": "^5.1.6",
-    "nest-winston": "^1.10.2",
-    "stripe": "^20.3.1",
-    "winston": "^3.19.0"
+  "devDependencies": {
+    "@commitlint/config-conventional": "^19.2.0",
+    "@graphql-codegen/cli": "^5.0.2",
+    "@graphql-codegen/client-preset": "^4.2.4",
+    "@typescript-eslint/eslint-plugin": "^7.7.0",
+    "@typescript-eslint/parser": "^7.7.0",
+    "commitlint": "^19.2.1",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-jsx-a11y": "^6.8.0",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2",
+    "prettier": "^3.2.5",
+    "prettier-plugin-tailwindcss": "^0.5.14",
+    "rimraf": "^5.0.5",
+    "turbo": "^2.0.3",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "lint-staged": {
+    "*.{json,md,yaml,yml,css}": [
+      "prettier --write"
+    ],
+    "*.{ts,tsx}": [
+      "eslint --fix --max-warnings=0",
+      "prettier --write"
+    ]
+  },
+  "name": "cannasaas",
+  "packageManager": "pnpm@9.0.0",
+  "pnpm": {
+    "overrides": {
+      "@swc/helpers": "^0.5.17",
+      "@types/react-dom": "^18.3.0",
+      "esbuild": "0.21.5"
+    },
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "@types/react",
+        "@types/react-dom"
+      ]
+    }
+  },
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "build:api": "turbo run build --filter=@cannasaas/api",
+    "clean": "turbo run clean && rimraf node_modules",
+    "codegen": "graphql-codegen --config codegen.yml",
+    "db:migrate": "turbo run db:migrate --filter=@cannasaas/api",
+    "db:migrate:gen": "pnpm --filter @cannasaas/api typeorm migration:generate",
+    "db:migrate:revert": "pnpm --filter @cannasaas/api typeorm migration:revert",
+    "db:seed": "turbo run db:seed --filter=@cannasaas/api",
+    "dev": "turbo run dev --parallel",
+    "dev:admin": "turbo run dev --filter=@cannasaas/admin",
+    "dev:api": "turbo run dev --filter=@cannasaas/api",
+    "dev:kiosk": "turbo run dev --filter=@cannasaas/kiosk",
+    "dev:sites": "turbo run dev --filter=@cannasaas/storefront --filter=@cannasaas/admin --filter=@cannasaas/staff --filter=@cannasaas/kiosk --parallel",
+    "dev:staff": "turbo run dev --filter=@cannasaas/staff",
+    "dev:storefront": "turbo run dev --filter=@cannasaas/storefront",
+    "format": "prettier --write \"**/*.{ts,tsx,json,md,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,json,md,yaml}\"",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint -- --fix",
+    "prepare": "husky",
+    "test": "turbo run test",
+    "test:coverage": "turbo run test -- --coverage",
+    "test:watch": "turbo run test -- --watch",
+    "type-check": "turbo run type-check"
   }
 }

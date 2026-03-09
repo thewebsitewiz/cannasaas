@@ -1,0 +1,16 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "eamodio.gitlens",
+    "humao.rest-client",
+    "graphql.vscode-graphql",
+    "bradlc.vscode-tailwindcss",
+    "christian-kohler.path-intellisense",
+    "usernamehw.errorlens",
+    "ms-azuretools.vscode-docker",
+    "ckolkman.vscode-postgres",
+    "cweijan.vscode-redis-client",
+    "ms-vscode.vscode-typescript-next"
+  ]
+}
