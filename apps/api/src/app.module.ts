@@ -21,6 +21,8 @@ import { ManufacturersModule } from './modules/manufacturers/manufacturers.modul
 import { OrdersModule } from './modules/orders/orders.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { PromotionsModule } from './modules/promotions/promotions.module';
+import { InventoryModule } from './modules/inventory/inventory.module';
+import { MetrcModule } from './modules/metrc/metrc.module';
 
 @Module({
   imports: [
@@ -45,6 +47,8 @@ import { PromotionsModule } from './modules/promotions/promotions.module';
     OrdersModule,
     PaymentsModule,
     PromotionsModule,
+    InventoryModule,
+    MetrcModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
