@@ -71,7 +71,9 @@
     "test": "turbo run test",
     "test:coverage": "turbo run test -- --coverage",
     "test:watch": "turbo run test -- --watch",
-    "type-check": "turbo run type-check",
-    "dev:sites": "turbo run dev --filter=@cannasaas/storefront --filter=@cannasaas/admin --filter=@cannasaas/staff --filter=@cannasaas/kiosk --parallel"
+    "type-check": "turbo run type-check"
+  },
+  "dependencies": {
+    "dotenv": "^17.3.1"
   }
 }

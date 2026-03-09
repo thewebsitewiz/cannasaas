@@ -1,17 +1,4 @@
 {
-  "name": "@cannasaas/api",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "ts-node --swc -r tsconfig-paths/register src/main.ts",
-    "build": "tsc -p tsconfig.build.json",
-    "start": "node dist/main.js",
-    "lint": "eslint src --ext .ts",
-    "test": "jest",
-    "db:migrate": "typeorm migration:run -d src/config/database.config.ts",
-    "db:migrate:generate": "typeorm migration:generate -d src/config/database.config.ts",
-    "db:seed": "ts-node -r tsconfig-paths/register src/database/seeds/run-seeds.ts"
-  },
   "dependencies": {
     "@apollo/server": "^4.11.0",
     "@nestjs/apollo": "^12.2.2",
@@ -54,5 +41,21 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.2"
-  }
+  },
+  "name": "@cannasaas/api",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "db:migrate": "typeorm migration:run -d src/config/database.config.ts",
+    "db:migrate:generate": "typeorm migration:generate -d src/config/database.config.ts",
+    "db:seed": "ts-node -r tsconfig-paths/register src/database/seeds/run-seeds.ts",
+    "dev": "ts-node --swc -r tsconfig-paths/register src/main.ts",
+    "lint": "eslint src --ext .ts",
+    "migration:generate": "ts-node --swc -r tsconfig-paths/register ./node_modules/typeorm/cli migration:generate src/migrations/InitialSchema -d src/data-source.ts",
+    "migration:revert": "ts-node --swc -r tsconfig-paths/register ./node_modules/typeorm/cli migration:revert -d src/data-source.ts",
+    "migration:run": "ts-node --swc -r tsconfig-paths/register ./node_modules/typeorm/cli migration:run -d src/data-source.ts",
+    "start": "node dist/main.js",
+    "test": "jest"
+  },
+  "version": "0.1.0"
 }

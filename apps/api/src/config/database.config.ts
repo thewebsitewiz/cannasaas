@@ -10,8 +10,9 @@ export const AppDataSource = new DataSource({
   entities: [__dirname + '/../**/*.entity{.ts,.js}'],
   migrations: [__dirname + '/../database/migrations/**/*{.ts,.js}'],
   migrationsRun: false,
-  synchronize: false,
-  logging: process.env['NODE_ENV'] === 'development' ? ['query', 'error'] : ['error'],
+  synchronize: true,
+  logging:
+    process.env['NODE_ENV'] === 'development' ? ['query', 'error'] : ['error'],
   extra: {
     max: parseInt(process.env['DATABASE_POOL_MAX'] ?? '20', 10),
     min: parseInt(process.env['DATABASE_POOL_MIN'] ?? '2', 10),
