@@ -10,6 +10,7 @@ import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { NestFactory } from '@nestjs/core';
 import * as compression from 'compression';
+import * as cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 
 async function bootstrap(): Promise<void> {
@@ -27,6 +28,7 @@ async function bootstrap(): Promise<void> {
     app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
   }
   app.use(compression());
+  app.use(cookieParser());
 
   app.enableCors({
     origin: (() => {

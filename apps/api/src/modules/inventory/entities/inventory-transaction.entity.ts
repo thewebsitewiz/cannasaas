@@ -14,66 +14,66 @@ import { ObjectType, Field, ID } from '@nestjs/graphql';
 export class InventoryTransaction {
   @Field(() => ID)
   @PrimaryGeneratedColumn('uuid', { name: 'transaction_id' })
-  transactionId: string;
+  transactionId!: string;
 
   @Field()
   @Index()
   @Column({ type: 'uuid', name: 'inventory_id' })
-  inventoryId: string;
+  inventoryId!: string;
 
   @Field({ nullable: true })
   @Column({ type: 'uuid', nullable: true, name: 'batch_id' })
-  batchId: string;
+  batchId!: string;
 
   @Field()
   @Column({ type: 'uuid', name: 'dispensary_id' })
-  dispensaryId: string;
+  dispensaryId!: string;
 
   @Field()
   @Column({ type: 'varchar', name: 'transaction_type' })
-  transactionType: string;
+  transactionType!: string;
 
   @Field({ nullable: true })
   @Column({ type: 'smallint', nullable: true, name: 'adjustment_reason_id' })
-  adjustmentReasonId: number;
+  adjustmentReasonId!: number;
 
   @Field()
   @Column({ type: 'numeric', precision: 12, scale: 4, name: 'quantity_delta' })
-  quantityDelta: number;
+  quantityDelta!: number;
 
   @Field()
   @Column({ type: 'numeric', precision: 12, scale: 4, name: 'quantity_before' })
-  quantityBefore: number;
+  quantityBefore!: number;
 
   @Field()
   @Column({ type: 'numeric', precision: 12, scale: 4, name: 'quantity_after' })
-  quantityAfter: number;
+  quantityAfter!: number;
 
   @Field({ nullable: true })
   @Column({ type: 'uuid', nullable: true, name: 'reference_order_id' })
-  referenceOrderId: string;
+  referenceOrderId!: string;
 
   @Field({ nullable: true })
   @Column({ type: 'varchar', length: 100, nullable: true, name: 'reference_transfer_manifest_id' })
-  referenceTransferManifestId: string;
+  referenceTransferManifestId!: string;
 
   @Field({ nullable: true })
   @Column({ type: 'uuid', nullable: true, name: 'performed_by_user_id' })
-  performedByUserId: string;
+  performedByUserId!: string;
 
   @Field()
   @Column({ type: 'boolean', default: false, name: 'metrc_synced' })
-  metrcSynced: boolean;
+  metrcSynced!: boolean;
 
   @Field({ nullable: true })
   @Column({ type: 'timestamptz', nullable: true, name: 'metrc_synced_at' })
-  metrcSyncedAt: Date;
+  metrcSyncedAt!: Date;
 
   @Field({ nullable: true })
   @Column({ type: 'text', nullable: true })
-  notes: string;
+  notes!: string;
 
   @Field()
   @CreateDateColumn({ type: 'timestamptz', name: 'created_at' })
-  createdAt: Date;
+  createdAt!: Date;
 }

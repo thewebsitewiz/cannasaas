@@ -14,64 +14,64 @@ import { Field, ID, ObjectType } from '@nestjs/graphql';
 export class RegulatoryLibrary {
   @Field(() => ID)
   @PrimaryGeneratedColumn('uuid', { name: 'reg_id' })
-  regId: string;
+  regId!: string;
 
   @Field({ nullable: true })
   @Column({ type: 'varchar', nullable: true, name: 'jurisdiction_level' })
-  jurisdictionLevel: string;
+  jurisdictionLevel!: string;
 
   @Field({ nullable: true })
   @Column({ type: 'varchar', nullable: true, name: 'jurisdiction_name' })
-  jurisdictionName: string;
+  jurisdictionName!: string;
 
   @Field({ nullable: true })
   @Column({ type: 'varchar', length: 10, nullable: true })
-  state: string;
+  state!: string;
 
   @Field({ nullable: true })
   @Column({ type: 'varchar', nullable: true, name: 'statute_number' })
-  statuteNumber: string;
+  statuteNumber!: string;
 
   @Field({ nullable: true })
   @Column({ type: 'varchar', nullable: true })
-  title: string;
+  title!: string;
 
   @Field({ nullable: true })
   @Column({ type: 'text', nullable: true })
-  summary: string;
+  summary!: string;
 
   @Field({ nullable: true })
   @Column({ type: 'text', nullable: true, name: 'full_text' })
-  fullText: string;
+  fullText!: string;
 
   @Field({ nullable: true })
   @Column({ type: 'date', nullable: true, name: 'effective_date' })
-  effectiveDate: Date;
+  effectiveDate!: Date;
 
   @Field({ nullable: true })
   @Column({ type: 'date', nullable: true, name: 'expiry_date' })
-  expiryDate: Date;
+  expiryDate!: Date;
 
   @Field()
   @Column({ type: 'varchar', default: 'active' })
-  status: string;
+  status!: string;
 
   @Column({ type: 'jsonb', nullable: true })
-  tags: string[];
+  tags!: string[];
 
   @Field({ nullable: true })
   @Column({ type: 'varchar', nullable: true, name: 'source_url' })
-  sourceUrl: string;
+  sourceUrl!: string;
 
   @Field({ nullable: true })
   @Column({ type: 'timestamptz', nullable: true, name: 'last_verified_at' })
-  lastVerifiedAt: Date;
+  lastVerifiedAt!: Date;
 
   @Field()
   @CreateDateColumn({ type: 'timestamptz', name: 'created_at' })
-  createdAt: Date;
+  createdAt!: Date;
 
   @Field()
   @UpdateDateColumn({ type: 'timestamptz', name: 'updated_at' })
-  updatedAt: Date;
+  updatedAt!: Date;
 }

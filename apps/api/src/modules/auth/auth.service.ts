@@ -1,74 +1,114 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
-import * as bcrypt from 'bcryptjs';
-import type { Request, Response } from 'express';
-import { UsersService } from '../users/users.service';
-import type { LoginInput } from './dto/login.input';
-import type { RegisterInput } from './dto/register.input';
-import type { AuthToken } from './dto/auth-token.type';
-
-const REFRESH_COOKIE = 'refresh_token';
-const SALT_ROUNDS = 12;
+import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
+import { User } from '../users/entities/user.entity';
+import { RefreshToken } from './entities/refresh-token.entity';
+import { LoginInput } from './dto/login.input';
+import { RegisterInput } from './dto/register.input';
+import { Role } from './enums/role.enum';
 
 @Injectable()
 export class AuthService {
-  private readonly accessTtl: number;
-  private readonly refreshTtl: number;
-  private readonly refreshSecret: string;
-
   constructor(
-    private readonly users: UsersService,
-    private readonly jwt: JwtService,
-    private readonly config: ConfigService,
-  ) {
-    this.accessTtl    = this.config.get<number>('jwt.accessTtl')  ?? 900;
-    this.refreshTtl   = this.config.get<number>('jwt.refreshTtl') ?? 604800;
-    this.refreshSecret = this.config.getOrThrow<string>('jwt.refreshSecret');
-  }
+    @InjectRepository(User) private userRepo: Repository<User>,
+    @InjectRepository(RefreshToken) private tokenRepo: Repository<RefreshToken>,
+    private jwt: JwtService,
+    private config: ConfigService,
+  ) {}
 
-  async register(input: RegisterInput): Promise<AuthToken> {
-    const passwordHash = await bcrypt.hash(input.password, SALT_ROUNDS);
-    const user = await this.users.create(input.email, passwordHash);
-    return this.buildTokens(user.id, user.email, user.role);
-  }
+  async register(dto: RegisterInput, meta?: { userAgent?: string; ipAddress?: string }) {
+    const existing = await this.userRepo.findOne({ where: { email: dto.email } });
+    if (existing) throw new ConflictException('Email already registered');
 
-  async login(input: LoginInput): Promise<AuthToken> {
-    const user = await this.users.findByEmail(input.email);
-    if (!user) throw new UnauthorizedException('Invalid credentials');
-    const valid = await bcrypt.compare(input.password, user.passwordHash);
-    if (!valid) throw new UnauthorizedException('Invalid credentials');
-    if (!user.isActive) throw new UnauthorizedException('Account disabled');
-    return this.buildTokens(user.id, user.email, user.role);
-  }
-
-  async refreshTokens(req: Request, res: Response): Promise<void> {
-    const token: string | undefined = req.cookies?.[REFRESH_COOKIE];
-    if (!token) { res.status(401).json({ message: 'No refresh token' }); return; }
-    try {
-      const payload = this.jwt.verify<{ sub: string; email: string; role: string }>(
-        token, { secret: this.refreshSecret },
-      );
-      const tokens = this.buildTokens(payload.sub, payload.email, payload.role);
-      this.setRefreshCookie(res, tokens.refreshToken!);
-      res.json({ accessToken: tokens.accessToken, expiresIn: tokens.expiresIn });
-    } catch { res.status(401).json({ message: 'Invalid refresh token' }); }
-  }
-
-  private buildTokens(sub: string, email: string, role: string): AuthToken {
-    const payload = { sub, email, role };
-    const accessToken  = this.jwt.sign(payload, { expiresIn: this.accessTtl });
-    const refreshToken = this.jwt.sign(payload, { secret: this.refreshSecret, expiresIn: this.refreshTtl });
-    return { accessToken, refreshToken, expiresIn: this.accessTtl };
-  }
-
-  private setRefreshCookie(res: Response, token: string): void {
-    res.cookie(REFRESH_COOKIE, token, {
-      httpOnly: true,
-      secure: this.config.get('nodeEnv') === 'production',
-      sameSite: 'strict',
-      maxAge: this.refreshTtl * 1000,
-      path: '/v1/auth/refresh',
+    const passwordHash = await bcrypt.hash(dto.password, 12);
+    const user = this.userRepo.create({
+      email: dto.email,
+      passwordHash,
+      role: Role.CUSTOMER,
     });
+    await this.userRepo.save(user);
+    return this.generateTokens(user, meta);
+  }
+
+  async login(dto: LoginInput, meta?: { userAgent?: string; ipAddress?: string }) {
+    const user = await this.userRepo.findOne({ where: { email: dto.email } });
+    if (!user || !user.passwordHash) throw new UnauthorizedException('Invalid credentials');
+
+    const valid = await bcrypt.compare(dto.password, user.passwordHash);
+    if (!valid) throw new UnauthorizedException('Invalid credentials');
+
+    if (!user.isActive) throw new UnauthorizedException('Account disabled');
+
+    await this.userRepo.update(user.id, { lastLoginAt: new Date() });
+    return this.generateTokens(user, meta);
+  }
+
+  async refresh(userId: string, rawToken: string) {
+    const tokenHash = this.hashToken(rawToken);
+    const stored = await this.tokenRepo.findOne({
+      where: { userId, tokenHash, isRevoked: false },
+    });
+
+    if (!stored || stored.expiresAt < new Date()) {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+
+    await this.tokenRepo.update(stored.id, { isRevoked: true, revokedAt: new Date() });
+    const user = await this.userRepo.findOneOrFail({ where: { id: userId } });
+    return this.generateTokens(user);
+  }
+
+  async logout(userId: string, rawToken: string) {
+    const tokenHash = this.hashToken(rawToken);
+    await this.tokenRepo.update({ userId, tokenHash }, { isRevoked: true, revokedAt: new Date() });
+  }
+
+  async logoutAll(userId: string) {
+    await this.tokenRepo.update(
+      { userId, isRevoked: false },
+      { isRevoked: true, revokedAt: new Date() }
+    );
+  }
+
+  private async generateTokens(user: User, meta?: { userAgent?: string; ipAddress?: string }) {
+    const expiresIn = 15 * 60; // 15 minutes in seconds
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      dispensaryId: user.dispensaryId,
+      organizationId: user.organizationId,
+    };
+
+    const accessToken = this.jwt.sign(payload, {
+      secret: this.config.get('JWT_ACCESS_SECRET'),
+      expiresIn: this.config.get('JWT_ACCESS_EXPIRES_IN', '15m'),
+    });
+
+    const rawRefresh = crypto.randomBytes(64).toString('hex');
+    const tokenHash = this.hashToken(rawRefresh);
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    await this.tokenRepo.save(
+      this.tokenRepo.create({
+        userId: user.id,
+        tokenHash,
+        expiresAt,
+        dispensaryId: user.dispensaryId,
+        organizationId: user.organizationId,
+        ...meta,
+      })
+    );
+
+    return { accessToken, refreshToken: rawRefresh, expiresIn };
+  }
+
+  private hashToken(raw: string): string {
+    return crypto.createHash('sha256').update(raw).digest('hex');
   }
 }
