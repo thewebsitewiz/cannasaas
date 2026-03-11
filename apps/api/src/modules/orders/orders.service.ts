@@ -223,4 +223,77 @@ export class OrdersService {
     );
     return (result[1] ?? 0) > 0;
   }
+
+  async confirmOrder(orderId: string, dispensaryId: string): Promise<boolean> {
+    const result = await this.dataSource.query(
+      `UPDATE orders SET "orderStatus" = 'confirmed', "updatedAt" = NOW()
+       WHERE "orderId" = $1 AND "dispensaryId" = $2 AND "orderStatus" = 'pending'`,
+      [orderId, dispensaryId]
+    );
+    return (result[1] ?? 0) > 0;
+  }
+
+  async completeOrder(input: any): Promise<any> {
+    const qr = this.dataSource.createQueryRunner();
+    await qr.connect();
+    await qr.startTransaction();
+
+    try {
+      // Get order
+      const [order] = await qr.query(
+        `SELECT "orderId", "dispensaryId", "orderStatus", subtotal, "taxTotal", total, "taxBreakdown",
+                "customerUserId", "orderType", "createdAt"
+         FROM orders WHERE "orderId" = $1 AND "dispensaryId" = $2`,
+        [input.orderId, input.dispensaryId]
+      );
+      if (!order) throw new Error('Order not found');
+      if (order.orderStatus === 'completed') throw new Error('Order already completed');
+      if (order.orderStatus === 'cancelled') throw new Error('Cannot complete a cancelled order');
+
+      // Get line items
+      const lineItems = await qr.query(
+        `SELECT li."lineItemId", li."productId", li."variantId", li.quantity,
+                li."unitPrice", li."taxApplied", li."metrcItemUid", li."metrcPackageLabel",
+                p.name as product_name
+         FROM order_line_items li
+         JOIN products p ON p.id = li."productId"
+         WHERE li."orderId" = $1`,
+        [input.orderId]
+      );
+
+      // Update order status
+      await qr.query(
+        `UPDATE orders SET 
+          "orderStatus" = 'completed',
+          "metrcReceiptId" = $1,
+          "metrcSyncStatus" = 'pending',
+          "updatedAt" = NOW()
+         WHERE "orderId" = $2`,
+        [input.metrcReceiptId ?? null, input.orderId]
+      );
+
+      // Move reserved inventory to sold (decrement quantity_on_hand)
+      for (const item of lineItems) {
+        if (item.variantId) {
+          await qr.query(
+            `UPDATE inventory
+             SET quantity_on_hand = quantity_on_hand - $1,
+                 quantity_reserved = quantity_reserved - $1,
+                 updated_at = NOW()
+             WHERE dispensary_id = $2 AND variant_id = $3 AND quantity_on_hand >= $1`,
+            [item.quantity, input.dispensaryId, item.variantId]
+          );
+        }
+      }
+
+      await qr.commitTransaction();
+      return { order, lineItems };
+    } catch (err) {
+      await qr.rollbackTransaction();
+      throw err;
+    } finally {
+      await qr.release();
+    }
+  }
+
 }

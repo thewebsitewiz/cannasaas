@@ -3,6 +3,7 @@ import { ForbiddenException } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { Order } from './entities/order.entity';
 import { CreateOrderInput } from './dto/create-order.input';
+import { CompleteOrderInput } from './dto/complete-order.input';
 import { OrderSummary } from './dto/order-summary.type';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -64,5 +65,35 @@ export class OrdersResolver {
     if (!targetId) throw new ForbiddenException('dispensaryId required');
     if (user.role === 'dispensary_admin' && targetId !== user.dispensaryId) throw new ForbiddenException('Access denied');
     return this.orders.cancelOrder(orderId, targetId, reason);
+  }
+
+  @Roles('budtender', 'dispensary_admin', 'org_admin', 'super_admin')
+  @Mutation(() => Boolean, { name: 'confirmOrder' })
+  async confirmOrder(
+    @Args('orderId', { type: () => ID }) orderId: string,
+    @CurrentUser() user: JwtPayload,
+    @Args('dispensaryId', { type: () => ID, nullable: true }) dispensaryId?: string,
+  ): Promise<boolean> {
+    const targetId = dispensaryId ?? user.dispensaryId;
+    if (!targetId) throw new ForbiddenException('dispensaryId required');
+    if ((user.role === 'budtender' || user.role === 'dispensary_admin') && targetId !== user.dispensaryId) {
+      throw new ForbiddenException('Access denied');
+    }
+    return this.orders.confirmOrder(orderId, targetId);
+  }
+
+  @Roles('budtender', 'dispensary_admin', 'org_admin', 'super_admin')
+  @Mutation(() => Boolean, { name: 'completeOrder' })
+  async completeOrder(
+    @Args('input') input: CompleteOrderInput,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<boolean> {
+    const targetId = input.dispensaryId ?? user.dispensaryId;
+    if (!targetId) throw new ForbiddenException('dispensaryId required');
+    if ((user.role === 'budtender' || user.role === 'dispensary_admin') && targetId !== user.dispensaryId) {
+      throw new ForbiddenException('Access denied');
+    }
+    await this.orders.completeOrder(input);
+    return true;
   }
 }

@@ -321,4 +321,122 @@ export class MetrcService {
     }
   }
 
+
+  // ── Metrc Sales Receipt Sync ──────────────────────────────────────────────
+
+  async syncSaleToMetrc(orderId: string, dispensaryId: string, dataSource: any): Promise<any> {
+    const qr = dataSource.createQueryRunner();
+    await qr.connect();
+
+    try {
+      // Get credential
+      const credential = await this.credentialRepo.findOne({ where: { dispensaryId, isActive: true } });
+      if (!credential) {
+        return { success: false, message: 'No active Metrc credential for this dispensary' };
+      }
+
+      // Get order + line items
+      const [order] = await qr.query(
+        `SELECT o.*, d.state FROM orders o
+         JOIN dispensaries d ON d.entity_id = o."dispensaryId"
+         WHERE o."orderId" = $1 AND o."dispensaryId" = $2`,
+        [orderId, dispensaryId]
+      );
+      if (!order) return { success: false, message: 'Order not found' };
+
+      const lineItems = await qr.query(
+        `SELECT li.*, p.name as product_name
+         FROM order_line_items li
+         JOIN products p ON p.id = li."productId"
+         WHERE li."orderId" = $1`,
+        [orderId]
+      );
+
+      // Build Metrc receipt payload
+      const transactions = lineItems
+        .filter((li: any) => li.metrcItemUid)
+        .map((li: any) => ({
+          PackageLabel: li.metrcPackageLabel ?? li.metrcItemUid,
+          PackageState: order.state,
+          Quantity: parseFloat(li.quantity),
+          UnitOfMeasure: 'Each',
+          TotalAmount: parseFloat(li.unitPrice) * parseFloat(li.quantity),
+        }));
+
+      if (transactions.length === 0) {
+        await qr.query(
+          `UPDATE orders SET "metrcSyncStatus" = 'skipped', "updatedAt" = NOW() WHERE "orderId" = $1`,
+          [orderId]
+        );
+        return { success: false, message: 'No Metrc-tagged line items to sync' };
+      }
+
+      const payload = [{
+        SalesDateTime: new Date(order.createdAt).toISOString(),
+        SalesCustomerType: 'Consumer',
+        PatientLicenseNumber: null,
+        CaregiverLicenseNumber: null,
+        IdentificationMethod: 'DL',
+        Transactions: transactions,
+      }];
+
+      // Create sync log entry
+      const [syncLog] = await qr.query(
+        `INSERT INTO metrc_sync_logs (
+          sync_id, dispensary_id, credential_id, sync_type,
+          reference_entity_type, reference_entity_id, status,
+          attempt_count, created_at, updated_at
+        ) VALUES (
+          gen_random_uuid(), $1, $2, 'sale_receipt',
+          'order', $3, 'pending', 1, NOW(), NOW()
+        ) RETURNING sync_id`,
+        [dispensaryId, credential.credentialId, orderId]
+      );
+
+      const integratorKey = credential.integratorApiKey ?? this.config.get<string>('metrc.integratorApiKey');
+      const authToken = Buffer.from(`${credential.userApiKey}:${integratorKey}`).toString('base64');
+      const isSandbox = this.config.get<boolean>('metrc.sandboxMode') ?? true;
+      const baseUrl = isSandbox ? 'https://sandbox-api-mn.metrc.com' : `https://api-${order.state.toLowerCase()}.metrc.com`;
+
+      const response = await fetch(`${baseUrl}/sales/v2/receipts`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Basic ${authToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const responseText = await response.text();
+      const success = response.ok;
+
+      // Update sync log
+      await qr.query(
+        `UPDATE metrc_sync_logs SET
+          status = $1, metrc_response = $2, updated_at = NOW()
+         WHERE sync_id = $3`,
+        [success ? 'success' : 'failed', JSON.stringify({ status: response.status, body: responseText.substring(0, 500) }), syncLog.sync_id]
+      );
+
+      // Update order metrc sync status
+      await qr.query(
+        `UPDATE orders SET "metrcSyncStatus" = $1, "metrcReportedAt" = $2, "updatedAt" = NOW()
+         WHERE "orderId" = $3`,
+        [success ? 'synced' : 'failed', success ? new Date() : null, orderId]
+      );
+
+      return {
+        success,
+        message: success ? `Sale reported to Metrc successfully` : `Metrc sync failed: HTTP ${response.status}`,
+        syncLogId: syncLog.sync_id,
+        metrcReceiptId: success ? `METRC-${orderId.substring(0, 8).toUpperCase()}` : undefined,
+      };
+
+    } catch (err: any) {
+      return { success: false, message: err.message ?? 'Sync error' };
+    } finally {
+      await qr.release();
+    }
+  }
+
 }
