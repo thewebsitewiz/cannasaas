@@ -1,0 +1,68 @@
+import { Resolver, Query, Mutation, Args, ID, Int } from '@nestjs/graphql';
+import { ForbiddenException } from '@nestjs/common';
+import { OrdersService } from './orders.service';
+import { Order } from './entities/order.entity';
+import { CreateOrderInput } from './dto/create-order.input';
+import { OrderSummary } from './dto/order-summary.type';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { JwtPayload } from '../auth/strategies/jwt.strategy';
+
+@Resolver(() => Order)
+export class OrdersResolver {
+  constructor(private readonly orders: OrdersService) {}
+
+  @Roles('budtender', 'dispensary_admin', 'org_admin', 'super_admin')
+  @Mutation(() => OrderSummary, { name: 'createOrder' })
+  async createOrder(
+    @Args('input') input: CreateOrderInput,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<OrderSummary> {
+    if (user.role === 'budtender' || user.role === 'dispensary_admin') {
+      if (input.dispensaryId !== user.dispensaryId) throw new ForbiddenException('Access denied');
+    }
+    return this.orders.createOrder(input, user.sub);
+  }
+
+  @Roles('budtender', 'dispensary_admin', 'org_admin', 'super_admin')
+  @Query(() => [Order], { name: 'orders' })
+  async listOrders(
+    @CurrentUser() user: JwtPayload,
+    @Args('dispensaryId', { type: () => ID, nullable: true }) dispensaryId?: string,
+    @Args('limit', { type: () => Int, nullable: true }) limit?: number,
+    @Args('offset', { type: () => Int, nullable: true }) offset?: number,
+  ): Promise<any[]> {
+    const targetId = dispensaryId ?? user.dispensaryId;
+    if (!targetId) throw new ForbiddenException('dispensaryId required');
+    if ((user.role === 'budtender' || user.role === 'dispensary_admin') && targetId !== user.dispensaryId) {
+      throw new ForbiddenException('Access denied');
+    }
+    return this.orders.listOrders(targetId, limit, offset);
+  }
+
+  @Roles('budtender', 'dispensary_admin', 'org_admin', 'super_admin')
+  @Query(() => Order, { name: 'order', nullable: true })
+  async getOrder(
+    @Args('orderId', { type: () => ID }) orderId: string,
+    @CurrentUser() user: JwtPayload,
+    @Args('dispensaryId', { type: () => ID, nullable: true }) dispensaryId?: string,
+  ): Promise<any> {
+    const targetId = dispensaryId ?? user.dispensaryId;
+    if (!targetId) throw new ForbiddenException('dispensaryId required');
+    return this.orders.getOrder(orderId, targetId);
+  }
+
+  @Roles('dispensary_admin', 'org_admin', 'super_admin')
+  @Mutation(() => Boolean, { name: 'cancelOrder' })
+  async cancelOrder(
+    @Args('orderId', { type: () => ID }) orderId: string,
+    @Args('reason') reason: string,
+    @CurrentUser() user: JwtPayload,
+    @Args('dispensaryId', { type: () => ID, nullable: true }) dispensaryId?: string,
+  ): Promise<boolean> {
+    const targetId = dispensaryId ?? user.dispensaryId;
+    if (!targetId) throw new ForbiddenException('dispensaryId required');
+    if (user.role === 'dispensary_admin' && targetId !== user.dispensaryId) throw new ForbiddenException('Access denied');
+    return this.orders.cancelOrder(orderId, targetId, reason);
+  }
+}

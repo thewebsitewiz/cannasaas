@@ -10,6 +10,8 @@ import { CredentialValidationResult } from './dto/credential-validation-result.t
 import { ComplianceReport } from './dto/compliance-report.type';
 import { UpsertCredentialInput } from './dto/upsert-credential.input';
 import { TagProductUidInput } from './dto/tag-product-uid.input';
+import { BulkTagUidInput } from './dto/bulk-tag-uid.input';
+import { BulkTagResult } from './dto/bulk-tag-result.type';
 import { TagPackageLabelInput } from './dto/tag-package-label.input';
 import { SetMetrcCategoryInput } from './dto/set-metrc-category.input';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -115,5 +117,26 @@ export class MetrcResolver {
     if (!targetId) throw new ForbiddenException('dispensaryId required');
     if (user.role === 'dispensary_admin' && targetId !== user.dispensaryId) throw new ForbiddenException('Access denied');
     return this.metrc.generateComplianceReport(targetId, this.dataSource);
+  }
+
+  @Roles('dispensary_admin', 'org_admin', 'super_admin')
+  @Mutation(() => BulkTagResult, { name: 'bulkTagProductUids' })
+  async bulkTagUids(
+    @Args('input') input: BulkTagUidInput,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<BulkTagResult> {
+    if (user.role === 'dispensary_admin' && input.dispensaryId !== user.dispensaryId) throw new ForbiddenException('Access denied');
+    return this.metrc.bulkTagUids(input, this.dataSource);
+  }
+
+  @Roles('dispensary_admin', 'org_admin', 'super_admin')
+  @Mutation(() => Boolean, { name: 'approveProduct' })
+  async approveProduct(
+    @Args('productId', { type: () => ID }) productId: string,
+    @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<boolean> {
+    if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId) throw new ForbiddenException('Access denied');
+    return this.metrc.approveProduct(productId, dispensaryId, user.sub, this.dataSource);
   }
 }

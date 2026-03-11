@@ -8,6 +8,7 @@ import {
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 
 @ObjectType()
+@Entity('order_line_items')
 export class OrderLineItem {
   @Field(() => ID) @PrimaryGeneratedColumn('uuid') lineItemId!: string;
   @Field() @Index() @Column('uuid') orderId!: string;

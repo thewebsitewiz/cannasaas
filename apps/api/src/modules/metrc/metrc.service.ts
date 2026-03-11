@@ -264,4 +264,61 @@ export class MetrcService {
       await qr.release();
     }
   }
+
+  // ── Bulk UID Tagging ──────────────────────────────────────────────────────
+
+  async bulkTagUids(input: any, dataSource: any): Promise<any> {
+    const qr = dataSource.createQueryRunner();
+    await qr.connect();
+    const results = [];
+
+    for (const pair of input.pairs) {
+      try {
+        const existing = await qr.query(
+          `SELECT id FROM products WHERE metrc_item_uid = $1 AND dispensary_id = $2 AND id != $3`,
+          [pair.metrcItemUid, input.dispensaryId, pair.productId]
+        );
+        if (existing.length > 0) {
+          results.push({ productId: pair.productId, productName: '', success: false, error: `UID already assigned to another product` });
+          continue;
+        }
+
+        await qr.query(
+          `UPDATE products SET metrc_item_uid = $1, updated_at = NOW() WHERE id = $2 AND dispensary_id = $3`,
+          [pair.metrcItemUid, pair.productId, input.dispensaryId]
+        );
+
+        const [product] = await qr.query(`SELECT name FROM products WHERE id = $1`, [pair.productId]);
+        results.push({ productId: pair.productId, productName: product?.name ?? '', success: true });
+      } catch (err: any) {
+        results.push({ productId: pair.productId, productName: '', success: false, error: err.message });
+      }
+    }
+
+    await qr.release();
+    return {
+      total: results.length,
+      succeeded: results.filter(r => r.success).length,
+      failed: results.filter(r => !r.success).length,
+      results,
+    };
+  }
+
+  // ── Approve Product ───────────────────────────────────────────────────────
+
+  async approveProduct(productId: string, dispensaryId: string, userId: string, dataSource: any): Promise<boolean> {
+    const qr = dataSource.createQueryRunner();
+    await qr.connect();
+    try {
+      const result = await qr.query(
+        `UPDATE products SET is_approved = true, approved_by_user_id = $1, approved_at = NOW(), updated_at = NOW()
+         WHERE id = $2 AND dispensary_id = $3`,
+        [userId, productId, dispensaryId]
+      );
+      return (result[1] ?? 0) > 0;
+    } finally {
+      await qr.release();
+    }
+  }
+
 }
