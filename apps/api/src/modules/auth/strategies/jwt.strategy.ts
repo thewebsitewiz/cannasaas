@@ -14,14 +14,17 @@ export interface JwtPayload {
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(config: ConfigService) {
+    const secret = config.get<string>('jwt.secret') ?? process.env['JWT_SECRET'];
+    console.log('JWT Strategy secret loaded:', secret ? `${secret.substring(0, 10)}...` : 'UNDEFINED');
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: config.get<string>('JWT_ACCESS_SECRET'),
+      secretOrKey: secret,
     });
   }
 
   async validate(payload: JwtPayload) {
+    console.log('JWT Strategy validate called with payload:', payload);
     return payload;
   }
 }

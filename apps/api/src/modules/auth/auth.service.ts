@@ -85,8 +85,8 @@ export class AuthService {
     };
 
     const accessToken = this.jwt.sign(payload, {
-      secret: this.config.get('JWT_ACCESS_SECRET'),
-      expiresIn: this.config.get('JWT_ACCESS_EXPIRES_IN', '15m'),
+      secret: this.config.get('jwt.secret'),
+      expiresIn: this.config.get<number>('jwt.accessTtl', 900),
     });
 
     const rawRefresh = crypto.randomBytes(64).toString('hex');
