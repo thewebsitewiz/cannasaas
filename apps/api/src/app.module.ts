@@ -23,6 +23,7 @@ import { ManufacturersModule } from './modules/manufacturers/manufacturers.modul
 import { OrdersModule } from './modules/orders/orders.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { StaffingModule } from './modules/staffing/staffing.module';
+import { TimeClockModule } from './modules/timeclock/timeclock.module';
 import { PromotionsModule } from './modules/promotions/promotions.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { MetrcModule } from './modules/metrc/metrc.module';
@@ -63,6 +64,7 @@ import { PosModule } from './modules/pos/pos.module';
     OrdersModule,
     PaymentsModule,
     StaffingModule,
+    TimeClockModule,
     PromotionsModule,
     InventoryModule,
     MetrcModule,

@@ -23,6 +23,8 @@ export class EmployeeProfile {
   @Field({ name: 'emergencyContactName', nullable: true }) @Column({ length: 100, nullable: true, name: 'emergency_contact_name' }) emergency_contact_name?: string;
   @Field({ name: 'emergencyContactPhone', nullable: true }) @Column({ length: 20, nullable: true, name: 'emergency_contact_phone' }) emergency_contact_phone?: string;
   @Field({ name: 'emergencyContactRelationship', nullable: true }) @Column({ length: 50, nullable: true, name: 'emergency_contact_relationship' }) emergency_contact_relationship?: string;
+  @Field({ name: 'isExempt' }) @Column({ default: false, name: 'is_exempt' }) is_exempt!: boolean;
+  @Field({ name: 'exemptReason', nullable: true }) @Column({ length: 100, nullable: true, name: 'exempt_reason' }) exempt_reason?: string;
   @Field({ nullable: true }) @Column({ type: 'text', nullable: true }) notes?: string;
   @Field(() => Date, { name: 'createdAt' }) @CreateDateColumn({ type: 'timestamptz' }) created_at!: Date;
   @Field(() => Date, { name: 'updatedAt' }) @UpdateDateColumn({ type: 'timestamptz' }) updated_at!: Date;
