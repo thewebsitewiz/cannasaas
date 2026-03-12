@@ -27,6 +27,7 @@ import { InventoryModule } from './modules/inventory/inventory.module';
 import { MetrcModule } from './modules/metrc/metrc.module';
 import { ProductDataModule } from './modules/product-data/product-data.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { FulfillmentModule } from './modules/fulfillment/fulfillment.module';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
     MetrcModule,
     ProductDataModule,
     AnalyticsModule,
+    FulfillmentModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
