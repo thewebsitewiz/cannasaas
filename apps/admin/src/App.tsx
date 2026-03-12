@@ -5,6 +5,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { ProductsPage } from './pages/ProductsPage';
 import { OrdersPage } from './pages/OrdersPage';
 import { CompliancePage } from './pages/CompliancePage';
+import { SettingsPage } from './pages/SettingsPage';
 import { InventoryPage } from './pages/InventoryPage';
 import { useAuthStore } from './stores/auth.store';
 
@@ -31,6 +32,7 @@ export function App() {
         <Route path="orders" element={<OrdersPage />} />
         <Route path="inventory" element={<InventoryPage />} />
         <Route path="compliance" element={<CompliancePage />} />
+        <Route path="settings" element={<SettingsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
