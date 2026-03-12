@@ -1,4 +1,5 @@
 import { APP_GUARD } from '@nestjs/core';
+import { BullModule } from '@nestjs/bullmq';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
@@ -26,6 +27,14 @@ import { MetrcModule } from './modules/metrc/metrc.module';
 
 @Module({
   imports: [
+    BullModule.forRootAsync({
+      useFactory: () => ({
+        connection: {
+          host: process.env['REDIS_HOST'] ?? 'localhost',
+          port: parseInt(process.env['REDIS_PORT'] ?? '6379', 10),
+        },
+      }),
+    }),
     ConfigModule.forRoot({ isGlobal: true, load: [configuration] }),
     ScheduleModule.forRoot(),
     GraphQLModule.forRoot<ApolloDriverConfig>({

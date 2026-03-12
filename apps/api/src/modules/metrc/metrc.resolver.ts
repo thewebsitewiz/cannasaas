@@ -1,4 +1,4 @@
-import { Resolver, Query, Mutation, Args, ID } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, ID, Int } from '@nestjs/graphql';
 import { ForbiddenException } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -13,6 +13,7 @@ import { TagProductUidInput } from './dto/tag-product-uid.input';
 import { BulkTagUidInput } from './dto/bulk-tag-uid.input';
 import { BulkTagResult } from './dto/bulk-tag-result.type';
 import { MetrcSaleResult } from './dto/metrc-sale-result.type';
+import { MetrcSyncQueueService } from './queue/metrc-sync.queue-service';
 import { TagPackageLabelInput } from './dto/tag-package-label.input';
 import { SetMetrcCategoryInput } from './dto/set-metrc-category.input';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -23,6 +24,7 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
 export class MetrcResolver {
   constructor(
     private readonly metrc: MetrcService,
+    private readonly syncQueue: MetrcSyncQueueService,
     @InjectDataSource() private dataSource: DataSource,
   ) {}
 
@@ -150,5 +152,17 @@ export class MetrcResolver {
   ): Promise<any> {
     if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId) throw new ForbiddenException('Access denied');
     return this.metrc.syncSaleToMetrc(orderId, dispensaryId, this.dataSource);
+  }
+
+  // ── Queue Management ─────────────────────────────────────────────────────
+
+  @Roles('dispensary_admin', 'org_admin', 'super_admin')
+  @Mutation(() => Int, { name: 'retryFailedMetrcSyncs' })
+  async retryFailed(
+    @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<number> {
+    if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId) throw new ForbiddenException('Access denied');
+    return this.syncQueue.enqueueRetryFailed(dispensaryId);
   }
 }

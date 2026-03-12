@@ -4,6 +4,7 @@ import { Resolver, Query, Mutation, Args, ID, Int } from '@nestjs/graphql';
 import { ForbiddenException } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { MetrcService } from '../metrc/metrc.service';
+import { MetrcSyncQueueService } from '../metrc/queue/metrc-sync.queue-service';
 import { Order } from './entities/order.entity';
 import { CreateOrderInput } from './dto/create-order.input';
 import { CompleteOrderInput } from './dto/complete-order.input';
@@ -17,6 +18,7 @@ export class OrdersResolver {
   constructor(
     private readonly orders: OrdersService,
     private readonly metrc: MetrcService,
+    private readonly syncQueue: MetrcSyncQueueService,
     @InjectDataSource() private dataSource: DataSource,
   ) {}
 
@@ -102,9 +104,9 @@ export class OrdersResolver {
     }
     await this.orders.completeOrder(input);
 
-    // Auto-sync to Metrc (non-blocking)
-    this.metrc.syncSaleToMetrc(input.orderId, targetId, this.dataSource)
-      .catch((err: any) => console.warn('Metrc auto-sync error:', err?.message));
+    // Enqueue Metrc sync with retry backoff
+    this.syncQueue.enqueueSaleSync(input.orderId, targetId)
+      .catch((err: any) => console.warn('Metrc queue error:', err?.message));
 
     return true;
   }
