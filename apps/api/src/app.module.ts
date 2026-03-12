@@ -22,6 +22,7 @@ import { BrandsModule } from './modules/brands/brands.module';
 import { ManufacturersModule } from './modules/manufacturers/manufacturers.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { PaymentsModule } from './modules/payments/payments.module';
+import { StaffingModule } from './modules/staffing/staffing.module';
 import { PromotionsModule } from './modules/promotions/promotions.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { MetrcModule } from './modules/metrc/metrc.module';
@@ -61,6 +62,7 @@ import { PosModule } from './modules/pos/pos.module';
     ManufacturersModule,
     OrdersModule,
     PaymentsModule,
+    StaffingModule,
     PromotionsModule,
     InventoryModule,
     MetrcModule,
