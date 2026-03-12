@@ -1,6 +1,9 @@
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 import { Resolver, Query, Mutation, Args, ID, Int } from '@nestjs/graphql';
 import { ForbiddenException } from '@nestjs/common';
 import { OrdersService } from './orders.service';
+import { MetrcService } from '../metrc/metrc.service';
 import { Order } from './entities/order.entity';
 import { CreateOrderInput } from './dto/create-order.input';
 import { CompleteOrderInput } from './dto/complete-order.input';
@@ -11,7 +14,11 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
 
 @Resolver(() => Order)
 export class OrdersResolver {
-  constructor(private readonly orders: OrdersService) {}
+  constructor(
+    private readonly orders: OrdersService,
+    private readonly metrc: MetrcService,
+    @InjectDataSource() private dataSource: DataSource,
+  ) {}
 
   @Roles('budtender', 'dispensary_admin', 'org_admin', 'super_admin')
   @Mutation(() => OrderSummary, { name: 'createOrder' })
@@ -94,6 +101,11 @@ export class OrdersResolver {
       throw new ForbiddenException('Access denied');
     }
     await this.orders.completeOrder(input);
+
+    // Auto-sync to Metrc (non-blocking)
+    this.metrc.syncSaleToMetrc(input.orderId, targetId, this.dataSource)
+      .catch((err: any) => console.warn('Metrc auto-sync error:', err?.message));
+
     return true;
   }
 }

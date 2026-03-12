@@ -230,7 +230,8 @@ export class OrdersService {
        WHERE "orderId" = $1 AND "dispensaryId" = $2 AND "orderStatus" = 'pending'`,
       [orderId, dispensaryId]
     );
-    return (result[1] ?? 0) > 0;
+    // pg driver returns rowCount as second element for UPDATE
+    return Array.isArray(result) && result.length >= 2 ? (result[1] ?? 0) > 0 : (result.rowCount ?? 0) > 0;
   }
 
   async completeOrder(input: any): Promise<any> {
