@@ -1,4 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { OrderCompletedEvent } from './events/order-completed.event';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { CreateOrderInput } from './dto/create-order.input';
@@ -22,7 +24,10 @@ const TAX_RATES: Record<string, { state: number; local: number; excise: number; 
 
 @Injectable()
 export class OrdersService {
-  constructor(@InjectDataSource() private dataSource: DataSource) {}
+  constructor(
+    @InjectDataSource() private dataSource: DataSource,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   async createOrder(input: CreateOrderInput, staffUserId?: string): Promise<OrderSummary> {
     const qr = this.dataSource.createQueryRunner();
@@ -288,6 +293,13 @@ export class OrdersService {
       }
 
       await qr.commitTransaction();
+
+      // Fire event — triggers Metrc sale sync via OrderCompletedListener
+      this.eventEmitter.emit(
+        'order.completed',
+        new OrderCompletedEvent(input.orderId, input.dispensaryId, new Date()),
+      );
+
       return { order, lineItems };
     } catch (err) {
       await qr.rollbackTransaction();

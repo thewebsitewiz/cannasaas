@@ -337,7 +337,7 @@ export class MetrcService {
 
       // Get order + line items
       const [order] = await qr.query(
-        `SELECT o.*, d.state FROM orders o
+        `SELECT o.*, d.state, d.license_number FROM orders o
          JOIN dispensaries d ON d.entity_id = o."dispensaryId"
          WHERE o."orderId" = $1 AND o."dispensaryId" = $2`,
         [orderId, dispensaryId]
@@ -398,7 +398,8 @@ export class MetrcService {
       const isSandbox = this.config.get<boolean>('metrc.sandboxMode') ?? true;
       const baseUrl = isSandbox ? 'https://sandbox-api-mn.metrc.com' : `https://api-${order.state.toLowerCase()}.metrc.com`;
 
-      const response = await fetch(`${baseUrl}/sales/v2/receipts`, {
+      const licenseNumber = order.license_number;
+      const response = await fetch(`${baseUrl}/sales/v2/receipts?licenseNumber=${encodeURIComponent(licenseNumber)}`, {
         method: 'POST',
         headers: {
           Authorization: `Basic ${authToken}`,

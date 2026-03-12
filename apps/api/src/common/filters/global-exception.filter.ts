@@ -8,15 +8,21 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const contextType = host.getType<string>();
     if (contextType === 'graphql') {
       if (exception instanceof HttpException) {
+        const response = exception.getResponse();
+        const detail = typeof response === 'object' ? JSON.stringify(response) : response;
+        this.logger.error(`GraphQL HttpException: ${detail}`);
         throw new GraphQLError(exception.message, {
           extensions: {
             code: exception.getStatus() === HttpStatus.UNAUTHORIZED ? 'UNAUTHENTICATED' : 'BAD_REQUEST',
             status: exception.getStatus(),
+            detail: typeof response === 'object' ? response : undefined,
           },
         });
       }
-      this.logger.error('Unhandled GraphQL exception', exception);
-      throw new GraphQLError('Internal server error', { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+      const errMsg = exception instanceof Error ? exception.message : String(exception);
+      const errStack = exception instanceof Error ? exception.stack : undefined;
+      this.logger.error(`Unhandled GraphQL exception: ${errMsg}`, errStack);
+      throw new GraphQLError(errMsg, { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
     }
     const res = host.switchToHttp().getResponse<{ status: (n: number) => { json: (o: unknown) => void } }>();
     const status = exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;

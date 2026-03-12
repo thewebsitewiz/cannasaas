@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, type ApolloDriverConfig } from '@nestjs/apollo';
 import { ScheduleModule } from '@nestjs/schedule';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 import { configuration } from './config/configuration';
 import { TenantMiddleware } from './common/middleware/tenant.middleware';
@@ -37,6 +38,7 @@ import { MetrcModule } from './modules/metrc/metrc.module';
     }),
     ConfigModule.forRoot({ isGlobal: true, load: [configuration] }),
     ScheduleModule.forRoot(),
+    EventEmitterModule.forRoot(),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: true,

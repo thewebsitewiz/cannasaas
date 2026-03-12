@@ -44,6 +44,7 @@ async function bootstrap(): Promise<void> {
   });
 
   app.useGlobalPipes(
+
     new ValidationPipe({
       transform: true,
       whitelist: true,
