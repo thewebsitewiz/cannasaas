@@ -1,6 +1,9 @@
 import { Resolver, Query, Args, ID, Int, ResolveField, Parent } from '@nestjs/graphql';
 import { ForbiddenException } from '@nestjs/common';
 import { ProductsService } from './products.service';
+import { ProductSearchService } from './product-search.service';
+import { ProductSearchInput } from './dto/product-search.input';
+import { ProductSearchResult, AutocompleteResult } from './dto/product-search-result.type';
 import { Product } from './entities/product.entity';
 import { ProductVariant } from './entities/product-variant.entity';
 import { ProductPricing } from './entities/product-pricing.entity';
@@ -13,7 +16,10 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
 
 @Resolver(() => Product)
 export class ProductsResolver {
-  constructor(private readonly products: ProductsService) {}
+  constructor(
+    private readonly products: ProductsService,
+    private readonly search: ProductSearchService,
+  ) {}
 
   // Public storefront — scoped to tenant dispensary
   @Public()
@@ -107,5 +113,25 @@ export class ProductsResolver {
     @Parent() product: Product,
   ): Promise<ProductVariant[]> {
     return this.products.findVariants(product.id, product.dispensary_id);
+  }
+
+  // ── Full-text search with faceted filtering ─────────────────────────────
+
+  @Public()
+  @Query(() => ProductSearchResult, { name: 'searchProducts' })
+  async searchProducts(
+    @Args('input') input: ProductSearchInput,
+  ): Promise<ProductSearchResult> {
+    return this.search.search(input);
+  }
+
+  @Public()
+  @Query(() => [AutocompleteResult], { name: 'autocompleteProducts' })
+  async autocomplete(
+    @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
+    @Args('query') query: string,
+    @Args('limit', { type: () => Int, nullable: true }) limit?: number,
+  ): Promise<AutocompleteResult[]> {
+    return this.search.autocomplete(dispensaryId, query, limit);
   }
 }

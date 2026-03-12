@@ -14,6 +14,7 @@ import {
 } from './entities/lookups/lookups.entity';
 import { ProductsResolver } from './products.resolver';
 import { ProductsService } from './products.service';
+import { ProductSearchService } from './product-search.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([
@@ -25,7 +26,7 @@ import { ProductsService } from './products.service';
     LkpCannabinoid, LkpAllergen, LkpWarningStatement,
     LkpLabTestCategory, LkpMetrcAdjustmentReason,
   ])],
-  providers: [ProductsResolver, ProductsService],
+  providers: [ProductsResolver, ProductsService, ProductSearchService],
   exports: [ProductsService],
 })
 export class ProductsModule {}
