@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, Index } from 'typeorm';
 import { ObjectType, Field, ID, Float, Int } from '@nestjs/graphql';
+import { GraphQLJSON } from 'graphql-type-json';
 
 @ObjectType()
 @Entity('products')
@@ -19,6 +20,15 @@ export class Product {
   @Field(() => Int, { name: 'extractionMethodId', nullable: true }) @Column({ nullable: true }) extraction_method_id?: number;
   @Field(() => Int, { name: 'uomId', nullable: true }) @Column({ nullable: true }) uom_id?: number;
   @Field(() => Int, { name: 'metrcItemCategoryId', nullable: true }) @Column({ nullable: true }) metrc_item_category_id?: number;
+
+  @Field({ name: 'strainName', nullable: true }) @Column({ length: 255, nullable: true }) strain_name?: string;
+  @Field({ name: 'strainType', nullable: true }) @Column({ length: 20, nullable: true }) strain_type?: string;
+  @Field(() => GraphQLJSON, { name: 'effects', nullable: true }) @Column({ type: 'jsonb', default: '[]' }) effects!: any;
+  @Field(() => GraphQLJSON, { name: 'flavors', nullable: true }) @Column({ type: 'jsonb', default: '[]' }) flavors!: any;
+  @Field(() => GraphQLJSON, { name: 'terpenes', nullable: true }) @Column({ type: 'jsonb', default: '[]' }) terpenes!: any;
+  @Field(() => GraphQLJSON, { name: 'lineage', nullable: true }) @Column({ type: 'jsonb', default: '{}' }) lineage!: any;
+  @Field({ name: 'otreebaOcpc', nullable: true }) @Column({ length: 50, nullable: true }) otreeba_ocpc?: string;
+  @Field(() => Date, { name: 'enrichedAt', nullable: true }) @Column({ type: 'timestamptz', nullable: true }) enriched_at?: Date;
 
   @Field() @Column({ length: 255 }) name!: string;
   @Field({ nullable: true }) @Column({ type: 'text', nullable: true }) description?: string;

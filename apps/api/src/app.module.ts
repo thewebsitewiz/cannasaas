@@ -25,6 +25,7 @@ import { PaymentsModule } from './modules/payments/payments.module';
 import { PromotionsModule } from './modules/promotions/promotions.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { MetrcModule } from './modules/metrc/metrc.module';
+import { ProductDataModule } from './modules/product-data/product-data.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { MetrcModule } from './modules/metrc/metrc.module';
     PromotionsModule,
     InventoryModule,
     MetrcModule,
+    ProductDataModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
