@@ -439,4 +439,56 @@ export class MetrcService {
     }
   }
 
+
+  async getFailedSyncDashboard(dispensaryId: string, dataSource: any): Promise<any> {
+    const qr = dataSource.createQueryRunner();
+    await qr.connect();
+    try {
+      const items = await qr.query(
+        `SELECT
+           o."orderId", o."orderStatus", o."metrcSyncStatus",
+           o."metrcReportedAt", o.subtotal, o.total,
+           to_char(o."createdAt" AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as created_at_str,
+           to_char(ml.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as last_sync_attempt,
+           ml.metrc_response->>'body' as last_sync_error,
+           ml.attempt_count
+         FROM orders o
+         LEFT JOIN LATERAL (
+           SELECT updated_at, metrc_response, attempt_count
+           FROM metrc_sync_logs
+           WHERE reference_entity_id = o."orderId"::text
+           ORDER BY created_at DESC
+           LIMIT 1
+         ) ml ON true
+         WHERE o."dispensaryId" = $1
+           AND o."metrcSyncStatus" IN ('failed', 'pending')
+           AND o."orderStatus" = 'completed'
+         ORDER BY o."createdAt" ASC`,
+        [dispensaryId]
+      );
+
+      const oldest = items.length > 0 ? items[0].created_at_str : null;
+
+      return {
+        dispensaryId,
+        totalFailed: items.length,
+        oldestFailedAt: oldest ? (oldest instanceof Date ? oldest.toISOString() : oldest) : null,
+        items: items.map((r: any) => ({
+          orderId: r.orderId,
+          orderStatus: r.orderStatus,
+          metrcSyncStatus: r.metrcSyncStatus,
+          metrcReportedAt: r.metrcReportedAt,
+          subtotal: parseFloat(r.subtotal),
+          total: parseFloat(r.total),
+          createdAt: r.created_at_str ?? '',
+          lastSyncAttempt: r.last_sync_attempt ?? null,
+          lastSyncError: r.last_sync_error ? r.last_sync_error.substring(0, 200) : null,
+          attemptCount: r.attempt_count ?? 0,
+        })),
+      };
+    } finally {
+      await qr.release();
+    }
+  }
+
 }

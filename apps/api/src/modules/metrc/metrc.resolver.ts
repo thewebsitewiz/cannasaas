@@ -13,6 +13,7 @@ import { TagProductUidInput } from './dto/tag-product-uid.input';
 import { BulkTagUidInput } from './dto/bulk-tag-uid.input';
 import { BulkTagResult } from './dto/bulk-tag-result.type';
 import { MetrcSaleResult } from './dto/metrc-sale-result.type';
+import { FailedSyncDashboard } from './dto/failed-sync.type';
 import { MetrcSyncQueueService } from './queue/metrc-sync.queue-service';
 import { TagPackageLabelInput } from './dto/tag-package-label.input';
 import { SetMetrcCategoryInput } from './dto/set-metrc-category.input';
@@ -164,5 +165,19 @@ export class MetrcResolver {
   ): Promise<number> {
     if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId) throw new ForbiddenException('Access denied');
     return this.syncQueue.enqueueRetryFailed(dispensaryId);
+  }
+
+  // ── Failed Sync Dashboard ────────────────────────────────────────────────
+
+  @Roles('budtender', 'dispensary_admin', 'org_admin', 'super_admin')
+  @Query(() => FailedSyncDashboard, { name: 'failedMetrcSyncs' })
+  async failedMetrcSyncs(
+    @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<any> {
+    if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId) {
+      throw new ForbiddenException('Access denied');
+    }
+    return this.metrc.getFailedSyncDashboard(dispensaryId, this.dataSource);
   }
 }
