@@ -103,6 +103,18 @@ export class Dispensary {
   @Column({ nullable: true, length: 50 })
   timezone?: string;
 
+  @Field(() => Float, { name: 'cashDiscountPercent', nullable: true })
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 0, name: 'cash_discount_percent' })
+  cash_discount_percent?: number;
+
+  @Field({ name: 'isCashEnabled' })
+  @Column({ default: true, name: 'is_cash_enabled' })
+  is_cash_enabled!: boolean;
+
+  @Field({ name: 'cashDeliveryEnabled' })
+  @Column({ default: true, name: 'cash_delivery_enabled' })
+  cash_delivery_enabled!: boolean;
+
   @Field(() => Date)
   @CreateDateColumn({ type: 'timestamptz' })
   created_at!: Date;

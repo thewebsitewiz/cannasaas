@@ -21,6 +21,8 @@ export class Order {
   @Field({ nullable: true }) @Column({ nullable: true, length: 100 }) metrcReceiptId?: string;
   @Field({ nullable: true }) @Column({ type: 'timestamptz', nullable: true }) metrcReportedAt?: Date;
   @Field({ nullable: true }) @Column({ nullable: true, default: 'pending' }) metrcSyncStatus?: string;
+  @Field({ nullable: true }) @Column({ nullable: true, default: 'cash', name: 'payment_method' }) paymentMethod?: string;
+  @Field() @Column('numeric', { precision: 10, scale: 2, default: 0, name: 'cash_discount_applied' }) cashDiscountApplied!: number;
   @Column('jsonb', { nullable: true }) fulfillmentAddress?: Record<string, unknown>;
   @Field({ nullable: true }) @Column({ type: 'timestamptz', nullable: true }) scheduledPickupAt?: Date;
   @Field({ nullable: true }) @Column({ type: 'text', nullable: true }) notes?: string;
