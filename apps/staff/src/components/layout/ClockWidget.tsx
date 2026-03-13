@@ -14,6 +14,7 @@ interface ClockStatus {
 export function ClockWidget() {
   const token = useAuthStore((s) => s.token);
   const user = useAuthStore((s) => s.user);
+  const user = useAuthStore((s) => s.user);
   const [status, setStatus] = useState<ClockStatus>({ isClockedIn: false });
   const [loading, setLoading] = useState(false);
   const [elapsed, setElapsed] = useState('0:00');
