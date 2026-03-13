@@ -30,6 +30,7 @@ import { NotificationModule } from './modules/notifications/notification.module'
 import { SchedulingModule } from './modules/scheduling/scheduling.module';
 import { ReportingModule } from './modules/reporting/reporting.module';
 import { ComplianceModule } from './modules/compliance/compliance.module';
+import { WsModule } from './modules/ws/ws.module';
 import { PromotionsModule } from './modules/promotions/promotions.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { MetrcModule } from './modules/metrc/metrc.module';
@@ -77,6 +78,7 @@ import { PosModule } from './modules/pos/pos.module';
     SchedulingModule,
     ReportingModule,
     ComplianceModule,
+    WsModule,
     PromotionsModule,
     InventoryModule,
     MetrcModule,
