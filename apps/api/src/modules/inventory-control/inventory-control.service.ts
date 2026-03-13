@@ -4,9 +4,9 @@ import { Repository } from 'typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { Cron } from '@nestjs/schedule';
-import { InventoryTransfer, InventoryTransferItem } from './entities/inventory-control.entities';
-import { InventoryCount, InventoryCountItem } from './entities/inventory-control.entities';
-import { InventoryAdjustment, LkpAdjustmentReason } from './entities/inventory-control.entities';
+import { InventoryTransfer, InventoryTransferItem } from './entities/inventory-control.entity';
+import { InventoryCount, InventoryCountItem } from './entities/inventory-control.entity';
+import { InventoryAdjustment, LkpAdjustmentReason } from './entities/inventory-control.entity';
 
 @Injectable()
 export class InventoryControlService {

@@ -2,7 +2,7 @@ import { Resolver, Query, Mutation, Args, ID, Int } from '@nestjs/graphql';
 import { ObjectType, Field, InputType } from '@nestjs/graphql';
 import { ForbiddenException } from '@nestjs/common';
 import { InventoryControlService } from './inventory-control.service';
-import { InventoryTransfer, InventoryTransferItem, InventoryCount, InventoryCountItem, InventoryAdjustment, LkpAdjustmentReason } from './entities/inventory-control.entities';
+import { InventoryTransfer, InventoryTransferItem, InventoryCount, InventoryCountItem, InventoryAdjustment, LkpAdjustmentReason } from './entities/inventory-control.entity';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtPayload } from '../auth/strategies/jwt.strategy';
