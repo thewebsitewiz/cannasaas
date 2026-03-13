@@ -27,6 +27,7 @@ import { TimeClockModule } from './modules/timeclock/timeclock.module';
 import { InventoryControlModule } from './modules/inventory-control/inventory-control.module';
 import { CustomerModule } from './modules/customers/customer.module';
 import { NotificationModule } from './modules/notifications/notification.module';
+import { SchedulingModule } from './modules/scheduling/scheduling.module';
 import { PromotionsModule } from './modules/promotions/promotions.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { MetrcModule } from './modules/metrc/metrc.module';
@@ -71,6 +72,7 @@ import { PosModule } from './modules/pos/pos.module';
     InventoryControlModule,
     CustomerModule,
     NotificationModule,
+    SchedulingModule,
     PromotionsModule,
     InventoryModule,
     MetrcModule,
