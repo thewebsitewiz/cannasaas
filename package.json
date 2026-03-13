@@ -4,8 +4,12 @@
     "@graphql-codegen/cli": "^5.0.2",
     "@graphql-codegen/client-preset": "^4.2.4",
     "@types/cookie-parser": "^1.4.10",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^18.3.0",
     "@typescript-eslint/eslint-plugin": "^7.7.0",
     "@typescript-eslint/parser": "^7.7.0",
+    "@vitejs/plugin-react": "^6.0.0",
+    "autoprefixer": "^10.4.27",
     "commitlint": "^19.2.1",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
@@ -13,11 +17,14 @@
     "eslint-plugin-jsx-a11y": "^6.8.0",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
+    "postcss": "^8.5.8",
     "prettier": "^3.2.5",
     "prettier-plugin-tailwindcss": "^0.5.14",
     "rimraf": "^5.0.5",
+    "tailwindcss": "^4.2.1",
     "turbo": "^2.0.3",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vite": "^8.0.0"
   },
   "engines": {
     "node": ">=20.0.0",
@@ -75,6 +82,12 @@
     "type-check": "turbo run type-check"
   },
   "dependencies": {
-    "dotenv": "^17.3.1"
+    "@tanstack/react-query": "^5.90.21",
+    "dotenv": "^17.3.1",
+    "lucide-react": "^0.577.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.13.1",
+    "zustand": "^5.0.11"
   }
 }

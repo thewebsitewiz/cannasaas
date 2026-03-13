@@ -1,6 +1,7 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { ClipboardList, Truck, Warehouse, Search, LogOut } from 'lucide-react';
 import { useAuthStore } from '../stores/auth.store';
+import { ClockWidget } from '../components/layout/ClockWidget';
 
 const NAV = [
   { to: '/', label: 'Orders', icon: ClipboardList },
@@ -16,7 +17,6 @@ export function StaffLayout() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Top nav — optimized for tablet at counter */}
       <header className="bg-gray-900 text-white">
         <div className="flex items-center justify-between px-4 h-14">
           <div className="flex items-center gap-6">
@@ -41,6 +41,7 @@ export function StaffLayout() {
           </div>
 
           <div className="flex items-center gap-4">
+            <ClockWidget />
             <span className="text-xs text-gray-500 hidden sm:inline">{user?.email}</span>
             <button onClick={() => { logout(); navigate('/login'); }} className="text-gray-400 hover:text-white">
               <LogOut size={18} />
