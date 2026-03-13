@@ -10,6 +10,7 @@ import { StaffingPage } from './pages/StaffingPage';
 import { InventoryControlPage } from './pages/InventoryControlPage';
 import { TimeClockPage } from './pages/TimeClockPage';
 import { SchedulingPage } from './pages/SchedulingPage';
+import { ReportsPage } from './pages/ReportsPage';
 import { InventoryPage } from './pages/InventoryPage';
 import { useAuthStore } from './stores/auth.store';
 
@@ -41,6 +42,7 @@ export function App() {
         <Route path="inventory-control" element={<InventoryControlPage />} />
         <Route path="timeclock" element={<TimeClockPage />} />
         <Route path="scheduling" element={<SchedulingPage />} />
+        <Route path="reports" element={<ReportsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

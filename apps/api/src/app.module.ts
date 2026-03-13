@@ -28,6 +28,7 @@ import { InventoryControlModule } from './modules/inventory-control/inventory-co
 import { CustomerModule } from './modules/customers/customer.module';
 import { NotificationModule } from './modules/notifications/notification.module';
 import { SchedulingModule } from './modules/scheduling/scheduling.module';
+import { ReportingModule } from './modules/reporting/reporting.module';
 import { PromotionsModule } from './modules/promotions/promotions.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { MetrcModule } from './modules/metrc/metrc.module';
@@ -73,6 +74,7 @@ import { PosModule } from './modules/pos/pos.module';
     CustomerModule,
     NotificationModule,
     SchedulingModule,
+    ReportingModule,
     PromotionsModule,
     InventoryModule,
     MetrcModule,

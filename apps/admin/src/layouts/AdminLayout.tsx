@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, ShoppingCart, Warehouse, ShieldCheck, Settings, Users, Clock, CalendarDays, ArrowRightLeft, LogOut } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Warehouse, ShieldCheck, Settings, Users, Clock, CalendarDays, ArrowRightLeft, BarChart3, LogOut } from 'lucide-react';
 import { useAuthStore } from '../stores/auth.store';
 
 const NAV_ITEMS = [
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { to: '/timeclock', label: 'Time Clock', icon: Clock },
   { to: '/scheduling', label: 'Scheduling', icon: CalendarDays },
   { to: '/inventory-control', label: 'Inv. Control', icon: ArrowRightLeft },
+  { to: '/reports', label: 'Reports', icon: BarChart3 },
   { to: '/settings', label: 'Settings', icon: Settings },
 ];
 
