@@ -1,3 +1,4 @@
+import { RateLimit } from '../../common/guards/rate-limit.guard';
 import { Controller, Post, Body, UseGuards, Req, Res, HttpCode } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Response, Request } from 'express';
@@ -13,6 +14,7 @@ export class AuthController {
 
   @Public()
   @Post('register')
+  @RateLimit(5, 300)
   async register(@Body() dto: RegisterInput, @Res({ passthrough: true }) res: Response) {
     const result = await this.auth.register(dto);
     this.setRefreshCookie(res, result.refreshToken);
@@ -22,6 +24,7 @@ export class AuthController {
   @Public()
   @Post('login')
   @HttpCode(200)
+  @RateLimit(10, 60)
   async login(@Body() dto: LoginInput, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const result = await this.auth.login(dto, {
       userAgent: req.headers['user-agent'],

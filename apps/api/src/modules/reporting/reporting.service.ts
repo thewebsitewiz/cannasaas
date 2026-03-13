@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { validateUUID, validateDateString } from '../../common/helpers/validation.helpers';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 
@@ -13,6 +14,8 @@ export class ReportingService {
   // ═══════════════════════════════════════════════════════════════════════════
 
   async salesSummary(dispensaryId: string, startDate: string, endDate: string): Promise<any> {
+    validateUUID(dispensaryId, 'dispensaryId'); validateDateString(startDate, 'startDate'); validateDateString(endDate, 'endDate');
+    if (new Date(startDate) > new Date(endDate)) throw new BadRequestException('startDate must be before endDate');
     const [summary] = await this.ds.query(
       `SELECT
         COUNT(*) as total_orders,
@@ -98,6 +101,7 @@ export class ReportingService {
   // ═══════════════════════════════════════════════════════════════════════════
 
   async taxReport(dispensaryId: string, startDate: string, endDate: string): Promise<any> {
+    validateUUID(dispensaryId, 'dispensaryId'); validateDateString(startDate, 'startDate'); validateDateString(endDate, 'endDate');
     const [disp] = await this.ds.query(
       `SELECT name, state, license_number FROM dispensaries WHERE entity_id = $1`, [dispensaryId],
     );
