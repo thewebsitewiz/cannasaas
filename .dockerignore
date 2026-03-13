@@ -1,8 +1,11 @@
 node_modules
-npm-debug.log
+.next
 dist
-.env
 .git
-.gitignore
-README.md
-.github
+.env
+.env.local
+*.md
+.vscode
+.idea
+coverage
+.turbo
