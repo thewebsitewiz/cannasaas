@@ -39,6 +39,8 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { FulfillmentModule } from './modules/fulfillment/fulfillment.module';
 import { PosModule } from './modules/pos/pos.module';
 
+import { LoyaltyModule } from './modules/loyalty/loyalty.module';
+
 @Module({
   imports: [
     BullModule.forRootAsync({
@@ -86,6 +88,7 @@ import { PosModule } from './modules/pos/pos.module';
     AnalyticsModule,
     FulfillmentModule,
     PosModule,
+    LoyaltyModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
