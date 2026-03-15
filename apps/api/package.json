@@ -39,6 +39,7 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "socket.io": "^4.8.3",
+    "stripe": "^20.4.1",
     "twilio": "^5.13.0",
     "typeorm": "^0.3.20"
   },
@@ -76,7 +77,8 @@
     "migration:revert": "ts-node --swc -r tsconfig-paths/register ./node_modules/typeorm/cli migration:revert -d src/data-source.ts",
     "migration:run": "ts-node --swc -r tsconfig-paths/register ./node_modules/typeorm/cli migration:run -d src/data-source.ts",
     "start": "node dist/main.js",
-    "test": "jest"
+    "test": "jest",
+    "test:e2e": "jest --config jest-e2e.config.js --runInBand --forceExit"
   },
   "version": "0.1.0"
 }

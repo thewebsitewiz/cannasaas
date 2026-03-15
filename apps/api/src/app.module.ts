@@ -42,6 +42,7 @@ import { PosModule } from './modules/pos/pos.module';
 import { LoyaltyModule } from './modules/loyalty/loyalty.module';
 import { VendorModule } from './modules/vendor/vendor.module';
 import { ImageModule } from './modules/image/image.module';
+import { StripeModule } from './modules/stripe/stripe.module';
 
 @Module({
   imports: [
@@ -93,6 +94,7 @@ import { ImageModule } from './modules/image/image.module';
     LoyaltyModule,
     VendorModule,
     ImageModule,
+    StripeModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
