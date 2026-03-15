@@ -11,6 +11,8 @@ import { InventoryControlPage } from './pages/InventoryControlPage';
 import { TimeClockPage } from './pages/TimeClockPage';
 import { SchedulingPage } from './pages/SchedulingPage';
 import { ReportsPage } from './pages/ReportsPage';
+import { VendorsPage } from './pages/VendorsPage';
+import { LoyaltyPage } from './pages/LoyaltyPage';
 import { InventoryPage } from './pages/InventoryPage';
 import { useAuthStore } from './stores/auth.store';
 

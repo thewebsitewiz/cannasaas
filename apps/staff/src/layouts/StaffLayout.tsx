@@ -1,6 +1,7 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { ClipboardList, Truck, Warehouse, Search, LogOut } from 'lucide-react';
 import { useAuthStore } from '../stores/auth.store';
+import { OrderToast } from '../components/OrderToast';
 import { ClockWidget } from '../components/layout/ClockWidget';
 
 const NAV = [
@@ -50,6 +51,7 @@ export function StaffLayout() {
         </div>
       </header>
 
+      <OrderToast />
       <main className="flex-1 p-4 sm:p-6">
         <Outlet />
       </main>

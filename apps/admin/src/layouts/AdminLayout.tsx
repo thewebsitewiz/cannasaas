@@ -12,6 +12,8 @@ const NAV_ITEMS = [
   { to: '/timeclock', label: 'Time Clock', icon: Clock },
   { to: '/scheduling', label: 'Scheduling', icon: CalendarDays },
   { to: '/inventory-control', label: 'Inv. Control', icon: ArrowRightLeft },
+  { to: '/vendors', label: 'Vendors', icon: Building2 },
+  { to: '/loyalty', label: 'Loyalty', icon: Star },
   { to: '/reports', label: 'Reports', icon: BarChart3 },
   { to: '/settings', label: 'Settings', icon: Settings },
 ];
