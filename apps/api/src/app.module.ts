@@ -40,6 +40,7 @@ import { FulfillmentModule } from './modules/fulfillment/fulfillment.module';
 import { PosModule } from './modules/pos/pos.module';
 
 import { LoyaltyModule } from './modules/loyalty/loyalty.module';
+import { VendorModule } from './modules/vendor/vendor.module';
 
 @Module({
   imports: [
@@ -89,6 +90,7 @@ import { LoyaltyModule } from './modules/loyalty/loyalty.module';
     FulfillmentModule,
     PosModule,
     LoyaltyModule,
+    VendorModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
