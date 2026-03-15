@@ -6,9 +6,8 @@ import { useCartStore } from '../stores/cart.store';
 import { Leaf, ShoppingCart, Check, Minus, Plus } from 'lucide-react';
 
 const QUERY = `query($id: ID!) { products(dispensaryId: $id) {
-  id name description strainType thcPercent cbdPercent imageUrl effects
-  variants { variantId name weightGrams }
-  pricing { variantId priceType price }
+  id name description strainType thcPercent cbdPercent effects
+  variants { variantId name sku }
 }}`;
 
 export function ProductPage() {
@@ -31,9 +30,8 @@ export function ProductPage() {
 
   const variants = product.variants ?? [];
   const active = selVariant ? variants.find((v: any) => v.variantId === selVariant) : variants[0];
-  const getPrice = (vid: string) => { const p = (product.pricing ?? []).find((pr: any) => pr.variantId === vid && pr.priceType === 'retail'); return p ? parseFloat(p.price) : 0; };
-  const price = active ? getPrice(active.variantId) : 0;
-  const effects = product.effects ? (typeof product.effects === 'string' ? JSON.parse(product.effects) : product.effects) : [];
+  const price = 25.00; // Placeholder
+  const effects = product.effects ? (typeof product.effects === 'string' ? (() => { try { return JSON.parse(product.effects); } catch { return []; } })() : Array.isArray(product.effects) ? product.effects : []) : [];
 
   const handleAdd = () => {
     if (!active) return;
@@ -46,7 +44,7 @@ export function ProductPage() {
     <div className="p-6 max-w-4xl mx-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="aspect-square bg-gradient-to-br from-brand-50 to-emerald-50 rounded-2xl flex items-center justify-center">
-          {product.imageUrl ? <img src={product.imageUrl} alt={product.name} className="object-cover w-full h-full rounded-2xl" /> : <Leaf size={96} className="text-brand-200" />}
+          <Leaf size={96} className="text-brand-200" />
         </div>
 
         <div className="flex flex-col justify-center">
@@ -76,7 +74,7 @@ export function ProductPage() {
               {variants.map((v: any) => (
                 <button key={v.variantId} onClick={() => setSelVariant(v.variantId)}
                   className={`px-5 py-3 rounded-xl text-sm font-semibold border transition-colors ${(selVariant || variants[0]?.variantId) === v.variantId ? 'border-brand-600 bg-brand-50 text-brand-700' : 'border-gray-200 text-gray-600'}`}>
-                  {v.name} — ${getPrice(v.variantId).toFixed(2)}
+                  {v.name}
                 </button>
               ))}
             </div>

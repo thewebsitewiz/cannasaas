@@ -22,13 +22,16 @@ export function CheckoutPage() {
       const input = {
         dispensaryId: DISPENSARY_ID,
         orderType: 'pickup',
-        paymentMethod: 'cash',
-        customerName: name.trim(),
-        lineItems: items.map((i) => ({ variantId: i.variantId, quantity: i.quantity })),
+        notes: 'Kiosk order for: ' + name.trim(),
+        lineItems: items.map((i) => ({ productId: i.productId, variantId: i.variantId, quantity: i.quantity })),
       };
       const data = await gql<any>(CREATE_ORDER, { input });
-      clearCart();
-      navigate('/confirm/' + data.createOrder.orderId);
+      if (data.createOrder) {
+        clearCart();
+        navigate('/confirm/' + data.createOrder.orderId);
+      } else {
+        setError('Order failed — please try again');
+      }
     } catch (err: any) {
       setError(err.message || 'Order failed');
     } finally {
@@ -40,12 +43,11 @@ export function CheckoutPage() {
     <div className="p-6 max-w-lg mx-auto">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Checkout</h1>
 
-      {/* Order summary */}
       <div className="bg-white rounded-xl border border-gray-100 p-6 mb-6">
         <h2 className="font-semibold text-gray-900 mb-3">Order Summary</h2>
         {items.map((i) => (
           <div key={i.variantId} className="flex justify-between py-2 text-sm">
-            <span>{i.name} × {i.quantity}</span>
+            <span>{i.name} x {i.quantity}</span>
             <span className="tabular-nums font-medium">${(i.price * i.quantity).toFixed(2)}</span>
           </div>
         ))}
@@ -56,7 +58,6 @@ export function CheckoutPage() {
         <p className="text-xs text-gray-400 mt-1">+ tax · Pay at counter</p>
       </div>
 
-      {/* Customer name */}
       <div className="bg-white rounded-xl border border-gray-100 p-6 mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">Your Name (for pickup)</label>
         <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="First name"

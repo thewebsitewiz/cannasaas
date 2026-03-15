@@ -6,9 +6,8 @@ import { useCartStore } from '../stores/cart.store';
 import { Leaf, Plus, Check } from 'lucide-react';
 
 const PRODUCTS_QUERY = `query($id: ID!) { products(dispensaryId: $id) {
-  id name strainType thcPercent cbdPercent imageUrl
-  variants { variantId name weightGrams }
-  pricing { variantId priceType price }
+  id name strainType thcPercent cbdPercent description
+  variants { variantId name sku }
 }}`;
 
 const FILTERS = ['All', 'Flower', 'Edible', 'Vape', 'Pre-Roll', 'Concentrate'];
@@ -25,9 +24,9 @@ export function MenuPage() {
     select: (d) => d.products,
   });
 
+  // Placeholder price — in production, pricing comes from inventory/POS
   const getPrice = (p: any) => {
-    const r = p.pricing?.find((pr: any) => pr.priceType === 'retail');
-    return r ? parseFloat(r.price) : 0;
+    return 25.00; // Default price; will be replaced with real pricing query
   };
 
   const handleAdd = (product: any) => {
@@ -42,7 +41,6 @@ export function MenuPage() {
 
   return (
     <div className="p-6">
-      {/* Category filters — large touch targets */}
       <div className="flex gap-3 mb-6 overflow-x-auto pb-2">
         {FILTERS.map((f) => (
           <button key={f} onClick={() => setFilter(f)}
@@ -54,20 +52,14 @@ export function MenuPage() {
         ))}
       </div>
 
-      {/* Product grid — 3 columns for tablet */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         {filtered.map((p: any) => {
           const price = getPrice(p);
           const isAdded = addedId === p.id;
           return (
             <div key={p.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md active:shadow-sm transition-all">
-              {/* Tappable image area → product detail */}
               <button onClick={() => navigate('/product/' + p.id)} className="w-full aspect-[4/3] bg-gradient-to-br from-brand-50 to-emerald-50 flex items-center justify-center relative">
-                {p.imageUrl ? (
-                  <img src={p.imageUrl} alt={p.name} className="object-cover w-full h-full" />
-                ) : (
-                  <Leaf size={56} className="text-brand-200" />
-                )}
+                <Leaf size={56} className="text-brand-200" />
                 {p.strainType && (
                   <span className={`absolute top-3 left-3 text-xs font-bold uppercase px-3 py-1 rounded-full ${
                     p.strainType === 'indica' ? 'bg-purple-100 text-purple-700' :
@@ -75,7 +67,6 @@ export function MenuPage() {
                   }`}>{p.strainType}</span>
                 )}
               </button>
-
               <div className="p-4">
                 <h3 className="font-bold text-gray-900 text-lg truncate">{p.name}</h3>
                 <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
