@@ -27,8 +27,8 @@ export function LoyaltyPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Loyalty Program</h1>
-        <button onClick={() => setShowCreate(!showCreate)} className="flex items-center gap-1.5 bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-700">
+        <h1 className="text-2xl font-bold text-txt">Loyalty Program</h1>
+        <button onClick={() => setShowCreate(!showCreate)} className="flex items-center gap-1.5 bg-brand-600 text-txt-inverse px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-700">
           <Plus size={16} /> New Reward
         </button>
       </div>
@@ -36,43 +36,43 @@ export function LoyaltyPage() {
       {/* KPIs */}
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <div className="bg-white rounded-xl border border-gray-100 p-4 text-center">
+          <div className="bg-surface rounded-xl border border-border p-4 text-center">
             <Users size={18} className="mx-auto text-brand-600 mb-1" />
             <p className="text-2xl font-bold">{stats.activeMembers}</p>
-            <p className="text-xs text-gray-500">Active Members</p>
+            <p className="text-xs text-txt-secondary">Active Members</p>
           </div>
-          <div className="bg-white rounded-xl border border-gray-100 p-4 text-center">
+          <div className="bg-surface rounded-xl border border-border p-4 text-center">
             <TrendingUp size={18} className="mx-auto text-green-600 mb-1" />
             <p className="text-2xl font-bold">{stats.totalEarned.toLocaleString()}</p>
-            <p className="text-xs text-gray-500">Points Earned</p>
+            <p className="text-xs text-txt-secondary">Points Earned</p>
           </div>
-          <div className="bg-white rounded-xl border border-gray-100 p-4 text-center">
+          <div className="bg-surface rounded-xl border border-border p-4 text-center">
             <Gift size={18} className="mx-auto text-purple-600 mb-1" />
             <p className="text-2xl font-bold">{stats.totalRedeemed.toLocaleString()}</p>
-            <p className="text-xs text-gray-500">Points Redeemed</p>
+            <p className="text-xs text-txt-secondary">Points Redeemed</p>
           </div>
-          <div className="bg-white rounded-xl border border-gray-100 p-4 text-center">
+          <div className="bg-surface rounded-xl border border-border p-4 text-center">
             <p className="text-2xl font-bold">{stats.redemptionCount}</p>
-            <p className="text-xs text-gray-500">Redemptions</p>
+            <p className="text-xs text-txt-secondary">Redemptions</p>
           </div>
-          <div className="bg-white rounded-xl border border-gray-100 p-4 text-center">
+          <div className="bg-surface rounded-xl border border-border p-4 text-center">
             <Star size={18} className="mx-auto text-amber-500 mb-1" />
             <p className="text-2xl font-bold">{stats.birthdayClaims}</p>
-            <p className="text-xs text-gray-500">Birthday Claims</p>
+            <p className="text-xs text-txt-secondary">Birthday Claims</p>
           </div>
         </div>
       )}
 
       {/* Tier breakdown */}
       {stats?.tierBreakdown && (
-        <div className="bg-white rounded-xl border border-gray-100 p-6">
-          <h2 className="font-semibold text-gray-900 mb-3">Member Tiers</h2>
+        <div className="bg-surface rounded-xl border border-border p-6">
+          <h2 className="font-semibold text-txt mb-3">Member Tiers</h2>
           <div className="grid grid-cols-4 gap-3">
             {stats.tierBreakdown.map((t: any) => (
               <div key={t.tier} className="text-center">
                 <span className={'inline-block text-xs font-bold px-3 py-1 rounded-full mb-2 capitalize ' + (TIER_COLORS[t.tier] || 'bg-gray-100 text-gray-700')}>{t.tier}</span>
-                <p className="text-2xl font-bold text-gray-900">{t.count}</p>
-                <p className="text-xs text-gray-500">members</p>
+                <p className="text-2xl font-bold text-txt">{t.count}</p>
+                <p className="text-xs text-txt-secondary">members</p>
               </div>
             ))}
           </div>
@@ -81,37 +81,37 @@ export function LoyaltyPage() {
 
       {/* Create reward form */}
       {showCreate && (
-        <div className="bg-white rounded-xl border border-gray-100 p-6 space-y-3">
+        <div className="bg-surface rounded-xl border border-border p-6 space-y-3">
           <h2 className="font-semibold">New Reward</h2>
           <div className="grid grid-cols-3 gap-3">
-            <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="Reward name *" className="px-3 py-2 border border-gray-200 rounded-lg text-sm" />
-            <input value={form.pointsCost} onChange={e => setForm({...form, pointsCost: e.target.value})} placeholder="Points cost *" type="number" className="px-3 py-2 border border-gray-200 rounded-lg text-sm" />
-            <select value={form.rewardType} onChange={e => setForm({...form, rewardType: e.target.value})} className="px-3 py-2 border border-gray-200 rounded-lg text-sm">
+            <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="Reward name *" className="px-3 py-2 border border-border rounded-lg text-sm" />
+            <input value={form.pointsCost} onChange={e => setForm({...form, pointsCost: e.target.value})} placeholder="Points cost *" type="number" className="px-3 py-2 border border-border rounded-lg text-sm" />
+            <select value={form.rewardType} onChange={e => setForm({...form, rewardType: e.target.value})} className="px-3 py-2 border border-border rounded-lg text-sm">
               <option value="discount_percent">% Discount</option><option value="discount_fixed">$ Off</option><option value="free_item">Free Item</option><option value="free_delivery">Free Delivery</option>
             </select>
-            <input value={form.rewardValue} onChange={e => setForm({...form, rewardValue: e.target.value})} placeholder="Value (e.g. 10 for 10%)" type="number" className="px-3 py-2 border border-gray-200 rounded-lg text-sm" />
-            <input value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="Description" className="px-3 py-2 border border-gray-200 rounded-lg text-sm col-span-2" />
+            <input value={form.rewardValue} onChange={e => setForm({...form, rewardValue: e.target.value})} placeholder="Value (e.g. 10 for 10%)" type="number" className="px-3 py-2 border border-border rounded-lg text-sm" />
+            <input value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="Description" className="px-3 py-2 border border-border rounded-lg text-sm col-span-2" />
           </div>
-          <button onClick={() => createMut.mutate()} disabled={!form.name || !form.pointsCost} className="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-700 disabled:opacity-50">Create Reward</button>
+          <button onClick={() => createMut.mutate()} disabled={!form.name || !form.pointsCost} className="bg-brand-600 text-txt-inverse px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-700 disabled:opacity-50">Create Reward</button>
         </div>
       )}
 
       {/* Rewards catalog */}
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-        <div className="px-4 py-3 bg-gray-50 border-b font-semibold text-gray-700">Rewards Catalog</div>
+      <div className="bg-surface rounded-xl border border-border overflow-hidden">
+        <div className="px-4 py-3 bg-bg-alt border-b font-semibold text-gray-700">Rewards Catalog</div>
         <table className="w-full text-sm">
           <thead><tr>
-            <th className="text-left px-4 py-2 text-gray-500">Reward</th>
-            <th className="text-right px-4 py-2 text-gray-500">Points Cost</th>
-            <th className="text-center px-4 py-2 text-gray-500">Type</th>
-            <th className="text-right px-4 py-2 text-gray-500">Value</th>
+            <th className="text-left px-4 py-2 text-txt-secondary">Reward</th>
+            <th className="text-right px-4 py-2 text-txt-secondary">Points Cost</th>
+            <th className="text-center px-4 py-2 text-txt-secondary">Type</th>
+            <th className="text-right px-4 py-2 text-txt-secondary">Value</th>
           </tr></thead>
           <tbody className="divide-y divide-gray-50">
             {(rewards ?? []).map((r: any) => (
               <tr key={r.rewardId}>
-                <td className="px-4 py-3"><p className="font-medium text-gray-900">{r.name}</p>{r.description && <p className="text-xs text-gray-400">{r.description}</p>}</td>
+                <td className="px-4 py-3"><p className="font-medium text-txt">{r.name}</p>{r.description && <p className="text-xs text-txt-muted">{r.description}</p>}</td>
                 <td className="px-4 py-3 text-right tabular-nums font-bold text-brand-700">{r.pointsCost} pts</td>
-                <td className="px-4 py-3 text-center text-xs text-gray-500">{r.rewardType.replace(/_/g, ' ')}</td>
+                <td className="px-4 py-3 text-center text-xs text-txt-secondary">{r.rewardType.replace(/_/g, ' ')}</td>
                 <td className="px-4 py-3 text-right tabular-nums">{r.rewardType.includes('percent') ? r.rewardValue + '%' : '$' + parseFloat(r.rewardValue).toFixed(2)}</td>
               </tr>
             ))}

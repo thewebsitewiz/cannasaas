@@ -51,7 +51,7 @@ export const StatCard = memo(function StatCard({
     <article
       aria-label={`${label}: ${formatValue(metric.value)}, ${isPositive ? 'up' : 'down'} ${changeAbs}% ${metric.comparisonLabel ?? ''}`}
       className={[
-        'bg-white rounded-2xl border border-gray-100 p-6',
+        'bg-surface rounded-2xl border border-border p-6',
         'hover:shadow-sm transition-shadow',
       ].join(' ')}
     >
@@ -66,7 +66,7 @@ export const StatCard = memo(function StatCard({
               {icon}
             </div>
           )}
-          <p className="text-sm font-medium text-gray-500">{label}</p>
+          <p className="text-sm font-medium text-txt-secondary">{label}</p>
         </div>
 
         {/* Change badge */}
@@ -77,7 +77,7 @@ export const StatCard = memo(function StatCard({
             'px-2 py-1 rounded-full',
             isPositive
               ? 'bg-green-50 text-green-700'
-              : 'bg-red-50 text-red-700',
+              : 'bg-danger-bg text-danger',
           ].join(' ')}
         >
           {/* Directional arrow — supplementary to text (WCAG 1.4.1) */}
@@ -87,12 +87,12 @@ export const StatCard = memo(function StatCard({
       </div>
 
       {/* Metric value */}
-      <p className="text-3xl font-bold text-gray-900 tabular-nums">
+      <p className="text-3xl font-bold text-txt tabular-nums">
         {formatValue(metric.value)}
       </p>
 
       {metric.comparisonLabel && (
-        <p className="text-xs text-gray-400 mt-1">{metric.comparisonLabel}</p>
+        <p className="text-xs text-txt-muted mt-1">{metric.comparisonLabel}</p>
       )}
 
       {/* Sparkline slot */}
@@ -107,7 +107,7 @@ StatCard.Skeleton = function StatCardSkeleton() {
     <div
       aria-busy="true"
       aria-label="Loading metric"
-      className="bg-white rounded-2xl border border-gray-100 p-6 animate-pulse"
+      className="bg-surface rounded-2xl border border-border p-6 animate-pulse"
     >
       <div className="w-8 h-8 bg-gray-100 rounded-lg mb-3" />
       <div className="w-24 h-4 bg-gray-100 rounded mb-4" />

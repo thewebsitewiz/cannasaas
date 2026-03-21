@@ -1,23 +1,72 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { ThemeConfig } from './theme-config.entity';
+import { SaveThemeConfigInput } from './dto';
 
 @Injectable()
 export class ThemeService {
-  private readonly logger = new Logger(ThemeService.name);
-  constructor(@InjectDataSource() private ds: DataSource) {}
+  constructor(
+    @InjectRepository(ThemeConfig)
+    private readonly repo: Repository<ThemeConfig>,
+  ) {}
 
-  async getThemes(): Promise<any[]> {
-    return this.ds.query('SELECT * FROM lkp_themes WHERE is_active = true ORDER BY theme_id');
+  /** Get theme config for a dispensary (returns defaults if none saved) */
+  async getByDispensaryId(dispensaryId: string): Promise<ThemeConfig> {
+    const existing = await this.repo.findOne({ where: { dispensaryId } });
+    if (existing) return existing;
+
+    // Return unsaved defaults so the frontend always gets a config
+    // Return in-memory defaults (column defaults don't apply on .create())
+    const defaults = this.repo.create({
+      dispensaryId,
+      preset: 'casual',
+      primary: '#2d6a4f',
+      secondary: '#74956c',
+      accent: '#c47820',
+      bgPrimary: '#faf6f0',
+      bgSecondary: '#f0ebe3',
+      bgCard: '#ffffff',
+      textPrimary: '#2c2418',
+      textSecondary: '#6b5e4f',
+      sidebarBg: '#1b3a2a',
+      sidebarText: '#c8d8c4',
+      success: '#27ae60',
+      warning: '#d97706',
+      error: '#c0392b',
+      info: '#2e86ab',
+      isDark: false,
+    });
+    defaults.id = dispensaryId; // placeholder ID
+    return defaults;
   }
 
-  async getDispensaryTheme(dispensaryId: string): Promise<any> {
-    const [result] = await this.ds.query('SELECT theme_code, custom_css, logo_url, brand_name, name FROM dispensaries WHERE entity_id = $1', [dispensaryId]);
-    return result ?? { theme_code: 'default' };
+  /** Upsert theme config — creates if missing, updates if exists */
+  async save(input: SaveThemeConfigInput): Promise<ThemeConfig> {
+    const existing = await this.repo.findOne({
+      where: { dispensaryId: input.dispensaryId },
+    });
+
+    if (existing) {
+      // Merge only provided fields
+      Object.entries(input).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          (existing as any)[key] = value;
+        }
+      });
+      return this.repo.save(existing);
+    }
+
+    const config = this.repo.create(input);
+    return this.repo.save(config);
   }
 
-  async setDispensaryTheme(dispensaryId: string, themeCode: string, customCss?: string): Promise<any> {
-    await this.ds.query('UPDATE dispensaries SET theme_code = $1, custom_css = COALESCE($2, custom_css), updated_at = NOW() WHERE entity_id = $3', [themeCode, customCss || null, dispensaryId]);
-    return this.getDispensaryTheme(dispensaryId);
+  /** Reset to default casual theme */
+  async resetToDefault(dispensaryId: string): Promise<ThemeConfig> {
+    const existing = await this.repo.findOne({ where: { dispensaryId } });
+    if (existing) {
+      await this.repo.remove(existing);
+    }
+    return this.repo.create({ dispensaryId });
   }
 }

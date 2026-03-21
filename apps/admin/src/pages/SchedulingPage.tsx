@@ -89,22 +89,22 @@ export function SchedulingPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Scheduling</h1>
+      <h1 className="text-2xl font-bold text-txt">Scheduling</h1>
 
       {/* Week Navigation */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button onClick={() => setWeekOffset(weekOffset - 1)} className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50"><ChevronLeft size={16} /></button>
+          <button onClick={() => setWeekOffset(weekOffset - 1)} className="p-2 rounded-lg border border-border hover:bg-bg-alt"><ChevronLeft size={16} /></button>
           <h2 className="text-lg font-semibold">
             <CalendarDays size={18} className="inline mr-2 text-brand-600" />
             Week of {weekStart}
           </h2>
-          <button onClick={() => setWeekOffset(weekOffset + 1)} className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50"><ChevronRight size={16} /></button>
+          <button onClick={() => setWeekOffset(weekOffset + 1)} className="p-2 rounded-lg border border-border hover:bg-bg-alt"><ChevronRight size={16} /></button>
           <button onClick={() => setWeekOffset(0)} className="text-xs text-brand-600 hover:text-brand-700">Today</button>
         </div>
         {unpublishedCount > 0 && (
           <button onClick={() => publishMutation.mutate()}
-            className="flex items-center gap-1.5 bg-brand-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-brand-700">
+            className="flex items-center gap-1.5 bg-brand-600 text-txt-inverse text-sm font-medium px-4 py-2 rounded-lg hover:bg-brand-700">
             <Send size={14} /> Publish {unpublishedCount} shifts
           </button>
         )}
@@ -116,8 +116,8 @@ export function SchedulingPage() {
           const dayShifts = shiftsByDay[date] ?? [];
           const isToday = date === new Date().toISOString().split('T')[0];
           return (
-            <div key={date} className={`bg-white rounded-xl border p-3 min-h-[120px] ${isToday ? 'border-brand-300 bg-brand-50/30' : 'border-gray-100'}`}>
-              <p className={`text-xs font-semibold mb-2 ${isToday ? 'text-brand-700' : 'text-gray-500'}`}>
+            <div key={date} className={`bg-surface rounded-xl border p-3 min-h-[120px] ${isToday ? 'border-brand-300 bg-brand-50/30' : 'border-border'}`}>
+              <p className={`text-xs font-semibold mb-2 ${isToday ? 'text-brand-700' : 'text-txt-secondary'}`}>
                 {DAYS[i]} {date.slice(5)}
               </p>
               {dayShifts.length > 0 ? (
@@ -129,7 +129,7 @@ export function SchedulingPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-[10px] text-gray-300">No shifts</p>
+                <p className="text-[10px] text-txt-muted">No shifts</p>
               )}
             </div>
           );
@@ -138,17 +138,17 @@ export function SchedulingPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Delivery Drivers */}
-        <div className="bg-white rounded-xl border border-gray-100 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+        <div className="bg-surface rounded-xl border border-border p-6">
+          <h2 className="text-lg font-semibold text-txt mb-3 flex items-center gap-2">
             <Truck size={18} className="text-indigo-600" /> Delivery Drivers
           </h2>
           {drivers && drivers.length > 0 ? (
             <div className="space-y-2">
               {drivers.map((d: any) => (
-                <div key={d.driverId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div key={d.driverId} className="flex items-center justify-between p-3 bg-bg-alt rounded-lg">
                   <div>
                     <p className="text-sm font-medium">{d.vehicleYear ?? ''} {d.vehicleMake} {d.vehicleModel}</p>
-                    <p className="text-xs text-gray-400">{d.vehicleColor} · {d.licensePlate}</p>
+                    <p className="text-xs text-txt-muted">{d.vehicleColor} · {d.licensePlate}</p>
                   </div>
                   <span className={`text-xs px-2 py-0.5 rounded-full ${
                     d.status === 'available' ? 'bg-green-50 text-green-700' :
@@ -157,20 +157,20 @@ export function SchedulingPage() {
                 </div>
               ))}
             </div>
-          ) : <p className="text-sm text-gray-400">No drivers configured</p>}
+          ) : <p className="text-sm text-txt-muted">No drivers configured</p>}
 
           {ds.totalTrips > 0 && (
-            <div className="mt-4 pt-3 border-t border-gray-100 grid grid-cols-3 gap-2 text-center text-xs">
-              <div><p className="font-bold text-lg">{ds.completed}</p><p className="text-gray-400">Trips (30d)</p></div>
-              <div><p className="font-bold text-lg">{ds.avgRating}</p><p className="text-gray-400">Avg Rating</p></div>
-              <div><p className="font-bold text-lg">{ds.totalMiles}</p><p className="text-gray-400">Total Miles</p></div>
+            <div className="mt-4 pt-3 border-t border-border grid grid-cols-3 gap-2 text-center text-xs">
+              <div><p className="font-bold text-lg">{ds.completed}</p><p className="text-txt-muted">Trips (30d)</p></div>
+              <div><p className="font-bold text-lg">{ds.avgRating}</p><p className="text-txt-muted">Avg Rating</p></div>
+              <div><p className="font-bold text-lg">{ds.totalMiles}</p><p className="text-txt-muted">Total Miles</p></div>
             </div>
           )}
         </div>
 
         {/* Time-Off Requests */}
-        <div className="bg-white rounded-xl border border-gray-100 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+        <div className="bg-surface rounded-xl border border-border p-6">
+          <h2 className="text-lg font-semibold text-txt mb-3 flex items-center gap-2">
             <Clock size={18} className="text-amber-500" /> Time-Off Requests
             {pendingTimeOff.length > 0 && (
               <span className="bg-amber-100 text-amber-700 text-xs font-bold px-2 py-0.5 rounded-full">{pendingTimeOff.length} pending</span>
@@ -179,19 +179,19 @@ export function SchedulingPage() {
           {timeOff && timeOff.length > 0 ? (
             <div className="space-y-2">
               {timeOff.map((t: any) => (
-                <div key={t.requestId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div key={t.requestId} className="flex items-center justify-between p-3 bg-bg-alt rounded-lg">
                   <div>
                     <p className="text-sm font-medium">{t.startDate} to {t.endDate}</p>
-                    <p className="text-xs text-gray-400">{t.requestType.toUpperCase()} {t.reason ? `— ${t.reason}` : ''}</p>
+                    <p className="text-xs text-txt-muted">{t.requestType.toUpperCase()} {t.reason ? `— ${t.reason}` : ''}</p>
                   </div>
                   <span className={`text-xs px-2 py-0.5 rounded-full ${
                     t.status === 'approved' ? 'bg-green-50 text-green-700' :
-                    t.status === 'pending' ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'
+                    t.status === 'pending' ? 'bg-amber-50 text-amber-700' : 'bg-danger-bg text-danger'
                   }`}>{t.status}</span>
                 </div>
               ))}
             </div>
-          ) : <p className="text-sm text-gray-400">No time-off requests</p>}
+          ) : <p className="text-sm text-txt-muted">No time-off requests</p>}
         </div>
       </div>
     </div>

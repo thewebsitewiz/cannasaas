@@ -1,8 +1,11 @@
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ChevronRight, Palette } from 'lucide-react';
+import { DollarSign, Percent, Save, Truck } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+import { Link } from 'react-router-dom';
 import { gqlRequest } from '../lib/graphql-client';
 import { useAuthStore } from '../stores/auth.store';
-import { DollarSign, Percent, Truck, Save } from 'lucide-react';
 
 const GET_CONFIG = `query($id: ID!) { cashDiscountConfig(dispensaryId: $id) { cashDiscountPercent isCashEnabled cashDeliveryEnabled } }`;
 const SET_CONFIG = `mutation($id: ID!, $pct: Float!, $delivery: Boolean) { setCashDiscount(dispensaryId: $id, percent: $pct, cashDeliveryEnabled: $delivery) { cashDiscountPercent isCashEnabled cashDeliveryEnabled } }`;
@@ -16,7 +19,8 @@ export function SettingsPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['cashConfig', dispensaryId],
-    queryFn: () => gqlRequest<{ cashDiscountConfig: any }>(GET_CONFIG, { id: dispensaryId }),
+    queryFn: () =>
+      gqlRequest<{ cashDiscountConfig: any }>(GET_CONFIG, { id: dispensaryId }),
     select: (d) => d.cashDiscountConfig,
     enabled: !!dispensaryId,
   });
@@ -29,7 +33,12 @@ export function SettingsPage() {
   }, [data]);
 
   const mutation = useMutation({
-    mutationFn: () => gqlRequest(SET_CONFIG, { id: dispensaryId, pct: percent, delivery: cashDelivery }),
+    mutationFn: () =>
+      gqlRequest(SET_CONFIG, {
+        id: dispensaryId,
+        pct: percent,
+        delivery: cashDelivery,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cashConfig'] });
       setSaved(true);
@@ -37,19 +46,46 @@ export function SettingsPage() {
     },
   });
 
-  if (isLoading) return <div className="text-gray-400">Loading...</div>;
+  if (isLoading) return <div className="text-txt-muted">Loading...</div>;
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-
-      <div className="bg-white rounded-xl border border-gray-100 p-6 max-w-lg">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+      <h1 className="text-2xl font-bold text-txt">Settings</h1>
+      {/* Settings Navigation Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
+        <Link
+          to="/settings/theme"
+          className="group bg-surface rounded-xl border border-bdr p-5 hover:border-brand-500 hover:shadow-sm transition-all"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-brand-50 rounded-lg">
+                <Palette size={20} className="text-brand-500" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-txt">
+                  Theme Designer
+                </h3>
+                <p className="text-xs text-txt-muted mt-0.5">
+                  Customize colors, fonts & branding
+                </p>
+              </div>
+            </div>
+            <ChevronRight
+              size={16}
+              className="text-txt-muted group-hover:text-brand-500 transition-colors"
+            />
+          </div>
+        </Link>
+      </div>
+      <div className="bg-surface rounded-xl border border-border p-6 max-w-lg">
+        <h2 className="text-lg font-semibold text-txt mb-4 flex items-center gap-2">
           <DollarSign size={18} className="text-brand-600" /> Cash Discount
         </h2>
 
-        <p className="text-sm text-gray-500 mb-6">
-          Offer a percentage discount to customers who pay with cash. This reduces credit card processing fees and encourages cash transactions.
+        <p className="text-sm text-txt-secondary mb-6">
+          Offer a percentage discount to customers who pay with cash. This
+          reduces credit card processing fees and encourages cash transactions.
         </p>
 
         {/* Discount Percent */}
@@ -60,15 +96,21 @@ export function SettingsPage() {
           <div className="flex items-center gap-3 mt-2">
             <input
               type="range"
-              min="0" max="15" step="0.5"
+              min="0"
+              max="15"
+              step="0.5"
               value={percent}
               onChange={(e) => setPercent(parseFloat(e.target.value))}
               className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-brand-600"
             />
-            <span className="text-2xl font-bold text-brand-700 w-16 text-right tabular-nums">{percent}%</span>
+            <span className="text-2xl font-bold text-brand-700 w-16 text-right tabular-nums">
+              {percent}%
+            </span>
           </div>
-          <p className="text-xs text-gray-400 mt-1">
-            {percent === 0 ? 'No cash discount active' : `Customers save $${(50 * percent / 100).toFixed(2)} on a $50 order`}
+          <p className="text-xs text-txt-muted mt-1">
+            {percent === 0
+              ? 'No cash discount active'
+              : `Customers save $${((50 * percent) / 100).toFixed(2)} on a $50 order`}
           </p>
         </label>
 
@@ -78,13 +120,15 @@ export function SettingsPage() {
             type="checkbox"
             checked={cashDelivery}
             onChange={(e) => setCashDelivery(e.target.checked)}
-            className="w-5 h-5 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+            className="w-5 h-5 rounded border-border-strong text-brand-600 focus:ring-brand-500"
           />
           <div>
             <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
               <Truck size={14} /> Allow Cash on Delivery
             </span>
-            <p className="text-xs text-gray-400">Customers can pay with cash when the driver arrives</p>
+            <p className="text-xs text-txt-muted">
+              Customers can pay with cash when the driver arrives
+            </p>
           </div>
         </label>
 
@@ -92,29 +136,43 @@ export function SettingsPage() {
         <button
           onClick={() => mutation.mutate()}
           disabled={mutation.isPending}
-          className="flex items-center gap-2 bg-brand-600 text-white font-semibold px-6 py-2.5 rounded-lg hover:bg-brand-700 transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 bg-brand-600 text-txt-inverse font-semibold px-6 py-2.5 rounded-lg hover:bg-brand-700 transition-colors disabled:opacity-50"
         >
           <Save size={16} />
           {mutation.isPending ? 'Saving...' : 'Save Settings'}
         </button>
 
         {saved && (
-          <p className="text-sm text-green-600 mt-3">Settings saved successfully</p>
+          <p className="text-sm text-green-600 mt-3">
+            Settings saved successfully
+          </p>
         )}
       </div>
 
       {/* Preview */}
       {percent > 0 && (
         <div className="bg-brand-50 border border-brand-200 rounded-xl p-6 max-w-lg">
-          <h3 className="font-semibold text-brand-800 mb-2">Cash Discount Preview</h3>
+          <h3 className="font-semibold text-brand-800 mb-2">
+            Cash Discount Preview
+          </h3>
           <table className="w-full text-sm">
-            <thead><tr className="text-left text-brand-600"><th className="pb-1">Order</th><th className="pb-1">Discount</th><th className="pb-1">Customer Pays</th></tr></thead>
+            <thead>
+              <tr className="text-left text-brand-600">
+                <th className="pb-1">Order</th>
+                <th className="pb-1">Discount</th>
+                <th className="pb-1">Customer Pays</th>
+              </tr>
+            </thead>
             <tbody className="text-brand-900">
               {[25, 50, 75, 100, 150].map((amt) => (
                 <tr key={amt}>
                   <td className="py-0.5">${amt.toFixed(2)}</td>
-                  <td className="py-0.5">-${(amt * percent / 100).toFixed(2)}</td>
-                  <td className="py-0.5 font-semibold">${(amt - amt * percent / 100).toFixed(2)}</td>
+                  <td className="py-0.5">
+                    -${((amt * percent) / 100).toFixed(2)}
+                  </td>
+                  <td className="py-0.5 font-semibold">
+                    ${(amt - (amt * percent) / 100).toFixed(2)}
+                  </td>
                 </tr>
               ))}
             </tbody>

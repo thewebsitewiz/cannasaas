@@ -83,14 +83,14 @@ export function ImageUpload({ productId, currentUrl, onUploaded }: Props) {
 
       {preview ? (
         <div className="relative inline-block">
-          <img src={preview} alt="Product" className="w-32 h-32 object-cover rounded-lg border border-gray-200" />
-          <button onClick={handleRemove} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600">
+          <img src={preview} alt="Product" className="w-32 h-32 object-cover rounded-lg border border-border" />
+          <button onClick={handleRemove} className="absolute -top-2 -right-2 bg-danger-bg0 text-txt-inverse rounded-full p-1 hover:bg-red-600">
             <X size={12} />
           </button>
         </div>
       ) : (
         <button onClick={() => fileRef.current?.click()} disabled={uploading}
-          className="w-32 h-32 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center gap-1 text-gray-400 hover:border-brand-400 hover:text-brand-600 transition-colors">
+          className="w-32 h-32 border-2 border-dashed border-border-strong rounded-lg flex flex-col items-center justify-center gap-1 text-txt-muted hover:border-brand-400 hover:text-brand-600 transition-colors">
           {uploading ? <Loader2 size={20} className="animate-spin" /> : <><Upload size={20} /><span className="text-xs">Upload</span></>}
         </button>
       )}

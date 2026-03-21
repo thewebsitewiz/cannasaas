@@ -25,7 +25,7 @@ interface DriverCardProps {
 }
 
 const STATUS_CONFIG: Record<DriverStatus, { label: string; dot: string; bg: string }> = {
-  offline:    { label: 'Offline',          dot: 'bg-gray-400',   bg: 'bg-gray-50' },
+  offline:    { label: 'Offline',          dot: 'bg-gray-400',   bg: 'bg-bg-alt' },
   available:  { label: 'Available',        dot: 'bg-green-500',  bg: 'bg-green-50' },
   en_route:   { label: 'En Route',         dot: 'bg-blue-500',   bg: 'bg-blue-50' },
   returning:  { label: 'Returning',        dot: 'bg-indigo-500', bg: 'bg-indigo-50' },
@@ -38,7 +38,7 @@ export const DriverCard = memo(function DriverCard({ driver, onAssign }: DriverC
   return (
     <article
       aria-label={`Driver ${driver.user.fullName}, status: ${statusCfg.label}`}
-      className="bg-white rounded-xl border border-gray-100 p-4 flex flex-col gap-3"
+      className="bg-surface rounded-xl border border-border p-4 flex flex-col gap-3"
     >
       {/* Header: avatar + name + status */}
       <div className="flex items-center gap-3">
@@ -51,17 +51,17 @@ export const DriverCard = memo(function DriverCard({ driver, onAssign }: DriverC
         ) : (
           <div
             aria-hidden="true"
-            className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 flex-shrink-0 text-sm font-semibold"
+            className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-txt-secondary flex-shrink-0 text-sm font-semibold"
           >
             {driver.user.fullName.charAt(0)}
           </div>
         )}
 
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-gray-900 truncate">
+          <p className="text-sm font-semibold text-txt truncate">
             {driver.user.fullName}
           </p>
-          <p className="text-xs text-gray-500 truncate">
+          <p className="text-xs text-txt-secondary truncate">
             {driver.vehicle
               ? `${driver.vehicle.year} ${driver.vehicle.color} ${driver.vehicle.make} ${driver.vehicle.model}`
               : 'Vehicle not listed'}
@@ -81,12 +81,12 @@ export const DriverCard = memo(function DriverCard({ driver, onAssign }: DriverC
       {/* Stats */}
       <dl className="grid grid-cols-2 gap-2 text-xs">
         <div>
-          <dt className="text-gray-500">Deliveries</dt>
-          <dd className="font-semibold text-gray-900">{driver.totalDeliveries}</dd>
+          <dt className="text-txt-secondary">Deliveries</dt>
+          <dd className="font-semibold text-txt">{driver.totalDeliveries}</dd>
         </div>
         <div>
-          <dt className="text-gray-500">Rating</dt>
-          <dd className="font-semibold text-gray-900">
+          <dt className="text-txt-secondary">Rating</dt>
+          <dd className="font-semibold text-txt">
             {driver.averageRating != null
               ? `${driver.averageRating.toFixed(1)} ⭐`
               : 'No ratings yet'}
@@ -103,7 +103,7 @@ export const DriverCard = memo(function DriverCard({ driver, onAssign }: DriverC
 
       {/* Location timestamp */}
       {driver.currentLocation && (
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-txt-muted">
           Location updated{' '}
           <time dateTime={driver.currentLocation.updatedAt}>
             {new Date(driver.currentLocation.updatedAt).toLocaleTimeString('en-US', {
@@ -122,7 +122,7 @@ export const DriverCard = memo(function DriverCard({ driver, onAssign }: DriverC
           aria-label={`Assign order to ${driver.user.fullName}`}
           className={[
             'w-full py-2 px-4 text-sm font-medium rounded-lg',
-            'bg-[hsl(var(--primary))] text-white',
+            'bg-[hsl(var(--primary))] text-txt-inverse',
             'hover:brightness-110 active:brightness-95',
             'focus-visible:outline-none focus-visible:ring-2',
             'focus-visible:ring-[hsl(var(--primary))] focus-visible:ring-offset-2',

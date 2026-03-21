@@ -1,0 +1,40 @@
+/**
+ * GreenStack Theme: Midnight
+ * Dark luxury dispensary. Deep blacks, electric sage, gold accents.
+ * Premium after-dark atmosphere. Sans-serif display.
+ * Activate: <html data-theme="midnight">
+ */
+[data-theme="midnight"] {
+  --color-bg:             #08100a;
+  --color-bg-alt:         #0c1610;
+  --color-surface:        #111e14;
+  --color-surface-alt:    #162219;
+  --color-surface-hover:  #1c2c20;
+  --color-border:         rgba(255,255,255,.08);
+  --color-border-strong:  rgba(255,255,255,.15);
+  --color-text:           rgba(245,242,232,.94);
+  --color-text-secondary: rgba(245,242,232,.72);
+  --color-text-muted:     rgba(245,242,232,.48);
+  --color-text-faint:     rgba(245,242,232,.28);
+  --color-primary:        #4db870;
+  --color-primary-hover:  #3aa05e;
+  --color-primary-light:  #7dd4a0;
+  --color-primary-xlight: rgba(77,184,112,.14);
+  --color-accent:         #d4a030;
+  --color-accent-hover:   #b88820;
+  --color-accent-light:   #f0c060;
+  --color-accent-xlight:  rgba(212,160,48,.14);
+  --gs-forest:            #060d07;
+  --gs-pine:              #0e1e11;
+  --gs-fern:              #1e5230;
+  --gs-sage:              #4db870;
+  --gs-cream:             rgba(245,242,232,.94);
+  --gs-amber:             #d4a030;
+  --font-display:         'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-body:            'Plus Jakarta Sans', system-ui, sans-serif;
+
+  color-scheme: dark;
+}
+
+/* Darken scrollbar for midnight */
+[data-theme="midnight"] ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); }

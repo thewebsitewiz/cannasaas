@@ -1,0 +1,35 @@
+/**
+ * GreenStack Theme: Casual
+ * Warm organic cannabis dispensary. Default theme.
+ * Deep forest greens, golden amber, parchment cream. Lora serif display.
+ */
+[data-theme="casual"],
+:root {
+  --color-bg:             #f7f2e7;
+  --color-bg-alt:         #f0ead8;
+  --color-surface:        #ffffff;
+  --color-surface-alt:    #faf7f0;
+  --color-surface-hover:  #f3ede0;
+  --color-border:         #e8e1ce;
+  --color-border-strong:  #d4cbb2;
+  --color-text:           #1a1a16;
+  --color-text-secondary: #3a3a30;
+  --color-text-muted:     #6e6858;
+  --color-text-faint:     #a8a090;
+  --color-primary:        #2a6640;
+  --color-primary-hover:  #1e4b31;
+  --color-primary-light:  #5e9b73;
+  --color-primary-xlight: #e8f4ec;
+  --color-accent:         #c47820;
+  --color-accent-hover:   #a8640e;
+  --color-accent-light:   #f0b655;
+  --color-accent-xlight:  #fdf1dc;
+  --gs-forest:            #122d1f;
+  --gs-pine:              #1e4b31;
+  --gs-fern:              #2a6640;
+  --gs-sage:              #5e9b73;
+  --gs-cream:             #f5f0e4;
+  --gs-amber:             #c47820;
+  --font-display:         'Lora', Georgia, serif;
+  --font-body:            'Plus Jakarta Sans', system-ui, sans-serif;
+}

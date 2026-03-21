@@ -10,6 +10,8 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
+    "@cannasaas/stores": "workspace:^",
+    "@cannasaas/ui": "workspace:^",
     "@tanstack/react-query": "^5.51.1",
     "graphql": "^16.9.0",
     "graphql-request": "^7.1.0",

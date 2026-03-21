@@ -1,0 +1,74 @@
+/*
+ * theme-vars.css
+ * @package @cannasaas/ui
+ *
+ * Default CSS custom properties — "Casual Earthy" preset.
+ * ThemeLoader overrides these at runtime via JS.
+ *
+ * Usage in Tailwind: use arbitrary properties like bg-[var(--bg-primary)]
+ * or add to your tailwind.config under theme.extend.colors.
+ */
+
+:root {
+  /* Brand */
+  --color-primary: #2d6a4f;
+  --color-secondary: #74956c;
+  --color-accent: #c47820;
+
+  /* Surfaces */
+  --bg-primary: #faf6f0;
+  --bg-secondary: #f0ebe3;
+  --bg-card: #ffffff;
+
+  /* Typography */
+  --text-primary: #2c2418;
+  --text-secondary: #6b5e4f;
+
+  /* Sidebar / Chrome */
+  --sidebar-bg: #1b3a2a;
+  --sidebar-text: #c8d8c4;
+
+  /* Semantic */
+  --color-success: #27ae60;
+  --color-warning: #d97706;
+  --color-error: #c0392b;
+  --color-info: #2e86ab;
+
+  /* RGB variants for opacity utilities */
+  --color-primary-rgb: 45, 106, 79;
+  --color-accent-rgb: 196, 120, 32;
+  --color-success-rgb: 39, 174, 96;
+  --color-warning-rgb: 217, 119, 6;
+  --color-error-rgb: 192, 57, 43;
+  --color-info-rgb: 46, 134, 171;
+}
+
+/* ─── Utility classes consuming the vars ─── */
+
+.bg-theme-primary { background-color: var(--bg-primary); }
+.bg-theme-secondary { background-color: var(--bg-secondary); }
+.bg-theme-card { background-color: var(--bg-card); }
+.bg-theme-sidebar { background-color: var(--sidebar-bg); }
+
+.text-theme-primary { color: var(--text-primary); }
+.text-theme-secondary { color: var(--text-secondary); }
+.text-theme-sidebar { color: var(--sidebar-text); }
+
+.text-brand-primary { color: var(--color-primary); }
+.text-brand-secondary { color: var(--color-secondary); }
+.text-brand-accent { color: var(--color-accent); }
+
+.bg-brand-primary { background-color: var(--color-primary); }
+.bg-brand-accent { background-color: var(--color-accent); }
+
+.text-semantic-success { color: var(--color-success); }
+.text-semantic-warning { color: var(--color-warning); }
+.text-semantic-error { color: var(--color-error); }
+.text-semantic-info { color: var(--color-info); }
+
+.bg-semantic-success { background-color: rgba(var(--color-success-rgb), 0.1); }
+.bg-semantic-warning { background-color: rgba(var(--color-warning-rgb), 0.1); }
+.bg-semantic-error { background-color: rgba(var(--color-error-rgb), 0.1); }
+.bg-semantic-info { background-color: rgba(var(--color-info-rgb), 0.1); }
+
+.border-brand { border-color: var(--color-primary); }

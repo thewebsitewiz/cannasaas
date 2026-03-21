@@ -1,5 +1,21 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, ShoppingCart, Warehouse, ShieldCheck, Settings, Users, Clock, CalendarDays, ArrowRightLeft, BarChart3, LogOut } from 'lucide-react';
+import {
+  ArrowRightLeft,
+  BarChart3,
+  Building2,
+  CalendarDays,
+  Clock,
+  LayoutDashboard,
+  LogOut,
+  Package,
+  Settings,
+  ShieldCheck,
+  ShoppingCart,
+  Star,
+  Users,
+  Warehouse,
+} from 'lucide-react';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+
 import { useAuthStore } from '../stores/auth.store';
 
 const NAV_ITEMS = [
@@ -31,10 +47,10 @@ export function AdminLayout() {
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-gray-900 text-white flex flex-col">
-        <div className="p-6 border-b border-gray-800">
+      <aside className="w-64 bg-gs-deep-pine text-txt-inverse flex flex-col">
+        <div className="p-6 border-b border-gs-pine">
           <h1 className="text-xl font-bold text-brand-400">CannaSaas</h1>
-          <p className="text-xs text-gray-400 mt-1">Admin Portal</p>
+          <p className="text-xs text-txt-muted mt-1">Admin Portal</p>
         </div>
 
         <nav className="flex-1 py-4">
@@ -46,8 +62,8 @@ export function AdminLayout() {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-6 py-3 text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-gray-800 text-white border-r-2 border-brand-500'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+                    ? 'bg-gs-pine text-txt-inverse border-r-2 border-brand-500'
+                    : 'text-txt-muted hover:text-txt-inverse hover:bg-gs-pine/50'
                 }`
               }
             >
@@ -57,11 +73,11 @@ export function AdminLayout() {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-gray-800">
-          <div className="text-xs text-gray-500 mb-2">{user?.email}</div>
+        <div className="p-4 border-t border-gs-pine">
+          <div className="text-xs text-txt-secondary mb-2">{user?.email}</div>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
+            className="flex items-center gap-2 text-sm text-txt-muted hover:text-txt-inverse transition-colors"
           >
             <LogOut size={16} />
             Sign Out

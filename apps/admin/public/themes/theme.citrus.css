@@ -1,0 +1,35 @@
+/**
+ * GreenStack Theme: Citrus
+ * Bright, energetic, modern dispensary. White base, lime greens,
+ * punchy orange accents. Clean sans-serif throughout.
+ * Activate: <html data-theme="citrus">
+ */
+[data-theme="citrus"] {
+  --color-bg:             #f8faf4;
+  --color-bg-alt:         #f0f5e8;
+  --color-surface:        #ffffff;
+  --color-surface-alt:    #f4f8ee;
+  --color-surface-hover:  #edf4e0;
+  --color-border:         #d8e8c0;
+  --color-border-strong:  #bcd8a0;
+  --color-text:           #1a2010;
+  --color-text-secondary: #2e3c20;
+  --color-text-muted:     #5a7040;
+  --color-text-faint:     #8aaa68;
+  --color-primary:        #5aaa20;
+  --color-primary-hover:  #489010;
+  --color-primary-light:  #88cc50;
+  --color-primary-xlight: #edfad0;
+  --color-accent:         #e87820;
+  --color-accent-hover:   #cc6010;
+  --color-accent-light:   #ffaa60;
+  --color-accent-xlight:  #fff0e0;
+  --gs-forest:            #1a3808;
+  --gs-pine:              #285010;
+  --gs-fern:              #5aaa20;
+  --gs-sage:              #88cc50;
+  --gs-cream:             #f8faf4;
+  --gs-amber:             #e87820;
+  --font-display:         'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-body:            'Plus Jakarta Sans', system-ui, sans-serif;
+}

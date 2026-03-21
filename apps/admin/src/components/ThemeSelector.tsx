@@ -26,7 +26,7 @@ export function ThemeSelector() {
     <div className="space-y-4">
       <div className="flex items-center gap-3">
         <Palette size={20} className="text-brand-600" />
-        <h2 className="text-lg font-semibold text-gray-900">Storefront Theme</h2>
+        <h2 className="text-lg font-semibold text-txt">Storefront Theme</h2>
         {current && <span className="text-xs bg-brand-100 text-brand-700 px-2 py-0.5 rounded-full">Current: {current.themeCode}</span>}
       </div>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
@@ -35,14 +35,14 @@ export function ThemeSelector() {
           const isActive = current?.themeCode === theme.code;
           return (
             <button key={theme.code} onClick={() => setTheme.mutate(theme.code)}
-              className={'relative rounded-xl border-2 overflow-hidden transition-all ' + (isActive ? 'border-brand-600 ring-2 ring-brand-200' : 'border-gray-200 hover:border-gray-300')}>
+              className={'relative rounded-xl border-2 overflow-hidden transition-all ' + (isActive ? 'border-brand-600 ring-2 ring-brand-200' : 'border-border hover:border-border-strong')}>
               <div className="aspect-[4/3] p-3" style={{ backgroundColor: p.bg }}>
                 <div className="h-2 rounded-full mb-2" style={{ backgroundColor: p.accent, width: '40%' }} />
                 <div className="space-y-1.5"><div className="h-1.5 rounded-full" style={{ backgroundColor: p.text, opacity: 0.3, width: '80%' }} /><div className="h-1.5 rounded-full" style={{ backgroundColor: p.text, opacity: 0.2, width: '60%' }} /></div>
                 <div className="flex gap-1.5 mt-2">{[1,2,3].map(i => <div key={i} className="flex-1 h-6 rounded" style={{ backgroundColor: p.accent, opacity: 0.15 }} />)}</div>
               </div>
-              <div className="px-2 py-2 text-center bg-white border-t border-gray-100"><p className="text-xs font-semibold text-gray-900 truncate">{theme.name}</p></div>
-              {isActive && <div className="absolute top-2 right-2 w-5 h-5 bg-brand-600 rounded-full flex items-center justify-center"><Check size={12} className="text-white" /></div>}
+              <div className="px-2 py-2 text-center bg-surface border-t border-border"><p className="text-xs font-semibold text-txt truncate">{theme.name}</p></div>
+              {isActive && <div className="absolute top-2 right-2 w-5 h-5 bg-brand-600 rounded-full flex items-center justify-center"><Check size={12} className="text-txt-inverse" /></div>}
             </button>
           );
         })}

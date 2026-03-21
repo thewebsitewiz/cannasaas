@@ -1,3 +1,16 @@
+import '@cannasaas/ui/src/casual.css';
+import '@cannasaas/ui/src/themes/theme.casual.css';
+import '@cannasaas/ui/src/themes/theme.dark.css';
+import '@cannasaas/ui/src/themes/theme.regal.css';
+import '@cannasaas/ui/src/themes/theme.modern.css';
+import '@cannasaas/ui/src/themes/theme.minimal.css';
+import '@cannasaas/ui/src/themes/theme.apothecary.css';
+import '@cannasaas/ui/src/themes/theme.citrus.css';
+import '@cannasaas/ui/src/themes/theme.earthy.css';
+import '@cannasaas/ui/src/themes/theme.midnight.css';
+import '@cannasaas/ui/src/themes/theme.neon.css';
+import './index.css';
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
@@ -8,9 +21,28 @@ import { ProductPage } from './pages/ProductPage';
 import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { OrderConfirmPage } from './pages/OrderConfirmPage';
-import './index.css';
+import { setThemePreset } from '@cannasaas/ui';
 
-const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: 1 } } });
+// Fetch and apply saved theme on startup
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const DISPENSARY_ID = import.meta.env.VITE_DISPENSARY_ID || 'c0000000-0000-0000-0000-000000000001';
+
+fetch(`${API_URL}/graphql`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    query: `{ themeConfig(dispensaryId: "${DISPENSARY_ID}") { preset } }`,
+  }),
+})
+  .then((r) => r.json())
+  .then(({ data }) => {
+    if (data?.themeConfig?.preset) setThemePreset(data.themeConfig.preset);
+  })
+  .catch(() => console.warn('[Theme] Using default'));
+
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
+});
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

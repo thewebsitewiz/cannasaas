@@ -1,0 +1,23 @@
+/**
+ * GreenStack Design System — place the full file here.
+ * Generated placeholder by scaffold-themes.sh
+ *
+ * Replace this file with the full greenstack-design-system.css
+ * from your Claude conversation output.
+ */
+:root {
+  --gs-forest:   #122d1f;
+  --gs-fern:     #2a6640;
+  --gs-sage:     #5e9b73;
+  --gs-cream:    #f5f0e4;
+  --gs-amber:    #c47820;
+  --gs-charcoal: #18181a;
+
+  --color-bg:       var(--gs-cream);
+  --color-surface:  #ffffff;
+  --color-primary:  var(--gs-fern);
+  --color-text:     var(--gs-charcoal);
+  --font-display:   'Lora', Georgia, serif;
+  --font-body:      'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-mono:      'JetBrains Mono', monospace;
+}

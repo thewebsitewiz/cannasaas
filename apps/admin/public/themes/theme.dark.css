@@ -1,0 +1,36 @@
+/**
+ * GreenStack Theme: Dark
+ * Rich dark luxury. Electric sage on deep black. Premium nighttime feel.
+ */
+[data-theme="dark"] {
+  --color-bg:             #080f0a;
+  --color-bg-alt:         #0c1610;
+  --color-surface:        #101a12;
+  --color-surface-alt:    #162019;
+  --color-surface-hover:  #1c2c20;
+  --color-border:         rgba(255,255,255,.08);
+  --color-border-strong:  rgba(255,255,255,.15);
+  --color-text:           rgba(245,242,232,.94);
+  --color-text-secondary: rgba(245,242,232,.72);
+  --color-text-muted:     rgba(245,242,232,.48);
+  --color-text-faint:     rgba(245,242,232,.26);
+  --color-primary:        #4cbe72;
+  --color-primary-hover:  #3aa05e;
+  --color-primary-light:  #7dd4a0;
+  --color-primary-xlight: rgba(76,190,114,.15);
+  --color-accent:         #d4a030;
+  --color-accent-hover:   #b88820;
+  --color-accent-light:   #f0c060;
+  --color-accent-xlight:  rgba(212,160,48,.15);
+  --gs-forest:            #040a06;
+  --gs-pine:              #0a1a0c;
+  --gs-fern:              #1e5230;
+  --gs-sage:              #4cbe72;
+  --gs-cream:             rgba(245,242,232,.94);
+  --gs-amber:             #d4a030;
+  --font-display:         'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-body:            'Plus Jakarta Sans', system-ui, sans-serif;
+  color-scheme: dark;
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); }
+[data-theme="dark"] ::selection { background: #4cbe72; color: #080f0a; }

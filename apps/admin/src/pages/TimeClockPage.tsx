@@ -65,13 +65,13 @@ export function TimeClockPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Time Clock & Payroll</h1>
+      <h1 className="text-2xl font-bold text-txt">Time Clock & Payroll</h1>
 
       {/* Who's Clocked In */}
-      <div className="bg-white rounded-xl border border-gray-100 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+      <div className="bg-surface rounded-xl border border-border p-6">
+        <h2 className="text-lg font-semibold text-txt mb-4 flex items-center gap-2">
           <Clock size={18} className="text-green-600" /> Currently On the Clock
-          <span className="text-xs text-gray-400 font-normal ml-2">Auto-refreshes every 30s</span>
+          <span className="text-xs text-txt-muted font-normal ml-2">Auto-refreshes every 30s</span>
         </h2>
         {activeClocks && activeClocks.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
@@ -81,8 +81,8 @@ export function TimeClockPage() {
                   {c.firstName?.[0]}{c.lastName?.[0]}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900 text-sm truncate">{c.firstName} {c.lastName}</p>
-                  <p className="text-xs text-gray-500">{c.positionName}</p>
+                  <p className="font-medium text-txt text-sm truncate">{c.firstName} {c.lastName}</p>
+                  <p className="text-xs text-txt-secondary">{c.positionName}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-lg font-bold text-green-700 tabular-nums">{c.hoursSoFar.toFixed(1)}h</p>
@@ -91,85 +91,85 @@ export function TimeClockPage() {
             ))}
           </div>
         ) : (
-          <p className="text-gray-400 text-sm">No one currently clocked in</p>
+          <p className="text-txt-muted text-sm">No one currently clocked in</p>
         )}
       </div>
 
       {/* Payroll Report */}
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-3">
-          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+      <div className="bg-surface rounded-xl border border-border overflow-hidden">
+        <div className="px-6 py-4 border-b border-border flex items-center justify-between flex-wrap gap-3">
+          <h2 className="text-lg font-semibold text-txt flex items-center gap-2">
             <DollarSign size={18} /> Payroll Report
           </h2>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 text-sm">
-              <Calendar size={14} className="text-gray-400" />
+              <Calendar size={14} className="text-txt-muted" />
               <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
-                className="border border-gray-200 rounded-lg px-2 py-1 text-sm" />
-              <span className="text-gray-400">to</span>
+                className="border border-border rounded-lg px-2 py-1 text-sm" />
+              <span className="text-txt-muted">to</span>
               <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)}
-                className="border border-gray-200 rounded-lg px-2 py-1 text-sm" />
+                className="border border-border rounded-lg px-2 py-1 text-sm" />
             </div>
             <button onClick={handleExportCsv}
-              className="flex items-center gap-1.5 bg-brand-600 text-white text-sm font-medium px-3 py-1.5 rounded-lg hover:bg-brand-700">
+              className="flex items-center gap-1.5 bg-brand-600 text-txt-inverse text-sm font-medium px-3 py-1.5 rounded-lg hover:bg-brand-700">
               <Download size={14} /> Export CSV
             </button>
           </div>
         </div>
 
         {/* Summary KPIs */}
-        <div className="grid grid-cols-4 gap-0 border-b border-gray-100">
-          <div className="p-4 text-center border-r border-gray-100">
+        <div className="grid grid-cols-4 gap-0 border-b border-border">
+          <div className="p-4 text-center border-r border-border">
             <p className="text-xl font-bold">{payroll?.length ?? 0}</p>
-            <p className="text-xs text-gray-500">Employees</p>
+            <p className="text-xs text-txt-secondary">Employees</p>
           </div>
-          <div className="p-4 text-center border-r border-gray-100">
+          <div className="p-4 text-center border-r border-border">
             <p className="text-xl font-bold tabular-nums">{totalHours.toFixed(1)}</p>
-            <p className="text-xs text-gray-500">Total Hours</p>
+            <p className="text-xs text-txt-secondary">Total Hours</p>
           </div>
-          <div className="p-4 text-center border-r border-gray-100">
+          <div className="p-4 text-center border-r border-border">
             <p className="text-xl font-bold tabular-nums text-amber-600">{totalOT.toFixed(1)}</p>
-            <p className="text-xs text-gray-500">OT Hours</p>
+            <p className="text-xs text-txt-secondary">OT Hours</p>
           </div>
           <div className="p-4 text-center">
             <p className="text-xl font-bold tabular-nums text-brand-700">${totalGross.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
-            <p className="text-xs text-gray-500">Gross Pay</p>
+            <p className="text-xs text-txt-secondary">Gross Pay</p>
           </div>
         </div>
 
         {payrollLoading ? (
-          <div className="p-8 text-center text-gray-400">Loading payroll...</div>
+          <div className="p-8 text-center text-txt-muted">Loading payroll...</div>
         ) : payroll && payroll.length > 0 ? (
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-100">
+            <thead className="bg-bg-alt border-b border-border">
               <tr>
-                <th className="text-left px-4 py-2 font-medium text-gray-500">Employee</th>
-                <th className="text-left px-4 py-2 font-medium text-gray-500">Position</th>
-                <th className="text-right px-4 py-2 font-medium text-gray-500">Rate</th>
-                <th className="text-right px-4 py-2 font-medium text-gray-500">Hours</th>
-                <th className="text-right px-4 py-2 font-medium text-gray-500">OT</th>
-                <th className="text-right px-4 py-2 font-medium text-gray-500">Shifts</th>
-                <th className="text-right px-4 py-2 font-medium text-gray-500">Gross Pay</th>
+                <th className="text-left px-4 py-2 font-medium text-txt-secondary">Employee</th>
+                <th className="text-left px-4 py-2 font-medium text-txt-secondary">Position</th>
+                <th className="text-right px-4 py-2 font-medium text-txt-secondary">Rate</th>
+                <th className="text-right px-4 py-2 font-medium text-txt-secondary">Hours</th>
+                <th className="text-right px-4 py-2 font-medium text-txt-secondary">OT</th>
+                <th className="text-right px-4 py-2 font-medium text-txt-secondary">Shifts</th>
+                <th className="text-right px-4 py-2 font-medium text-txt-secondary">Gross Pay</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {payroll.map((r: any, i: number) => (
-                <tr key={i} className={r.isExempt ? 'bg-gray-50' : ''}>
+                <tr key={i} className={r.isExempt ? 'bg-bg-alt' : ''}>
                   <td className="px-4 py-3">
-                    <p className="font-medium text-gray-900">{r.firstName} {r.lastName}</p>
-                    <p className="text-xs text-gray-400">{r.employeeNumber}</p>
+                    <p className="font-medium text-txt">{r.firstName} {r.lastName}</p>
+                    <p className="text-xs text-txt-muted">{r.employeeNumber}</p>
                   </td>
                   <td className="px-4 py-3 text-gray-600">
                     {r.positionName}
-                    {r.isExempt && <span className="text-xs ml-1 text-gray-400">(exempt)</span>}
+                    {r.isExempt && <span className="text-xs ml-1 text-txt-muted">(exempt)</span>}
                   </td>
                   <td className="px-4 py-3 text-right tabular-nums">${r.hourlyRate?.toFixed(2) ?? '-'}</td>
                   <td className="px-4 py-3 text-right tabular-nums font-medium">{r.totalHours.toFixed(1)}</td>
-                  <td className={`px-4 py-3 text-right tabular-nums ${r.overtimeHours > 0 ? 'text-amber-600 font-semibold' : 'text-gray-400'}`}>
+                  <td className={`px-4 py-3 text-right tabular-nums ${r.overtimeHours > 0 ? 'text-amber-600 font-semibold' : 'text-txt-muted'}`}>
                     {r.overtimeHours > 0 ? r.overtimeHours.toFixed(1) : '-'}
                   </td>
                   <td className="px-4 py-3 text-right tabular-nums">{r.shiftsWorked}</td>
-                  <td className="px-4 py-3 text-right tabular-nums font-semibold text-gray-900">
+                  <td className="px-4 py-3 text-right tabular-nums font-semibold text-txt">
                     ${(r.grossPayWithOt ?? r.regularPay ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </td>
                 </tr>
@@ -177,7 +177,7 @@ export function TimeClockPage() {
             </tbody>
           </table>
         ) : (
-          <div className="p-8 text-center text-gray-400">No payroll data for this period</div>
+          <div className="p-8 text-center text-txt-muted">No payroll data for this period</div>
         )}
       </div>
     </div>

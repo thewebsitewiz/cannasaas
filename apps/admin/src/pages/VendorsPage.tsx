@@ -39,12 +39,12 @@ export function VendorsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Vendor Management</h1>
+        <h1 className="text-2xl font-bold text-txt">Vendor Management</h1>
         <div className="flex gap-2">
           <button onClick={() => setShowPOs(!showPOs)} className="flex items-center gap-1.5 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-200">
             <Truck size={16} /> {showPOs ? 'Hide' : 'Show'} POs
           </button>
-          <button onClick={() => setShowCreate(!showCreate)} className="flex items-center gap-1.5 bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-700">
+          <button onClick={() => setShowCreate(!showCreate)} className="flex items-center gap-1.5 bg-brand-600 text-txt-inverse px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-700">
             <Plus size={16} /> New Vendor
           </button>
         </div>
@@ -54,9 +54,9 @@ export function VendorsPage() {
       {stats && (
         <div className="grid grid-cols-5 gap-3">
           {kpis.map(k => (
-            <div key={k.label} className="bg-white rounded-xl border border-gray-100 p-4 text-center">
-              <p className="text-xl font-bold text-gray-900">{k.value}</p>
-              <p className="text-xs text-gray-500">{k.label}</p>
+            <div key={k.label} className="bg-surface rounded-xl border border-border p-4 text-center">
+              <p className="text-xl font-bold text-txt">{k.value}</p>
+              <p className="text-xs text-txt-secondary">{k.label}</p>
             </div>
           ))}
         </div>
@@ -64,55 +64,55 @@ export function VendorsPage() {
 
       {/* Create form */}
       {showCreate && (
-        <div className="bg-white rounded-xl border border-gray-100 p-6 space-y-3">
+        <div className="bg-surface rounded-xl border border-border p-6 space-y-3">
           <h2 className="font-semibold">New Vendor</h2>
           <div className="grid grid-cols-4 gap-3">
-            <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="Vendor name *" className="px-3 py-2 border border-gray-200 rounded-lg text-sm" />
-            <select value={form.vendorType} onChange={e => setForm({...form, vendorType: e.target.value})} className="px-3 py-2 border border-gray-200 rounded-lg text-sm">
+            <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="Vendor name *" className="px-3 py-2 border border-border rounded-lg text-sm" />
+            <select value={form.vendorType} onChange={e => setForm({...form, vendorType: e.target.value})} className="px-3 py-2 border border-border rounded-lg text-sm">
               <option value="cultivator">Cultivator</option><option value="manufacturer">Manufacturer</option><option value="distributor">Distributor</option><option value="packaging">Packaging</option>
             </select>
-            <input value={form.email} onChange={e => setForm({...form, email: e.target.value})} placeholder="Email" className="px-3 py-2 border border-gray-200 rounded-lg text-sm" />
-            <input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="Phone" className="px-3 py-2 border border-gray-200 rounded-lg text-sm" />
-            <select value={form.state} onChange={e => setForm({...form, state: e.target.value})} className="px-3 py-2 border border-gray-200 rounded-lg text-sm">
+            <input value={form.email} onChange={e => setForm({...form, email: e.target.value})} placeholder="Email" className="px-3 py-2 border border-border rounded-lg text-sm" />
+            <input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="Phone" className="px-3 py-2 border border-border rounded-lg text-sm" />
+            <select value={form.state} onChange={e => setForm({...form, state: e.target.value})} className="px-3 py-2 border border-border rounded-lg text-sm">
               <option value="NY">NY</option><option value="NJ">NJ</option><option value="CT">CT</option>
             </select>
-            <select value={form.paymentTerms} onChange={e => setForm({...form, paymentTerms: e.target.value})} className="px-3 py-2 border border-gray-200 rounded-lg text-sm">
+            <select value={form.paymentTerms} onChange={e => setForm({...form, paymentTerms: e.target.value})} className="px-3 py-2 border border-border rounded-lg text-sm">
               <option value="net_15">Net 15</option><option value="net_30">Net 30</option><option value="net_45">Net 45</option>
             </select>
-            <input value={form.contactName} onChange={e => setForm({...form, contactName: e.target.value})} placeholder="Primary contact name" className="px-3 py-2 border border-gray-200 rounded-lg text-sm" />
-            <input value={form.contactTitle} onChange={e => setForm({...form, contactTitle: e.target.value})} placeholder="Contact title" className="px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+            <input value={form.contactName} onChange={e => setForm({...form, contactName: e.target.value})} placeholder="Primary contact name" className="px-3 py-2 border border-border rounded-lg text-sm" />
+            <input value={form.contactTitle} onChange={e => setForm({...form, contactTitle: e.target.value})} placeholder="Contact title" className="px-3 py-2 border border-border rounded-lg text-sm" />
           </div>
-          <button onClick={() => createMut.mutate()} disabled={!form.name} className="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-700 disabled:opacity-50">Create Vendor</button>
+          <button onClick={() => createMut.mutate()} disabled={!form.name} className="bg-brand-600 text-txt-inverse px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-700 disabled:opacity-50">Create Vendor</button>
         </div>
       )}
 
       {/* Vendor table */}
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+      <div className="bg-surface rounded-xl border border-border overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-200">
+          <thead className="bg-bg-alt border-b border-border">
             <tr>
-              <th className="text-left px-4 py-3 font-medium text-gray-500">Vendor</th>
-              <th className="text-center px-4 py-3 font-medium text-gray-500">Type</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-500">License</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-500">Contact</th>
-              <th className="text-center px-4 py-3 font-medium text-gray-500">Terms</th>
-              <th className="text-center px-4 py-3 font-medium text-gray-500">Rating</th>
-              <th className="text-right px-4 py-3 font-medium text-gray-500">POs</th>
-              <th className="text-right px-4 py-3 font-medium text-gray-500">Total Spend</th>
+              <th className="text-left px-4 py-3 font-medium text-txt-secondary">Vendor</th>
+              <th className="text-center px-4 py-3 font-medium text-txt-secondary">Type</th>
+              <th className="text-left px-4 py-3 font-medium text-txt-secondary">License</th>
+              <th className="text-left px-4 py-3 font-medium text-txt-secondary">Contact</th>
+              <th className="text-center px-4 py-3 font-medium text-txt-secondary">Terms</th>
+              <th className="text-center px-4 py-3 font-medium text-txt-secondary">Rating</th>
+              <th className="text-right px-4 py-3 font-medium text-txt-secondary">POs</th>
+              <th className="text-right px-4 py-3 font-medium text-txt-secondary">Total Spend</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
             {(vendors ?? []).map((v: any) => {
               const primary = v.contacts ? (Array.isArray(v.contacts) ? v.contacts : JSON.parse(v.contacts || '[]')).find((c: any) => c.isPrimary) : null;
               return (
-                <tr key={v.vendor_id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3"><p className="font-medium text-gray-900">{v.name}</p></td>
+                <tr key={v.vendor_id} className="hover:bg-bg-alt">
+                  <td className="px-4 py-3"><p className="font-medium text-txt">{v.name}</p></td>
                   <td className="px-4 py-3 text-center"><span className={'text-xs px-2 py-0.5 rounded-full font-medium ' + (TYPE_COLORS[v.vendor_type] || 'bg-gray-100 text-gray-700')}>{v.vendor_type}</span></td>
-                  <td className="px-4 py-3 text-xs text-gray-500">{v.license_number || '—'}</td>
+                  <td className="px-4 py-3 text-xs text-txt-secondary">{v.license_number || '—'}</td>
                   <td className="px-4 py-3">
                     {primary ? <p className="text-xs">{primary.name}</p> : null}
                     <div className="flex gap-2 mt-0.5">
-                      {v.email && <span className="text-xs text-gray-400 flex items-center gap-0.5"><Mail size={10} /> {v.email}</span>}
+                      {v.email && <span className="text-xs text-txt-muted flex items-center gap-0.5"><Mail size={10} /> {v.email}</span>}
                     </div>
                   </td>
                   <td className="px-4 py-3 text-center text-xs">{v.payment_terms?.replace('_',' ')}</td>
@@ -128,16 +128,16 @@ export function VendorsPage() {
 
       {/* Purchase Orders */}
       {showPOs && (
-        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-          <div className="px-4 py-3 bg-gray-50 border-b font-semibold text-gray-700">Purchase Orders</div>
+        <div className="bg-surface rounded-xl border border-border overflow-hidden">
+          <div className="px-4 py-3 bg-bg-alt border-b font-semibold text-gray-700">Purchase Orders</div>
           <table className="w-full text-sm">
             <thead><tr>
-              <th className="text-left px-4 py-2 text-gray-500">PO #</th>
-              <th className="text-left px-4 py-2 text-gray-500">Vendor</th>
-              <th className="text-center px-4 py-2 text-gray-500">Status</th>
-              <th className="text-right px-4 py-2 text-gray-500">Total</th>
-              <th className="text-center px-4 py-2 text-gray-500">Payment</th>
-              <th className="text-right px-4 py-2 text-gray-500">Items</th>
+              <th className="text-left px-4 py-2 text-txt-secondary">PO #</th>
+              <th className="text-left px-4 py-2 text-txt-secondary">Vendor</th>
+              <th className="text-center px-4 py-2 text-txt-secondary">Status</th>
+              <th className="text-right px-4 py-2 text-txt-secondary">Total</th>
+              <th className="text-center px-4 py-2 text-txt-secondary">Payment</th>
+              <th className="text-right px-4 py-2 text-txt-secondary">Items</th>
             </tr></thead>
             <tbody className="divide-y divide-gray-50">
               {(pos ?? []).map((po: any) => (
@@ -152,7 +152,7 @@ export function VendorsPage() {
               ))}
             </tbody>
           </table>
-          {(!pos || pos.length === 0) && <div className="p-6 text-center text-gray-400">No purchase orders yet</div>}
+          {(!pos || pos.length === 0) && <div className="p-6 text-center text-txt-muted">No purchase orders yet</div>}
         </div>
       )}
     </div>

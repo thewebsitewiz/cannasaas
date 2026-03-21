@@ -21,13 +21,13 @@ interface ComplianceLogRowProps {
 /** Maps event types to display labels and severity colours */
 const EVENT_CONFIG: Partial<Record<ComplianceEventType, { label: string; color: string }>> = {
   order_created:            { label: 'Order Created',         color: 'text-blue-700 bg-blue-50' },
-  order_cancelled:          { label: 'Order Cancelled',       color: 'text-red-700 bg-red-50' },
+  order_cancelled:          { label: 'Order Cancelled',       color: 'text-danger bg-danger-bg' },
   order_refunded:           { label: 'Order Refunded',        color: 'text-orange-700 bg-orange-50' },
-  purchase_limit_exceeded:  { label: 'Limit Exceeded',        color: 'text-red-700 bg-red-50' },
-  metrc_sync_failure:       { label: 'Metrc Failure',         color: 'text-red-700 bg-red-50' },
+  purchase_limit_exceeded:  { label: 'Limit Exceeded',        color: 'text-danger bg-danger-bg' },
+  metrc_sync_failure:       { label: 'Metrc Failure',         color: 'text-danger bg-danger-bg' },
   metrc_sync_success:       { label: 'Metrc Sync OK',         color: 'text-green-700 bg-green-50' },
   age_verification_approved:{ label: 'Age Verified',          color: 'text-green-700 bg-green-50' },
-  age_verification_rejected:{ label: 'Age Rejected',          color: 'text-red-700 bg-red-50' },
+  age_verification_rejected:{ label: 'Age Rejected',          color: 'text-danger bg-danger-bg' },
   inventory_adjusted:       { label: 'Inventory Adjusted',    color: 'text-purple-700 bg-purple-50' },
   login_failure:            { label: 'Login Failure',         color: 'text-amber-700 bg-amber-50' },
 };
@@ -39,7 +39,7 @@ export const ComplianceLogRow = memo(function ComplianceLogRow({ event }: Compli
   };
 
   return (
-    <tr className="hover:bg-gray-50 transition-colors">
+    <tr className="hover:bg-bg-alt transition-colors">
       {/* Timestamp */}
       <td
         data-label="Time"
@@ -67,7 +67,7 @@ export const ComplianceLogRow = memo(function ComplianceLogRow({ event }: Compli
 
       {/* Actor */}
       <td data-label="Actor" className="px-4 py-3 text-sm text-gray-700">
-        {event.actor?.fullName ?? <span className="text-gray-400 italic">System</span>}
+        {event.actor?.fullName ?? <span className="text-txt-muted italic">System</span>}
       </td>
 
       {/* Subject */}
@@ -76,7 +76,7 @@ export const ComplianceLogRow = memo(function ComplianceLogRow({ event }: Compli
       </td>
 
       {/* Entity reference */}
-      <td data-label="Reference" className="px-4 py-3 text-xs text-gray-500 font-mono">
+      <td data-label="Reference" className="px-4 py-3 text-xs text-txt-secondary font-mono">
         {event.entityId?.substring(0, 8) ?? '—'}
       </td>
 
@@ -92,7 +92,7 @@ export const ComplianceLogRow = memo(function ComplianceLogRow({ event }: Compli
             {event.metrcContext.metrcResponseCode === 200 ? '✓ Synced' : '⏳ Pending'}
           </span>
         ) : (
-          <span className="text-gray-400">—</span>
+          <span className="text-txt-muted">—</span>
         )}
       </td>
     </tr>

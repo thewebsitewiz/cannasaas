@@ -1,19 +1,21 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
+
 import { AdminLayout } from './layouts/AdminLayout';
-import { LoginPage } from './pages/LoginPage';
-import { DashboardPage } from './pages/DashboardPage';
-import { ProductsPage } from './pages/ProductsPage';
-import { OrdersPage } from './pages/OrdersPage';
 import { CompliancePage } from './pages/CompliancePage';
+import { DashboardPage } from './pages/DashboardPage';
+import { InventoryControlPage } from './pages/InventoryControlPage';
+import { InventoryPage } from './pages/InventoryPage';
+import { LoginPage } from './pages/LoginPage';
+import { LoyaltyPage } from './pages/LoyaltyPage';
+import { OrdersPage } from './pages/OrdersPage';
+import { ProductsPage } from './pages/ProductsPage';
+import { ReportsPage } from './pages/ReportsPage';
+import { SchedulingPage } from './pages/SchedulingPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { StaffingPage } from './pages/StaffingPage';
-import { InventoryControlPage } from './pages/InventoryControlPage';
+import ThemePage from './pages/Settings/ThemePage';
 import { TimeClockPage } from './pages/TimeClockPage';
-import { SchedulingPage } from './pages/SchedulingPage';
-import { ReportsPage } from './pages/ReportsPage';
 import { VendorsPage } from './pages/VendorsPage';
-import { LoyaltyPage } from './pages/LoyaltyPage';
-import { InventoryPage } from './pages/InventoryPage';
 import { useAuthStore } from './stores/auth.store';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -40,6 +42,7 @@ export function App() {
         <Route path="inventory" element={<InventoryPage />} />
         <Route path="compliance" element={<CompliancePage />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="settings/theme" element={<ThemePage />} />
         <Route path="staffing" element={<StaffingPage />} />
         <Route path="inventory-control" element={<InventoryControlPage />} />
         <Route path="timeclock" element={<TimeClockPage />} />

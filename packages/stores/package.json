@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "@cannasaas/ui": "workspace:^",
+    "zustand": "^4.5.0"
+  },
+  "main": "src/index.ts",
+  "name": "@cannasaas/stores",
+  "private": true,
+  "types": "src/index.ts",
+  "version": "0.1.0"
+}

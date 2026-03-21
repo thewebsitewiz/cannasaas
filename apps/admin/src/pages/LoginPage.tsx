@@ -53,18 +53,18 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-bg-alt flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">CannaSaas</h1>
-          <p className="text-gray-500 mt-2">Admin Portal</p>
+          <h1 className="text-3xl font-bold text-txt">CannaSaas</h1>
+          <p className="text-txt-secondary mt-2">Admin Portal</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-gray-100 p-8 shadow-sm">
-          <h2 className="text-lg font-semibold text-gray-900 mb-6">Sign In</h2>
+        <form onSubmit={handleSubmit} className="bg-surface rounded-2xl border border-border p-8 shadow-sm">
+          <h2 className="text-lg font-semibold text-txt mb-6">Sign In</h2>
 
           {error && (
-            <div className="bg-red-50 text-red-700 text-sm rounded-lg p-3 mb-4">{error}</div>
+            <div className="bg-danger-bg text-danger text-sm rounded-lg p-3 mb-4">{error}</div>
           )}
 
           <label className="block mb-4">
@@ -73,7 +73,7 @@ export function LoginPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none"
+              className="mt-1 block w-full rounded-lg border border-border px-4 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none"
               required
             />
           </label>
@@ -84,7 +84,7 @@ export function LoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none"
+              className="mt-1 block w-full rounded-lg border border-border px-4 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none"
               required
             />
           </label>
@@ -92,7 +92,7 @@ export function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-brand-600 text-white font-semibold rounded-lg px-4 py-2.5 text-sm hover:bg-brand-700 transition-colors disabled:opacity-50"
+            className="w-full bg-brand-600 text-txt-inverse font-semibold rounded-lg px-4 py-2.5 text-sm hover:bg-brand-700 transition-colors disabled:opacity-50"
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
