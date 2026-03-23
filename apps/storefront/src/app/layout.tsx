@@ -14,6 +14,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
+<<<<<<< HEAD
     <html lang="en">
       <head>
         <link rel="manifest" href="/manifest.json" />
@@ -23,6 +24,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&display=swap" rel="stylesheet" />
       </head>
       <body className="bg-white text-gray-900 antialiased min-h-screen flex flex-col" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+=======
+    <html lang="en" suppressHydrationWarning>
+      <body suppressHydrationWarning className="bg-bg text-txt antialiased min-h-screen flex flex-col">
+>>>>>>> 3b445acf (fix: suppress hydration warnings in storefront layout)
         <Providers>
           <ThemeProvider />
           <ServiceWorkerRegistrar />
