@@ -3,6 +3,7 @@ import { DollarSign, Percent, Save, Truck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { DesignSystemPicker } from '../components/DesignSystemPicker';
 import { Link } from 'react-router-dom';
 import { gqlRequest } from '../lib/graphql-client';
 import { useAuthStore } from '../stores/auth.store';
@@ -51,6 +52,7 @@ export function SettingsPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-txt">Settings</h1>
+
       {/* Settings Navigation Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
         <Link
@@ -78,6 +80,13 @@ export function SettingsPage() {
           </div>
         </Link>
       </div>
+
+      {/* ── Design System Picker ─────────────────────────────────────── */}
+      <div className="max-w-2xl">
+        <DesignSystemPicker />
+      </div>
+
+      {/* ── Cash Discount ────────────────────────────────────────────── */}
       <div className="bg-surface rounded-xl border border-border p-6 max-w-lg">
         <h2 className="text-lg font-semibold text-txt mb-4 flex items-center gap-2">
           <DollarSign size={18} className="text-brand-600" /> Cash Discount

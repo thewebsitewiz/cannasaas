@@ -3,23 +3,23 @@
  * @app storefront
  *
  * Application entry point.
- * Generated stub by scaffold-themes.sh
  */
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import '@cannasaas/ui/src/casual.css'; // [THEME-SCAFFOLD] css-import
-import { ThemeLoader } from '@cannasaas/ui'; // [THEME-SCAFFOLD] ThemeLoader
+import { ThemeLoader } from './components/ThemeLoader';
 import App from './App';
-import '@cannasaas/ui/src/greenstack-design-system.css'; // [THEME-SCAFFOLD] css-import
-import { ThemeLoader } from '@cannasaas/ui'; // [THEME-SCAFFOLD] ThemeLoader
 
 const root = document.getElementById('root')!;
 
+// TODO: Replace with actual dispensary ID from your tenant context
+const DISPENSARY_ID = import.meta.env.VITE_DISPENSARY_ID || '';
+
 ReactDOM.createRoot(root).render(
   <React.StrictMode>
-    <ThemeLoader />
-    <ThemeLoader /> // [THEME-SCAFFOLD] ThemeLoader
-    <ThemeLoader /> // [THEME-SCAFFOLD] ThemeLoader
+    <ThemeLoader
+      dispensaryId={DISPENSARY_ID}
+      graphqlUrl={import.meta.env.VITE_API_URL || 'http://localhost:3000/graphql'}
+    />
     <App />
   </React.StrictMode>,
 );

@@ -115,6 +115,18 @@ export class Dispensary {
   @Column({ default: true, name: 'cash_delivery_enabled' })
   cash_delivery_enabled!: boolean;
 
+  // ── Design System ────────────────────────────────────────────────────
+
+  @Field({ name: 'designSystem' })
+  @Column({ length: 50, default: 'casual', name: 'design_system' })
+  design_system!: string;
+
+  @Field({ name: 'designSystemFile' })
+  @Column({ length: 100, default: 'casual.css', name: 'design_system_file' })
+  design_system_file!: string;
+
+  // ── Timestamps ───────────────────────────────────────────────────────
+
   @Field(() => Date)
   @CreateDateColumn({ type: 'timestamptz' })
   created_at!: Date;

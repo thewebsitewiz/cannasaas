@@ -1,0 +1,238 @@
+/**
+ * ╔══════════════════════════════════════════════════════════════════╗
+ * ║       S P R I N G   B L O O M   D E S I G N   S Y S T E M      ║
+ * ║                        v1.0  |  2026                            ║
+ * ╠══════════════════════════════════════════════════════════════════╣
+ * ║  Playful · Professional · Cannabis-Forward                      ║
+ * ║                                                                  ║
+ * ║  Overrides GreenStack design tokens defined in casual.css.      ║
+ * ║  Loads AFTER casual.css — only replaces token values.           ║
+ * ║  All component classes from casual.css remain intact.           ║
+ * ║                                                                  ║
+ * ║  Palette: Meadow Green / Wisteria Purple / Poppy Coral          ║
+ * ║  Fonts: Sora (headings) + Nunito Sans (body)                    ║
+ * ╚══════════════════════════════════════════════════════════════════╝
+ */
+
+/* ════════════════════════════════════════════════════════════════════
+   §1  GOOGLE FONTS
+════════════════════════════════════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Nunito+Sans:ital,opsz,wght@0,6..12,300;0,6..12,400;0,6..12,500;0,6..12,600;0,6..12,700;0,6..12,800;1,6..12,400;1,6..12,500&display=swap');
+
+/* ════════════════════════════════════════════════════════════════════
+   §2  TOKEN OVERRIDES — LIGHT MODE
+════════════════════════════════════════════════════════════════════ */
+:root {
+
+  /* ── Brand Palette: "Meadow" replaces pine/fern/moss ─────────── */
+  --gs-forest:        #10270C;
+  --gs-deep-pine:     #1C2118;
+  --gs-pine:          #26481F;
+  --gs-fern:          #336A24;
+  --gs-moss:          #3F852A;
+  --gs-sage:          #56A638;
+  --gs-mist:          #9BD37D;
+  --gs-dew:           #C3E4AE;
+
+  /* ── Warm Neutrals ──────────────────────────────────────────── */
+  --gs-cream:         #FAFAF8;
+  --gs-parchment:     #F3F2EE;
+  --gs-sand:          #E8E6DF;
+  --gs-charcoal:      #292722;
+  --gs-ink:           #353329;
+  --gs-graphite:      #4D4A43;
+  --gs-stone:         #6E695D;
+  --gs-ash:           #9D9888;
+  --gs-silver:        #B8B4A7;
+  --gs-fog:           #D5D2C8;
+  --gs-white:         #FFFFFF;
+
+  /* ── Accent: "Poppy" replaces amber/gold ─────────────────────── */
+  --gs-amber:         #F04F0D;
+  --gs-gold:          #FF6B25;
+  --gs-harvest:       #FF884D;
+  --gs-wheat:         #FFB080;
+
+  /* ── Secondary: "Wisteria" (new) ─────────────────────────────── */
+  --gs-wisteria:      #7340C1;
+  --gs-wisteria-light:#9B72E8;
+  --gs-wisteria-xlt:  #F0EAFD;
+
+  /* ── Semantic Surfaces ───────────────────────────────────────── */
+  --color-bg:              var(--gs-cream);
+  --color-bg-alt:          var(--gs-parchment);
+  --color-surface:         var(--gs-white);
+  --color-surface-alt:     #F8F7F4;
+  --color-surface-hover:   var(--gs-parchment);
+
+  /* ── Borders ─────────────────────────────────────────────────── */
+  --color-border:          var(--gs-sand);
+  --color-border-strong:   var(--gs-fog);
+  --color-border-focus:    var(--gs-moss);
+
+  /* ── Text ────────────────────────────────────────────────────── */
+  --color-text:            var(--gs-charcoal);
+  --color-text-secondary:  var(--gs-stone);
+  --color-text-muted:      var(--gs-ash);
+  --color-text-faint:      var(--gs-silver);
+  --color-text-inverse:    var(--gs-cream);
+
+  /* ── Primary: Meadow Green ───────────────────────────────────── */
+  --color-primary:         var(--gs-moss);
+  --color-primary-hover:   var(--gs-fern);
+  --color-primary-light:   var(--gs-sage);
+  --color-primary-xlight:  #F2F9EE;
+
+  /* ── Accent: Poppy Coral ─────────────────────────────────────── */
+  --color-accent:          var(--gs-gold);
+  --color-accent-hover:    var(--gs-amber);
+  --color-accent-light:    var(--gs-harvest);
+  --color-accent-xlight:   #FFF6F0;
+
+  /* ── Semantic ────────────────────────────────────────────────── */
+  --color-success:         #059669;
+  --color-success-bg:      #ECFDF5;
+  --color-warning:         #D97706;
+  --color-warning-bg:      #FFFBEB;
+  --color-danger:          #DC2626;
+  --color-danger-bg:       #FEF2F2;
+  --color-info:            #2563EB;
+  --color-info-bg:         #EFF6FF;
+
+  /* ── Typography ──────────────────────────────────────────────── */
+  --font-display:      'Sora', system-ui, -apple-system, sans-serif;
+  --font-body:         'Nunito Sans', system-ui, -apple-system, sans-serif;
+  --font-mono:         'JetBrains Mono', 'Cascadia Code', 'Courier New', monospace;
+
+  /* ── Shadows (warm-tinted) ───────────────────────────────────── */
+  --shadow-xs:  0 1px 2px rgba(41,39,34,.04);
+  --shadow-sm:  0 1px 3px rgba(41,39,34,.06), 0 1px 2px rgba(41,39,34,.04);
+  --shadow-md:  0 4px 6px -1px rgba(41,39,34,.06), 0 2px 4px -2px rgba(41,39,34,.04);
+  --shadow-lg:  0 10px 15px -3px rgba(41,39,34,.07), 0 4px 6px -4px rgba(41,39,34,.04);
+  --shadow-xl:  0 20px 25px -5px rgba(41,39,34,.08), 0 8px 10px -6px rgba(41,39,34,.04);
+  --shadow-2xl: 0 32px 64px rgba(41,39,34,.12), 0 12px 28px rgba(41,39,34,.08);
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   §3  PORTAL OVERRIDES — STOREFRONT
+════════════════════════════════════════════════════════════════════ */
+[data-portal="storefront"] {
+  --color-bg:              #FAFAF8;
+  --color-bg-alt:          #F3F2EE;
+  --color-surface:         #FFFFFF;
+  --color-surface-alt:     #F8F7F4;
+  --color-surface-hover:   #F3F2EE;
+  --color-border:          #E8E6DF;
+  --color-border-strong:   #D5D2C8;
+  --color-text:            #292722;
+  --color-text-secondary:  #6E695D;
+  --color-text-muted:      #9D9888;
+  --color-text-faint:      #B8B4A7;
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   §4  PORTAL OVERRIDES — ADMIN
+════════════════════════════════════════════════════════════════════ */
+[data-portal="admin"] {
+  --color-bg:              #F8F7F4;
+  --color-bg-alt:          #F3F2EE;
+  --color-surface:         #FFFFFF;
+  --color-surface-alt:     #FAFAF8;
+  --color-surface-hover:   #F3F2EE;
+  --color-border:          #E8E6DF;
+  --color-border-strong:   #D5D2C8;
+  --color-text:            #292722;
+  --color-text-secondary:  #4D4A43;
+  --color-text-muted:      #6E695D;
+  --color-text-faint:      #9D9888;
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   §5  PORTAL OVERRIDES — STAFF (dark terminal)
+════════════════════════════════════════════════════════════════════ */
+[data-portal="staff"] {
+  --color-bg:              #111210;
+  --color-bg-alt:          #1A1917;
+  --color-surface:         #1A1917;
+  --color-surface-alt:     #262521;
+  --color-surface-hover:   #353329;
+  --color-border:          #353329;
+  --color-border-strong:   #4D4A43;
+  --color-text:            #F3F2EE;
+  --color-text-secondary:  #B8B4A7;
+  --color-text-muted:      #9D9888;
+  --color-text-faint:      #6E695D;
+  --color-text-inverse:    #292722;
+  --color-primary:         #73BF52;
+  --color-primary-hover:   #56A638;
+  --color-primary-light:   #9BD37D;
+  --color-primary-xlight:  rgba(115,191,82,0.12);
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   §6  PORTAL OVERRIDES — KIOSK
+════════════════════════════════════════════════════════════════════ */
+[data-portal="kiosk"] {
+  --color-bg:              #FAFAF8;
+  --color-bg-alt:          #F3F2EE;
+  --color-surface:         #FFFFFF;
+  --color-surface-alt:     #F8F7F4;
+  --color-surface-hover:   #F3F2EE;
+  --color-border:          #E8E6DF;
+  --color-border-strong:   #D5D2C8;
+  --color-text:            #292722;
+  --color-text-secondary:  #6E695D;
+  --color-text-muted:      #9D9888;
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   §7  SPRING BLOOM ENHANCEMENTS
+   Additive styles that layer on top of casual.css components
+════════════════════════════════════════════════════════════════════ */
+
+/* Smooth transitions on theme switch */
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Heading character — tighter, bolder with Sora */
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+h1 { font-weight: 800; }
+h2 { font-weight: 700; }
+h3 { font-weight: 700; }
+h4 { font-weight: 600; }
+
+/* Storefront header gets frosted glass */
+[data-portal="storefront"] header {
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+}
+
+/* Selection color */
+::selection {
+  background: #C3E4AE;
+  color: #26481F;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #D5D2C8; border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: #B8B4A7; }
+
+/* ════════════════════════════════════════════════════════════════════
+   §8  PRINT
+════════════════════════════════════════════════════════════════════ */
+@media print {
+  * { box-shadow: none !important; animation: none !important; }
+  body { background: #fff !important; }
+}
