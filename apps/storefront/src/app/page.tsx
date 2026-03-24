@@ -11,6 +11,7 @@ import {
 import { DEFAULT_DISPENSARY_ID, gql } from '@/lib/graphql';
 import { useEffect, useState } from 'react';
 
+import { Leaf } from 'lucide-react';
 import Link from 'next/link';
 import { ProductCard } from '@/components/product/ProductCard';
 import { useQuery } from '@tanstack/react-query';
@@ -45,6 +46,11 @@ const FEATURED_PRODUCTS = `
 `;
 
 export default function HomePage() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const { data } = useQuery({
     queryKey: ['featuredProducts'],
     queryFn: () =>

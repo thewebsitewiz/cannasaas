@@ -1,6 +1,12 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 body {
-  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  font-family:
+    'DM Sans',
+    system-ui,
+    -apple-system,
+    sans-serif;
   -webkit-font-smoothing: antialiased;
 }
