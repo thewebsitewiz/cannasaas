@@ -44,43 +44,63 @@ CannaSaas targets small to mid-size dispensary operators with 1-5 retail locatio
 
 # 3. Products and Services
 
-CannaSaas delivers a unified platform comprising five integrated applications, a comprehensive backend API, and production deployment infrastructure.
+CannaSaas delivers a unified platform comprising six integrated applications, a comprehensive backend API, and production deployment infrastructure.
 
 ## Platform Applications
 
 ### Customer Storefront
 
-A responsive Next.js web application providing:
+A responsive Next.js 15 web application with "Botanical Luxury" design, PWA support, and i18n (EN/ES) providing:
 
-- Product browsing with full-text search and faceted filtering
-- Shopping cart with variant selection
+- Product browsing with Meilisearch full-text search, vibe search (semantic), and faceted filtering
+- AI-powered product recommendations
+- Shopping cart with variant selection and express checkout
 - Delivery and pickup ordering with geo-fenced eligibility
-- Customer accounts with age verification and order history
+- Cash, Stripe, CanPay, and AeroPay payment methods
+- Customer accounts with age verification, order history, and digital ID verification (OCR)
 - Real-time order status tracking via WebSocket
+- Back-in-stock notifications
 
 ### Admin Portal
 
-A comprehensive management dashboard for dispensary administrators featuring:
+A comprehensive management dashboard (16+ pages) for dispensary administrators featuring:
 
 - Analytics and KPI dashboards
 - Product and inventory management
 - Order monitoring and fulfillment oversight
+- Digital menu board display
 - Staffing roster with certification tracking
 - Payroll reports with CSV export
 - Scheduling with shift templates and time-off management
 - Compliance monitoring with audit trails
 - Financial reporting (sales, tax, staff, inventory) with statutory references
-- White-label theme selection with custom CSS support
+- White-label theme selection (10 presets) with custom CSS support
+- Onboarding wizard for new tenants
+- Changelog viewer
+- Marketing Suite — campaigns and automations
+- Customer segmentation (6 auto-segments)
+- Customer reviews & ratings management
 
 ### Staff Portal
 
 A tablet-optimized application for counter operations including:
 
 - Live order queue with Kanban-style lanes
+- Barcode scanner for product lookup
 - Fulfillment zone management
 - Inventory lookup and stock alerts
 - Product search for customer assistance
 - Real-time clock-in/out with elapsed time display
+
+### Platform Manager
+
+A super admin dashboard for multi-tenant management:
+
+- Tenant management (create, suspend, change tier)
+- Billing and invoice tracking
+- Tax rule configuration by state
+- Tenant health reporting and churn analytics
+- Platform activity feed
 
 ### Self-Service Kiosk
 
@@ -96,7 +116,7 @@ A touch-optimized in-store ordering interface with:
 
 A NestJS GraphQL API providing:
 
-- 150+ operations across 28 modules with 79 database tables
+- 180+ operations across 43+ modules with 95+ database tables
 - JWT authentication with role-based access control
 - WebSocket real-time event broadcasting
 - BullMQ job queues for async processing

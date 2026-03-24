@@ -2,7 +2,7 @@
 
 ## Platform Architecture
 
-**33 Modules · 95+ Tables · 180+ API Operations · 5 Frontend Apps · 10 Themes**
+**43+ Modules · 95+ Tables · 180+ API Operations · 6 Frontend Apps · 10 Themes**
 
 **March 2026 | Confidential**
 
@@ -12,21 +12,22 @@
 
 # 1. System Architecture
 
-The CannaSaas platform consists of five frontend applications communicating through an nginx reverse proxy to a NestJS API server, backed by PostgreSQL and Redis, with optional integrations to Stripe, Metrc, SendGrid, and Twilio.
+The CannaSaas platform consists of six frontend applications communicating through an nginx reverse proxy to a NestJS API server, backed by PostgreSQL and Redis, with optional integrations to Stripe, Metrc, BioTrack, Meilisearch, SendGrid, Twilio, CanPay, AeroPay, and Sentry.
 
 ## 1.1 Component Overview
 
 | Component | Technology | Port | Purpose |
 |---|---|---|---|
-| Storefront | Next.js 14 | :5173 | Customer e-commerce — browse, cart, checkout, order tracking |
-| Admin Portal | Vite + React | :5174 | Dispensary management — products, orders, staff, compliance, vendors, loyalty |
-| Staff Portal | Vite + React | :5175 | Counter operations — order queue, fulfillment, inventory, clock-in/out |
-| Kiosk | Vite + React | :5176 | In-store self-service — touch-optimized menu, cart, checkout |
-| Platform Manager | Vite + React | :5177 | Super admin — tenant management, billing, tax config, reports |
+| Storefront | Next.js 15 | :5173 | Customer e-commerce — "Botanical Luxury" design, PWA, i18n EN/ES, Meilisearch + vibe search, AI recommendations |
+| Admin Portal | Vite 8 + React 19 | :5174 | Dispensary management — 16+ pages incl. menu board, onboarding wizard, changelog, marketing suite |
+| Staff Portal | Vite 8 + React 19 | :5175 | Counter operations — order queue, barcode scanner, fulfillment, inventory, clock-in/out |
+| Kiosk | Vite 8 + React 19 | :5176 | In-store self-service — check-in, touch-optimized, PWA |
+| Platform Manager | Vite 8 + React 19 | :5177 | Super admin — tenant management, billing, tax config, reports |
 | API Server | NestJS + GraphQL | :3000 | 180+ GraphQL operations, 12 REST endpoints, WebSocket |
 | Database | PostgreSQL 16 | :5432 | 95+ tables with UUID, JSONB, FTS, pgcrypto |
-| Cache / Queue | Redis 7 | :6379 | BullMQ job queues, caching, session store |
-| Reverse Proxy | nginx | :80/:443 | TLS termination, rate limiting, security headers, subdomain routing |
+| Search Engine | Meilisearch | :7700 | Full-text search + vibe search (semantic similarity) |
+| Cache / Queue | Redis 7 | :6379 | BullMQ job queues, caching (products, themes, tax rules), session store |
+| Reverse Proxy | nginx | :80/:443 | TLS termination, rate limiting, gzip, CSP, security headers, subdomain routing |
 
 ## 1.2 Request Flow
 
@@ -36,25 +37,32 @@ Every request follows this path through the system.
 
 | Service | Purpose | Graceful Degradation |
 |---|---|---|
-| Stripe | Card payments — intents, webhooks, refunds | Falls back to cash-only if not configured |
+| Stripe | Card payments — intents, webhooks (retry via BullMQ), refunds | Falls back to cash-only if not configured |
+| CanPay | Cannabis-specific debit payment processing | Disabled if not configured |
+| AeroPay | ACH-based cannabis payment processing | Disabled if not configured |
 | Metrc | Seed-to-sale compliance tracking (all Metrc-integrated states) | Local-only mode; sync queued for later |
-| SendGrid / SMTP | Email notifications (18 templates) | Logs to console if not configured |
+| BioTrack | Seed-to-sale compliance tracking (BioTrack states) | Local-only mode; sync queued for later |
+| Meilisearch | Full-text + vibe search | Falls back to PostgreSQL FTS if unavailable (circuit breaker) |
+| SendGrid / SMTP | Email notifications (18+ white-label templates) | Logs to console if not configured |
 | Twilio | SMS notifications | Skipped silently if not configured |
+| Sentry | Error tracking with request ID correlation | Optional; errors logged locally if not configured |
 
-# 2. Backend Modules (33)
+# 2. Backend Modules (43+)
 
-The API is organized into 33 NestJS modules grouped across eight domains. Each module is self-contained with its own service, resolver/controller, and entity definitions. Cross-module communication uses EventEmitter2 events.
+The API is organized into 43+ NestJS modules grouped across ten domains. Each module is self-contained with its own service, resolver/controller, and entity definitions. Cross-module communication uses EventEmitter2 events.
 
 | Domain | Modules | Key Capabilities |
 |---|---|---|
-| Core (6) | Auth, Users, Organizations, Companies, Dispensaries, Brands | JWT + RBAC (6 roles), multi-tenant hierarchy, user management |
-| Catalog (4) | Products, Manufacturers, Promotions, ProductData | 30+ product fields, variants, pricing, FTS, Otreeba strain enrichment |
-| Commerce (3) | Orders, Payments, Stripe | Full order lifecycle, cash discount, Stripe intents/webhooks/refunds |
-| Inventory (2) | Inventory, InventoryControl | Stock tracking, transfers, counts, adjustments, reorder alerts, dead stock |
-| Compliance (3) | Metrc, Compliance, Reporting | Metrc sync + BullMQ retry, manifests, waste, audit log, reconciliation, 7 reports + 4 CSV |
-| People (6) | Customers, Loyalty, Staffing, TimeClock, Scheduling, Notifications | Profiles, 4-tier loyalty, employees/certs, payroll, shifts/swaps, email/SMS |
-| Operations (5) | Delivery, Fulfillment, Vendors, POS, Analytics | Drivers + GPS, geo-fencing, vendor directory + PO lifecycle, Dutchie/Treez adapters, KPIs |
-| Platform (4) | Platform, Theme, Image, WebSocket | Tenant admin + billing, 10 CSS themes, image upload/thumbnails, real-time events |
+| Core (7) | Auth (JWT + 2FA/TOTP), Users, Organizations, Companies, Dispensaries, Brands, Manufacturers | JWT auth with 2FA, RBAC (6 roles), multi-tenant hierarchy, user management |
+| Catalog (6) | Products, ProductData (Otreeba), Promotions, Search (Meilisearch + vibe search), Recommendations (AI), Knowledge Base (budtender AI) | 30+ product fields, variants, pricing, Meilisearch FTS, semantic vibe search, AI recommendations |
+| Commerce (5) | Orders, Payments (Cash), Stripe (webhook retry via BullMQ), CanPay, AeroPay | Full order lifecycle with tax engine for all legal states, cash/card/cannabis payments |
+| Inventory (3) | Inventory, InventoryControl, Reorder Suggestions (AI) | Stock tracking, transfers, counts, adjustments, AI-driven reorder alerts, dead stock |
+| Compliance (4) | Metrc, BioTrack, Compliance (manifests/waste/audit), Compliance Alerts (CRON) | Metrc + BioTrack sync, manifests, waste, audit log, reconciliation, automated alerts |
+| People (7) | Customers (6 auto-segments), Loyalty (4 tiers), Staffing, TimeClock, Scheduling, Notifications (back-in-stock + white-label), Marketing Suite (campaigns/automations) | Customer segmentation, loyalty, employees/certs, payroll, shifts, email/SMS, marketing campaigns |
+| Operations (3) | Delivery, Fulfillment (zones/slots/tracking), Vendors | Drivers + GPS, geo-fencing, delivery slots, vendor directory + PO lifecycle |
+| Platform (6) | Platform, Theme (10 presets), Changelog, Image, WebSocket, Health | Tenant admin + billing, 10 CSS themes, changelog, image upload/thumbnails, real-time events |
+| Security (3) | Verification (digital ID/OCR), Webhooks API (HMAC-SHA256), Status | Digital ID verification, outbound webhooks, status page |
+| Observability (3) | Metrics (Prometheus), Reviews, POS (Dutchie/Treez) | Prometheus metrics, customer reviews & ratings, POS adapters |
 
 ## 2.1 Module Interactions
 
@@ -213,6 +221,10 @@ Cannabis compliance is architected as a first-class concern. The compliance subs
 - **New York:** 9% retail cannabis excise + per-mg THC taxes (flower $0.005, concentrate $0.008, edible $0.03)
 - **New Jersey:** 6.625% sales tax + 6% cannabis excise + up to 2% municipal tax
 - **Connecticut:** 6.35% sales tax + 3% cannabis excise + up to 3% municipal tax
+- **California:** 15% cannabis excise + 7.25% state sales tax
+- **Colorado:** 15% state excise + 2.9% state sales tax
+- **Massachusetts:** 10.75% excise + 6.25% state sales tax
+- And all other US states with legal cannabis programs — pre-configured tax rules
 
 All rules stored in `lkp_tax_categories` with statutory references (e.g., NY Tax Law § 493-a).
 
@@ -289,6 +301,8 @@ The production deployment uses Docker Compose with seven services. All applicati
 | storefront | Custom Next.js standalone | Non-root, NEXT_TELEMETRY_DISABLED |
 | admin | Custom Vite → nginx | SPA fallback, static file serving |
 | staff | Custom Vite → nginx | SPA fallback, static file serving |
+| kiosk | Custom Vite → nginx | SPA fallback, PWA, touch-optimized |
+| platform | Custom Vite → nginx | SPA fallback, super admin |
 | postgres | postgres:16-alpine | Persistent volume (pgdata), health check (pg_isready), 127.0.0.1 binding |
 | redis | redis:7-alpine | AOF persistence, 256MB LRU eviction, health check |
 

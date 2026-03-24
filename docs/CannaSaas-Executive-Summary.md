@@ -26,13 +26,14 @@ The core challenges facing dispensary operators today include:
 
 # The Solution
 
-CannaSaas consolidates every operational need into a single, integrated platform with five purpose-built applications:
+CannaSaas consolidates every operational need into a single, integrated platform with six purpose-built applications:
 
-- **Storefront:** Customer-facing e-commerce with product search, age verification, cart, and delivery/pickup ordering
-- **Admin Portal:** Dispensary management dashboard with analytics, reporting, compliance monitoring, and theme customization
-- **Staff Portal:** Counter and fulfillment operations with order queue, inventory lookup, and real-time clock-in/out
-- **Kiosk:** Touch-optimized in-store self-service ordering for walk-in customers
-- **API:** GraphQL-first backend with 150+ operations, WebSocket real-time updates, and full Metrc integration
+- **Storefront:** Next.js 15 customer e-commerce with "Botanical Luxury" design, Meilisearch + vibe search, AI recommendations, PWA, i18n (EN/ES), express checkout, and back-in-stock notifications
+- **Admin Portal:** Dispensary management dashboard (16+ pages) with analytics, menu board, onboarding wizard, marketing suite, customer segmentation, and theme customization
+- **Staff Portal:** Counter and fulfillment operations with order queue, barcode scanner, budtender AI knowledge base, and real-time clock-in/out
+- **Kiosk:** Touch-optimized PWA for in-store self-service with check-in flow
+- **Platform Manager:** Super admin dashboard for multi-tenant management, billing, and tax configuration
+- **API:** GraphQL-first backend with 180+ operations across 43+ modules, WebSocket real-time updates, Prometheus metrics, and full Metrc + BioTrack integration
 
 # Market Opportunity
 
@@ -47,21 +48,29 @@ CannaSaas targets the 15,000+ small dispensary operators (1-5 locations) nationw
 
 # Competitive Advantage
 
-- All-in-one platform eliminates integration complexity and reduces total cost of ownership by 40-60% versus multi-vendor stacks
-- Built-in Metrc compliance with state-specific tax engines, purchase limit enforcement, manifest generation, and daily reconciliation
-- Multi-tenant architecture enables rapid onboarding with white-label theming (10 pre-built themes plus custom CSS)
-- Modern tech stack (NestJS, GraphQL, React, PostgreSQL) ensures scalability, developer velocity, and long-term maintainability
+- All-in-one platform (43+ backend modules, 6 frontend apps) eliminates integration complexity and reduces total cost of ownership by 40-60% versus multi-vendor stacks
+- Built-in Metrc + BioTrack compliance with state-specific tax engines for all legal states, purchase limit enforcement, manifest generation, automated compliance alerts, and daily reconciliation
+- AI-powered features: product recommendations, reorder suggestions, budtender knowledge base, vibe search (semantic product discovery)
+- Multi-tenant architecture enables rapid onboarding with white-label theming (10 presets), "Botanical Luxury" design language, and PWA support
+- Enterprise-grade infrastructure: Redis caching, circuit breakers, Prometheus metrics, Sentry error tracking, GraphQL depth/complexity limiting, CSRF protection
+- Modern tech stack (NestJS 11, GraphQL, React 19, Next.js 15, PostgreSQL 16, Drizzle ORM, Tailwind CSS v4, TypeScript 5.8) ensures scalability and developer velocity
+- Cannabis-specific payment processing: Cash + Stripe + CanPay + AeroPay
 - Affordable pricing model targeting $299-799/month per location versus $1,500+/month from enterprise competitors
 
 # Current Status
 
 CannaSaas is in advanced development with the full platform operational in a development environment:
 
-- 28 backend modules with 79 database tables and 150+ GraphQL operations
-- 4 frontend applications (storefront, admin, staff, kiosk) all functional
-- Complete Metrc integration pipeline including credential encryption, manifest generation, waste logging, and daily reconciliation
-- Full compliance suite: audit logging, age verification, purchase limits, state-specific tax calculations with statutory references
-- Production deployment architecture: Docker Compose, nginx reverse proxy with rate limiting, CI/CD ready
+- 43+ backend modules with 95+ database tables and 180+ GraphQL operations
+- 6 frontend applications (storefront, admin, staff, kiosk, platform, all with "Botanical Luxury" design) fully functional
+- Complete Metrc + BioTrack integration pipeline including credential encryption, manifest generation, waste logging, automated compliance alerts, and daily reconciliation
+- Full compliance suite: audit logging, age verification, digital ID verification (OCR), purchase limits, state-specific tax calculations for all legal states with statutory references
+- AI features: product recommendations, reorder suggestions, budtender knowledge base, Meilisearch + vibe search
+- Marketing Suite with campaign builder and automation workflows
+- Customer segmentation (6 auto-segments), loyalty program (4 tiers), reviews & ratings
+- Webhooks API with HMAC-SHA256 signed payloads
+- Production deployment architecture: Docker multi-stage builds, nginx reverse proxy with HTTPS/TLS/gzip/CSP, GitHub Actions CI/CD with staging
+- 8 unit test suites (58 tests), 2 integration tests, k6 load test
 
 Target launch date: March 31, 2026 (Metrc compliance deadline).
 

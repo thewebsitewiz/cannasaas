@@ -1,6 +1,6 @@
 # CannaSaas — Deployment Guide
 
-**Version:** 2.0 | February 2026
+**Version:** 3.0 | March 2026
 
 ---
 
@@ -9,7 +9,8 @@
 ### 1.1 Prerequisites
 
 - Node.js 20+
-- pnpm 8+
+- pnpm 9+
+- TypeScript 5.8 (+ @typescript/native-preview for tsgo fast checking)
 - Docker Desktop
 - PostgreSQL 16 (via Docker)
 - Redis 7+ (via Docker)
@@ -68,15 +69,15 @@ volumes:
 cd docker && docker compose up -d
 
 # Terminal 2: Backend API
-cd cannasaas-api
+cd apps/api
 cp .env.example .env    # Edit with local DB credentials
-npm run migration:run   # Run TypeORM migrations
-npm run seed            # Seed dev data
-npm run start:dev       # Starts on port 3000
+pnpm db:migrate         # Run Drizzle migrations
+pnpm db:seed            # Seed dev data
+pnpm dev:api            # Starts on port 3000
 
-# Terminal 3: All frontend apps
-cd ../                  # Back to monorepo root
-turbo dev               # Starts storefront (5173), admin (5174), staff (5175)
+# Terminal 3: All frontend apps (6 apps)
+cd ../..                # Back to monorepo root
+pnpm dev                # Starts storefront (5173), admin (5174), staff (5175), kiosk (5176), platform (5177)
 ```
 
 ---
@@ -126,8 +127,20 @@ TWILIO_ACCOUNT_SID=
 TWILIO_AUTH_TOKEN=
 TWILIO_FROM_NUMBER=
 
-# Elasticsearch
-ELASTICSEARCH_NODE=http://localhost:9200
+# Meilisearch
+MEILISEARCH_HOST=http://localhost:7700
+MEILISEARCH_API_KEY=
+
+# Sentry (optional)
+SENTRY_DSN=
+
+# CanPay
+CANPAY_API_KEY=
+CANPAY_MERCHANT_ID=
+
+# AeroPay
+AEROPAY_API_KEY=
+AEROPAY_MERCHANT_ID=
 ```
 
 ---
@@ -156,10 +169,11 @@ External Services:
 ├── Route 53 (DNS)
 ├── CloudFront (CDN)
 ├── S3 (uploads, static assets)
-├── OpenSearch (product search)
+├── Meilisearch (product search + vibe search)
 ├── SES (transactional email)
 ├── Secrets Manager (credentials)
-└── KMS (encryption keys)
+├── KMS (encryption keys)
+└── Prometheus + Grafana (metrics + dashboards)
 ```
 
 ### 3.2 Terraform Modules
@@ -403,9 +417,10 @@ npm run migration:revert
 
 | Tool | Purpose |
 |---|---|
+| Prometheus | Metrics collection (via `/metrics` endpoint) |
+| Grafana | Metrics dashboards and alerting |
 | CloudWatch | Logs, metrics, alarms |
-| DataDog / New Relic | APM, distributed tracing |
-| Sentry | Error tracking |
+| Sentry | Error tracking with request ID correlation |
 | PgHero | PostgreSQL query performance |
 | Uptime Robot | External uptime monitoring |
 
@@ -434,3 +449,10 @@ npm run migration:revert
 - [ ] Log aggregation configured
 - [ ] Uptime monitoring active
 - [ ] DNS + wildcard SSL certificate provisioned
+- [ ] Meilisearch API key configured and index created
+- [ ] Prometheus metrics endpoint accessible
+- [ ] Sentry DSN configured (if using error tracking)
+- [ ] CanPay/AeroPay credentials configured (if using cannabis payments)
+- [ ] CSRF protection enabled
+- [ ] GraphQL depth/complexity limits verified
+- [ ] Redis caching TTLs configured for products, themes, tax rules
