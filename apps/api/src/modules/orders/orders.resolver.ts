@@ -93,6 +93,36 @@ export class OrdersResolver {
   }
 
   @Roles('budtender', 'dispensary_admin', 'org_admin', 'super_admin')
+  @Mutation(() => Boolean, { name: 'startPreparingOrder' })
+  async startPreparing(
+    @Args('orderId', { type: () => ID }) orderId: string,
+    @CurrentUser() user: JwtPayload,
+    @Args('dispensaryId', { type: () => ID, nullable: true }) dispensaryId?: string,
+  ): Promise<boolean> {
+    const targetId = dispensaryId ?? user.dispensaryId;
+    if (!targetId) throw new ForbiddenException('dispensaryId required');
+    if ((user.role === 'budtender' || user.role === 'dispensary_admin') && targetId !== user.dispensaryId) {
+      throw new ForbiddenException('Access denied');
+    }
+    return this.orders.startPreparing(orderId, targetId);
+  }
+
+  @Roles('budtender', 'dispensary_admin', 'org_admin', 'super_admin')
+  @Mutation(() => Boolean, { name: 'markOrderReady' })
+  async markReady(
+    @Args('orderId', { type: () => ID }) orderId: string,
+    @CurrentUser() user: JwtPayload,
+    @Args('dispensaryId', { type: () => ID, nullable: true }) dispensaryId?: string,
+  ): Promise<boolean> {
+    const targetId = dispensaryId ?? user.dispensaryId;
+    if (!targetId) throw new ForbiddenException('dispensaryId required');
+    if ((user.role === 'budtender' || user.role === 'dispensary_admin') && targetId !== user.dispensaryId) {
+      throw new ForbiddenException('Access denied');
+    }
+    return this.orders.markReady(orderId, targetId);
+  }
+
+  @Roles('budtender', 'dispensary_admin', 'org_admin', 'super_admin')
   @Mutation(() => Boolean, { name: 'completeOrder' })
   async completeOrder(
     @Args('input') input: CompleteOrderInput,

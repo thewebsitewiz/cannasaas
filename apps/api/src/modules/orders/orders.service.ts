@@ -400,7 +400,24 @@ export class OrdersService {
        WHERE "orderId" = $1 AND "dispensaryId" = $2 AND "orderStatus" = 'pending'`,
       [orderId, dispensaryId]
     );
-    // pg driver returns rowCount as second element for UPDATE
+    return Array.isArray(result) && result.length >= 2 ? (result[1] ?? 0) > 0 : (result.rowCount ?? 0) > 0;
+  }
+
+  async startPreparing(orderId: string, dispensaryId: string): Promise<boolean> {
+    const result = await this.dataSource.query(
+      `UPDATE orders SET "orderStatus" = 'preparing', "updatedAt" = NOW()
+       WHERE "orderId" = $1 AND "dispensaryId" = $2 AND "orderStatus" = 'confirmed'`,
+      [orderId, dispensaryId]
+    );
+    return Array.isArray(result) && result.length >= 2 ? (result[1] ?? 0) > 0 : (result.rowCount ?? 0) > 0;
+  }
+
+  async markReady(orderId: string, dispensaryId: string): Promise<boolean> {
+    const result = await this.dataSource.query(
+      `UPDATE orders SET "orderStatus" = 'ready', "updatedAt" = NOW()
+       WHERE "orderId" = $1 AND "dispensaryId" = $2 AND "orderStatus" = 'preparing'`,
+      [orderId, dispensaryId]
+    );
     return Array.isArray(result) && result.length >= 2 ? (result[1] ?? 0) > 0 : (result.rowCount ?? 0) > 0;
   }
 
