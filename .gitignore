@@ -4,8 +4,6 @@ build
 *.tsbuildinfo
 
 .next
-**/.next
-apps/**/.next
 
 # dependencies
 node_modules
