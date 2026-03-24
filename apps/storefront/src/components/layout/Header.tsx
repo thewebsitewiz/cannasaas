@@ -4,10 +4,14 @@ import Link from 'next/link';
 import { ShoppingCart, Search, Leaf, User, Zap } from 'lucide-react';
 import { useCartStore } from '@/stores/cart.store';
 import { useAuthStore } from '@/stores/auth.store';
+import { useState, useEffect } from 'react';
 
 export function Header() {
   const itemCount = useCartStore((s) => s.itemCount());
   const { user, isAuthenticated } = useAuthStore();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const isLoggedIn = mounted && isAuthenticated();
 
   return (
     <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
@@ -37,7 +41,7 @@ export function Header() {
             )}
           </Link>
 
-          {isAuthenticated() ? (
+          {isLoggedIn ? (
             <Link href="/account" className="flex items-center gap-2 p-2 text-gray-500 hover:text-gray-900 transition-colors">
               <div className="w-7 h-7 bg-brand-100 rounded-full flex items-center justify-center">
                 <User size={14} className="text-brand-700" />
