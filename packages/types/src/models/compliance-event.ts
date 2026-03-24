@@ -11,8 +11,8 @@
  * backend before returning the API response (not async) to ensure
  * the audit trail is always consistent.
  *
- * For NY, NJ, CT — compliance aligns with Metrc reporting requirements
- * documented in CannaSaas-Metrc-Otreeba-Integration-Guide.md.
+ * For all Metrc-integrated states — compliance aligns with Metrc reporting
+ * requirements documented in CannaSaas-Metrc-Otreeba-Integration-Guide.md.
  */
 
 import type { UserSummary } from './user';

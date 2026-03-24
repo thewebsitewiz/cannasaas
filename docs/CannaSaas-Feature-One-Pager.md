@@ -24,7 +24,7 @@
 
 ## Compliance
 
-- Metrc seed-to-sale integration (NY/NJ/CT)
+- Metrc seed-to-sale integration (all Metrc-integrated states)
 - Manifest generation for all transfers
 - Daily automated reconciliation (local vs Metrc)
 - Waste/destruction logging with witness tracking
@@ -34,10 +34,11 @@
 
 ## Tax Engine
 
-- State-specific multi-line tax calculations
+- State-specific multi-line tax calculations for 13+ states
 - NY: retail excise + per-mg THC by product type
 - NJ: sales tax + cannabis excise + municipal
 - CT: sales tax + excise + municipal
+- CA, CO, MA, IL, MI, AZ, WA, OR, NV, FL, and more
 - Statutory references for every tax line
 - Tax report with CSV export for accountants
 
@@ -130,4 +131,4 @@
 
 **Tech Stack:** NestJS | GraphQL | PostgreSQL | React | Next.js | Zustand | TanStack Query | Tailwind CSS | Docker | nginx | Redis | BullMQ | Socket.IO
 
-**Target Markets:** New York | New Jersey | Connecticut | **Pricing:** $299-$799/month per location
+**Target Markets:** All US states with legal cannabis programs (38+ states) | **Pricing:** $299-$799/month per location

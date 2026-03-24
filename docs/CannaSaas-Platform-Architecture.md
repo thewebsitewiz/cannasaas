@@ -37,7 +37,7 @@ Every request follows this path through the system.
 | Service | Purpose | Graceful Degradation |
 |---|---|---|
 | Stripe | Card payments — intents, webhooks, refunds | Falls back to cash-only if not configured |
-| Metrc | Seed-to-sale compliance tracking (NY/NJ/CT) | Local-only mode; sync queued for later |
+| Metrc | Seed-to-sale compliance tracking (all Metrc-integrated states) | Local-only mode; sync queued for later |
 | SendGrid / SMTP | Email notifications (18 templates) | Logs to console if not configured |
 | Twilio | SMS notifications | Skipped silently if not configured |
 

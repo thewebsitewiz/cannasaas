@@ -8,9 +8,9 @@
 
 # Company Overview
 
-CannaSaas is a comprehensive, multi-tenant software-as-a-service platform purpose-built for licensed cannabis dispensaries operating in New York, New Jersey, and Connecticut. The platform delivers a complete technology stack covering e-commerce, point-of-sale integration, inventory management, regulatory compliance, staffing operations, and delivery logistics.
+CannaSaas is a comprehensive, multi-tenant software-as-a-service platform purpose-built for licensed cannabis dispensaries operating in all states with legal cannabis programs. The platform delivers a complete technology stack covering e-commerce, point-of-sale integration, inventory management, regulatory compliance, staffing operations, and delivery logistics.
 
-Unlike legacy cannabis technology providers that charge premium prices for fragmented solutions, CannaSaas offers an affordable, all-in-one platform specifically designed for small to mid-size dispensary operators entering the rapidly expanding tri-state cannabis market.
+Unlike legacy cannabis technology providers that charge premium prices for fragmented solutions, CannaSaas offers an affordable, all-in-one platform specifically designed for small to mid-size dispensary operators entering the rapidly expanding nationwide cannabis market.
 
 # The Problem
 
@@ -20,7 +20,7 @@ The core challenges facing dispensary operators today include:
 
 - Metrc compliance complexity requiring real-time seed-to-sale tracking across multiple state regulatory frameworks
 - Fragmented technology stacks where POS, e-commerce, inventory, and compliance systems do not communicate
-- State-specific tax calculations with distinct excise, sales, and municipal tax structures in NY, NJ, and CT
+- State-specific tax calculations with distinct excise, sales, and municipal tax structures across 13+ states
 - Staffing and payroll complexity including compliance certification tracking and overtime calculations
 - Delivery logistics with age verification, geo-fencing, and real-time tracking requirements
 
@@ -36,13 +36,14 @@ CannaSaas consolidates every operational need into a single, integrated platform
 
 # Market Opportunity
 
-The tri-state cannabis market represents a significant and rapidly growing opportunity:
+The nationwide cannabis market represents a significant and rapidly growing opportunity:
 
 - **New York:** 2,000+ retail licenses expected by 2027; adult-use sales projected at $4.2 billion annually at maturity
 - **New Jersey:** 180+ dispensaries operational, $2.1 billion in projected 2026 sales
-- **Connecticut:** 70+ retail licenses issued, market scaling rapidly post-legalization
+- **California:** The largest state market with $5+ billion in annual sales and 1,000+ retail licenses
+- **Illinois, Michigan, Colorado, Arizona, and 30+ additional states** with legal cannabis programs
 
-CannaSaas targets the 1,500+ small dispensary operators (1-5 locations) who are underserved by enterprise-priced platforms and represent an estimated $45M+ annual SaaS addressable market in the tri-state region alone.
+CannaSaas targets the 15,000+ small dispensary operators (1-5 locations) nationwide who are underserved by enterprise-priced platforms and represent an estimated $500M+ annual SaaS addressable market across all legal markets.
 
 # Competitive Advantage
 
@@ -74,7 +75,7 @@ Target launch date: March 31, 2026 (Metrc compliance deadline).
 
 # The Ask
 
-CannaSaas is seeking $500,000 in seed funding to complete the launch, acquire the first 25 dispensary clients, and establish market presence in the NY/NJ/CT corridor. Funds will be allocated to:
+CannaSaas is seeking $500,000 in seed funding to complete the launch, acquire the first 25 dispensary clients, and establish market presence nationwide. Funds will be allocated to:
 
 - Final development and QA (30%)
 - Sales and marketing (40%)

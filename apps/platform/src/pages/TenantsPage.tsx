@@ -45,7 +45,16 @@ export function TenantsPage() {
               <option value="starter">Starter ($299)</option><option value="professional">Professional ($499)</option><option value="enterprise">Enterprise ($799)</option>
             </select>
             <select value={state} onChange={e=>setState(e.target.value)} className="px-3 py-2 border border-slate-200 rounded-lg text-sm">
-              <option value="NY">New York</option><option value="NJ">New Jersey</option><option value="CT">Connecticut</option>
+              <option value="AK">Alaska</option><option value="AL">Alabama</option><option value="AZ">Arizona</option><option value="AR">Arkansas</option>
+              <option value="CA">California</option><option value="CO">Colorado</option><option value="CT">Connecticut</option><option value="DE">Delaware</option>
+              <option value="FL">Florida</option><option value="HI">Hawaii</option><option value="IL">Illinois</option><option value="KY">Kentucky</option>
+              <option value="LA">Louisiana</option><option value="MA">Massachusetts</option><option value="MD">Maryland</option><option value="ME">Maine</option>
+              <option value="MI">Michigan</option><option value="MN">Minnesota</option><option value="MO">Missouri</option><option value="MT">Montana</option>
+              <option value="NE">Nebraska</option><option value="NV">Nevada</option><option value="NH">New Hampshire</option><option value="NJ">New Jersey</option>
+              <option value="NM">New Mexico</option><option value="NY">New York</option><option value="NC">North Carolina</option><option value="ND">North Dakota</option>
+              <option value="OH">Ohio</option><option value="OK">Oklahoma</option><option value="OR">Oregon</option><option value="PA">Pennsylvania</option>
+              <option value="RI">Rhode Island</option><option value="SD">South Dakota</option><option value="UT">Utah</option><option value="VT">Vermont</option>
+              <option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option>
             </select>
           </div>
           <button onClick={() => createMut.mutate()} className="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-700">Create</button>

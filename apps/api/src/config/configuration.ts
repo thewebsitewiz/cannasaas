@@ -28,9 +28,8 @@ export const configuration = () => ({
   metrc: {
     integratorApiKey: process.env['METRC_INTEGRATOR_API_KEY'],
     sandboxMode:      process.env['METRC_SANDBOX_MODE'] === 'true',
-    baseUrlNy:        process.env['METRC_BASE_URL_NY'],
-    baseUrlNj:        process.env['METRC_BASE_URL_NJ'],
-    baseUrlCt:        process.env['METRC_BASE_URL_CT'],
+    baseUrl:          process.env['METRC_BASE_URL'] || 'https://api-{state}.metrc.com', // {state} replaced at runtime with lowercase state code
+    sandbox:          process.env['METRC_SANDBOX'] === 'true',
   },
   opensearch: {
     endpoint:    process.env['OPENSEARCH_ENDPOINT'] ?? 'http://localhost:9200',

@@ -18,17 +18,17 @@ To empower small and mid-size cannabis dispensary operators with enterprise-grad
 
 ## Legal Structure
 
-CannaSaas will be incorporated as a Delaware C-Corporation with operations based in Rockland County, New York. The company will maintain necessary state business registrations in New York, New Jersey, and Connecticut.
+CannaSaas will be incorporated as a Delaware C-Corporation with operations based in Rockland County, New York. The company will maintain necessary state business registrations in all states with legal cannabis programs where it operates.
 
 # 2. Market Analysis
 
 ## Industry Overview
 
-The U.S. legal cannabis market reached $33.6 billion in 2024 and is projected to exceed $57 billion by 2028. The tri-state region of NY, NJ, and CT represents one of the fastest-growing cannabis markets in the country, driven by recent adult-use legalization and a dense, affluent consumer base of 34 million people.
+The U.S. legal cannabis market reached $33.6 billion in 2024 and is projected to exceed $57 billion by 2028. With 38+ states now having legal cannabis programs (recreational or medical), the nationwide market represents an enormous opportunity driven by ongoing legalization and a growing consumer base.
 
 ## Target Market
 
-CannaSaas targets small to mid-size dispensary operators with 1-5 retail locations. These operators represent approximately 80% of all licensed dispensaries in the tri-state region. The total addressable market (TAM) for cannabis SaaS in the tri-state region is estimated at $45 million annually, based on 1,500+ expected licensees at average SaaS spend of $500-800/month per location.
+CannaSaas targets small to mid-size dispensary operators with 1-5 retail locations across all legal cannabis states. These operators represent approximately 80% of all licensed dispensaries nationwide. The total addressable market (TAM) for cannabis SaaS across all legal markets is estimated at $500+ million annually, based on 15,000+ expected licensees at average SaaS spend of $500-800/month per location.
 
 ## Competitive Landscape
 
@@ -40,7 +40,7 @@ CannaSaas targets small to mid-size dispensary operators with 1-5 retail locatio
 | White-Label Theming | 10 themes + custom | Limited | Basic |
 | Staffing/Payroll | Built-in | No | No |
 | Delivery Management | Built-in | Third-party | No |
-| State Tax Engine | NY/NJ/CT built-in | Generic | No |
+| State Tax Engine | 13+ states built-in | Generic | No |
 
 # 3. Products and Services
 
@@ -109,7 +109,7 @@ Cannabis compliance is the cornerstone of the CannaSaas platform. Every feature 
 
 ## Metrc Integration
 
-CannaSaas provides deep integration with the Metrc seed-to-sale tracking system used by NY, NJ, and CT. The platform includes:
+CannaSaas provides deep integration with the Metrc seed-to-sale tracking system used by 20+ states including NY, NJ, CT, CA, CO, MA, MI, OR, and others. The platform includes:
 
 - API credential management with AES-256-CBC encryption
 - Manifest generation for all inter-location transfers
@@ -124,6 +124,9 @@ The tax engine calculates distinct tax structures for each state with full statu
 - **New York:** 9% retail cannabis excise plus per-mg THC taxes varying by product category (flower, concentrate, edible)
 - **New Jersey:** 6.625% sales tax plus 6% cannabis excise and up to 2% municipal tax
 - **Connecticut:** 6.35% sales tax plus 3% cannabis excise and up to 3% municipal tax
+- **California:** 15% cannabis excise plus 7.25% state sales tax
+- **Colorado:** 15% state excise plus 2.9% state sales tax
+- And 10+ additional states with pre-configured tax rules
 
 ## Purchase Limit Enforcement
 
@@ -150,13 +153,13 @@ CannaSaas employs a tiered subscription model based on dispensary size and featu
 
 Launch with 5-10 pilot dispensaries in the New York Rockland County and Hudson Valley region, offering discounted pricing in exchange for feedback and case studies. Focus on building a reference base and refining the onboarding process.
 
-## Phase 2: Regional Expansion (Months 7-18)
+## Phase 2: Nationwide Expansion (Months 7-18)
 
-Expand sales across the tri-state region through targeted outreach to newly licensed dispensaries, cannabis industry events, and referral partnerships with cannabis attorneys and compliance consultants.
+Expand sales across all legal cannabis states through targeted outreach to newly licensed dispensaries, cannabis industry events, and referral partnerships with cannabis attorneys and compliance consultants. Priority markets include NY, NJ, CT, CA, CO, MA, MI, IL, and AZ.
 
 ## Phase 3: Market Leadership (Months 19-36)
 
-Establish CannaSaas as the default technology platform for independent dispensaries in the northeast, explore expansion to additional Metrc-integrated states (Massachusetts, Michigan, Colorado), and develop strategic partnerships with cannabis distributors and brands.
+Establish CannaSaas as the default technology platform for independent dispensaries nationwide, expand into newly legalizing states as they come online, and develop strategic partnerships with cannabis distributors and brands.
 
 # 7. Financial Projections
 
