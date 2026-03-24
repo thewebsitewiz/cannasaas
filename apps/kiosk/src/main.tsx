@@ -27,7 +27,7 @@ import { setThemePreset } from '@cannasaas/ui';
 
 // Fetch and apply saved theme on startup
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-const DISPENSARY_ID = import.meta.env.VITE_DISPENSARY_ID || 'c0000000-0000-0000-0000-000000000001';
+const DISPENSARY_ID = import.meta.env.VITE_DISPENSARY_ID || '45cd244d-7016-4db8-8e88-9c71725340c8';
 
 fetch(`${API_URL}/graphql`, {
   method: 'POST',

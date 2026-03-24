@@ -51,7 +51,7 @@ export function ThemeProvider() {
             }
           }
         }
-        if (!dispensaryId) dispensaryId = 'c0000000-0000-0000-0000-000000000001';
+        if (!dispensaryId) dispensaryId = '45cd244d-7016-4db8-8e88-9c71725340c8';
 
         const res = await fetch(`${apiUrl}/graphql`, {
           method: 'POST',

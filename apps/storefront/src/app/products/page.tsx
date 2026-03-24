@@ -1,7 +1,7 @@
 // Server Component — data fetched on the server with ISR
 import ProductFilters from './ProductFilters';
 
-const DEFAULT_DISPENSARY_ID = process.env['NEXT_PUBLIC_DISPENSARY_ID'] || 'c0000000-0000-0000-0000-000000000001';
+const DEFAULT_DISPENSARY_ID = process.env['NEXT_PUBLIC_DISPENSARY_ID'] || '45cd244d-7016-4db8-8e88-9c71725340c8';
 
 async function getProducts(dispensaryId: string) {
   const res = await fetch(`${process.env['NEXT_PUBLIC_API_URL'] || 'http://localhost:3000'}/graphql`, {
