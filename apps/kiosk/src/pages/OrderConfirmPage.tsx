@@ -32,7 +32,7 @@ export function OrderConfirmPage() {
       <h1 className="text-3xl font-bold text-gray-900 mb-2">Order Placed!</h1>
 
       <p className="text-xl text-gray-600 mb-2">
-        Order <span className="font-mono font-bold text-brand-700">#{orderId?.slice(0, 8).toUpperCase()}</span>
+        Order <span className="font-mono font-bold text-emerald-700">#{orderId?.slice(0, 8).toUpperCase()}</span>
       </p>
 
       <p className="text-lg text-gray-500 mb-8">
@@ -47,7 +47,7 @@ export function OrderConfirmPage() {
       </div>
 
       <button onClick={() => navigate('/')}
-        className="mt-8 text-brand-600 hover:text-brand-700 font-semibold text-lg">
+        className="mt-8 text-emerald-600 hover:text-emerald-700 font-semibold text-lg">
         Start New Order
       </button>
     </div>
