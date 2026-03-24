@@ -1,10 +1,34 @@
 import { Resolver, Query, Mutation, Args, ID, Int, Float } from '@nestjs/graphql';
 import { ObjectType, Field } from '@nestjs/graphql';
 import { ComplianceService } from './compliance.service';
+import { ComplianceAlertsService } from './compliance-alerts.service';
 import { MetrcManifest, MetrcManifestItem, WasteDestructionLog, AuditLog, ReconciliationReport, ReconciliationItem } from './entities/compliance.entity';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtPayload } from '../auth/strategies/jwt.strategy';
+
+@ObjectType() class ComplianceAlert {
+  @Field() alertType!: string;
+  @Field() severity!: string;
+  @Field({ nullable: true }) entityType?: string;
+  @Field(() => ID, { nullable: true }) entityId?: string;
+  @Field({ nullable: true }) entityName?: string;
+  @Field({ nullable: true }) licenseNumber?: string;
+  @Field({ nullable: true }) expirationDate?: string;
+  @Field(() => Int, { nullable: true }) daysRemaining?: number;
+  @Field(() => Float, { nullable: true }) localQuantity?: number;
+  @Field(() => Float, { nullable: true }) metrcQuantity?: number;
+  @Field(() => Float, { nullable: true }) variancePercent?: number;
+  @Field() message!: string;
+}
+
+@ObjectType() class ComplianceAlertsResult {
+  @Field(() => Int) totalAlerts!: number;
+  @Field(() => Int) criticalCount!: number;
+  @Field(() => Int) warningCount!: number;
+  @Field(() => Int) infoCount!: number;
+  @Field(() => [ComplianceAlert]) alerts!: ComplianceAlert[];
+}
 
 @ObjectType() class EncryptionResult {
   @Field(() => Int) credentialsEncrypted!: number;
@@ -12,7 +36,10 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
 
 @Resolver()
 export class ComplianceResolver {
-  constructor(private readonly compliance: ComplianceService) {}
+  constructor(
+    private readonly compliance: ComplianceService,
+    private readonly complianceAlerts: ComplianceAlertsService,
+  ) {}
 
   // ── Manifests ─────────────────────────────────────────────────────────────
 
@@ -144,6 +171,25 @@ export class ComplianceResolver {
     @Args('status', { nullable: true }) status: string,
   ): Promise<any[]> {
     return this.compliance.getReconciliationItems(reportId, status);
+  }
+
+  // ── Compliance Alerts ───────────────────────────────────────────────────
+
+  @Roles('dispensary_admin', 'org_admin', 'super_admin')
+  @Query(() => ComplianceAlertsResult, { name: 'complianceAlerts' })
+  async complianceAlertsQuery(
+    @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
+  ): Promise<any> {
+    return this.complianceAlerts.getComplianceAlerts(dispensaryId);
+  }
+
+  @Roles('dispensary_admin', 'org_admin', 'super_admin')
+  @Query(() => [ComplianceAlert], { name: 'purchaseLimitAlerts' })
+  async purchaseLimitAlerts(
+    @Args('customerId', { type: () => ID }) customerId: string,
+    @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
+  ): Promise<any[]> {
+    return this.complianceAlerts.checkPurchaseLimitApproaching(customerId, dispensaryId);
   }
 
   // ── Encryption ────────────────────────────────────────────────────────────

@@ -1,14 +1,13 @@
 schema: "http://localhost:3000/graphql"
-documents: "apps/*/src/**/*.{ts,tsx}"
 generates:
   packages/types/src/generated/graphql.ts:
     plugins:
       - typescript
-      - typescript-operations
     config:
       scalars:
         DateTime: string
-        JSON: Record<string, any>
+        JSON: Record<string, unknown>
         ID: string
       enumsAsTypes: true
       skipTypename: true
+      maybeValue: T | null

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingCart, Search, Leaf, User } from 'lucide-react';
+import { ShoppingCart, Search, Leaf, User, Zap } from 'lucide-react';
 import { useCartStore } from '@/stores/cart.store';
 import { useAuthStore } from '@/stores/auth.store';
 
@@ -20,6 +20,7 @@ export function Header() {
         <nav className="hidden md:flex items-center gap-8">
           <Link href="/" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Shop</Link>
           <Link href="/products" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Menu</Link>
+          <Link href="/express-checkout" className="flex items-center gap-1 text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors"><Zap size={14} />Express</Link>
         </nav>
 
         <div className="flex items-center gap-3">

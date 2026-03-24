@@ -2,7 +2,8 @@ import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { gqlRequest } from '../lib/graphql-client';
 import { useAuthStore } from '../stores/auth.store';
-import { Search, Leaf } from 'lucide-react';
+import { Search, Leaf, ScanLine } from 'lucide-react';
+import { BarcodeScanner } from '../components/BarcodeScanner';
 
 const SEARCH_QUERY = `
   query($input: ProductSearchInput!) {
@@ -23,6 +24,7 @@ export function ProductLookupPage() {
   const dispensaryId = useAuthStore((s) => s.user?.dispensaryId);
   const [search, setSearch] = useState('');
   const [debounced, setDebounced] = useState('');
+  const [showScanner, setShowScanner] = useState(false);
 
   const handleChange = (val: string) => {
     setSearch(val);
@@ -45,17 +47,32 @@ export function ProductLookupPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-900">Product Lookup</h1>
 
-      <div className="relative max-w-xl">
-        <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-        <input
-          type="text"
-          placeholder="Search by name, strain, effects..."
-          value={search}
-          onChange={(e) => handleChange(e.target.value)}
-          autoFocus
-          className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none bg-white"
-        />
+      <div className="flex gap-3 max-w-xl">
+        <div className="relative flex-1">
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search by name, strain, effects..."
+            value={search}
+            onChange={(e) => handleChange(e.target.value)}
+            autoFocus
+            className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none bg-white"
+          />
+        </div>
+        <button
+          onClick={() => setShowScanner(true)}
+          className="flex items-center gap-2 px-4 py-3 rounded-xl bg-brand-600 text-white font-semibold text-sm hover:bg-brand-700 transition-colors"
+        >
+          <ScanLine size={18} /> Scan
+        </button>
       </div>
+
+      {showScanner && (
+        <BarcodeScanner
+          onScan={(barcode) => { setShowScanner(false); handleChange(barcode); }}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
 
       {isLoading ? (
         <div className="text-gray-400 text-sm">Searching...</div>

@@ -15,6 +15,7 @@ import { Providers } from './providers';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { ThemeProvider } from '@/components/ThemeProvider';
+import { ServiceWorkerRegistrar } from '@/components/ServiceWorkerRegistrar';
 
 export const metadata: Metadata = {
   title: 'CannaSaas Dispensary',
@@ -24,9 +25,14 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#2d6a4f" />
+      </head>
       <body className="bg-bg text-txt antialiased min-h-screen flex flex-col">
         <Providers>
           <ThemeProvider />
+          <ServiceWorkerRegistrar />
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />

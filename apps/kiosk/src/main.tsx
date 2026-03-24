@@ -21,6 +21,7 @@ import { ProductPage } from './pages/ProductPage';
 import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { OrderConfirmPage } from './pages/OrderConfirmPage';
+import { CheckInPage } from './pages/CheckInPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { setThemePreset } from '@cannasaas/ui';
 
@@ -51,6 +52,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <BrowserRouter>
         <ErrorBoundary>
           <Routes>
+            <Route path="/checkin" element={<CheckInPage />} />
             <Route element={<KioskLayout />}>
               <Route path="/" element={<MenuPage />} />
               <Route path="/product/:id" element={<ProductPage />} />
