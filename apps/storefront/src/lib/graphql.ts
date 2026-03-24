@@ -26,10 +26,6 @@ export async function gqlAuth<T>(query: string, variables?: Record<string, any>)
   return client.request<T>(query, variables);
 }
 
-<<<<<<< HEAD
 // Hardcoded for dev — in production, this comes from the subdomain/slug
 export const DEFAULT_DISPENSARY_ID = '45cd244d-7016-4db8-8e88-9c71725340c8';
-=======
 // In production, this comes from the subdomain/slug
-export const DEFAULT_DISPENSARY_ID = process.env.NEXT_PUBLIC_DISPENSARY_ID || 'c0000000-0000-0000-0000-000000000001';
->>>>>>> f0f01fc3 (Storefront product selection through cart and purchase)
