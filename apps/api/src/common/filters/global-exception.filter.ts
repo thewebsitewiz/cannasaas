@@ -46,25 +46,30 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       });
     }
 
-    // REST context — extract full request context for logging
-    const req = host.switchToHttp().getRequest<any>();
-    const res = host.switchToHttp().getResponse<{ status: (n: number) => { json: (o: unknown) => void } }>();
+    // REST context — safely extract request context
+    let req: any, res: any;
+    try {
+      req = host.switchToHttp().getRequest();
+      res = host.switchToHttp().getResponse();
+    } catch {
+      // Not an HTTP context (e.g. WebSocket) — log and return
+      this.logger.error(`[${errorId}] Non-HTTP exception: ${errMsg}`, errStack);
+      return;
+    }
+
+    if (!res?.status) {
+      this.logger.error(`[${errorId}] No response object: ${errMsg}`, errStack);
+      return;
+    }
+
     const status = exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
     const requestId = req?.headers?.['x-request-id'] || errorId;
-    const userId = req?.user?.sub ?? req?.user?.id ?? 'anonymous';
 
-    // Log every exception with full context (URL, method, user ID, stack trace)
     this.logger.error(
-      `[${requestId}] ${req?.method} ${req?.url} - User: ${userId} - Status: ${status} - ${errMsg}`,
+      `[${requestId}] ${req?.method || '?'} ${req?.url || '?'} - Status: ${status} - ${errMsg}`,
       errStack,
     );
 
-    // Report 5xx errors to Sentry
-    if (status >= 500 && exception instanceof Error) {
-      this.sentry?.captureException(exception, { requestId, userId, url: req?.url, method: req?.method });
-    }
-
-    // In production, mask internal error details but log them server-side
     const clientMessage = exception instanceof HttpException
       ? errMsg
       : (isProd ? 'Internal server error' : errMsg);
