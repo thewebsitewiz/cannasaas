@@ -1,17 +1,18 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { sql } from 'drizzle-orm';
+
+export const DRIZZLE = Symbol.for('DRIZZLE');
 
 @Injectable()
 export class ManufacturersService {
   private readonly logger = new Logger(ManufacturersService.name);
 
-  constructor(@InjectDataSource() private ds: DataSource) {}
+  constructor(@Inject(DRIZZLE) private db: any) {}
 
   // ═══ READ ═══
 
   async findById(manufacturerId: string): Promise<any> {
-    const [row] = await this.ds.query(
+    const [row] = await this._q(
       `SELECT manufacturer_id as "manufacturerId", brand_id as "brandId",
         legal_name as "legalName", dba_name as "dbaName",
         license_number as "licenseNumber", license_type as "licenseType",
@@ -28,7 +29,7 @@ export class ManufacturersService {
   }
 
   async findAll(limit = 50, offset = 0): Promise<any[]> {
-    return this.ds.query(
+    return this._q(
       `SELECT manufacturer_id as "manufacturerId", brand_id as "brandId",
         legal_name as "legalName", dba_name as "dbaName",
         license_number as "licenseNumber", license_state as "licenseState",
@@ -40,7 +41,7 @@ export class ManufacturersService {
   }
 
   async findByBrand(brandId: string): Promise<any[]> {
-    return this.ds.query(
+    return this._q(
       `SELECT manufacturer_id as "manufacturerId", brand_id as "brandId",
         legal_name as "legalName", dba_name as "dbaName",
         license_number as "licenseNumber", license_state as "licenseState",
@@ -59,7 +60,7 @@ export class ManufacturersService {
     addressLine1?: string; city?: string; state?: string; zip?: string;
     contactEmail?: string; contactPhone?: string;
   }): Promise<any> {
-    const [row] = await this.ds.query(
+    const [row] = await this._q(
       `INSERT INTO manufacturers (brand_id, legal_name, dba_name,
         license_number, license_type, license_state, license_expiry_date,
         address_line1, city, state, zip, contact_email, contact_phone)
@@ -105,7 +106,7 @@ export class ManufacturersService {
     if (fields.length === 0) return this.findById(manufacturerId);
 
     values.push(manufacturerId);
-    await this.ds.query(
+    await this._q(
       'UPDATE manufacturers SET ' + fields.join(', ') + ', updated_at = NOW() WHERE manufacturer_id = $' + idx + ' AND deleted_at IS NULL',
       values,
     );
@@ -117,10 +118,17 @@ export class ManufacturersService {
   // ═══ DELETE ═══
 
   async softDelete(manufacturerId: string): Promise<boolean> {
-    const result = await this.ds.query(
+    const result = await this._q(
       'UPDATE manufacturers SET deleted_at = NOW() WHERE manufacturer_id = $1 AND deleted_at IS NULL',
       [manufacturerId],
     );
     return result[1] > 0;
+  }
+
+  private async _q(text: string, params?: any[]): Promise<any[]> {
+    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
+    if (client?.query) { const r = await client.query(text, params); return r.rows ?? r; }
+    const result = await this.db.execute(sql.raw(text));
+    return Array.isArray(result) ? result : (result as any).rows ?? [];
   }
 }

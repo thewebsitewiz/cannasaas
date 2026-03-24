@@ -1,31 +1,37 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThanOrEqual } from 'typeorm';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
-import { Cron } from '@nestjs/schedule';
-import { EmployeeProfile } from './entities/employee-profile.entity';
-import { EmployeeCertification } from './entities/employee-certification.entity';
-import { PerformanceReview } from './entities/performance-review.entity';
-import { LkpPosition, LkpCertificationType } from './entities/staffing-lookups.entity';
+import { Inject, Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Inject, Cron } from '@nestjs/schedule';
+import { Inject, EmployeeProfile } from './entities/employee-profile.entity';
+import { Inject, EmployeeCertification } from './entities/employee-certification.entity';
+import { Inject, PerformanceReview } from './entities/performance-review.entity';
+import { Inject, LkpPosition, LkpCertificationType } from './entities/staffing-lookups.entity';
+import { sql } from 'drizzle-orm';
+
+export const DRIZZLE = Symbol.for('DRIZZLE');
 
 @Injectable()
 export class StaffingService {
+  private profileRepo: any;
+  private certRepo: any;
+  private reviewRepo: any;
+  private positionRepo: any;
+  private certTypeRepo: any;
   private readonly logger = new Logger(StaffingService.name);
 
   constructor(
-    @InjectRepository(EmployeeProfile) private profileRepo: Repository<EmployeeProfile>,
-    @InjectRepository(EmployeeCertification) private certRepo: Repository<EmployeeCertification>,
-    @InjectRepository(PerformanceReview) private reviewRepo: Repository<PerformanceReview>,
-    @InjectRepository(LkpPosition) private positionRepo: Repository<LkpPosition>,
-    @InjectRepository(LkpCertificationType) private certTypeRepo: Repository<LkpCertificationType>,
-    @InjectDataSource() private dataSource: DataSource,
-  ) {}
+
+    @Inject(DRIZZLE) private db: any
+  ) {
+    this.profileRepo = this._makeRepo('customer_profiles');
+    this.certRepo = this._makeRepo('employee_certifications');
+    this.reviewRepo = this._makeRepo('performance_reviews');
+    this.positionRepo = this._makeRepo('lkp_positions');
+    this.certTypeRepo = this._makeRepo('lkp_certification_types');
+  }
 
   // ── Employee Roster ───────────────────────────────────────────────────────
 
   async getEmployees(dispensaryId: string, status?: string): Promise<any[]> {
-    const rows = await this.dataSource.query(
+    const rows = await this._q(
       `SELECT ep.*, u.email, u."firstName", u."lastName", u.role,
         lp.name as position_name, lp.code as position_code, lp.department as position_department,
         (SELECT COUNT(*) FROM employee_certifications ec WHERE ec.profile_id = ep.profile_id AND ec.status = 'active') as active_certs,
@@ -66,7 +72,7 @@ export class StaffingService {
   }
 
   async getEmployee(profileId: string): Promise<any> {
-    const employees = await this.dataSource.query(
+    const employees = await this._q(
       `SELECT ep.*, u.email, u."firstName", u."lastName", u.role,
         lp.name as position_name, lp.code as position_code
        FROM employee_profiles ep
@@ -123,7 +129,7 @@ export class StaffingService {
   // ── Certifications ────────────────────────────────────────────────────────
 
   async getEmployeeCertifications(profileId: string): Promise<any[]> {
-    return this.dataSource.query(
+    return this._q(
       `SELECT ec.*, ct.name as cert_name, ct.code as cert_code, ct.issuing_authority, ct.is_state_required,
         CASE
           WHEN ec.expiration_date IS NULL THEN 'no_expiry'
@@ -181,7 +187,7 @@ export class StaffingService {
   // ── Expiration Alerts ─────────────────────────────────────────────────────
 
   async getExpiringCertifications(dispensaryId: string, daysAhead = 30): Promise<any[]> {
-    return this.dataSource.query(
+    return this._q(
       `SELECT ec.*, ct.name as cert_name, ct.code as cert_code, ct.is_state_required,
         u."firstName", u."lastName", u.email,
         ep.employee_number,
@@ -200,7 +206,7 @@ export class StaffingService {
   }
 
   async getComplianceOverview(dispensaryId: string): Promise<any> {
-    const [result] = await this.dataSource.query(
+    const [result] = await this._q(
       `SELECT
         COUNT(DISTINCT ep.profile_id) as total_employees,
         COUNT(DISTINCT ep.profile_id) FILTER (WHERE ep.employment_status = 'active') as active_employees,
@@ -271,7 +277,7 @@ export class StaffingService {
   async checkExpiringCertifications(): Promise<void> {
     this.logger.log('Checking for expiring certifications...');
 
-    const expiring = await this.dataSource.query(
+    const expiring = await this._q(
       `SELECT ec.certification_id, ct.name, u.email, u."firstName", u."lastName",
         ec.expiration_date, ec.expiration_date - CURRENT_DATE as days_left
        FROM employee_certifications ec
@@ -292,7 +298,7 @@ export class StaffingService {
     }
 
     // Auto-expire past-due certs
-    const expired = await this.dataSource.query(
+    const expired = await this._q(
       `UPDATE employee_certifications SET status = 'expired', updated_at = NOW()
        WHERE status IN ('active', 'verified') AND expiration_date < CURRENT_DATE
        RETURNING certification_id`,
@@ -301,5 +307,70 @@ export class StaffingService {
     if (expired.length > 0) {
       this.logger.warn(`Auto-expired ${expired.length} certification(s)`);
     }
+  }
+
+  private async _q(text: string, params?: any[]): Promise<any[]> {
+    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
+    if (client?.query) { const r = await client.query(text, params); return r.rows ?? r; }
+    const result = await this.db.execute(sql.raw(text));
+    return Array.isArray(result) ? result : (result as any).rows ?? [];
+  }
+
+  private _makeRepo(table: string) {
+    const q = this._q.bind(this);
+    return {
+      async find(opts?: any): Promise<any[]> {
+        let s = 'SELECT * FROM ' + table; const p: any[] = []; let i = 1;
+        if (opts?.where) { const cd: string[] = []; for (const [k,v] of Object.entries(opts.where)) { if (v !== undefined) { cd.push(k+' = $'+i++); p.push(v); } } if (cd.length) s += ' WHERE ' + cd.join(' AND '); }
+        if (opts?.order) { const sr = Object.entries(opts.order).map(([k,d]) => k+' '+d); if (sr.length) s += ' ORDER BY ' + sr.join(', '); }
+        if (opts?.take) { s += ' LIMIT $'+i++; p.push(opts.take); }
+        return q(s, p.length ? p : undefined);
+      },
+      async findOne(opts?: any): Promise<any> { const rows = await this.find({...opts, take: 1}); return rows[0] ?? null; },
+      async findOneOrFail(opts?: any): Promise<any> { const r = await this.findOne(opts); if (!r) throw new Error('Entity not found'); return r; },
+      create(data: any): any { return {...data}; },
+      async save(entity: any): Promise<any> {
+        const cols = Object.keys(entity).filter(k => entity[k] !== undefined);
+        const vals = cols.map(k => entity[k]);
+        const ph = cols.map((_,i) => '$'+(i+1));
+        const [row] = await q('INSERT INTO '+table+' ('+cols.join(',')+') VALUES ('+ph.join(',')+') ON CONFLICT DO NOTHING RETURNING *', vals);
+        return row ?? entity;
+      },
+      async update(criteria: any, values: any): Promise<any> {
+        const sets: string[] = []; const p: any[] = []; let i = 1;
+        for (const [k,v] of Object.entries(values)) { if (v !== undefined) { sets.push(k+' = $'+i++); p.push(v); } }
+        if (!sets.length) return {affected:0};
+        const cd: string[] = [];
+        if (typeof criteria === 'string' || typeof criteria === 'number') { cd.push('id = $'+i++); p.push(criteria); }
+        else { for (const [k,v] of Object.entries(criteria)) { cd.push(k+' = $'+i++); p.push(v); } }
+        await q('UPDATE '+table+' SET '+sets.join(',')+' WHERE '+cd.join(' AND '), p);
+        return {affected:1};
+      },
+      async delete(criteria: any): Promise<any> {
+        const cd: string[] = []; const p: any[] = []; let i = 1;
+        for (const [k,v] of Object.entries(criteria)) { cd.push(k+' = $'+i++); p.push(v); }
+        await q('DELETE FROM '+table+(cd.length ? ' WHERE '+cd.join(' AND ') : ''), p);
+        return {affected:1};
+      },
+      async count(opts?: any): Promise<number> {
+        let s = 'SELECT COUNT(*)::int as count FROM '+table; const p: any[] = []; let i = 1;
+        if (opts?.where) { const cd: string[] = []; for (const [k,v] of Object.entries(opts.where)) { if (v !== undefined) { cd.push(k+' = $'+i++); p.push(v); } } if (cd.length) s += ' WHERE ' + cd.join(' AND '); }
+        const [r] = await q(s, p.length ? p : undefined); return r?.count ?? 0;
+      },
+      async remove(entity: any): Promise<void> { const keys = Object.keys(entity); await q('DELETE FROM '+table+' WHERE '+keys[0]+' = $1', [entity[keys[0]]]); },
+      createQueryBuilder(alias: string) {
+        let s = 'SELECT '+alias+'.* FROM '+table+' '+alias;
+        const wheres: string[] = []; const p: any[] = []; let i = 1;
+        const obs: string[] = []; let lim: number|undefined;
+        return {
+          where(cond: string, params?: any) { let c2=cond; if (params) for (const [k,v] of Object.entries(params)) { c2=c2.replace(':'+k,'$'+i++); p.push(v); } wheres.push(c2); return this; },
+          andWhere(cond: string, params?: any) { return this.where(cond, params); },
+          orderBy(col: string, dir: string) { obs.push(col+' '+dir); return this; },
+          addOrderBy(col: string, dir: string) { obs.push(col+' '+dir); return this; },
+          take(n: number) { lim=n; return this; },
+          async getMany() { let full=s; if (wheres.length) full+=' WHERE '+wheres.join(' AND '); if (obs.length) full+=' ORDER BY '+obs.join(', '); if (lim) { full+=' LIMIT $'+i++; p.push(lim); } return q(full, p.length?p:undefined); },
+        };
+      },
+    };
   }
 }

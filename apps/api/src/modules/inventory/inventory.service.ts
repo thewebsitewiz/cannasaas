@@ -1,17 +1,18 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { Inject, Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { sql } from 'drizzle-orm';
+
+export const DRIZZLE = Symbol.for('DRIZZLE');
 
 @Injectable()
 export class InventoryService {
   private readonly logger = new Logger(InventoryService.name);
 
-  constructor(@InjectDataSource() private ds: DataSource) {}
+  constructor(@Inject(DRIZZLE) private db: any) {}
 
   // ═══ READ ═══
 
   async findById(inventoryId: string): Promise<any> {
-    const [row] = await this.ds.query(
+    const [row] = await this._q(
       `SELECT inventory_id as "inventoryId", variant_id as "variantId", dispensary_id as "dispensaryId",
         quantity_on_hand as "quantityOnHand", quantity_reserved as "quantityReserved",
         quantity_available as "quantityAvailable",
@@ -28,7 +29,7 @@ export class InventoryService {
   }
 
   async getByDispensary(dispensaryId: string, limit = 100, offset = 0): Promise<any[]> {
-    return this.ds.query(
+    return this._q(
       `SELECT inventory_id as "inventoryId", variant_id as "variantId", dispensary_id as "dispensaryId",
         quantity_on_hand as "quantityOnHand", quantity_reserved as "quantityReserved",
         quantity_available as "quantityAvailable",
@@ -40,7 +41,7 @@ export class InventoryService {
   }
 
   async getByVariant(variantId: string, dispensaryId: string): Promise<any> {
-    const [row] = await this.ds.query(
+    const [row] = await this._q(
       `SELECT inventory_id as "inventoryId", variant_id as "variantId", dispensary_id as "dispensaryId",
         quantity_on_hand as "quantityOnHand", quantity_reserved as "quantityReserved",
         quantity_available as "quantityAvailable",
@@ -57,7 +58,7 @@ export class InventoryService {
 
   async adjustQuantity(inventoryId: string, delta: number, transactionType: string, performedByUserId: string, notes?: string, referenceOrderId?: string): Promise<any> {
     // Single UPDATE ... RETURNING * instead of SELECT + UPDATE (N+1 fix)
-    const [inv] = await this.ds.query(
+    const [inv] = await this._q(
       `UPDATE inventory
        SET quantity_on_hand = quantity_on_hand + $2,
            quantity_available = quantity_available + $2,
@@ -68,7 +69,7 @@ export class InventoryService {
     );
     if (!inv) {
       // Distinguish between not-found and negative-quantity
-      const [exists] = await this.ds.query('SELECT 1 FROM inventory WHERE inventory_id = $1', [inventoryId]);
+      const [exists] = await this._q('SELECT 1 FROM inventory WHERE inventory_id = $1', [inventoryId]);
       if (!exists) throw new NotFoundException('Inventory record not found');
       throw new BadRequestException('Adjustment would result in negative quantity');
     }
@@ -76,7 +77,7 @@ export class InventoryService {
     const before = parseFloat(inv.quantity_on_hand) - delta;
     const after = parseFloat(inv.quantity_on_hand);
 
-    const [tx] = await this.ds.query(
+    const [tx] = await this._q(
       `INSERT INTO inventory_transactions (inventory_id, dispensary_id, transaction_type, quantity_delta, quantity_before, quantity_after, performed_by_user_id, notes, reference_order_id)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
       [inventoryId, inv.dispensary_id, transactionType, delta, before, after, performedByUserId, notes || null, referenceOrderId || null],
@@ -88,7 +89,7 @@ export class InventoryService {
 
   async reserveStock(inventoryId: string, quantity: number, performedByUserId: string, referenceOrderId?: string): Promise<any> {
     // Single UPDATE ... RETURNING * instead of SELECT + UPDATE (N+1 fix)
-    const [inv] = await this.ds.query(
+    const [inv] = await this._q(
       `UPDATE inventory
        SET quantity_reserved = quantity_reserved + $2,
            quantity_available = quantity_available - $2,
@@ -98,7 +99,7 @@ export class InventoryService {
       [inventoryId, quantity],
     );
     if (!inv) {
-      const [exists] = await this.ds.query('SELECT inventory_id, quantity_available FROM inventory WHERE inventory_id = $1', [inventoryId]);
+      const [exists] = await this._q('SELECT inventory_id, quantity_available FROM inventory WHERE inventory_id = $1', [inventoryId]);
       if (!exists) throw new NotFoundException('Inventory record not found');
       throw new BadRequestException('Not enough available stock. Available: ' + exists.quantity_available + ', requested: ' + quantity);
     }
@@ -106,7 +107,7 @@ export class InventoryService {
     const previousAvailable = parseFloat(inv.quantity_available) + quantity;
     const newAvailable = parseFloat(inv.quantity_available);
 
-    const [tx] = await this.ds.query(
+    const [tx] = await this._q(
       `INSERT INTO inventory_transactions (inventory_id, dispensary_id, transaction_type, quantity_delta, quantity_before, quantity_after, performed_by_user_id, reference_order_id, notes)
       VALUES ($1,$2,'reserve',$3,$4,$5,$6,$7,$8) RETURNING *`,
       [inventoryId, inv.dispensary_id, -quantity, previousAvailable, newAvailable, performedByUserId, referenceOrderId || null, 'Reserved ' + quantity + ' units'],
@@ -119,7 +120,7 @@ export class InventoryService {
   async releaseReserve(inventoryId: string, quantity: number, performedByUserId: string, referenceOrderId?: string): Promise<any> {
     // Single UPDATE ... RETURNING * instead of SELECT + UPDATE (N+1 fix)
     // Use LEAST to cap release at current reserved amount atomically
-    const [inv] = await this.ds.query(
+    const [inv] = await this._q(
       `WITH pre AS (
         SELECT inventory_id, dispensary_id, quantity_reserved, quantity_available,
                LEAST($2, quantity_reserved) AS release_qty
@@ -140,7 +141,7 @@ export class InventoryService {
     const previousAvailable = parseFloat(inv.prev_available);
     const newAvailable = parseFloat(inv.quantity_available);
 
-    const [tx] = await this.ds.query(
+    const [tx] = await this._q(
       `INSERT INTO inventory_transactions (inventory_id, dispensary_id, transaction_type, quantity_delta, quantity_before, quantity_after, performed_by_user_id, reference_order_id, notes)
       VALUES ($1,$2,'release',$3,$4,$5,$6,$7,$8) RETURNING *`,
       [inventoryId, inv.dispensary_id, release, previousAvailable, newAvailable, performedByUserId, referenceOrderId || null, 'Released ' + release + ' reserved units'],
@@ -153,7 +154,7 @@ export class InventoryService {
   // ═══ REPORTS ═══
 
   async getLowStock(dispensaryId: string): Promise<any[]> {
-    return this.ds.query(
+    return this._q(
       `SELECT inventory_id as "inventoryId", variant_id as "variantId",
         quantity_on_hand as "quantityOnHand", quantity_available as "quantityAvailable",
         reorder_threshold as "reorderThreshold", reorder_quantity as "reorderQuantity",
@@ -166,7 +167,7 @@ export class InventoryService {
   }
 
   async getInventoryValue(dispensaryId: string): Promise<any> {
-    const [result] = await this.ds.query(
+    const [result] = await this._q(
       `SELECT COUNT(*) as "totalItems",
         COALESCE(SUM(quantity_on_hand), 0) as "totalOnHand",
         COALESCE(SUM(quantity_reserved), 0) as "totalReserved",
@@ -183,7 +184,7 @@ export class InventoryService {
   }
 
   async getTransactions(inventoryId: string, limit = 50): Promise<any[]> {
-    return this.ds.query(
+    return this._q(
       `SELECT transaction_id as "transactionId", inventory_id as "inventoryId",
         dispensary_id as "dispensaryId", transaction_type as "transactionType",
         quantity_delta as "quantityDelta", quantity_before as "quantityBefore", quantity_after as "quantityAfter",
@@ -192,5 +193,12 @@ export class InventoryService {
       FROM inventory_transactions WHERE inventory_id = $1 ORDER BY created_at DESC LIMIT $2`,
       [inventoryId, limit],
     );
+  }
+
+  private async _q(text: string, params?: any[]): Promise<any[]> {
+    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
+    if (client?.query) { const r = await client.query(text, params); return r.rows ?? r; }
+    const result = await this.db.execute(sql.raw(text));
+    return Array.isArray(result) ? result : (result as any).rows ?? [];
   }
 }

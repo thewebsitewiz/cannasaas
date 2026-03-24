@@ -1,6 +1,7 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { sql } from 'drizzle-orm';
+
+export const DRIZZLE = Symbol.for('DRIZZLE');
 
 interface SearchResult {
   productId: string;
@@ -20,7 +21,7 @@ export class SearchService implements OnModuleInit {
   private readonly logger = new Logger(SearchService.name);
   private searchClient: any = null;
 
-  constructor(@InjectDataSource() private ds: DataSource) {}
+  constructor(@Inject(DRIZZLE) private db: any) {}
 
   async onModuleInit() {
     const searchUrl = process.env['OPENSEARCH_NODE'] || process.env['MEILISEARCH_URL'];
@@ -55,7 +56,7 @@ export class SearchService implements OnModuleInit {
 
   async indexProducts(dispensaryId: string): Promise<number> {
     if (!this.searchClient) return 0;
-    const products = await this.ds.query(`
+    const products = await this._q(`
       SELECT p.product_id, p.name, p.description, p.dispensary_id,
              p.strain_type, p.strain_name, p.thc_percent, p.cbd_percent,
              p.effects, p.flavors, p.terpenes, p.lineage
@@ -132,7 +133,7 @@ export class SearchService implements OnModuleInit {
     sql += ` ORDER BY score DESC LIMIT $${paramIdx}`;
     params.push(limit);
 
-    const rows = await this.ds.query(sql, params);
+    const rows = await this._q(sql, params);
     return rows.map((r: any) => ({ ...r, score: parseFloat(r.score) || 0 }));
   }
 
@@ -156,7 +157,7 @@ export class SearchService implements OnModuleInit {
     const effects = vibeKey ? VIBE_MAP[vibeKey] : [vibe.toLowerCase()];
 
     const placeholders = effects.map((_, i) => `$${i + 2}`).join(', ');
-    const rows = await this.ds.query(`
+    const rows = await this._q(`
       SELECT p.product_id as "productId", p.name, p.strain_type as "strainType",
              p.thc_percent as "thcPercent", p.cbd_percent as "cbdPercent",
              p.effects, p.flavors, p.terpenes,
@@ -169,5 +170,12 @@ export class SearchService implements OnModuleInit {
     `, [dispensaryId, ...effects, limit]);
 
     return rows.map((r: any) => ({ ...r, score: parseInt(r.match_count) || 0 }));
+  }
+
+  private async _q(text: string, params?: any[]): Promise<any[]> {
+    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
+    if (client?.query) { const r = await client.query(text, params); return r.rows ?? r; }
+    const result = await this.db.execute(sql.raw(text));
+    return Array.isArray(result) ? result : (result as any).rows ?? [];
   }
 }

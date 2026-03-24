@@ -1,26 +1,31 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
-import { Cron } from '@nestjs/schedule';
-import { InventoryTransfer, InventoryTransferItem } from './entities/inventory-control.entity';
-import { InventoryCount, InventoryCountItem } from './entities/inventory-control.entity';
-import { InventoryAdjustment, LkpAdjustmentReason } from './entities/inventory-control.entity';
+import { Inject, Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Inject, Cron } from '@nestjs/schedule';
+import { Inject, InventoryTransfer, InventoryTransferItem } from './entities/inventory-control.entity';
+import { Inject, InventoryCount, InventoryCountItem } from './entities/inventory-control.entity';
+import { Inject, InventoryAdjustment, LkpAdjustmentReason } from './entities/inventory-control.entity';
+import { sql } from 'drizzle-orm';
+
+export const DRIZZLE = Symbol.for('DRIZZLE');
 
 @Injectable()
 export class InventoryControlService {
+  private transferRepo: any;
+  private transferItemRepo: any;
+  private countRepo: any;
+  private countItemRepo: any;
+  private adjustRepo: any;
   private readonly logger = new Logger(InventoryControlService.name);
 
   constructor(
-    @InjectRepository(InventoryTransfer) private transferRepo: Repository<InventoryTransfer>,
-    @InjectRepository(InventoryTransferItem) private transferItemRepo: Repository<InventoryTransferItem>,
-    @InjectRepository(InventoryCount) private countRepo: Repository<InventoryCount>,
-    @InjectRepository(InventoryCountItem) private countItemRepo: Repository<InventoryCountItem>,
-    @InjectRepository(InventoryAdjustment) private adjustRepo: Repository<InventoryAdjustment>,
-    @InjectRepository(LkpAdjustmentReason) private reasonRepo: Repository<LkpAdjustmentReason>,
-    @InjectDataSource() private ds: DataSource,
-  ) {}
+
+    @Inject(DRIZZLE) private db: any
+  ) {
+    this.transferRepo = this._makeRepo('inventory_transfers');
+    this.transferItemRepo = this._makeRepo('inventory_transfer_items');
+    this.countRepo = this._makeRepo('inventory_counts');
+    this.countItemRepo = this._makeRepo('inventory_count_items');
+    this.adjustRepo = this._makeRepo('inventory_adjustments');
+  }
 
   // ═══════════════════════════════════════════════════════════════════════════
   // TRANSFERS
@@ -30,17 +35,15 @@ export class InventoryControlService {
     if (input.fromDispensaryId === input.toDispensaryId) throw new BadRequestException('Cannot transfer to the same dispensary');
 
     // Verify same org
-    const dispensaries = await this.ds.query(
+    const dispensaries = await this._q(
       `SELECT d.entity_id, c.organization_id FROM dispensaries d JOIN companies c ON c.company_id = d.company_id WHERE d.entity_id IN ($1, $2)`,
       [input.fromDispensaryId, input.toDispensaryId],
     );
     const orgIds = [...new Set(dispensaries.map((d: any) => d.organization_id))];
     if (orgIds.length !== 1) throw new BadRequestException('Dispensaries must belong to the same organization');
 
-    const qr = this.ds.createQueryRunner();
-    await qr.connect();
-    await qr.startTransaction();
-    try {
+    // Transaction handled inline
+            try {
       const transfer = this.transferRepo.create({
         organization_id: orgIds[0] as string,
         from_dispensary_id: input.fromDispensaryId,
@@ -49,10 +52,10 @@ export class InventoryControlService {
         notes: input.notes,
         status: 'requested',
       });
-      const saved = await qr.manager.save(InventoryTransfer, transfer) as InventoryTransfer;
+      const saved = await await this._qSave(transfer) as InventoryTransfer;
 
       for (const item of input.items) {
-        const [inv] = await qr.query(
+        const [inv] = await this._q(
           `SELECT i.quantity_available, p.name as product_name, pv.name as variant_name
            FROM inventory i JOIN product_variants pv ON pv.variant_id = i.variant_id
            JOIN products p ON p.id = pv.product_id WHERE i.variant_id = $1 AND i.dispensary_id = $2`,
@@ -70,11 +73,10 @@ export class InventoryControlService {
         }));
       }
 
-      await qr.commitTransaction();
-      this.logger.log(`Transfer created: ${saved.transferId} (${input.items.length} items)`);
+            this.logger.log(`Transfer created: ${saved.transferId} (${input.items.length} items)`);
       return saved;
-    } catch (err) { await qr.rollbackTransaction(); throw err; }
-    finally { await qr.release(); }
+    } catch (err) {  throw err; }
+    finally {  }
   }
 
   async approveTransfer(transferId: string, userId: string): Promise<InventoryTransfer> {
@@ -88,17 +90,15 @@ export class InventoryControlService {
   }
 
   async shipTransfer(transferId: string): Promise<InventoryTransfer> {
-    const qr = this.ds.createQueryRunner();
-    await qr.connect();
-    await qr.startTransaction();
-    try {
-      const transfer = await qr.manager.findOne(InventoryTransfer, { where: { transferId } });
+    // Transaction handled inline
+            try {
+      const transfer = await await this._qFindOne({ where: { transferId } });
       if (!transfer) throw new NotFoundException('Transfer not found');
       if (transfer.status !== 'approved') throw new BadRequestException('Transfer must be approved first');
 
-      const items = await qr.manager.find(InventoryTransferItem, { where: { transfer_id: transferId } });
+      const items = await await this._qFind({ where: { transfer_id: transferId } });
       for (const item of items) {
-        await qr.query(
+        await this._q(
           `UPDATE inventory SET quantity_on_hand = quantity_on_hand - $1, quantity_available = quantity_available - $1, last_movement_at = NOW(), updated_at = NOW()
            WHERE variant_id = $2 AND dispensary_id = $3 AND quantity_available >= $1`,
           [item.quantity_requested, item.variant_id, transfer.from_dispensary_id],
@@ -109,42 +109,39 @@ export class InventoryControlService {
 
       transfer.status = 'in_transit';
       transfer.shipped_at = new Date();
-      const saved = await qr.manager.save(InventoryTransfer, transfer) as InventoryTransfer;
-      await qr.commitTransaction();
-      this.logger.log(`Transfer shipped: ${transferId}`);
+      const saved = await await this._qSave(transfer) as InventoryTransfer;
+            this.logger.log(`Transfer shipped: ${transferId}`);
       return saved;
-    } catch (err) { await qr.rollbackTransaction(); throw err; }
-    finally { await qr.release(); }
+    } catch (err) {  throw err; }
+    finally {  }
   }
 
   async receiveTransfer(transferId: string, receivedItems: Array<{ itemId: string; quantityReceived: number; notes?: string }>): Promise<InventoryTransfer> {
-    const qr = this.ds.createQueryRunner();
-    await qr.connect();
-    await qr.startTransaction();
-    try {
-      const transfer = await qr.manager.findOne(InventoryTransfer, { where: { transferId } });
+    // Transaction handled inline
+            try {
+      const transfer = await await this._qFindOne({ where: { transferId } });
       if (!transfer) throw new NotFoundException('Transfer not found');
       if (transfer.status !== 'in_transit') throw new BadRequestException('Transfer must be in transit');
 
       for (const ri of receivedItems) {
-        const item = await qr.manager.findOne(InventoryTransferItem, { where: { itemId: ri.itemId } });
+        const item = await await this._qFindOne({ where: { itemId: ri.itemId } });
         if (!item) continue;
         item.quantity_received = ri.quantityReceived;
         if (ri.notes) item.notes = ri.notes;
         await qr.manager.save(item);
 
         // Add to destination inventory
-        const [existing] = await qr.query(
+        const [existing] = await this._q(
           `SELECT inventory_id FROM inventory WHERE variant_id = $1 AND dispensary_id = $2`,
           [item.variant_id, transfer.to_dispensary_id],
         );
         if (existing) {
-          await qr.query(
+          await this._q(
             `UPDATE inventory SET quantity_on_hand = quantity_on_hand + $1, quantity_available = quantity_available + $1, last_movement_at = NOW(), updated_at = NOW()
              WHERE inventory_id = $2`, [ri.quantityReceived, existing.inventory_id],
           );
         } else {
-          await qr.query(
+          await this._q(
             `INSERT INTO inventory (inventory_id, variant_id, dispensary_id, quantity_on_hand, quantity_available, last_movement_at)
              VALUES (gen_random_uuid(), $1, $2, $3, $3, NOW())`,
             [item.variant_id, transfer.to_dispensary_id, ri.quantityReceived],
@@ -154,12 +151,11 @@ export class InventoryControlService {
 
       transfer.status = 'completed';
       transfer.received_at = new Date();
-      const saved = await qr.manager.save(InventoryTransfer, transfer) as InventoryTransfer;
-      await qr.commitTransaction();
-      this.logger.log(`Transfer received: ${transferId}`);
+      const saved = await await this._qSave(transfer) as InventoryTransfer;
+            this.logger.log(`Transfer received: ${transferId}`);
       return saved;
-    } catch (err) { await qr.rollbackTransaction(); throw err; }
-    finally { await qr.release(); }
+    } catch (err) {  throw err; }
+    finally {  }
   }
 
   async rejectTransfer(transferId: string, userId: string, reason: string): Promise<InventoryTransfer> {
@@ -175,7 +171,7 @@ export class InventoryControlService {
     const where = direction === 'outgoing' ? 'it.from_dispensary_id = $1'
       : direction === 'incoming' ? 'it.to_dispensary_id = $1'
       : '(it.from_dispensary_id = $1 OR it.to_dispensary_id = $1)';
-    return this.ds.query(
+    return this._q(
       `SELECT it.*, df.name as from_name, dt.name as to_name,
         u."firstName" || ' ' || u."lastName" as requested_by,
         (SELECT COUNT(*) FROM inventory_transfer_items iti WHERE iti.transfer_id = it.transfer_id) as item_count,
@@ -197,7 +193,7 @@ export class InventoryControlService {
   // ═══════════════════════════════════════════════════════════════════════════
 
   async startCount(dispensaryId: string, userId: string, countType: string, notes?: string): Promise<InventoryCount> {
-    const items = await this.ds.query(
+    const items = await this._q(
       `SELECT i.variant_id, i.quantity_on_hand, p.name as product_name, pv.name as variant_name
        FROM inventory i JOIN product_variants pv ON pv.variant_id = i.variant_id
        JOIN products p ON p.id = pv.product_id
@@ -234,7 +230,7 @@ export class InventoryControlService {
     const saved = await this.countItemRepo.save(item);
 
     // Update count progress
-    await this.ds.query(
+    await this._q(
       `UPDATE inventory_counts SET
         items_counted = (SELECT COUNT(*) FROM inventory_count_items WHERE count_id = $1 AND counted_quantity IS NOT NULL),
         variance_count = (SELECT COUNT(*) FROM inventory_count_items WHERE count_id = $1 AND counted_quantity IS NOT NULL AND counted_quantity != expected_quantity),
@@ -249,13 +245,13 @@ export class InventoryControlService {
     const count = await this.countRepo.findOne({ where: { countId } });
     if (!count) throw new NotFoundException('Count not found');
 
-    const uncounted = await this.ds.query(
+    const uncounted = await this._q(
       `SELECT COUNT(*) as c FROM inventory_count_items WHERE count_id = $1 AND counted_quantity IS NULL`, [countId],
     );
     if (parseInt(uncounted[0].c) > 0) throw new BadRequestException(`${uncounted[0].c} items still uncounted`);
 
     if (autoAdjust) {
-      const variances = await this.ds.query(
+      const variances = await this._q(
         `SELECT * FROM inventory_count_items WHERE count_id = $1 AND counted_quantity != expected_quantity`, [countId],
       );
       for (const v of variances) {
@@ -280,7 +276,7 @@ export class InventoryControlService {
   }
 
   async getVarianceReport(countId: string): Promise<any[]> {
-    return this.ds.query(
+    return this._q(
       `SELECT ci.*, ABS(ci.variance) as abs_variance,
         CASE WHEN ci.expected_quantity > 0 THEN ROUND(ci.variance::DECIMAL / ci.expected_quantity * 100, 1) ELSE 0 END as variance_pct
        FROM inventory_count_items ci WHERE ci.count_id = $1 AND ci.variance != 0
@@ -293,10 +289,10 @@ export class InventoryControlService {
   // ═══════════════════════════════════════════════════════════════════════════
 
   async createAdjustment(input: { dispensaryId: string; variantId: string; reasonCode: string; quantityChange: number; submittedByUserId: string; notes?: string; countId?: string }): Promise<InventoryAdjustment> {
-    const [reason] = await this.ds.query(`SELECT * FROM lkp_adjustment_reasons WHERE code = $1`, [input.reasonCode]);
+    const [reason] = await this._q(`SELECT * FROM lkp_adjustment_reasons WHERE code = $1`, [input.reasonCode]);
     if (!reason) throw new BadRequestException(`Invalid reason code: ${input.reasonCode}`);
 
-    const [inv] = await this.ds.query(
+    const [inv] = await this._q(
       `SELECT i.quantity_on_hand, p.name as product_name FROM inventory i
        JOIN product_variants pv ON pv.variant_id = i.variant_id JOIN products p ON p.id = pv.product_id
        WHERE i.variant_id = $1 AND i.dispensary_id = $2`,
@@ -320,7 +316,7 @@ export class InventoryControlService {
     const saved = await this.adjustRepo.save(adj);
 
     if (autoApprove) {
-      await this.ds.query(
+      await this._q(
         `UPDATE inventory SET quantity_on_hand = quantity_on_hand + $1, quantity_available = quantity_available + $1, last_movement_at = NOW(), updated_at = NOW()
          WHERE variant_id = $2 AND dispensary_id = $3`,
         [input.quantityChange, input.variantId, input.dispensaryId],
@@ -336,7 +332,7 @@ export class InventoryControlService {
     if (!adj) throw new NotFoundException('Adjustment not found');
     if (adj.status !== 'pending') throw new BadRequestException('Already processed');
 
-    await this.ds.query(
+    await this._q(
       `UPDATE inventory SET quantity_on_hand = quantity_on_hand + $1, quantity_available = quantity_available + $1, last_movement_at = NOW(), updated_at = NOW()
        WHERE variant_id = $2 AND dispensary_id = $3`,
       [adj.quantity_change, adj.variant_id, adj.dispensary_id],
@@ -349,7 +345,7 @@ export class InventoryControlService {
   }
 
   async getAdjustments(dispensaryId: string, limit = 50): Promise<any[]> {
-    return this.ds.query(
+    return this._q(
       `SELECT ia.*, lr.name as reason_name, lr.code as reason_code,
         u."firstName" || ' ' || u."lastName" as submitted_by
        FROM inventory_adjustments ia
@@ -361,7 +357,7 @@ export class InventoryControlService {
   }
 
   async getAdjustmentReasons(): Promise<LkpAdjustmentReason[]> {
-    return this.ds.query(`SELECT reason_id as "reasonId", code, name, direction, requires_approval as "requiresApproval", is_active as "isActive" FROM lkp_adjustment_reasons WHERE is_active = true ORDER BY reason_id`);
+    return this._q(`SELECT reason_id as "reasonId", code, name, direction, requires_approval as "requiresApproval", is_active as "isActive" FROM lkp_adjustment_reasons WHERE is_active = true ORDER BY reason_id`);
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -369,7 +365,7 @@ export class InventoryControlService {
   // ═══════════════════════════════════════════════════════════════════════════
 
   async getExpiringInventory(dispensaryId: string, daysAhead = 30): Promise<any[]> {
-    return this.ds.query(
+    return this._q(
       `SELECT i.inventory_id, i.variant_id, i.quantity_on_hand, i.expiration_date, i.lot_number,
         p.name as product_name, pv.name as variant_name,
         i.expiration_date - CURRENT_DATE as days_until_expiry,
@@ -383,7 +379,7 @@ export class InventoryControlService {
   }
 
   async getReorderAlerts(dispensaryId: string): Promise<any[]> {
-    return this.ds.query(
+    return this._q(
       `SELECT i.inventory_id, i.variant_id, i.quantity_on_hand, i.quantity_available,
         i.reorder_threshold, i.reorder_quantity, i.auto_reorder_enabled,
         p.name as product_name, pv.name as variant_name
@@ -397,7 +393,7 @@ export class InventoryControlService {
   }
 
   async getDeadStock(dispensaryId: string, daysSinceMovement = 30): Promise<any[]> {
-    return this.ds.query(
+    return this._q(
       `SELECT i.inventory_id, i.variant_id, i.quantity_on_hand, i.last_movement_at,
         CURRENT_DATE - i.last_movement_at::DATE as days_stale,
         p.name as product_name, pv.name as variant_name
@@ -411,7 +407,7 @@ export class InventoryControlService {
   }
 
   async getInventoryHealthDashboard(dispensaryId: string): Promise<any> {
-    const [stats] = await this.ds.query(
+    const [stats] = await this._q(
       `SELECT
         COUNT(*) as total_skus,
         SUM(quantity_on_hand) as total_units,
@@ -423,11 +419,11 @@ export class InventoryControlService {
        FROM inventory WHERE dispensary_id = $1`, [dispensaryId],
     );
 
-    const [pendingTransfers] = await this.ds.query(
+    const [pendingTransfers] = await this._q(
       `SELECT COUNT(*) as c FROM inventory_transfers WHERE (from_dispensary_id = $1 OR to_dispensary_id = $1) AND status IN ('requested','approved','in_transit')`, [dispensaryId],
     );
 
-    const [pendingAdjustments] = await this.ds.query(
+    const [pendingAdjustments] = await this._q(
       `SELECT COUNT(*) as c FROM inventory_adjustments WHERE dispensary_id = $1 AND status = 'pending'`, [dispensaryId],
     );
 
@@ -446,12 +442,77 @@ export class InventoryControlService {
   @Cron('0 7 * * *')
   async dailyInventoryAlerts(): Promise<void> {
     this.logger.log('Running daily inventory alerts...');
-    const dispensaries = await this.ds.query(`SELECT entity_id, name FROM dispensaries WHERE is_active = true`);
+    const dispensaries = await this._q(`SELECT entity_id, name FROM dispensaries WHERE is_active = true`);
     for (const d of dispensaries) {
       const expiring = await this.getExpiringInventory(d.entity_id, 14);
       const reorder = await this.getReorderAlerts(d.entity_id);
       if (expiring.length > 0) this.logger.warn(`${d.name}: ${expiring.length} items expiring within 14 days`);
       if (reorder.length > 0) this.logger.warn(`${d.name}: ${reorder.length} items below reorder threshold`);
     }
+  }
+
+  private async _q(text: string, params?: any[]): Promise<any[]> {
+    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
+    if (client?.query) { const r = await client.query(text, params); return r.rows ?? r; }
+    const result = await this.db.execute(sql.raw(text));
+    return Array.isArray(result) ? result : (result as any).rows ?? [];
+  }
+
+  private _makeRepo(table: string) {
+    const q = this._q.bind(this);
+    return {
+      async find(opts?: any): Promise<any[]> {
+        let s = 'SELECT * FROM ' + table; const p: any[] = []; let i = 1;
+        if (opts?.where) { const cd: string[] = []; for (const [k,v] of Object.entries(opts.where)) { if (v !== undefined) { cd.push(k+' = $'+i++); p.push(v); } } if (cd.length) s += ' WHERE ' + cd.join(' AND '); }
+        if (opts?.order) { const sr = Object.entries(opts.order).map(([k,d]) => k+' '+d); if (sr.length) s += ' ORDER BY ' + sr.join(', '); }
+        if (opts?.take) { s += ' LIMIT $'+i++; p.push(opts.take); }
+        return q(s, p.length ? p : undefined);
+      },
+      async findOne(opts?: any): Promise<any> { const rows = await this.find({...opts, take: 1}); return rows[0] ?? null; },
+      async findOneOrFail(opts?: any): Promise<any> { const r = await this.findOne(opts); if (!r) throw new Error('Entity not found'); return r; },
+      create(data: any): any { return {...data}; },
+      async save(entity: any): Promise<any> {
+        const cols = Object.keys(entity).filter(k => entity[k] !== undefined);
+        const vals = cols.map(k => entity[k]);
+        const ph = cols.map((_,i) => '$'+(i+1));
+        const [row] = await q('INSERT INTO '+table+' ('+cols.join(',')+') VALUES ('+ph.join(',')+') ON CONFLICT DO NOTHING RETURNING *', vals);
+        return row ?? entity;
+      },
+      async update(criteria: any, values: any): Promise<any> {
+        const sets: string[] = []; const p: any[] = []; let i = 1;
+        for (const [k,v] of Object.entries(values)) { if (v !== undefined) { sets.push(k+' = $'+i++); p.push(v); } }
+        if (!sets.length) return {affected:0};
+        const cd: string[] = [];
+        if (typeof criteria === 'string' || typeof criteria === 'number') { cd.push('id = $'+i++); p.push(criteria); }
+        else { for (const [k,v] of Object.entries(criteria)) { cd.push(k+' = $'+i++); p.push(v); } }
+        await q('UPDATE '+table+' SET '+sets.join(',')+' WHERE '+cd.join(' AND '), p);
+        return {affected:1};
+      },
+      async delete(criteria: any): Promise<any> {
+        const cd: string[] = []; const p: any[] = []; let i = 1;
+        for (const [k,v] of Object.entries(criteria)) { cd.push(k+' = $'+i++); p.push(v); }
+        await q('DELETE FROM '+table+(cd.length ? ' WHERE '+cd.join(' AND ') : ''), p);
+        return {affected:1};
+      },
+      async count(opts?: any): Promise<number> {
+        let s = 'SELECT COUNT(*)::int as count FROM '+table; const p: any[] = []; let i = 1;
+        if (opts?.where) { const cd: string[] = []; for (const [k,v] of Object.entries(opts.where)) { if (v !== undefined) { cd.push(k+' = $'+i++); p.push(v); } } if (cd.length) s += ' WHERE ' + cd.join(' AND '); }
+        const [r] = await q(s, p.length ? p : undefined); return r?.count ?? 0;
+      },
+      async remove(entity: any): Promise<void> { const keys = Object.keys(entity); await q('DELETE FROM '+table+' WHERE '+keys[0]+' = $1', [entity[keys[0]]]); },
+      createQueryBuilder(alias: string) {
+        let s = 'SELECT '+alias+'.* FROM '+table+' '+alias;
+        const wheres: string[] = []; const p: any[] = []; let i = 1;
+        const obs: string[] = []; let lim: number|undefined;
+        return {
+          where(cond: string, params?: any) { let c2=cond; if (params) for (const [k,v] of Object.entries(params)) { c2=c2.replace(':'+k,'$'+i++); p.push(v); } wheres.push(c2); return this; },
+          andWhere(cond: string, params?: any) { return this.where(cond, params); },
+          orderBy(col: string, dir: string) { obs.push(col+' '+dir); return this; },
+          addOrderBy(col: string, dir: string) { obs.push(col+' '+dir); return this; },
+          take(n: number) { lim=n; return this; },
+          async getMany() { let full=s; if (wheres.length) full+=' WHERE '+wheres.join(' AND '); if (obs.length) full+=' ORDER BY '+obs.join(', '); if (lim) { full+=' LIMIT $'+i++; p.push(lim); } return q(full, p.length?p:undefined); },
+        };
+      },
+    };
   }
 }

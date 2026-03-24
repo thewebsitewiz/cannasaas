@@ -1,8 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
-import { MetrcApiClient } from '../metrc-api.client';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Cron, CronExpression } from '@nestjs/schedule';
+import { Inject, MetrcApiClient } from '../metrc-api.client';
+import { sql } from 'drizzle-orm';
+
+export const DRIZZLE = Symbol.for('DRIZZLE');
 
 @Injectable()
 export class MetrcInventorySyncCron {
@@ -10,14 +11,14 @@ export class MetrcInventorySyncCron {
 
   constructor(
     private readonly metrcApi: MetrcApiClient,
-    @InjectDataSource() private dataSource: DataSource,
+    @Inject(DRIZZLE) private db: any
   ) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_2AM)
   async reconcileInventory(): Promise<void> {
     this.logger.log('Starting nightly Metrc inventory reconciliation...');
 
-    const dispensaries = await this.dataSource.query(
+    const dispensaries = await this._q(
       `SELECT d.entity_id as dispensary_id, d.state, d.license_number
        FROM dispensaries d
        JOIN metrc_credentials mc ON mc.dispensary_id = d.entity_id AND mc.is_active = true
@@ -46,7 +47,7 @@ export class MetrcInventorySyncCron {
     const metrcPackages = Array.isArray(result.data) ? result.data : [];
 
     // 2. Get local variants with package labels
-    const localVariants = await this.dataSource.query(
+    const localVariants = await this._q(
       `SELECT pv.variant_id, pv.metrc_package_label, pv.name, p.name as product_name
        FROM product_variants pv
        JOIN products p ON p.id = pv.product_id
@@ -70,7 +71,7 @@ export class MetrcInventorySyncCron {
       );
 
       // Log discrepancies
-      await this.dataSource.query(
+      await this._q(
         `INSERT INTO compliance_logs (log_id, dispensary_id, event_type, entity_type, action, details, created_at)
          VALUES (gen_random_uuid(), $1, 'inventory_discrepancy', 'inventory', 'reconciliation', $2, NOW())`,
         [dispensaryId, JSON.stringify({
@@ -83,5 +84,12 @@ export class MetrcInventorySyncCron {
     } else {
       this.logger.log(`Dispensary ${dispensaryId}: inventory in sync (${metrcPackages.length} packages)`);
     }
+  }
+
+  private async _q(text: string, params?: any[]): Promise<any[]> {
+    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
+    if (client?.query) { const r = await client.query(text, params); return r.rows ?? r; }
+    const result = await this.db.execute(sql.raw(text));
+    return Array.isArray(result) ? result : (result as any).rows ?? [];
   }
 }

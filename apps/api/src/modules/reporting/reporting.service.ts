@@ -1,13 +1,14 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
-import { validateUUID, validateDateString } from '../../common/helpers/validation.helpers';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { Inject, Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Inject, validateUUID, validateDateString } from '../../common/helpers/validation.helpers';
+import { sql } from 'drizzle-orm';
+
+export const DRIZZLE = Symbol.for('DRIZZLE');
 
 @Injectable()
 export class ReportingService {
   private readonly logger = new Logger(ReportingService.name);
 
-  constructor(@InjectDataSource() private ds: DataSource) {}
+  constructor(@Inject(DRIZZLE) private db: any) {}
 
   // ═══════════════════════════════════════════════════════════════════════════
   // SALES REPORTS
@@ -16,7 +17,7 @@ export class ReportingService {
   async salesSummary(dispensaryId: string, startDate: string, endDate: string): Promise<any> {
     validateUUID(dispensaryId, 'dispensaryId'); validateDateString(startDate, 'startDate'); validateDateString(endDate, 'endDate');
     if (new Date(startDate) > new Date(endDate)) throw new BadRequestException('startDate must be before endDate');
-    const [summary] = await this.ds.query(
+    const [summary] = await this._q(
       `SELECT
         COUNT(*) as total_orders,
         COUNT(*) FILTER (WHERE "orderStatus" = 'completed') as completed_orders,
@@ -52,7 +53,7 @@ export class ReportingService {
   }
 
   async salesByDay(dispensaryId: string, startDate: string, endDate: string): Promise<any[]> {
-    return this.ds.query(
+    return this._q(
       `SELECT DATE("createdAt") as date,
         COUNT(*) as orders,
         COALESCE(SUM(subtotal), 0)::DECIMAL(10,2) as gross,
@@ -67,7 +68,7 @@ export class ReportingService {
   }
 
   async salesByProduct(dispensaryId: string, startDate: string, endDate: string): Promise<any[]> {
-    return this.ds.query(
+    return this._q(
       `SELECT p.name as product_name, p.strain_type, pv.name as variant_name,
         COUNT(DISTINCT o."orderId") as orders,
         SUM(oi.quantity) as units_sold,
@@ -85,7 +86,7 @@ export class ReportingService {
   }
 
   async salesByHour(dispensaryId: string, startDate: string, endDate: string): Promise<any[]> {
-    return this.ds.query(
+    return this._q(
       `SELECT EXTRACT(HOUR FROM "createdAt")::INT as hour,
         COUNT(*) as orders,
         COALESCE(SUM(total), 0)::DECIMAL(10,2) as revenue
@@ -102,11 +103,11 @@ export class ReportingService {
 
   async taxReport(dispensaryId: string, startDate: string, endDate: string): Promise<any> {
     validateUUID(dispensaryId, 'dispensaryId'); validateDateString(startDate, 'startDate'); validateDateString(endDate, 'endDate');
-    const [disp] = await this.ds.query(
+    const [disp] = await this._q(
       `SELECT name, state, license_number FROM dispensaries WHERE entity_id = $1`, [dispensaryId],
     );
 
-    const [totals] = await this.ds.query(
+    const [totals] = await this._q(
       `SELECT
         COALESCE(SUM(subtotal), 0)::DECIMAL(12,2) as taxable_sales,
         COALESCE(SUM("discountTotal"), 0)::DECIMAL(12,2) as total_discounts,
@@ -118,7 +119,7 @@ export class ReportingService {
       [dispensaryId, startDate, endDate],
     );
 
-    const taxByCategory = await this.ds.query(
+    const taxByCategory = await this._q(
       `SELECT
         tc.name as tax_name, tc.code as tax_code, tc.rate, tc.tax_basis,
         tc.statutory_reference,
@@ -164,7 +165,7 @@ export class ReportingService {
   // ═══════════════════════════════════════════════════════════════════════════
 
   async staffPerformance(dispensaryId: string, startDate: string, endDate: string): Promise<any[]> {
-    return this.ds.query(
+    return this._q(
       `SELECT ep.employee_number, u."firstName", u."lastName",
         lp.name as position_name,
         COALESCE(SUM(te.total_hours), 0)::DECIMAL(8,2) as total_hours,
@@ -195,7 +196,7 @@ export class ReportingService {
   }
 
   async laborCostSummary(dispensaryId: string, startDate: string, endDate: string): Promise<any> {
-    const [result] = await this.ds.query(
+    const [result] = await this._q(
       `SELECT
         COUNT(DISTINCT ep.profile_id) as employee_count,
         COALESCE(SUM(te.total_hours), 0)::DECIMAL(8,2) as total_hours,
@@ -231,7 +232,7 @@ export class ReportingService {
   // ═══════════════════════════════════════════════════════════════════════════
 
   async inventoryValuation(dispensaryId: string): Promise<any[]> {
-    return this.ds.query(
+    return this._q(
       `SELECT p.name as product_name, pv.name as variant_name, pv.sku,
         i.quantity_on_hand, i.quantity_reserved, i.quantity_available,
         pp.price as unit_price,
@@ -248,7 +249,7 @@ export class ReportingService {
   }
 
   async shrinkageReport(dispensaryId: string, startDate: string, endDate: string): Promise<any> {
-    const adjustments = await this.ds.query(
+    const adjustments = await this._q(
       `SELECT lr.name as reason, lr.code as reason_code,
         COUNT(*) as adjustment_count,
         SUM(ABS(ia.quantity_change)) as total_units,
@@ -285,7 +286,7 @@ export class ReportingService {
   // ═══════════════════════════════════════════════════════════════════════════
 
   async generateSalesCsv(dispensaryId: string, startDate: string, endDate: string): Promise<string> {
-    const [disp] = await this.ds.query(`SELECT name FROM dispensaries WHERE entity_id = $1`, [dispensaryId]);
+    const [disp] = await this._q(`SELECT name FROM dispensaries WHERE entity_id = $1`, [dispensaryId]);
     const daily = await this.salesByDay(dispensaryId, startDate, endDate);
     const summary = await this.salesSummary(dispensaryId, startDate, endDate);
 
@@ -313,7 +314,7 @@ export class ReportingService {
   }
 
   async generateStaffCsv(dispensaryId: string, startDate: string, endDate: string): Promise<string> {
-    const [disp] = await this.ds.query(`SELECT name FROM dispensaries WHERE entity_id = $1`, [dispensaryId]);
+    const [disp] = await this._q(`SELECT name FROM dispensaries WHERE entity_id = $1`, [dispensaryId]);
     const staff = await this.staffPerformance(dispensaryId, startDate, endDate);
     const labor = await this.laborCostSummary(dispensaryId, startDate, endDate);
 
@@ -331,7 +332,7 @@ export class ReportingService {
   }
 
   async generateInventoryCsv(dispensaryId: string): Promise<string> {
-    const [disp] = await this.ds.query(`SELECT name FROM dispensaries WHERE entity_id = $1`, [dispensaryId]);
+    const [disp] = await this._q(`SELECT name FROM dispensaries WHERE entity_id = $1`, [dispensaryId]);
     const items = await this.inventoryValuation(dispensaryId);
 
     const meta = `"Inventory Valuation: ${disp?.name ?? 'Unknown'}"\n"Generated: ${new Date().toISOString()}"\n`;
@@ -345,5 +346,12 @@ export class ReportingService {
     const totalValue = items.reduce((s: number, i: any) => s + parseFloat(i.total_value || 0), 0);
 
     return meta + `"Total Inventory Value","${totalValue.toFixed(2)}"\n` + headers + rows + '\n';
+  }
+
+  private async _q(text: string, params?: any[]): Promise<any[]> {
+    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
+    if (client?.query) { const r = await client.query(text, params); return r.rows ?? r; }
+    const result = await this.db.execute(sql.raw(text));
+    return Array.isArray(result) ? result : (result as any).rows ?? [];
   }
 }

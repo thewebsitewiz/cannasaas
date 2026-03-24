@@ -1,13 +1,14 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import * as crypto from 'crypto';
+import { sql } from 'drizzle-orm';
+
+export const DRIZZLE = Symbol.for('DRIZZLE');
 
 @Injectable()
 export class CashlessPaymentsService {
   private readonly logger = new Logger(CashlessPaymentsService.name);
 
-  constructor(@InjectDataSource() private dataSource: DataSource) {}
+  constructor(@Inject(DRIZZLE) private db: any) {}
 
   // ── CanPay ACH Integration ──────────────────────────────────────────────
 
@@ -51,7 +52,7 @@ export class CashlessPaymentsService {
     this.logger.log(`CanPay webhook: txn=${payload.transactionId} status=${payload.status}`);
 
     if (payload.orderId && payload.status === 'completed') {
-      await this.dataSource.query(
+      await this._q(
         `UPDATE orders SET payment_method = 'canpay', "updatedAt" = NOW() WHERE "orderId" = $1`,
         [payload.orderId],
       );
@@ -68,7 +69,7 @@ export class CashlessPaymentsService {
     this.logger.log(`AeroPay webhook: ref=${payload.referenceId} status=${payload.status}`);
 
     if (payload.orderId && payload.status === 'completed') {
-      await this.dataSource.query(
+      await this._q(
         `UPDATE orders SET payment_method = 'aeropay', "updatedAt" = NOW() WHERE "orderId" = $1`,
         [payload.orderId],
       );
@@ -82,7 +83,7 @@ export class CashlessPaymentsService {
   async getAvailablePaymentMethods(
     dispensaryId: string,
   ): Promise<{ method: string; enabled: boolean }[]> {
-    const [disp] = await this.dataSource.query(
+    const [disp] = await this._q(
       `SELECT is_cash_enabled, canpay_enabled, aeropay_enabled, stripe_enabled
        FROM dispensaries WHERE entity_id = $1`,
       [dispensaryId],
@@ -95,5 +96,12 @@ export class CashlessPaymentsService {
       { method: 'canpay', enabled: disp.canpay_enabled ?? false },
       { method: 'aeropay', enabled: disp.aeropay_enabled ?? false },
     ];
+  }
+
+  private async _q(text: string, params?: any[]): Promise<any[]> {
+    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
+    if (client?.query) { const r = await client.query(text, params); return r.rows ?? r; }
+    const result = await this.db.execute(sql.raw(text));
+    return Array.isArray(result) ? result : (result as any).rows ?? [];
   }
 }

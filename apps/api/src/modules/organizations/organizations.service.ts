@@ -1,17 +1,18 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { sql } from 'drizzle-orm';
+
+export const DRIZZLE = Symbol.for('DRIZZLE');
 
 @Injectable()
 export class OrganizationsService {
   private readonly logger = new Logger(OrganizationsService.name);
 
-  constructor(@InjectDataSource() private ds: DataSource) {}
+  constructor(@Inject(DRIZZLE) private db: any) {}
 
   // ═══ READ ═══
 
   async findById(organizationId: string): Promise<any> {
-    const [row] = await this.ds.query(
+    const [row] = await this._q(
       `SELECT organization_id as "organizationId", name, slug,
         billing_email as "billingEmail", billing_address as "billingAddress",
         subscription_tier as "subscriptionTier", subscription_status as "subscriptionStatus",
@@ -25,7 +26,7 @@ export class OrganizationsService {
   }
 
   async findAll(limit = 50, offset = 0): Promise<any[]> {
-    return this.ds.query(
+    return this._q(
       `SELECT organization_id as "organizationId", name, slug,
         billing_email as "billingEmail",
         subscription_tier as "subscriptionTier", subscription_status as "subscriptionStatus",
@@ -36,7 +37,7 @@ export class OrganizationsService {
   }
 
   async findBySlug(slug: string): Promise<any> {
-    const [row] = await this.ds.query(
+    const [row] = await this._q(
       `SELECT organization_id as "organizationId", name, slug,
         billing_email as "billingEmail", billing_address as "billingAddress",
         subscription_tier as "subscriptionTier", subscription_status as "subscriptionStatus",
@@ -55,7 +56,7 @@ export class OrganizationsService {
     billingEmail?: string; billingAddress?: string;
     subscriptionTier?: string;
   }): Promise<any> {
-    const [row] = await this.ds.query(
+    const [row] = await this._q(
       `INSERT INTO organizations (name, slug, billing_email, billing_address, subscription_tier)
       VALUES ($1,$2,$3,$4,$5) RETURNING *`,
       [input.name, input.slug, input.billingEmail || null, input.billingAddress || null, input.subscriptionTier || 'starter'],
@@ -90,7 +91,7 @@ export class OrganizationsService {
     if (fields.length === 0) return this.findById(organizationId);
 
     values.push(organizationId);
-    await this.ds.query(
+    await this._q(
       'UPDATE organizations SET ' + fields.join(', ') + ', updated_at = NOW() WHERE organization_id = $' + idx + ' AND deleted_at IS NULL',
       values,
     );
@@ -115,7 +116,7 @@ export class OrganizationsService {
     if (fields.length === 0) return this.findById(organizationId);
 
     values.push(organizationId);
-    await this.ds.query(
+    await this._q(
       'UPDATE organizations SET ' + fields.join(', ') + ', updated_at = NOW() WHERE organization_id = $' + idx + ' AND deleted_at IS NULL',
       values,
     );
@@ -127,10 +128,17 @@ export class OrganizationsService {
   // ═══ DELETE ═══
 
   async softDelete(organizationId: string): Promise<boolean> {
-    const result = await this.ds.query(
+    const result = await this._q(
       'UPDATE organizations SET deleted_at = NOW() WHERE organization_id = $1 AND deleted_at IS NULL',
       [organizationId],
     );
     return result[1] > 0;
+  }
+
+  private async _q(text: string, params?: any[]): Promise<any[]> {
+    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
+    if (client?.query) { const r = await client.query(text, params); return r.rows ?? r; }
+    const result = await this.db.execute(sql.raw(text));
+    return Array.isArray(result) ? result : (result as any).rows ?? [];
   }
 }

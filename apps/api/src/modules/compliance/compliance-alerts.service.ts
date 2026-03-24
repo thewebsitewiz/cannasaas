@@ -1,21 +1,22 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
-import { Cron } from '@nestjs/schedule';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Cron } from '@nestjs/schedule';
+import { Inject, EventEmitter2 } from '@nestjs/event-emitter';
+import { sql } from 'drizzle-orm';
+
+export const DRIZZLE = Symbol.for('DRIZZLE');
 
 @Injectable()
 export class ComplianceAlertsService {
   private readonly logger = new Logger(ComplianceAlertsService.name);
 
   constructor(
-    @InjectDataSource() private ds: DataSource,
-    private eventEmitter: EventEmitter2,
+    @Inject(DRIZZLE) private db: any,
+    private eventEmitter: EventEmitter2
   ) {}
 
   async checkPurchaseLimitApproaching(customerId: string, dispensaryId: string): Promise<any[]> {
     // Check if customer is at 80%+ of state purchase limit (default 28g/day rolling window)
-    const rows = await this.ds.query(
+    const rows = await this._q(
       `WITH purchase_totals AS (
         SELECT
           o."userId",
@@ -52,7 +53,7 @@ export class ComplianceAlertsService {
     const alerts: any[] = [];
 
     // Check dispensary license
-    const dispLicenses = await this.ds.query(
+    const dispLicenses = await this._q(
       `SELECT entity_id as "entityId", name, license_number as "licenseNumber",
         license_expiration_date as "expirationDate"
        FROM dispensaries
@@ -78,7 +79,7 @@ export class ComplianceAlertsService {
     }
 
     // Check employee certifications
-    const empCerts = await this.ds.query(
+    const empCerts = await this._q(
       `SELECT u.id as "userId", u.email, u.first_name as "firstName", u.last_name as "lastName",
         s.certification_expiry as "expirationDate"
        FROM staffing s
@@ -105,7 +106,7 @@ export class ComplianceAlertsService {
     }
 
     // Check vendor licenses
-    const vendorLicenses = await this.ds.query(
+    const vendorLicenses = await this._q(
       `SELECT v.vendor_id as "vendorId", v.company_name as "companyName",
         v.license_number as "licenseNumber", v.license_expiration as "expirationDate"
        FROM vendors v
@@ -136,7 +137,7 @@ export class ComplianceAlertsService {
 
   async checkInventoryDiscrepancies(dispensaryId: string): Promise<any[]> {
     // Compare local inventory vs last Metrc sync, flag >5% variance
-    const rows = await this.ds.query(
+    const rows = await this._q(
       `SELECT
         i.inventory_id as "inventoryId",
         i.variant_id as "variantId",
@@ -200,7 +201,7 @@ export class ComplianceAlertsService {
   @Cron('0 7 * * *')
   async dailyComplianceCheck(): Promise<void> {
     this.logger.log('Running daily compliance alerts check...');
-    const dispensaries = await this.ds.query('SELECT entity_id FROM dispensaries WHERE is_active = true');
+    const dispensaries = await this._q('SELECT entity_id FROM dispensaries WHERE is_active = true');
 
     for (const d of dispensaries) {
       try {
@@ -226,5 +227,12 @@ export class ComplianceAlertsService {
         this.logger.error('Compliance check failed for ' + d.entity_id + ': ' + err.message);
       }
     }
+  }
+
+  private async _q(text: string, params?: any[]): Promise<any[]> {
+    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
+    if (client?.query) { const r = await client.query(text, params); return r.rows ?? r; }
+    const result = await this.db.execute(sql.raw(text));
+    return Array.isArray(result) ? result : (result as any).rows ?? [];
   }
 }
