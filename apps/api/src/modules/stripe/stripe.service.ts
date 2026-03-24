@@ -41,11 +41,25 @@ export class StripeService {
 
     if (amountCents < 50) throw new BadRequestException('Minimum payment is $0.50');
 
+    // Check if a payment intent already exists for this order (idempotency)
+    const [existing] = await this.ds.query(
+      `SELECT stripe_payment_intent_id FROM payments WHERE order_id = $1 AND stripe_payment_intent_id IS NOT NULL`,
+      [orderId],
+    );
+    if (existing) {
+      // Retrieve the existing intent from Stripe to return its clientSecret
+      const existingIntent = await this.stripe.paymentIntents.retrieve(existing.stripe_payment_intent_id);
+      this.logger.log('Returning existing payment intent: ' + existingIntent.id + ' for order ' + orderId);
+      return { clientSecret: existingIntent.client_secret!, paymentIntentId: existingIntent.id };
+    }
+
     const intent = await this.stripe.paymentIntents.create({
       amount: amountCents,
       currency: 'usd',
       automatic_payment_methods: { enabled: true },
       metadata: { orderId, dispensaryId, ...metadata },
+    }, {
+      idempotencyKey: orderId,
     });
 
     // Save intent to DB

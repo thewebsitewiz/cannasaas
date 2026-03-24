@@ -22,7 +22,10 @@ interface ConnectedClient {
 }
 
 @WebSocketGateway({
-  cors: { origin: '*', credentials: true },
+  cors: {
+    origin: (process.env['CORS_ORIGINS'] || 'http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176,http://localhost:5177').split(','),
+    credentials: true,
+  },
   namespace: '/',
   transports: ['websocket', 'polling'],
 })

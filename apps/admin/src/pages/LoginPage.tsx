@@ -5,13 +5,19 @@ import { useAuthStore } from '../stores/auth.store';
 export function LoginPage() {
   const navigate = useNavigate();
   const setAuth = useAuthStore((s) => s.setAuth);
-  const [email, setEmail] = useState('admin@greenleaf.com');
-  const [password, setPassword] = useState('Admin123!');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isPasswordValid = password.length >= 8;
+  const isFormValid = isEmailValid && isPasswordValid;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isEmailValid) { setError('Please enter a valid email address'); return; }
+    if (!isPasswordValid) { setError('Password must be at least 8 characters'); return; }
     setError('');
     setLoading(true);
 
@@ -91,7 +97,7 @@ export function LoginPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !isFormValid}
             className="w-full bg-brand-600 text-txt-inverse font-semibold rounded-lg px-4 py-2.5 text-sm hover:bg-brand-700 transition-colors disabled:opacity-50"
           >
             {loading ? 'Signing in...' : 'Sign In'}

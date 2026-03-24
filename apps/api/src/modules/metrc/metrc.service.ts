@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
+import * as crypto from 'crypto';
 import { MetrcCredential } from './entities/metrc-credential.entity';
 import { UpsertCredentialInput } from './dto/upsert-credential.input';
 import { TagProductUidInput } from './dto/tag-product-uid.input';
@@ -18,19 +19,36 @@ const METRC_BASE_URLS: Record<string, string> = {
 
 @Injectable()
 export class MetrcService {
+  private encryptionKey: Buffer;
+
   constructor(
     @InjectRepository(MetrcCredential)
     private credentialRepo: Repository<MetrcCredential>,
     private config: ConfigService,
-  ) {}
+  ) {
+    const keyStr = this.config.get<string>('ENCRYPTION_KEY', 'cannasaas-dev-key-change-in-prod-32b');
+    const saltBytes = crypto.createHash('sha256').update(keyStr).digest().subarray(0, 16);
+    this.encryptionKey = crypto.scryptSync(keyStr, saltBytes, 32);
+  }
+
+  private encrypt(plaintext: string): string {
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv('aes-256-cbc', this.encryptionKey, iv);
+    let encrypted = cipher.update(plaintext, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    return iv.toString('hex') + ':' + encrypted;
+  }
 
   // ── Credentials ──────────────────────────────────────────────────────────
 
   async upsertCredential(input: UpsertCredentialInput): Promise<MetrcCredential> {
+    const encryptedUserApiKey = this.encrypt(input.userApiKey);
+    const encryptedIntegratorApiKey = input.integratorApiKey ? this.encrypt(input.integratorApiKey) : undefined;
+
     let credential = await this.credentialRepo.findOne({ where: { dispensaryId: input.dispensaryId } });
     if (credential) {
-      credential.userApiKey = input.userApiKey;
-      if (input.integratorApiKey) credential.integratorApiKey = input.integratorApiKey;
+      credential.userApiKey = encryptedUserApiKey;
+      if (encryptedIntegratorApiKey) credential.integratorApiKey = encryptedIntegratorApiKey;
       credential.state = input.state;
       if (input.metrcUsername) credential.metrcUsername = input.metrcUsername;
       credential.isActive = true;
@@ -39,14 +57,30 @@ export class MetrcService {
     } else {
       credential = this.credentialRepo.create({
         dispensaryId: input.dispensaryId,
-        userApiKey: input.userApiKey,
-        integratorApiKey: input.integratorApiKey,
+        userApiKey: encryptedUserApiKey,
+        integratorApiKey: encryptedIntegratorApiKey,
         state: input.state,
         metrcUsername: input.metrcUsername,
         isActive: true,
       });
     }
-    return this.credentialRepo.save(credential);
+
+    // Persist so validateCredential can look it up by dispensaryId
+    credential = await this.credentialRepo.save(credential);
+
+    // Validate credentials against the Metrc API before keeping them
+    const validation = await this.validateCredential(input.dispensaryId);
+    if (!validation.valid) {
+      // Mark as inactive since validation failed
+      credential.isActive = false;
+      credential.validationError = validation.message as any;
+      await this.credentialRepo.save(credential);
+      throw new BadRequestException(
+        `Metrc credential validation failed: ${validation.message}`,
+      );
+    }
+
+    return credential;
   }
 
   async getCredential(dispensaryId: string): Promise<MetrcCredential | null> {

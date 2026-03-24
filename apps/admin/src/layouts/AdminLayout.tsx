@@ -47,18 +47,19 @@ export function AdminLayout() {
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-gs-deep-pine text-txt-inverse flex flex-col">
+      <aside className="w-64 bg-gs-deep-pine text-txt-inverse flex flex-col" role="navigation" aria-label="Main navigation">
         <div className="p-6 border-b border-gs-pine">
           <h1 className="text-xl font-bold text-brand-400">CannaSaas</h1>
           <p className="text-xs text-txt-muted mt-1">Admin Portal</p>
         </div>
 
-        <nav className="flex-1 py-4">
+        <nav className="flex-1 py-4" aria-label="Admin navigation">
           {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
               end={to === '/'}
+              aria-label={label}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-6 py-3 text-sm font-medium transition-colors ${
                   isActive
@@ -67,26 +68,27 @@ export function AdminLayout() {
                 }`
               }
             >
-              <Icon size={18} />
+              <Icon size={18} aria-hidden="true" />
               {label}
             </NavLink>
           ))}
         </nav>
 
         <div className="p-4 border-t border-gs-pine">
-          <div className="text-xs text-txt-secondary mb-2">{user?.email}</div>
+          <div className="text-xs text-txt-secondary mb-2" aria-label="Logged in user">{user?.email}</div>
           <button
             onClick={handleLogout}
+            aria-label="Sign out"
             className="flex items-center gap-2 text-sm text-txt-muted hover:text-txt-inverse transition-colors"
           >
-            <LogOut size={16} />
+            <LogOut size={16} aria-hidden="true" />
             Sign Out
           </button>
         </div>
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto" role="main" aria-label="Page content">
         <div className="p-8">
           <Outlet />
         </div>

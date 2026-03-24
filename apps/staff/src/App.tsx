@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { StaffLayout } from './layouts/StaffLayout';
 import { LoginPage } from './pages/LoginPage';
 import { OrderQueuePage } from './pages/OrderQueuePage';

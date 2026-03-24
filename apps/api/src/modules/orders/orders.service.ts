@@ -139,6 +139,42 @@ export class OrdersService {
   }
 
   async createOrder(input: CreateOrderInput, staffUserId?: string): Promise<OrderSummary> {
+    // Pre-transaction validation — fail fast before starting a DB transaction
+    if (!input.lineItems || input.lineItems.length === 0) {
+      throw new BadRequestException('Order must contain at least one line item');
+    }
+
+    // Verify all quantities are > 0
+    const invalidQty = input.lineItems.find(li => li.quantity <= 0);
+    if (invalidQty) {
+      throw new BadRequestException(
+        `Invalid quantity for product ${invalidQty.productId}: quantity must be greater than 0`,
+      );
+    }
+
+    // Verify the dispensary exists
+    const [dispensaryCheck] = await this.dataSource.query(
+      `SELECT entity_id FROM dispensaries WHERE entity_id = $1`,
+      [input.dispensaryId],
+    );
+    if (!dispensaryCheck) {
+      throw new BadRequestException(`Dispensary ${input.dispensaryId} does not exist`);
+    }
+
+    // Verify all product IDs exist and belong to this dispensary
+    const productIds = input.lineItems.map(li => li.productId);
+    const existingProducts = await this.dataSource.query(
+      `SELECT product_id FROM products WHERE product_id = ANY($1) AND dispensary_id = $2`,
+      [productIds, input.dispensaryId],
+    );
+    const existingProductIds = new Set(existingProducts.map((r: any) => r.product_id));
+    const missingProducts = productIds.filter(id => !existingProductIds.has(id));
+    if (missingProducts.length > 0) {
+      throw new BadRequestException(
+        `Products not found in this dispensary: ${missingProducts.join(', ')}`,
+      );
+    }
+
     const qr = this.dataSource.createQueryRunner();
     await qr.connect();
     await qr.startTransaction();
@@ -336,9 +372,12 @@ export class OrdersService {
   }
 
   async listOrders(dispensaryId: string, limit = 20, offset = 0): Promise<any[]> {
+    // Explicitly select only list-view columns; exclude heavy JSONB fields
+    // (tax_breakdown, applied_promotions, metrc_receipt_data) to avoid over-fetching
     return this.dataSource.query(
       `SELECT "orderId", "dispensaryId", "customerUserId", "orderType", "orderStatus",
-              subtotal, "taxTotal", total, "createdAt", "updatedAt"
+              subtotal, "taxTotal", total, "paymentMethod", "paymentStatus",
+              "createdAt", "updatedAt"
        FROM orders WHERE "dispensaryId" = $1
        ORDER BY "createdAt" DESC LIMIT $2 OFFSET $3`,
       [dispensaryId, limit, offset]

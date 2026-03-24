@@ -56,19 +56,25 @@ export class InventoryService {
   // ═══ ADJUST ═══
 
   async adjustQuantity(inventoryId: string, delta: number, transactionType: string, performedByUserId: string, notes?: string, referenceOrderId?: string): Promise<any> {
-    const [inv] = await this.ds.query('SELECT * FROM inventory WHERE inventory_id = $1', [inventoryId]);
-    if (!inv) throw new NotFoundException('Inventory record not found');
-
-    const before = parseFloat(inv.quantity_on_hand);
-    const after = before + delta;
-    if (after < 0) throw new BadRequestException('Adjustment would result in negative quantity');
-
-    const newAvailable = after - parseFloat(inv.quantity_reserved);
-
-    await this.ds.query(
-      'UPDATE inventory SET quantity_on_hand = $1, quantity_available = $2, updated_at = NOW() WHERE inventory_id = $3',
-      [after, newAvailable, inventoryId],
+    // Single UPDATE ... RETURNING * instead of SELECT + UPDATE (N+1 fix)
+    const [inv] = await this.ds.query(
+      `UPDATE inventory
+       SET quantity_on_hand = quantity_on_hand + $2,
+           quantity_available = quantity_available + $2,
+           updated_at = NOW()
+       WHERE inventory_id = $1 AND quantity_on_hand + $2 >= 0
+       RETURNING *`,
+      [inventoryId, delta],
     );
+    if (!inv) {
+      // Distinguish between not-found and negative-quantity
+      const [exists] = await this.ds.query('SELECT 1 FROM inventory WHERE inventory_id = $1', [inventoryId]);
+      if (!exists) throw new NotFoundException('Inventory record not found');
+      throw new BadRequestException('Adjustment would result in negative quantity');
+    }
+
+    const before = parseFloat(inv.quantity_on_hand) - delta;
+    const after = parseFloat(inv.quantity_on_hand);
 
     const [tx] = await this.ds.query(
       `INSERT INTO inventory_transactions (inventory_id, dispensary_id, transaction_type, quantity_delta, quantity_before, quantity_after, performed_by_user_id, notes, reference_order_id)
@@ -81,24 +87,29 @@ export class InventoryService {
   }
 
   async reserveStock(inventoryId: string, quantity: number, performedByUserId: string, referenceOrderId?: string): Promise<any> {
-    const [inv] = await this.ds.query('SELECT * FROM inventory WHERE inventory_id = $1', [inventoryId]);
-    if (!inv) throw new NotFoundException('Inventory record not found');
-
-    const available = parseFloat(inv.quantity_available);
-    if (quantity > available) throw new BadRequestException('Not enough available stock. Available: ' + available + ', requested: ' + quantity);
-
-    const newReserved = parseFloat(inv.quantity_reserved) + quantity;
-    const newAvailable = available - quantity;
-
-    await this.ds.query(
-      'UPDATE inventory SET quantity_reserved = $1, quantity_available = $2, updated_at = NOW() WHERE inventory_id = $3',
-      [newReserved, newAvailable, inventoryId],
+    // Single UPDATE ... RETURNING * instead of SELECT + UPDATE (N+1 fix)
+    const [inv] = await this.ds.query(
+      `UPDATE inventory
+       SET quantity_reserved = quantity_reserved + $2,
+           quantity_available = quantity_available - $2,
+           updated_at = NOW()
+       WHERE inventory_id = $1 AND quantity_available >= $2
+       RETURNING *`,
+      [inventoryId, quantity],
     );
+    if (!inv) {
+      const [exists] = await this.ds.query('SELECT inventory_id, quantity_available FROM inventory WHERE inventory_id = $1', [inventoryId]);
+      if (!exists) throw new NotFoundException('Inventory record not found');
+      throw new BadRequestException('Not enough available stock. Available: ' + exists.quantity_available + ', requested: ' + quantity);
+    }
+
+    const previousAvailable = parseFloat(inv.quantity_available) + quantity;
+    const newAvailable = parseFloat(inv.quantity_available);
 
     const [tx] = await this.ds.query(
       `INSERT INTO inventory_transactions (inventory_id, dispensary_id, transaction_type, quantity_delta, quantity_before, quantity_after, performed_by_user_id, reference_order_id, notes)
       VALUES ($1,$2,'reserve',$3,$4,$5,$6,$7,$8) RETURNING *`,
-      [inventoryId, inv.dispensary_id, -quantity, available, newAvailable, performedByUserId, referenceOrderId || null, 'Reserved ' + quantity + ' units'],
+      [inventoryId, inv.dispensary_id, -quantity, previousAvailable, newAvailable, performedByUserId, referenceOrderId || null, 'Reserved ' + quantity + ' units'],
     );
 
     this.logger.log('Stock reserved: ' + inventoryId + ' qty=' + quantity);
@@ -106,24 +117,33 @@ export class InventoryService {
   }
 
   async releaseReserve(inventoryId: string, quantity: number, performedByUserId: string, referenceOrderId?: string): Promise<any> {
-    const [inv] = await this.ds.query('SELECT * FROM inventory WHERE inventory_id = $1', [inventoryId]);
+    // Single UPDATE ... RETURNING * instead of SELECT + UPDATE (N+1 fix)
+    // Use LEAST to cap release at current reserved amount atomically
+    const [inv] = await this.ds.query(
+      `WITH pre AS (
+        SELECT inventory_id, dispensary_id, quantity_reserved, quantity_available,
+               LEAST($2, quantity_reserved) AS release_qty
+        FROM inventory WHERE inventory_id = $1
+      )
+      UPDATE inventory i
+       SET quantity_reserved = i.quantity_reserved - pre.release_qty,
+           quantity_available = i.quantity_available + pre.release_qty,
+           updated_at = NOW()
+       FROM pre
+       WHERE i.inventory_id = pre.inventory_id
+       RETURNING i.*, pre.release_qty, pre.quantity_available AS prev_available`,
+      [inventoryId, quantity],
+    );
     if (!inv) throw new NotFoundException('Inventory record not found');
 
-    const reserved = parseFloat(inv.quantity_reserved);
-    const release = Math.min(quantity, reserved);
-
-    const newReserved = reserved - release;
-    const newAvailable = parseFloat(inv.quantity_available) + release;
-
-    await this.ds.query(
-      'UPDATE inventory SET quantity_reserved = $1, quantity_available = $2, updated_at = NOW() WHERE inventory_id = $3',
-      [newReserved, newAvailable, inventoryId],
-    );
+    const release = parseFloat(inv.release_qty);
+    const previousAvailable = parseFloat(inv.prev_available);
+    const newAvailable = parseFloat(inv.quantity_available);
 
     const [tx] = await this.ds.query(
       `INSERT INTO inventory_transactions (inventory_id, dispensary_id, transaction_type, quantity_delta, quantity_before, quantity_after, performed_by_user_id, reference_order_id, notes)
       VALUES ($1,$2,'release',$3,$4,$5,$6,$7,$8) RETURNING *`,
-      [inventoryId, inv.dispensary_id, release, parseFloat(inv.quantity_available), newAvailable, performedByUserId, referenceOrderId || null, 'Released ' + release + ' reserved units'],
+      [inventoryId, inv.dispensary_id, release, previousAvailable, newAvailable, performedByUserId, referenceOrderId || null, 'Released ' + release + ' reserved units'],
     );
 
     this.logger.log('Reserve released: ' + inventoryId + ' qty=' + release);
