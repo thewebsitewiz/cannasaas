@@ -3,62 +3,62 @@ import { ObjectType, Field, ID } from '@nestjs/graphql';
 @ObjectType()
 export class ThemeConfigType {
   @Field(() => ID)
-  id: string;
+  id!: string;
 
   @Field()
-  dispensaryId: string;
+  dispensaryId!: string;
 
   @Field()
-  preset: string;
+  preset!: string;
 
   @Field()
-  primary: string;
+  primary!: string;
 
   @Field()
-  secondary: string;
+  secondary!: string;
 
   @Field()
-  accent: string;
+  accent!: string;
 
   @Field()
-  bgPrimary: string;
+  bgPrimary!: string;
 
   @Field()
-  bgSecondary: string;
+  bgSecondary!: string;
 
   @Field()
-  bgCard: string;
+  bgCard!: string;
 
   @Field()
-  textPrimary: string;
+  textPrimary!: string;
 
   @Field()
-  textSecondary: string;
+  textSecondary!: string;
 
   @Field()
-  sidebarBg: string;
+  sidebarBg!: string;
 
   @Field()
-  sidebarText: string;
+  sidebarText!: string;
 
   @Field()
-  success: string;
+  success!: string;
 
   @Field()
-  warning: string;
+  warning!: string;
 
   @Field()
-  error: string;
+  error!: string;
 
   @Field()
-  info: string;
+  info!: string;
 
   @Field()
-  isDark: boolean;
+  isDark!: boolean;
 
   @Field()
-  createdAt: Date;
+  createdAt!: Date;
 
   @Field()
-  updatedAt: Date;
+  updatedAt!: Date;
 }

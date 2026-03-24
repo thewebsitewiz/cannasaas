@@ -39,7 +39,7 @@ export class OrdersResolver {
   async listOrders(
     @CurrentUser() user: JwtPayload,
     @Args('dispensaryId', { type: () => ID, nullable: true }) dispensaryId?: string,
-    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) rawLimit: number,
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) rawLimit = 50,
     @Args('offset', { type: () => Int, nullable: true }) offset?: number,
   ): Promise<any[]> {
     const limit = Math.min(rawLimit, 100);

@@ -88,7 +88,7 @@ export class ManufacturersResolver {
 
   @Roles('super_admin')
   @Query(() => [ManufacturerListItem], { name: 'manufacturers' })
-  async manufacturers(
+  async listManufacturers(
     @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) limit: number,
     @Args('offset', { type: () => Int, nullable: true, defaultValue: 0 }) offset: number,
   ): Promise<any[]> {

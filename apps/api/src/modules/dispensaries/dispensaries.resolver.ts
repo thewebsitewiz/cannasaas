@@ -110,7 +110,7 @@ export class DispensariesResolver {
 
   @Roles('org_admin', 'super_admin')
   @Query(() => [DispensaryListItem], { name: 'dispensaries' })
-  async dispensaries(
+  async listDispensaries(
     @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) limit: number,
     @Args('offset', { type: () => Int, nullable: true, defaultValue: 0 }) offset: number,
   ): Promise<any[]> {

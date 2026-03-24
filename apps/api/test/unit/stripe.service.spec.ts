@@ -12,7 +12,7 @@ const mockRefundsCreate = jest.fn();
 const mockWebhooksConstructEvent = jest.fn();
 
 jest.mock('stripe', () => {
-  return jest.fn().mockImplementation(() => ({
+  const MockStripe = jest.fn().mockImplementation(() => ({
     paymentIntents: {
       create: mockPaymentIntentsCreate,
       retrieve: mockPaymentIntentsRetrieve,
@@ -24,6 +24,7 @@ jest.mock('stripe', () => {
       constructEvent: mockWebhooksConstructEvent,
     },
   }));
+  return { __esModule: true, default: MockStripe };
 });
 
 describe('StripeService', () => {
@@ -52,6 +53,7 @@ describe('StripeService', () => {
         },
         { provide: DataSource, useValue: { query: mockQuery } },
         { provide: EventEmitter2, useValue: mockEvents },
+        { provide: 'BullQueue_stripe-webhooks', useValue: { add: jest.fn() } },
       ],
     }).compile();
 
@@ -112,24 +114,10 @@ describe('StripeService', () => {
         },
       });
 
-      // markPaymentSucceeded: update payments
-      mockQuery.mockResolvedValueOnce([]);
-      // markPaymentSucceeded: get payment for order update
-      mockQuery.mockResolvedValueOnce([{ order_id: 'order-1' }]);
-      // markPaymentSucceeded: update order payment status
-      mockQuery.mockResolvedValueOnce([]);
-
       const result = await service.handleWebhook(payload, signature);
 
+      // Webhook processing now goes through BullMQ queue
       expect(result).toEqual({ received: true });
-      expect(mockQuery).toHaveBeenCalledWith(
-        expect.stringContaining('UPDATE payments SET status'),
-        ['succeeded', 'ch_123', 'pi_123'],
-      );
-      expect(mockEvents.emit).toHaveBeenCalledWith(
-        'order.payment_received',
-        expect.objectContaining({ orderId: 'order-1' }),
-      );
     });
   });
 

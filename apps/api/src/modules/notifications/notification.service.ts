@@ -148,7 +148,7 @@ export class NotificationService {
       );
 
       log.status = 'sent';
-      log.external_id = message.sid;
+      log.external_id = (message as any).sid;
       log.sent_at = new Date();
       this.logger.log(`SMS sent: ${input.to}`);
     } catch (err: any) {

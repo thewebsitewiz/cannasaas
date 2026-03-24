@@ -62,7 +62,7 @@ export class BrandsResolver {
 
   @Roles('super_admin')
   @Query(() => [BrandListItem], { name: 'brands' })
-  async brands(
+  async listBrands(
     @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) limit: number,
     @Args('offset', { type: () => Int, nullable: true, defaultValue: 0 }) offset: number,
   ): Promise<any[]> {

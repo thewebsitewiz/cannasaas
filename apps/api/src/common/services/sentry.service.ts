@@ -15,7 +15,7 @@ export class SentryService implements OnModuleInit {
     if (dsn) {
       try {
         // Dynamic import to avoid hard dependency
-        const Sentry = await import('@sentry/node');
+        const Sentry = await import(/* webpackIgnore: true */ '@sentry/node' as string);
         Sentry.init({
           dsn,
           environment: process.env['NODE_ENV'] || 'development',
@@ -35,7 +35,7 @@ export class SentryService implements OnModuleInit {
   async captureException(error: Error, context?: Record<string, any>): Promise<void> {
     if (this.initialized) {
       try {
-        const Sentry = await import('@sentry/node');
+        const Sentry = await import(/* webpackIgnore: true */ '@sentry/node' as string);
         if (context) Sentry.setContext('extra', context);
         Sentry.captureException(error);
       } catch { /* Sentry unavailable */ }
@@ -47,7 +47,7 @@ export class SentryService implements OnModuleInit {
   async captureMessage(message: string, level: 'info' | 'warning' | 'error' = 'info'): Promise<void> {
     if (this.initialized) {
       try {
-        const Sentry = await import('@sentry/node');
+        const Sentry = await import(/* webpackIgnore: true */ '@sentry/node' as string);
         Sentry.captureMessage(message, level);
       } catch { /* Sentry unavailable */ }
     }
