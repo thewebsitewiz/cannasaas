@@ -12,6 +12,7 @@ import { IoAdapter } from '@nestjs/platform-socket.io';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import * as path from 'path';
+import { json, urlencoded } from 'express';
 import * as compression from 'compression';
 import * as cookieParser from 'cookie-parser';
 import helmet from 'helmet';
@@ -35,6 +36,11 @@ async function bootstrap(): Promise<void> {
   }
   app.use(compression());
   app.use(cookieParser());
+
+  // Request body size limits (webhook endpoint gets a larger limit for Stripe payloads)
+  app.use('/v1/webhooks', json({ limit: '5mb' }));
+  app.use(json({ limit: '1mb' }));
+  app.use(urlencoded({ extended: true, limit: '1mb' }));
 
   // Serve uploaded images
   const uploadDir = process.env['UPLOAD_DIR'] || path.join(process.cwd(), 'uploads');
@@ -68,6 +74,7 @@ async function bootstrap(): Promise<void> {
   app.useGlobalInterceptors(new LoggingInterceptor());
   app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' });
   app.useWebSocketAdapter(new IoAdapter(app));
+  app.enableShutdownHooks(); // Graceful shutdown: drain connections on SIGTERM/SIGINT
 
   if (!isProd) {
     const swaggerConfig = new DocumentBuilder()

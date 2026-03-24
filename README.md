@@ -1,98 +1,102 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# CannaSaas — GreenStack Platform
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Multi-tenant SaaS platform for licensed cannabis dispensaries in NY, NJ, and CT.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Architecture
 
-## Description
+- **API**: NestJS 11 + GraphQL (Apollo) + PostgreSQL 16 + Redis 7
+- **Storefront**: Next.js 15 (customer e-commerce)
+- **Admin**: React 19 + Vite 8 (dispensary management)
+- **Staff**: React 19 + Vite 8 (counter operations)
+- **Kiosk**: React 19 + Vite 8 (in-store self-service)
+- **Platform**: React 19 + Vite 8 (super admin)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+## Quick Start
 
 ```bash
-$ npm install
+# Prerequisites: Node 20+, pnpm 9+, Docker
+
+# Start PostgreSQL + Redis
+docker compose up -d
+
+# Install dependencies
+pnpm install
+
+# Run migrations and seed data
+pnpm db:migrate
+pnpm db:seed
+
+# Start all apps in parallel
+pnpm dev
 ```
 
-## Compile and run the project
+## Ports
+
+| App | Port |
+|-----|------|
+| API (GraphQL + REST) | :3000 |
+| Storefront | :5173 |
+| Admin | :5174 |
+| Staff | :5175 |
+| Kiosk | :5176 |
+| Platform | :5177 |
+
+## Key Commands
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+pnpm dev              # Start all apps
+pnpm dev:api          # Start API only
+pnpm dev:admin        # Start admin only
+pnpm build            # Build all apps
+pnpm test             # Run unit tests
+pnpm test:e2e         # Run E2E tests
+pnpm lint             # Lint all code
+pnpm type-check       # TypeScript check
+pnpm type-check:native # Fast check via tsgo
+pnpm db:migrate       # Run migrations
+pnpm db:seed          # Seed test data
 ```
 
-## Run tests
+## Project Structure
+
+```
+apps/
+  api/          NestJS backend (34 modules, 95+ tables)
+  admin/        Dispensary admin portal
+  staff/        Staff operations portal
+  kiosk/        In-store self-service
+  storefront/   Customer e-commerce
+  platform/     Super admin dashboard
+packages/
+  ui/           Shared design system (10 themes)
+  stores/       Zustand state stores
+  types/        Shared TypeScript types
+deploy/
+  Dockerfile.*  Production Docker images
+  nginx.conf    Reverse proxy config
+docs/           Architecture & business docs
+```
+
+## Test Credentials (Dev)
+
+- Admin: `admin@greenleaf.com` / `Admin123!`
+- GraphQL Playground: http://localhost:3000/graphql
+- Swagger Docs: http://localhost:3000/docs
+
+## Production Deployment
 
 ```bash
-# unit tests
-$ npm run test
+# Set required environment variables
+export DB_PASSWORD=<secure-password>
+# See .env.template for all variables
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+# Deploy with Docker Compose
+docker compose -f docker-compose.prod.yml up -d
 ```
 
-## Deployment
+## Documentation
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- [Architecture Document](docs/CannaSaas-Architecture-Document.md)
+- [Business Plan](docs/CannaSaas-Business-Plan.md)
+- [Complete Feature List](docs/CannaSaas-Complete-Feature-List.md)
+- [Platform Architecture](docs/CannaSaas-Platform-Architecture.md)

@@ -9,6 +9,9 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 
 import { configuration } from './config/configuration';
 import { TenantMiddleware } from './common/middleware/tenant.middleware';
+import { CsrfMiddleware } from './common/middleware/csrf.middleware';
+import { depthLimitPlugin } from './common/plugins/depth-limit.plugin';
+import { complexityLimitPlugin } from './common/plugins/complexity-limit.plugin';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { DatabaseModule } from './database/database.module';
@@ -46,9 +49,14 @@ import { StripeModule } from './modules/stripe/stripe.module';
 import { PlatformModule } from './modules/platform/platform.module';
 import { ThemeModule } from './modules/theme/theme.module';
 import { HealthModule } from './modules/health/health.module';
+import { CacheModule } from './common/services/cache.module';
+import { SentryModule } from './common/services/sentry.module';
+import { MetricsModule } from './common/services/metrics.module';
 
 @Module({
   imports: [
+    SentryModule,
+    MetricsModule,
     BullModule.forRootAsync({
       useFactory: () => ({
         connection: {
@@ -66,7 +74,9 @@ import { HealthModule } from './modules/health/health.module';
       sortSchema: true,
       playground: process.env['NODE_ENV'] !== 'production',
       context: ({ req, res }: { req: unknown; res: unknown }) => ({ req, res }),
+      plugins: [depthLimitPlugin, complexityLimitPlugin],
     }),
+    CacheModule,
     DatabaseModule,
     AuthModule,
     UsersModule,
@@ -109,6 +119,6 @@ import { HealthModule } from './modules/health/health.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(TenantMiddleware).forRoutes('*');
+    consumer.apply(CsrfMiddleware, TenantMiddleware).forRoutes('*');
   }
 }

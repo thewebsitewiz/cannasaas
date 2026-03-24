@@ -13,12 +13,15 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
         synchronize: true,
         logging:
-          config.get<string>('nodeEnv') === 'development'
+          config.get<string>('nodeEnv') !== 'production'
             ? ['query', 'error']
-            : ['error'],
+            : ['error', 'warn'],
+        maxQueryExecutionTime: 1000, // Log queries slower than 1 second
         extra: {
-          max: config.get<number>('database.poolMax') ?? 20,
-          min: config.get<number>('database.poolMin') ?? 2,
+          max: parseInt(process.env['DB_POOL_MAX'] || '20', 10),
+          min: parseInt(process.env['DB_POOL_MIN'] || '5', 10),
+          idleTimeoutMillis: 30000,
+          connectionTimeoutMillis: 5000,
         },
       }),
       inject: [ConfigService],

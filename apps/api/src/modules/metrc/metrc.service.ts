@@ -10,6 +10,7 @@ import { TagPackageLabelInput } from './dto/tag-package-label.input';
 import { SetMetrcCategoryInput } from './dto/set-metrc-category.input';
 import { CredentialValidationResult } from './dto/credential-validation-result.type';
 import { ComplianceReport, ComplianceIssue } from './dto/compliance-report.type';
+import { CircuitBreaker } from '../../common/services/circuit-breaker';
 
 const METRC_BASE_URLS: Record<string, string> = {
   NY: 'https://api-mn.metrc.com',
@@ -20,6 +21,7 @@ const METRC_BASE_URLS: Record<string, string> = {
 @Injectable()
 export class MetrcService {
   private encryptionKey: Buffer;
+  private readonly breaker = new CircuitBreaker({ name: 'metrc', failureThreshold: 3, resetTimeoutMs: 60000 });
 
   constructor(
     @InjectRepository(MetrcCredential)
@@ -112,9 +114,11 @@ export class MetrcService {
       const isSandbox = this.config.get<boolean>('metrc.sandboxMode') ?? true;
       const url = isSandbox ? `https://sandbox-api-mn.metrc.com/facilities/v2` : `${baseUrl}/facilities/v2`;
 
-      const response = await fetch(url, {
-        headers: { Authorization: `Basic ${authToken}`, 'Content-Type': 'application/json' },
-      });
+      const response = await this.breaker.exec(() =>
+        fetch(url, {
+          headers: { Authorization: `Basic ${authToken}`, 'Content-Type': 'application/json' },
+        }),
+      );
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -433,14 +437,16 @@ export class MetrcService {
       const baseUrl = isSandbox ? 'https://sandbox-api-mn.metrc.com' : `https://api-${order.state.toLowerCase()}.metrc.com`;
 
       const licenseNumber = order.license_number;
-      const response = await fetch(`${baseUrl}/sales/v2/receipts?licenseNumber=${encodeURIComponent(licenseNumber)}`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Basic ${authToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
+      const response = await this.breaker.exec(() =>
+        fetch(`${baseUrl}/sales/v2/receipts?licenseNumber=${encodeURIComponent(licenseNumber)}`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Basic ${authToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        }),
+      );
 
       const responseText = await response.text();
       const success = response.ok;

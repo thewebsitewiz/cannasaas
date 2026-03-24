@@ -3,18 +3,27 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ThemeConfig } from './theme-config.entity';
 import { SaveThemeConfigInput } from './dto';
+import { CacheService } from '../../common/services/cache.service';
 
 @Injectable()
 export class ThemeService {
   constructor(
     @InjectRepository(ThemeConfig)
     private readonly repo: Repository<ThemeConfig>,
+    private readonly cache: CacheService,
   ) {}
 
   /** Get theme config for a dispensary (returns defaults if none saved) */
   async getByDispensaryId(dispensaryId: string): Promise<ThemeConfig> {
+    const cacheKey = `theme:${dispensaryId}`;
+    const cached = await this.cache.get<ThemeConfig>(cacheKey);
+    if (cached) return cached;
+
     const existing = await this.repo.findOne({ where: { dispensaryId } });
-    if (existing) return existing;
+    if (existing) {
+      await this.cache.set(cacheKey, existing, 300);
+      return existing;
+    }
 
     // Return unsaved defaults so the frontend always gets a config
     // Return in-memory defaults (column defaults don't apply on .create())
@@ -47,6 +56,7 @@ export class ThemeService {
       where: { dispensaryId: input.dispensaryId },
     });
 
+    let result: ThemeConfig;
     if (existing) {
       // Merge only provided fields
       Object.entries(input).forEach(([key, value]) => {
@@ -54,11 +64,15 @@ export class ThemeService {
           (existing as any)[key] = value;
         }
       });
-      return this.repo.save(existing);
+      result = await this.repo.save(existing);
+    } else {
+      const config = this.repo.create(input);
+      result = await this.repo.save(config);
     }
 
-    const config = this.repo.create(input);
-    return this.repo.save(config);
+    // Invalidate cache on save
+    await this.cache.del(`theme:${input.dispensaryId}`);
+    return result;
   }
 
   /** Reset to default casual theme */
@@ -67,6 +81,8 @@ export class ThemeService {
     if (existing) {
       await this.repo.remove(existing);
     }
+    // Invalidate cache on reset
+    await this.cache.del(`theme:${dispensaryId}`);
     return this.repo.create({ dispensaryId });
   }
 }

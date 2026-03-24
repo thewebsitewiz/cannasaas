@@ -16,15 +16,17 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 export function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/" element={<ProtectedRoute><StaffLayout /></ProtectedRoute>}>
-        <Route index element={<OrderQueuePage />} />
-        <Route path="fulfillment" element={<FulfillmentPage />} />
-        <Route path="inventory" element={<InventoryPage />} />
-        <Route path="products" element={<ProductLookupPage />} />
-      </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <ErrorBoundary>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/" element={<ProtectedRoute><StaffLayout /></ProtectedRoute>}>
+          <Route index element={<OrderQueuePage />} />
+          <Route path="fulfillment" element={<FulfillmentPage />} />
+          <Route path="inventory" element={<InventoryPage />} />
+          <Route path="products" element={<ProductLookupPage />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </ErrorBoundary>
   );
 }

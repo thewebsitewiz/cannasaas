@@ -1,12 +1,17 @@
-import { type ArgumentsHost, Catch, type ExceptionFilter, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import { type ArgumentsHost, Catch, type ExceptionFilter, HttpException, HttpStatus, Inject, Logger, Optional } from '@nestjs/common';
 import { GraphQLError } from 'graphql';
 import { randomUUID } from 'crypto';
+import { SentryService } from '../services/sentry.service';
 
 const isProd = process.env['NODE_ENV'] === 'production';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(GlobalExceptionFilter.name);
+
+  constructor(
+    @Optional() @Inject(SentryService) private readonly sentry?: SentryService,
+  ) {}
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const contextType = host.getType<string>();
@@ -33,6 +38,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         });
       }
       this.logger.error(`[${errorId}] Unhandled GraphQL: ${errMsg}`, errStack);
+      if (exception instanceof Error) {
+        this.sentry?.captureException(exception, { errorId, context: 'graphql' });
+      }
       throw new GraphQLError(isProd ? 'Internal server error' : errMsg, {
         extensions: { code: 'INTERNAL_SERVER_ERROR', errorId },
       });
@@ -50,6 +58,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       `[${requestId}] ${req?.method} ${req?.url} - User: ${userId} - Status: ${status} - ${errMsg}`,
       errStack,
     );
+
+    // Report 5xx errors to Sentry
+    if (status >= 500 && exception instanceof Error) {
+      this.sentry?.captureException(exception, { requestId, userId, url: req?.url, method: req?.method });
+    }
 
     // In production, mask internal error details but log them server-side
     const clientMessage = exception instanceof HttpException

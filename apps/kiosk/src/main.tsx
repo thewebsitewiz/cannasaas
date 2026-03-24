@@ -21,6 +21,7 @@ import { ProductPage } from './pages/ProductPage';
 import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { OrderConfirmPage } from './pages/OrderConfirmPage';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { setThemePreset } from '@cannasaas/ui';
 
 // Fetch and apply saved theme on startup
@@ -48,15 +49,17 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <Routes>
-          <Route element={<KioskLayout />}>
-            <Route path="/" element={<MenuPage />} />
-            <Route path="/product/:id" element={<ProductPage />} />
-            <Route path="/cart" element={<CartPage />} />
-            <Route path="/checkout" element={<CheckoutPage />} />
-            <Route path="/confirm/:orderId" element={<OrderConfirmPage />} />
-          </Route>
-        </Routes>
+        <ErrorBoundary>
+          <Routes>
+            <Route element={<KioskLayout />}>
+              <Route path="/" element={<MenuPage />} />
+              <Route path="/product/:id" element={<ProductPage />} />
+              <Route path="/cart" element={<CartPage />} />
+              <Route path="/checkout" element={<CheckoutPage />} />
+              <Route path="/confirm/:orderId" element={<OrderConfirmPage />} />
+            </Route>
+          </Routes>
+        </ErrorBoundary>
       </BrowserRouter>
     </QueryClientProvider>
   </React.StrictMode>,
