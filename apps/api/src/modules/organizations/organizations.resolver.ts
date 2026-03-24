@@ -74,7 +74,7 @@ export class OrganizationsResolver {
 
   @Roles('super_admin')
   @Query(() => [OrganizationListItem], { name: 'organizations' })
-  async organizations(
+  async listOrganizations(
     @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) limit: number,
     @Args('offset', { type: () => Int, nullable: true, defaultValue: 0 }) offset: number,
   ): Promise<any[]> {

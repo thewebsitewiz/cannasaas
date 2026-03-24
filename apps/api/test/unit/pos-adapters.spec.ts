@@ -2,9 +2,15 @@ import { DutchieAdapter } from '../../src/modules/pos/adapters/dutchie.adapter';
 import { TreezAdapter } from '../../src/modules/pos/adapters/treez.adapter';
 import { PosProvider } from '../../src/modules/pos/interfaces/pos-provider.interface';
 
-// Mock axios
+// Mock axios with interceptors
 jest.mock('axios', () => {
-  const mockClient = { post: jest.fn(), get: jest.fn(), put: jest.fn() };
+  const mockInterceptor = { use: jest.fn() };
+  const mockClient = {
+    post: jest.fn(),
+    get: jest.fn(),
+    put: jest.fn(),
+    interceptors: { request: mockInterceptor, response: mockInterceptor },
+  };
   return { __esModule: true, default: { create: jest.fn(() => mockClient) } };
 });
 

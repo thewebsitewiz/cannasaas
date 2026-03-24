@@ -5,7 +5,7 @@ import { IsHexColor, IsOptional, IsString, IsBoolean } from 'class-validator';
 export class SaveThemeConfigInput {
   @Field()
   @IsString()
-  dispensaryId: string;
+  dispensaryId!: string;
 
   @Field({ nullable: true })
   @IsOptional()

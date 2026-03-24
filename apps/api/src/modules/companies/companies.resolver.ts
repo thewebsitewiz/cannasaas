@@ -92,7 +92,7 @@ export class CompaniesResolver {
 
   @Roles('super_admin')
   @Query(() => [CompanyListItem], { name: 'companies' })
-  async companies(
+  async listCompanies(
     @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) limit: number,
     @Args('offset', { type: () => Int, nullable: true, defaultValue: 0 }) offset: number,
   ): Promise<any[]> {

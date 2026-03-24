@@ -29,7 +29,7 @@ export class ProductsResolver {
     @Args('productTypeId', { type: () => Int, nullable: true }) productTypeId?: number,
     @Args('categoryId', { type: () => Int, nullable: true }) categoryId?: number,
     @Args('search', { nullable: true }) search?: string,
-    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) rawLimit: number,
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) rawLimit = 50,
     @Args('offset', { type: () => Int, nullable: true }) offset?: number,
   ): Promise<Product[]> {
     const limit = Math.min(rawLimit, 100);
@@ -63,7 +63,7 @@ export class ProductsResolver {
     @Args('productTypeId', { type: () => Int, nullable: true }) productTypeId?: number,
     @Args('categoryId', { type: () => Int, nullable: true }) categoryId?: number,
     @Args('search', { nullable: true }) search?: string,
-    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) rawLimit: number,
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) rawLimit = 50,
     @Args('offset', { type: () => Int, nullable: true }) offset?: number,
   ): Promise<Product[]> {
     const limit = Math.min(rawLimit, 100);
@@ -132,7 +132,7 @@ export class ProductsResolver {
   async autocomplete(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @Args('query') query: string,
-    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) rawLimit: number,
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) rawLimit = 50,
   ): Promise<AutocompleteResult[]> {
     const limit = Math.min(rawLimit, 100);
     return this.search.autocomplete(dispensaryId, query, limit);
