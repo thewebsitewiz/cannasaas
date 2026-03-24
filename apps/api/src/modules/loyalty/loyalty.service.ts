@@ -1,27 +1,28 @@
-import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { Inject, Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { Cron } from '@nestjs/schedule';
+import { sql } from 'drizzle-orm';
+
+export const DRIZZLE = Symbol.for('DRIZZLE');
 
 @Injectable()
 export class LoyaltyService {
   private readonly logger = new Logger(LoyaltyService.name);
 
-  constructor(@InjectDataSource() private ds: DataSource) {}
+  constructor(@Inject(DRIZZLE) private db: any) {}
 
   // ═══ EARN POINTS ═══
 
   async earnPoints(userId: string, dispensaryId: string, points: number, type: string, description: string, orderId?: string): Promise<any> {
-    const [profile] = await this.ds.query('SELECT loyalty_points, lifetime_points FROM customer_profiles WHERE user_id = $1', [userId]);
+    const [profile] = await this._q('SELECT loyalty_points, lifetime_points FROM customer_profiles WHERE user_id = $1', [userId]);
     if (!profile) return null;
 
     const newBalance = (profile.loyalty_points || 0) + points;
     const newLifetime = (profile.lifetime_points || 0) + points;
 
-    await this.ds.query('UPDATE customer_profiles SET loyalty_points = $1, lifetime_points = $2, updated_at = NOW() WHERE user_id = $3', [newBalance, newLifetime, userId]);
+    await this._q('UPDATE customer_profiles SET loyalty_points = $1, lifetime_points = $2, updated_at = NOW() WHERE user_id = $3', [newBalance, newLifetime, userId]);
 
-    const [tx] = await this.ds.query(
+    const [tx] = await this._q(
       'INSERT INTO loyalty_transactions (user_id, dispensary_id, type, points, balance_after, description, order_id) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
       [userId, dispensaryId, type, points, newBalance, description, orderId || null],
     );
@@ -34,14 +35,14 @@ export class LoyaltyService {
   }
 
   async redeemPoints(userId: string, dispensaryId: string, rewardId: string, orderId?: string): Promise<any> {
-    const [reward] = await this.ds.query('SELECT * FROM loyalty_rewards WHERE reward_id = $1 AND dispensary_id = $2 AND is_active = true', [rewardId, dispensaryId]);
+    const [reward] = await this._q('SELECT * FROM loyalty_rewards WHERE reward_id = $1 AND dispensary_id = $2 AND is_active = true', [rewardId, dispensaryId]);
     if (!reward) throw new NotFoundException('Reward not found');
 
     if (reward.max_redemptions && reward.current_redemptions >= reward.max_redemptions) {
       throw new BadRequestException('This reward is no longer available');
     }
 
-    const [profile] = await this.ds.query('SELECT loyalty_points FROM customer_profiles WHERE user_id = $1', [userId]);
+    const [profile] = await this._q('SELECT loyalty_points FROM customer_profiles WHERE user_id = $1', [userId]);
     if (!profile) throw new NotFoundException('Customer profile not found');
 
     if (profile.loyalty_points < reward.points_cost) {
@@ -50,19 +51,19 @@ export class LoyaltyService {
 
     const newBalance = profile.loyalty_points - reward.points_cost;
 
-    await this.ds.query('UPDATE customer_profiles SET loyalty_points = $1, updated_at = NOW() WHERE user_id = $2', [newBalance, userId]);
+    await this._q('UPDATE customer_profiles SET loyalty_points = $1, updated_at = NOW() WHERE user_id = $2', [newBalance, userId]);
 
-    await this.ds.query(
+    await this._q(
       'INSERT INTO loyalty_transactions (user_id, dispensary_id, type, points, balance_after, description, order_id) VALUES ($1,$2,$3,$4,$5,$6,$7)',
       [userId, dispensaryId, 'redeem', -reward.points_cost, newBalance, 'Redeemed: ' + reward.name, orderId || null],
     );
 
-    const [redemption] = await this.ds.query(
+    const [redemption] = await this._q(
       'INSERT INTO loyalty_redemptions (user_id, reward_id, dispensary_id, points_spent, order_id) VALUES ($1,$2,$3,$4,$5) RETURNING *',
       [userId, rewardId, dispensaryId, reward.points_cost, orderId || null],
     );
 
-    await this.ds.query('UPDATE loyalty_rewards SET current_redemptions = current_redemptions + 1 WHERE reward_id = $1', [rewardId]);
+    await this._q('UPDATE loyalty_rewards SET current_redemptions = current_redemptions + 1 WHERE reward_id = $1', [rewardId]);
 
     this.logger.log('Reward redeemed: ' + reward.name + ' by user ' + userId + ' (-' + reward.points_cost + ' pts)');
     return { redemption, reward, newBalance };
@@ -71,7 +72,7 @@ export class LoyaltyService {
   // ═══ TIERS ═══
 
   private async updateTier(userId: string, dispensaryId: string, lifetimePoints: number): Promise<void> {
-    const tiers = await this.ds.query(
+    const tiers = await this._q(
       'SELECT code, min_points FROM loyalty_tiers WHERE dispensary_id = $1 ORDER BY min_points DESC', [dispensaryId],
     );
 
@@ -80,24 +81,24 @@ export class LoyaltyService {
       if (lifetimePoints >= tier.min_points) { newTier = tier.code; break; }
     }
 
-    const [current] = await this.ds.query('SELECT loyalty_tier FROM customer_profiles WHERE user_id = $1', [userId]);
+    const [current] = await this._q('SELECT loyalty_tier FROM customer_profiles WHERE user_id = $1', [userId]);
     if (current && current.loyalty_tier !== newTier) {
-      await this.ds.query('UPDATE customer_profiles SET loyalty_tier = $1 WHERE user_id = $2', [newTier, userId]);
+      await this._q('UPDATE customer_profiles SET loyalty_tier = $1 WHERE user_id = $2', [newTier, userId]);
       this.logger.log('Tier upgrade: user ' + userId + ' → ' + newTier);
     }
   }
 
   async getMyLoyalty(userId: string, dispensaryId: string): Promise<any> {
-    const [profile] = await this.ds.query(
+    const [profile] = await this._q(
       'SELECT loyalty_points as points, lifetime_points as "lifetimePoints", loyalty_tier as tier FROM customer_profiles WHERE user_id = $1', [userId],
     );
     if (!profile) return null;
 
-    const tiers = await this.ds.query('SELECT * FROM loyalty_tiers WHERE dispensary_id = $1 ORDER BY sort_order', [dispensaryId]);
+    const tiers = await this._q('SELECT * FROM loyalty_tiers WHERE dispensary_id = $1 ORDER BY sort_order', [dispensaryId]);
     const currentTier = tiers.find((t: any) => t.code === profile.tier) || tiers[0];
     const nextTier = tiers.find((t: any) => t.min_points > (profile.lifetimePoints || 0));
 
-    const [program] = await this.ds.query('SELECT * FROM loyalty_programs WHERE dispensary_id = $1', [dispensaryId]);
+    const [program] = await this._q('SELECT * FROM loyalty_programs WHERE dispensary_id = $1', [dispensaryId]);
 
     return {
       points: profile.points || 0,
@@ -114,7 +115,7 @@ export class LoyaltyService {
   }
 
   async getPointHistory(userId: string, limit = 20): Promise<any[]> {
-    return this.ds.query(
+    return this._q(
       'SELECT transaction_id as "transactionId", type, points, balance_after as "balanceAfter", description, created_at as "createdAt" FROM loyalty_transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2',
       [userId, limit],
     );
@@ -123,14 +124,14 @@ export class LoyaltyService {
   // ═══ REWARDS CATALOG ═══
 
   async getRewards(dispensaryId: string): Promise<any[]> {
-    return this.ds.query(
+    return this._q(
       'SELECT reward_id as "rewardId", name, description, points_cost as "pointsCost", reward_type as "rewardType", reward_value as "rewardValue", is_active as "isActive" FROM loyalty_rewards WHERE dispensary_id = $1 AND is_active = true ORDER BY points_cost',
       [dispensaryId],
     );
   }
 
   async createReward(dispensaryId: string, input: { name: string; description?: string; pointsCost: number; rewardType: string; rewardValue: number }): Promise<any> {
-    const [reward] = await this.ds.query(
+    const [reward] = await this._q(
       'INSERT INTO loyalty_rewards (dispensary_id, name, description, points_cost, reward_type, reward_value) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
       [dispensaryId, input.name, input.description, input.pointsCost, input.rewardType, input.rewardValue],
     );
@@ -140,10 +141,10 @@ export class LoyaltyService {
   // ═══ BIRTHDAY ═══
 
   async checkBirthdayBonus(userId: string, dispensaryId: string): Promise<any> {
-    const [profile] = await this.ds.query('SELECT date_of_birth FROM customer_profiles WHERE user_id = $1', [userId]);
+    const [profile] = await this._q('SELECT date_of_birth FROM customer_profiles WHERE user_id = $1', [userId]);
     if (!profile?.date_of_birth) return { eligible: false, reason: 'No date of birth on file' };
 
-    const [program] = await this.ds.query('SELECT birthday_bonus_points, birthday_discount_percent, birthday_window_days FROM loyalty_programs WHERE dispensary_id = $1', [dispensaryId]);
+    const [program] = await this._q('SELECT birthday_bonus_points, birthday_discount_percent, birthday_window_days FROM loyalty_programs WHERE dispensary_id = $1', [dispensaryId]);
     if (!program) return { eligible: false, reason: 'No loyalty program' };
 
     const dob = new Date(profile.date_of_birth);
@@ -157,7 +158,7 @@ export class LoyaltyService {
     }
 
     // Check if already claimed this year
-    const [claimed] = await this.ds.query(
+    const [claimed] = await this._q(
       "SELECT transaction_id FROM loyalty_transactions WHERE user_id = $1 AND type = 'birthday_bonus' AND created_at >= DATE_TRUNC('year', NOW())",
       [userId],
     );
@@ -180,7 +181,7 @@ export class LoyaltyService {
   // ═══ ADMIN ═══
 
   async getLoyaltyStats(dispensaryId: string): Promise<any> {
-    const [stats] = await this.ds.query(`SELECT
+    const [stats] = await this._q(`SELECT
       COUNT(DISTINCT lt.user_id) as active_members,
       COALESCE(SUM(CASE WHEN lt.type LIKE 'earn%' OR lt.type = 'birthday_bonus' THEN lt.points ELSE 0 END), 0) as total_earned,
       COALESCE(SUM(CASE WHEN lt.type = 'redeem' THEN ABS(lt.points) ELSE 0 END), 0) as total_redeemed,
@@ -188,7 +189,7 @@ export class LoyaltyService {
       COUNT(*) FILTER (WHERE lt.type = 'birthday_bonus') as birthday_claims
      FROM loyalty_transactions lt WHERE lt.dispensary_id = $1`, [dispensaryId]);
 
-    const tierCounts = await this.ds.query(`SELECT cp.loyalty_tier as tier, COUNT(*) as count
+    const tierCounts = await this._q(`SELECT cp.loyalty_tier as tier, COUNT(*) as count
       FROM customer_profiles cp WHERE cp.preferred_dispensary_id = $1 AND cp.loyalty_tier IS NOT NULL
       GROUP BY cp.loyalty_tier ORDER BY count DESC`, [dispensaryId]);
 
@@ -208,13 +209,13 @@ export class LoyaltyService {
   async onOrderCompleted(payload: any): Promise<void> {
     if (!payload.customerUserId || !payload.dispensaryId || !payload.total) return;
 
-    const [program] = await this.ds.query('SELECT points_per_dollar FROM loyalty_programs WHERE dispensary_id = $1 AND is_active = true', [payload.dispensaryId]);
+    const [program] = await this._q('SELECT points_per_dollar FROM loyalty_programs WHERE dispensary_id = $1 AND is_active = true', [payload.dispensaryId]);
     if (!program) return;
 
-    const [profile] = await this.ds.query('SELECT loyalty_tier FROM customer_profiles WHERE user_id = $1', [payload.customerUserId]);
+    const [profile] = await this._q('SELECT loyalty_tier FROM customer_profiles WHERE user_id = $1', [payload.customerUserId]);
     const tier = profile?.loyalty_tier || 'bronze';
 
-    const [tierData] = await this.ds.query('SELECT points_multiplier FROM loyalty_tiers WHERE dispensary_id = $1 AND code = $2', [payload.dispensaryId, tier]);
+    const [tierData] = await this._q('SELECT points_multiplier FROM loyalty_tiers WHERE dispensary_id = $1 AND code = $2', [payload.dispensaryId, tier]);
     const multiplier = parseFloat(tierData?.points_multiplier || '1');
 
     const basePoints = Math.floor(payload.total * parseFloat(program.points_per_dollar));
@@ -229,9 +230,21 @@ export class LoyaltyService {
   @Cron('0 8 * * *')
   async dailyBirthdayCheck(): Promise<void> {
     this.logger.log('Checking birthdays...');
-    const birthdays = await this.ds.query(
+    const birthdays = await this._q(
       "SELECT cp.user_id, cp.preferred_dispensary_id FROM customer_profiles cp WHERE cp.date_of_birth IS NOT NULL AND EXTRACT(MONTH FROM cp.date_of_birth) = EXTRACT(MONTH FROM CURRENT_DATE) AND EXTRACT(DAY FROM cp.date_of_birth) = EXTRACT(DAY FROM CURRENT_DATE) AND cp.preferred_dispensary_id IS NOT NULL",
     );
     this.logger.log('Found ' + birthdays.length + ' birthdays today');
   }
+
+  /** Raw SQL helper – bridges TypeORM .query() to Drizzle */
+  private async _q(text: string, params?: any[]): Promise<any[]> {
+    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
+    if (client?.query) {
+      const r = await client.query(text, params);
+      return r.rows ?? r;
+    }
+    const result = await this.db.execute(sql.raw(text));
+    return Array.isArray(result) ? result : (result as any).rows ?? [];
+  }
+
 }

@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike } from 'typeorm';
 import { StrainData } from './entities/strain-data.entity';
+
+export const DRIZZLE = Symbol.for('DRIZZLE');
 
 const CACHE_TTL_HOURS = 168; // 7 days
 
@@ -13,8 +13,7 @@ export class OtreebaService {
   private readonly apiKey: string;
 
   constructor(
-    @InjectRepository(StrainData) private strainRepo: Repository<StrainData>,
-    private config: ConfigService,
+    private config: ConfigService
   ) {
     this.baseUrl = this.config.get<string>('OTREEBA_API_BASE_URL') ?? 'https://api.otreeba.com/v1';
     this.apiKey = this.config.get<string>('OTREEBA_API_KEY') ?? '';

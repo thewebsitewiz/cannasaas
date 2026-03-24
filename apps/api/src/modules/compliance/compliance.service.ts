@@ -1,12 +1,11 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
 import * as crypto from 'crypto';
 import { MetrcManifest, MetrcManifestItem, WasteDestructionLog, AuditLog, ReconciliationReport, ReconciliationItem } from './entities/compliance.entity';
+import { sql } from 'drizzle-orm';
+
+export const DRIZZLE = Symbol.for('DRIZZLE');
 
 @Injectable()
 export class ComplianceService {
@@ -14,14 +13,8 @@ export class ComplianceService {
   private encryptionKey: Buffer;
 
   constructor(
-    @InjectRepository(MetrcManifest) private manifestRepo: Repository<MetrcManifest>,
-    @InjectRepository(MetrcManifestItem) private manifestItemRepo: Repository<MetrcManifestItem>,
-    @InjectRepository(WasteDestructionLog) private wasteRepo: Repository<WasteDestructionLog>,
-    @InjectRepository(AuditLog) private auditRepo: Repository<AuditLog>,
-    @InjectRepository(ReconciliationReport) private reconRepo: Repository<ReconciliationReport>,
-    @InjectRepository(ReconciliationItem) private reconItemRepo: Repository<ReconciliationItem>,
-    @InjectDataSource() private ds: DataSource,
-    private config: ConfigService,
+    @Inject(DRIZZLE) private db: any,
+    private config: ConfigService
   ) {
     const keyStr = this.config.get<string>('ENCRYPTION_KEY', 'cannasaas-dev-key-change-in-prod-32b');
     const saltBytes = crypto.createHash('sha256').update(keyStr).digest().subarray(0, 16);
@@ -48,7 +41,7 @@ export class ComplianceService {
   }
 
   async encryptCredentials(dispensaryId: string): Promise<void> {
-    const creds = await this.ds.query(
+    const creds = await this._q(
       'SELECT credential_id, user_api_key, integrator_api_key, encryption_version FROM metrc_credentials WHERE dispensary_id = $1',
       [dispensaryId],
     );
@@ -56,7 +49,7 @@ export class ComplianceService {
     const cred = creds[0];
     const encUser = cred.user_api_key ? this.encrypt(cred.user_api_key) : null;
     const encInt = cred.integrator_api_key ? this.encrypt(cred.integrator_api_key) : null;
-    await this.ds.query(
+    await this._q(
       'UPDATE metrc_credentials SET user_api_key_encrypted = $1, integrator_api_key_encrypted = $2, user_api_key = $3, integrator_api_key = $4, encryption_version = 1, updated_at = NOW() WHERE credential_id = $5',
       [encUser, encInt, '***encrypted***', cred.integrator_api_key ? '***encrypted***' : null, cred.credential_id],
     );
@@ -64,13 +57,13 @@ export class ComplianceService {
   }
 
   async encryptAllCredentials(): Promise<number> {
-    const creds = await this.ds.query('SELECT dispensary_id FROM metrc_credentials WHERE encryption_version = 0 OR encryption_version IS NULL');
+    const creds = await this._q('SELECT dispensary_id FROM metrc_credentials WHERE encryption_version = 0 OR encryption_version IS NULL');
     for (const c of creds) { await this.encryptCredentials(c.dispensary_id); }
     return creds.length;
   }
 
   async getDecryptedApiKey(dispensaryId: string): Promise<{ userApiKey: string; integratorApiKey?: string }> {
-    const creds = await this.ds.query(
+    const creds = await this._q(
       'SELECT user_api_key, user_api_key_encrypted, integrator_api_key, integrator_api_key_encrypted, encryption_version FROM metrc_credentials WHERE dispensary_id = $1',
       [dispensaryId],
     );
@@ -85,14 +78,14 @@ export class ComplianceService {
   // ═══ MANIFESTS ═══
 
   async generateManifest(transferId: string, userId: string): Promise<any> {
-    const transfers = await this.ds.query(
+    const transfers = await this._q(
       'SELECT it.*, df.name as from_name, df.license_number as from_license, dt.name as to_name, dt.license_number as to_license FROM inventory_transfers it JOIN dispensaries df ON df.entity_id = it.from_dispensary_id JOIN dispensaries dt ON dt.entity_id = it.to_dispensary_id WHERE it.transfer_id = $1',
       [transferId],
     );
     if (transfers.length === 0) throw new NotFoundException('Transfer not found');
     const t = transfers[0];
     const manifestNumber = 'MFT-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
-    const items = await this.ds.query('SELECT * FROM inventory_transfer_items WHERE transfer_id = $1', [transferId]);
+    const items = await this._q('SELECT * FROM inventory_transfer_items WHERE transfer_id = $1', [transferId]);
     const totalQty = items.reduce((s: number, i: any) => s + (i.quantity_requested || 0), 0);
 
     const manifest = this.manifestRepo.create({
@@ -175,7 +168,7 @@ export class ComplianceService {
     await this.logAudit(input.dispensaryId, input.submittedByUserId, 'create', 'waste_log', (saved as any).logId, { productName: input.productName, quantity: input.quantity });
 
     if (input.variantId) {
-      await this.ds.query('UPDATE inventory SET quantity_on_hand = GREATEST(0, quantity_on_hand - $1), quantity_available = GREATEST(0, quantity_available - $1), updated_at = NOW() WHERE variant_id = $2 AND dispensary_id = $3', [input.quantity, input.variantId, input.dispensaryId]);
+      await this._q('UPDATE inventory SET quantity_on_hand = GREATEST(0, quantity_on_hand - $1), quantity_available = GREATEST(0, quantity_available - $1), updated_at = NOW() WHERE variant_id = $2 AND dispensary_id = $3', [input.quantity, input.variantId, input.dispensaryId]);
     }
     return saved as WasteDestructionLog;
   }
@@ -197,7 +190,7 @@ export class ComplianceService {
   }
 
   async getWasteTypes(): Promise<any[]> {
-    return this.ds.query('SELECT * FROM lkp_waste_types WHERE is_active = true ORDER BY waste_type_id');
+    return this._q('SELECT * FROM lkp_waste_types WHERE is_active = true ORDER BY waste_type_id');
   }
 
   // ═══ AUDIT LOGGING ═══
@@ -205,7 +198,7 @@ export class ComplianceService {
   async logAudit(dispensaryId: string | null, userId: string | null, action: string, entityType: string, entityId: string, changes: any, ipAddress?: string): Promise<void> {
     let email: string | undefined;
     if (userId) {
-      const users = await this.ds.query('SELECT email FROM users WHERE id = $1', [userId]);
+      const users = await this._q('SELECT email FROM users WHERE id = $1', [userId]);
       email = users[0]?.email;
     }
     const entry = this.auditRepo.create({
@@ -242,15 +235,15 @@ export class ComplianceService {
     const today = new Date().toISOString().split('T')[0];
 
     // Delete existing report for today
-    await this.ds.query('DELETE FROM reconciliation_items WHERE report_id IN (SELECT report_id FROM reconciliation_reports WHERE dispensary_id = $1 AND report_date = $2)', [dispensaryId, today]);
-    await this.ds.query('DELETE FROM reconciliation_reports WHERE dispensary_id = $1 AND report_date = $2', [dispensaryId, today]);
+    await this._q('DELETE FROM reconciliation_items WHERE report_id IN (SELECT report_id FROM reconciliation_reports WHERE dispensary_id = $1 AND report_date = $2)', [dispensaryId, today]);
+    await this._q('DELETE FROM reconciliation_reports WHERE dispensary_id = $1 AND report_date = $2', [dispensaryId, today]);
 
-    const localItems = await this.ds.query(
+    const localItems = await this._q(
       'SELECT i.variant_id, i.quantity_on_hand, p.name as product_name, pv.metrc_package_label FROM inventory i JOIN product_variants pv ON pv.variant_id = i.variant_id JOIN products p ON p.id = pv.product_id WHERE i.dispensary_id = $1',
       [dispensaryId],
     );
 
-    const metrcProducts = await this.ds.query(
+    const metrcProducts = await this._q(
       'SELECT p.metrc_item_uid, p.name, SUM(i.quantity_on_hand) as expected_qty FROM products p JOIN product_variants pv ON pv.product_id = p.id JOIN inventory i ON i.variant_id = pv.variant_id WHERE p.dispensary_id = $1 AND p.metrc_item_uid IS NOT NULL GROUP BY p.metrc_item_uid, p.name',
       [dispensaryId],
     );
@@ -273,7 +266,7 @@ export class ComplianceService {
     const seen = new Set<string>();
 
     for (const local of localItems) {
-      const productMetrc = await this.ds.query(
+      const productMetrc = await this._q(
         'SELECT p.metrc_item_uid FROM products p JOIN product_variants pv ON pv.product_id = p.id WHERE pv.variant_id = $1',
         [local.variant_id],
       );
@@ -336,10 +329,22 @@ export class ComplianceService {
   @Cron('0 6 * * *')
   async dailyReconciliation(): Promise<void> {
     this.logger.log('Running daily reconciliation...');
-    const dispensaries = await this.ds.query('SELECT entity_id FROM dispensaries WHERE is_active = true');
+    const dispensaries = await this._q('SELECT entity_id FROM dispensaries WHERE is_active = true');
     for (const d of dispensaries) {
       try { await this.runReconciliation(d.entity_id, 'system'); }
       catch (err: any) { this.logger.error('Reconciliation failed for ' + d.entity_id + ': ' + err.message); }
     }
   }
+
+  /** Raw SQL helper – bridges TypeORM .query() to Drizzle */
+  private async _q(text: string, params?: any[]): Promise<any[]> {
+    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
+    if (client?.query) {
+      const r = await client.query(text, params);
+      return r.rows ?? r;
+    }
+    const result = await this.db.execute(sql.raw(text));
+    return Array.isArray(result) ? result : (result as any).rows ?? [];
+  }
+
 }

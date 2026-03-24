@@ -1,24 +1,22 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { Inject, Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { TimeEntry } from './entities/time-entry.entity';
+import { sql } from 'drizzle-orm';
+
+export const DRIZZLE = Symbol.for('DRIZZLE');
 
 @Injectable()
 export class TimeClockService {
   private readonly logger = new Logger(TimeClockService.name);
 
   constructor(
-    @InjectRepository(TimeEntry) private entryRepo: Repository<TimeEntry>,
-    @InjectDataSource() private dataSource: DataSource,
+    @Inject(DRIZZLE) private db: any
   ) {}
 
   // ── Clock In ──────────────────────────────────────────────────────────────
 
   async clockIn(userId: string, dispensaryId: string, notes?: string): Promise<TimeEntry> {
     // Find employee profile
-    const [profile] = await this.dataSource.query(
+    const [profile] = await this._q(
       `SELECT ep.profile_id, ep.is_exempt, ep.employment_status, lp.name as position_name
        FROM employee_profiles ep
        LEFT JOIN lkp_positions lp ON lp.position_id = ep.position_id
@@ -30,7 +28,7 @@ export class TimeClockService {
     if (profile.is_exempt) throw new BadRequestException(`${profile.position_name} is exempt from time tracking`);
 
     // Check not already clocked in
-    const [existing] = await this.dataSource.query(
+    const [existing] = await this._q(
       `SELECT entry_id FROM time_entries WHERE profile_id = $1 AND status = 'clocked_in'`,
       [profile.profile_id],
     );
@@ -52,7 +50,7 @@ export class TimeClockService {
   // ── Clock Out ─────────────────────────────────────────────────────────────
 
   async clockOut(userId: string, dispensaryId: string, breakMinutes = 0, notes?: string): Promise<TimeEntry> {
-    const [profile] = await this.dataSource.query(
+    const [profile] = await this._q(
       `SELECT profile_id FROM employee_profiles WHERE user_id = $1 AND dispensary_id = $2`,
       [userId, dispensaryId],
     );
@@ -82,7 +80,7 @@ export class TimeClockService {
   // ── Current Status ────────────────────────────────────────────────────────
 
   async getClockStatus(userId: string, dispensaryId: string): Promise<{ isClockedIn: boolean; isExempt: boolean; currentEntry?: TimeEntry; todayHours: number }> {
-    const [profile] = await this.dataSource.query(
+    const [profile] = await this._q(
       `SELECT profile_id, is_exempt FROM employee_profiles WHERE user_id = $1 AND dispensary_id = $2`,
       [userId, dispensaryId],
     );
@@ -97,7 +95,7 @@ export class TimeClockService {
       order: { clock_in: 'DESC' },
     });
 
-    const [todayResult] = await this.dataSource.query(
+    const [todayResult] = await this._q(
       `SELECT COALESCE(SUM(total_hours), 0) as today_hours
        FROM time_entries
        WHERE profile_id = $1 AND clock_in >= CURRENT_DATE AND status = 'completed'`,
@@ -115,7 +113,7 @@ export class TimeClockService {
   // ── Who's Clocked In ─────────────────────────────────────────────────────
 
   async getActiveClocks(dispensaryId: string): Promise<any[]> {
-    return this.dataSource.query(
+    return this._q(
       `SELECT te.entry_id, te.clock_in, te.profile_id,
         u."firstName", u."lastName", u.email,
         lp.name as position_name,
@@ -157,7 +155,7 @@ export class TimeClockService {
   // ── Payroll Report ────────────────────────────────────────────────────────
 
   async getPayrollReport(dispensaryId: string, startDate: string, endDate: string): Promise<any[]> {
-    return this.dataSource.query(
+    return this._q(
       `SELECT
         ep.employee_number,
         u."firstName", u."lastName", u.email,
@@ -198,7 +196,7 @@ export class TimeClockService {
   async generatePayrollCsv(dispensaryId: string, startDate: string, endDate: string): Promise<string> {
     const rows = await this.getPayrollReport(dispensaryId, startDate, endDate);
 
-    const [disp] = await this.dataSource.query(
+    const [disp] = await this._q(
       `SELECT name, state FROM dispensaries WHERE entity_id = $1`, [dispensaryId],
     );
     const dispName = disp?.name ?? 'Unknown';
@@ -239,4 +237,16 @@ export class TimeClockService {
 
     return meta + headers + '\n' + csvRows.join('\n') + '\n';
   }
+
+  /** Raw SQL helper – bridges TypeORM .query() to Drizzle */
+  private async _q(text: string, params?: any[]): Promise<any[]> {
+    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
+    if (client?.query) {
+      const r = await client.query(text, params);
+      return r.rows ?? r;
+    }
+    const result = await this.db.execute(sql.raw(text));
+    return Array.isArray(result) ? result : (result as any).rows ?? [];
+  }
+
 }

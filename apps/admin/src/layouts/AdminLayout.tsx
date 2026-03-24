@@ -10,12 +10,14 @@ import {
   Settings,
   ShieldCheck,
   ShoppingCart,
+  Sparkles,
   Star,
   Users,
   Monitor,
   Warehouse,
 } from 'lucide-react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 
 import { useAuthStore } from '../stores/auth.store';
 import { DarkModeToggle } from '../components/DarkModeToggle';
@@ -35,12 +37,27 @@ const NAV_ITEMS = [
   { to: '/reports', label: 'Reports', icon: BarChart3 },
   { to: '/menu-board', label: 'Menu Board', icon: Monitor },
   { to: '/settings', label: 'Settings', icon: Settings },
+  { to: '/changelog', label: "What's New", icon: Sparkles },
 ];
 
 export function AdminLayout() {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
+  const [hasNewChangelog, setHasNewChangelog] = useState(false);
+
+  useEffect(() => {
+    const lastSeen = localStorage.getItem('changelog_last_seen');
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    fetch(`${apiUrl}/changelog?limit=1`)
+      .then(r => r.json())
+      .then(entries => {
+        if (entries.length > 0 && (!lastSeen || new Date(entries[0].created_at) > new Date(lastSeen))) {
+          setHasNewChangelog(true);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -73,6 +90,9 @@ export function AdminLayout() {
             >
               <Icon size={18} aria-hidden="true" />
               {label}
+              {label === "What's New" && hasNewChangelog && (
+                <span className="ml-auto w-2 h-2 bg-brand-500 rounded-full" />
+              )}
             </NavLink>
           ))}
         </nav>

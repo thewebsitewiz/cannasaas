@@ -1,7 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { OtreebaService } from './otreeba.service';
+import { sql } from 'drizzle-orm';
+
+export const DRIZZLE = Symbol.for('DRIZZLE');
 
 export interface EnrichmentResult {
   productId: string;
@@ -16,13 +17,13 @@ export class ProductEnrichmentService {
 
   constructor(
     private readonly otreeba: OtreebaService,
-    @InjectDataSource() private dataSource: DataSource,
+    @Inject(DRIZZLE) private db: any
   ) {}
 
   // ── Enrich Single Product ─────────────────────────────────────────────────
 
   async enrichProduct(productId: string, dispensaryId: string): Promise<EnrichmentResult> {
-    const qr = this.dataSource.createQueryRunner();
+    const qr = this.db.createQueryRunner();
     await qr.connect();
 
     try {
@@ -102,7 +103,7 @@ export class ProductEnrichmentService {
   // ── Bulk Enrich All Products for Dispensary ───────────────────────────────
 
   async enrichDispensary(dispensaryId: string): Promise<{ total: number; enriched: number; failed: number }> {
-    const products = await this.dataSource.query(
+    const products = await this._q(
       `SELECT id FROM products WHERE dispensary_id = $1 AND is_active = true AND enriched_at IS NULL`,
       [dispensaryId],
     );
@@ -135,4 +136,16 @@ export class ProductEnrichmentService {
       .trim();
     return cleaned.length > 2 ? cleaned : null;
   }
+
+  /** Raw SQL helper – bridges TypeORM .query() to Drizzle */
+  private async _q(text: string, params?: any[]): Promise<any[]> {
+    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
+    if (client?.query) {
+      const r = await client.query(text, params);
+      return r.rows ?? r;
+    }
+    const result = await this.db.execute(sql.raw(text));
+    return Array.isArray(result) ? result : (result as any).rows ?? [];
+  }
+
 }

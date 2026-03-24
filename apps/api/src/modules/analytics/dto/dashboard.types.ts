@@ -87,6 +87,72 @@ export class ComplianceSummary {
   @Field(() => Float) compliancePercent!: number;
 }
 
+// ── Weekly Digest ───────────────────────────────────────────────────────────
+
+@ObjectType()
+export class DigestRevenue {
+  @Field(() => Float) current!: number;
+  @Field(() => Float) previous!: number;
+  @Field(() => Float) changePercent!: number;
+  @Field() trend!: string;
+}
+
+@ObjectType()
+export class DigestOrders {
+  @Field(() => Int) current!: number;
+  @Field(() => Int) previous!: number;
+  @Field(() => Float) changePercent!: number;
+}
+
+@ObjectType()
+export class DigestProduct {
+  @Field() name!: string;
+  @Field(() => Int) currentUnits!: number;
+  @Field(() => Int) previousUnits!: number;
+  @Field(() => Int) change!: number;
+}
+
+@ObjectType()
+export class DigestBusiestHour {
+  @Field(() => Int) hour!: number;
+  @Field(() => Int) orders!: number;
+}
+
+@ObjectType()
+export class DigestCustomerRatio {
+  @Field(() => Int) newCustomers!: number;
+  @Field(() => Int) returningCustomers!: number;
+  @Field(() => Float) newPercent!: number;
+}
+
+@ObjectType()
+export class DigestInventoryAlert {
+  @Field() productName!: string;
+  @Field() variantName!: string;
+  @Field(() => Float) available!: number;
+  @Field(() => Int) daysUntilOut!: number;
+}
+
+@ObjectType()
+export class DigestPeriod {
+  @Field() start!: string;
+  @Field() end!: string;
+}
+
+@ObjectType()
+export class WeeklyDigestData {
+  @Field() dispensaryId!: string;
+  @Field() dispensaryName!: string;
+  @Field(() => DigestPeriod) period!: DigestPeriod;
+  @Field(() => DigestRevenue) revenue!: DigestRevenue;
+  @Field(() => DigestOrders) orders!: DigestOrders;
+  @Field(() => DigestProduct, { nullable: true }) topGainingProduct?: DigestProduct;
+  @Field(() => DigestProduct, { nullable: true }) topDecliningProduct?: DigestProduct;
+  @Field(() => DigestBusiestHour, { nullable: true }) busiestHour?: DigestBusiestHour;
+  @Field(() => DigestCustomerRatio) customerRatio!: DigestCustomerRatio;
+  @Field(() => [DigestInventoryAlert]) inventoryAlerts!: DigestInventoryAlert[];
+}
+
 // ── Combined Dashboard ──────────────────────────────────────────────────────
 
 @ObjectType()

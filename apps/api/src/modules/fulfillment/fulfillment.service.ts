@@ -1,11 +1,10 @@
-import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { Inject, Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
 import { DeliveryZone } from './entities/delivery-zone.entity';
 import { DeliveryTimeSlot } from './entities/delivery-time-slot.entity';
 import { OrderTracking } from './entities/order-tracking.entity';
+import { sql } from 'drizzle-orm';
+
+export const DRIZZLE = Symbol.for('DRIZZLE');
 
 export interface DeliveryEligibility {
   eligible: boolean;
@@ -31,10 +30,7 @@ export class FulfillmentService {
   private readonly logger = new Logger(FulfillmentService.name);
 
   constructor(
-    @InjectRepository(DeliveryZone) private zoneRepo: Repository<DeliveryZone>,
-    @InjectRepository(DeliveryTimeSlot) private slotRepo: Repository<DeliveryTimeSlot>,
-    @InjectRepository(OrderTracking) private trackingRepo: Repository<OrderTracking>,
-    @InjectDataSource() private dataSource: DataSource,
+    @Inject(DRIZZLE) private db: any
   ) {}
 
   // ── Delivery Zones ────────────────────────────────────────────────────────
@@ -55,7 +51,7 @@ export class FulfillmentService {
     orderSubtotal?: number,
   ): Promise<DeliveryEligibility> {
     // Get dispensary location
-    const [dispensary] = await this.dataSource.query(
+    const [dispensary] = await this._q(
       `SELECT latitude, longitude, is_delivery_enabled FROM dispensaries WHERE entity_id = $1`,
       [dispensaryId],
     );
@@ -65,7 +61,7 @@ export class FulfillmentService {
     if (!dispensary.latitude || !dispensary.longitude) return { eligible: false, reason: 'Dispensary location not configured' };
 
     // Calculate distance
-    const [{ distance }] = await this.dataSource.query(
+    const [{ distance }] = await this._q(
       `SELECT haversine_miles($1, $2, $3, $4) as distance`,
       [dispensary.latitude, dispensary.longitude, customerLat, customerLng],
     );
@@ -73,7 +69,7 @@ export class FulfillmentService {
     const distanceMiles = parseFloat(distance);
 
     // Find matching zone (smallest radius that covers the distance)
-    const zones = await this.dataSource.query(
+    const zones = await this._q(
       `SELECT zone_id, name, radius_miles, delivery_fee, min_order_amount,
               free_delivery_threshold, estimated_minutes_min, estimated_minutes_max
        FROM delivery_zones
@@ -127,7 +123,7 @@ export class FulfillmentService {
     const dayOfWeek = targetDate.getDay();
 
     // Get slots for this day
-    const slots = await this.dataSource.query(
+    const slots = await this._q(
       `SELECT s.slot_id, s.start_time, s.end_time, s.max_orders,
         COALESCE(booked.count, 0) as booked_count
        FROM delivery_time_slots s
@@ -170,7 +166,7 @@ export class FulfillmentService {
     }
 
     // Verify order exists
-    const [order] = await this.dataSource.query(
+    const [order] = await this._q(
       `SELECT "orderId", fulfillment_status FROM orders WHERE "orderId" = $1 AND "dispensaryId" = $2`,
       [orderId, dispensaryId],
     );
@@ -189,7 +185,7 @@ export class FulfillmentService {
     updateSql += ` WHERE "orderId" = $${paramIdx}`;
     params.push(orderId);
 
-    await this.dataSource.query(updateSql, params);
+    await this._q(updateSql, params);
 
     // Create tracking entry
     const tracking = this.trackingRepo.create({
@@ -223,4 +219,16 @@ export class FulfillmentService {
     };
     return map[status] ?? null;
   }
+
+  /** Raw SQL helper – bridges TypeORM .query() to Drizzle */
+  private async _q(text: string, params?: any[]): Promise<any[]> {
+    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
+    if (client?.query) {
+      const r = await client.query(text, params);
+      return r.rows ?? r;
+    }
+    const result = await this.db.execute(sql.raw(text));
+    return Array.isArray(result) ? result : (result as any).rows ?? [];
+  }
+
 }

@@ -1,15 +1,16 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { sql } from 'drizzle-orm';
+
+export const DRIZZLE = Symbol.for('DRIZZLE');
 
 @Injectable()
 export class IdVerificationService implements OnModuleInit {
   private readonly logger = new Logger(IdVerificationService.name);
 
-  constructor(@InjectDataSource() private dataSource: DataSource) {}
+  constructor(@Inject(DRIZZLE) private db: any) {}
 
   async onModuleInit(): Promise<void> {
-    await this.dataSource.query(`
+    await this._q(`
       CREATE TABLE IF NOT EXISTS age_verifications (
         verification_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         dispensary_id UUID NOT NULL,
@@ -96,7 +97,7 @@ export class IdVerificationService implements OnModuleInit {
     is21Plus: boolean;
     verificationStatus: string;
   }): Promise<any> {
-    const [row] = await this.dataSource.query(
+    const [row] = await this._q(
       `INSERT INTO age_verifications
         (dispensary_id, customer_id, full_name, date_of_birth, expiry_date, id_state, id_number, age, is_21_plus, verification_status, verified_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
@@ -120,7 +121,7 @@ export class IdVerificationService implements OnModuleInit {
   // ── History ─────────────────────────────────────────────────────────────
 
   async getVerificationHistory(customerId: string): Promise<any[]> {
-    const rows = await this.dataSource.query(
+    const rows = await this._q(
       `SELECT * FROM age_verifications WHERE customer_id = $1 ORDER BY created_at DESC`,
       [customerId],
     );
@@ -144,4 +145,16 @@ export class IdVerificationService implements OnModuleInit {
       createdAt: row.created_at,
     };
   }
+
+  /** Raw SQL helper – bridges TypeORM .query() to Drizzle */
+  private async _q(text: string, params?: any[]): Promise<any[]> {
+    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
+    if (client?.query) {
+      const r = await client.query(text, params);
+      return r.rows ?? r;
+    }
+    const result = await this.db.execute(sql.raw(text));
+    return Array.isArray(result) ? result : (result as any).rows ?? [];
+  }
+
 }

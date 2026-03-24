@@ -19,6 +19,7 @@ import { TimeClockPage } from './pages/TimeClockPage';
 import { VendorsPage } from './pages/VendorsPage';
 import { MenuBoardPage } from './pages/MenuBoardPage';
 import { OnboardingPage } from './pages/OnboardingPage';
+import { ChangelogPage } from './pages/ChangelogPage';
 import { useAuthStore } from './stores/auth.store';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -54,6 +55,7 @@ export function App() {
           <Route path="scheduling" element={<SchedulingPage />} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="menu-board" element={<MenuBoardPage />} />
+          <Route path="changelog" element={<ChangelogPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

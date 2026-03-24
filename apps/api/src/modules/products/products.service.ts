@@ -1,11 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindManyOptions, ILike } from 'typeorm';
-import { Product } from './entities/product.entity';
-import { ProductVariant } from './entities/product-variant.entity';
-import { ProductPricing } from './entities/product-pricing.entity';
-import { LkpProductType, LkpProductCategory } from './entities/lookups/lookups.entity';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { eq, and, asc, desc, ilike, or, sql, count } from 'drizzle-orm';
+import * as schema from '../../database/schema';
 import { CacheService } from '../../common/services/cache.service';
+
+export const DRIZZLE = Symbol.for('DRIZZLE');
+type DB = NodePgDatabase<typeof schema>;
 
 export interface ProductsFilter {
   dispensaryId: string;
@@ -20,19 +20,14 @@ export interface ProductsFilter {
 @Injectable()
 export class ProductsService {
   constructor(
-    @InjectRepository(Product) private productRepo: Repository<Product>,
-    @InjectRepository(ProductVariant) private variantRepo: Repository<ProductVariant>,
-    @InjectRepository(ProductPricing) private pricingRepo: Repository<ProductPricing>,
-    @InjectRepository(LkpProductType) private productTypeRepo: Repository<LkpProductType>,
-    @InjectRepository(LkpProductCategory) private categoryRepo: Repository<LkpProductCategory>,
+    @Inject(DRIZZLE) private db: DB,
     private readonly cache: CacheService,
   ) {}
 
-  async findAll(filter: ProductsFilter): Promise<Product[]> {
-    // Build a stable cache key from the filter (only cache non-search queries)
+  async findAll(filter: ProductsFilter): Promise<any[]> {
     if (!filter.search) {
       const cacheKey = `products:${filter.dispensaryId}:${filter.productTypeId ?? ''}:${filter.categoryId ?? ''}:${filter.isActive ?? ''}:${filter.limit ?? 20}:${filter.offset ?? 0}`;
-      const cached = await this.cache.get<Product[]>(cacheKey);
+      const cached = await this.cache.get<any[]>(cacheKey);
       if (cached) return cached;
 
       const results = await this._queryProducts(filter);
@@ -43,62 +38,105 @@ export class ProductsService {
     return this._queryProducts(filter);
   }
 
-  private async _queryProducts(filter: ProductsFilter): Promise<Product[]> {
-    const where: any = { dispensary_id: filter.dispensaryId };
-    if (filter.isActive !== undefined) where.is_active = filter.isActive;
-    if (filter.productTypeId) where.product_type_id = filter.productTypeId;
-    if (filter.categoryId) where.primary_category_id = filter.categoryId;
+  private async _queryProducts(filter: ProductsFilter): Promise<any[]> {
+    const conditions: any[] = [eq(schema.products.dispensaryId, filter.dispensaryId)];
 
-    const options: FindManyOptions<Product> = {
-      where: filter.search
-        ? [
-            { ...where, name: ILike(`%${filter.search}%`) },
-            { ...where, description: ILike(`%${filter.search}%`) },
-          ]
-        : where,
-      order: { name: 'ASC' },
-      take: filter.limit ?? 20,
-      skip: filter.offset ?? 0,
-    };
-    return this.productRepo.find(options);
+    if (filter.isActive !== undefined) {
+      conditions.push(eq(schema.products.isActive, filter.isActive));
+    }
+    if (filter.productTypeId) {
+      conditions.push(eq(schema.products.productTypeId, filter.productTypeId));
+    }
+    if (filter.categoryId) {
+      conditions.push(eq(schema.products.primaryCategoryId, filter.categoryId));
+    }
+
+    if (filter.search) {
+      conditions.push(
+        or(
+          ilike(schema.products.name, `%${filter.search}%`),
+          ilike(schema.products.description, `%${filter.search}%`),
+        ),
+      );
+    }
+
+    return this.db
+      .select()
+      .from(schema.products)
+      .where(and(...conditions))
+      .orderBy(asc(schema.products.name))
+      .limit(filter.limit ?? 20)
+      .offset(filter.offset ?? 0);
   }
 
-  async findById(id: string, dispensaryId?: string): Promise<Product> {
-    const where: any = { id };
-    if (dispensaryId) where.dispensary_id = dispensaryId;
-    const product = await this.productRepo.findOne({ where });
+  async findById(id: string, dispensaryId?: string): Promise<any> {
+    const conditions: any[] = [eq(schema.products.id, id)];
+    if (dispensaryId) {
+      conditions.push(eq(schema.products.dispensaryId, dispensaryId));
+    }
+
+    const [product] = await this.db
+      .select()
+      .from(schema.products)
+      .where(and(...conditions));
     if (!product) throw new NotFoundException(`Product ${id} not found`);
     return product;
   }
 
-  async findVariants(productId: string, dispensaryId: string): Promise<ProductVariant[]> {
-    return this.variantRepo.find({
-      where: { product_id: productId, dispensary_id: dispensaryId, is_active: true },
-      order: { sort_order: 'ASC' },
-    });
+  async findVariants(productId: string, dispensaryId: string): Promise<any[]> {
+    return this.db
+      .select()
+      .from(schema.productVariants)
+      .where(
+        and(
+          eq(schema.productVariants.productId, productId),
+          eq(schema.productVariants.dispensaryId, dispensaryId),
+          eq(schema.productVariants.isActive, true),
+        ),
+      )
+      .orderBy(asc(schema.productVariants.sortOrder));
   }
 
-  async findCurrentPricing(variantId: string): Promise<ProductPricing | null> {
+  async findCurrentPricing(variantId: string): Promise<any | null> {
     const now = new Date();
-    return this.pricingRepo
-      .createQueryBuilder('p')
-      .where('p.variant_id = :variantId', { variantId })
-      .andWhere('p.price_type = :type', { type: 'retail' })
-      .andWhere('p.effective_from <= :now', { now })
-      .andWhere('(p.effective_until IS NULL OR p.effective_until > :now)', { now })
-      .orderBy('p.effective_from', 'DESC')
-      .getOne();
+    const result = await this.db.execute(sql`
+      SELECT * FROM product_pricing
+      WHERE variant_id = ${variantId}
+        AND price_type = 'retail'
+        AND effective_from <= ${now}
+        AND (effective_until IS NULL OR effective_until > ${now})
+      ORDER BY effective_from DESC
+      LIMIT 1
+    `);
+    return (result.rows[0] as any) ?? null;
   }
 
-  async findProductTypes(): Promise<LkpProductType[]> {
-    return this.productTypeRepo.find({ where: { is_active: true }, order: { sort_order: 'ASC' } });
+  async findProductTypes(): Promise<any[]> {
+    return this.db
+      .select()
+      .from(schema.lkpProductTypes)
+      .where(eq(schema.lkpProductTypes.isActive, true))
+      .orderBy(asc(schema.lkpProductTypes.sortOrder));
   }
 
-  async findCategories(): Promise<LkpProductCategory[]> {
-    return this.categoryRepo.find({ where: { is_active: true }, order: { sort_order: 'ASC' } });
+  async findCategories(): Promise<any[]> {
+    return this.db
+      .select()
+      .from(schema.lkpProductCategories)
+      .where(eq(schema.lkpProductCategories.isActive, true))
+      .orderBy(asc(schema.lkpProductCategories.sortOrder));
   }
 
   async countByDispensary(dispensaryId: string): Promise<number> {
-    return this.productRepo.count({ where: { dispensary_id: dispensaryId, is_active: true } });
+    const [result] = await this.db
+      .select({ count: count() })
+      .from(schema.products)
+      .where(
+        and(
+          eq(schema.products.dispensaryId, dispensaryId),
+          eq(schema.products.isActive, true),
+        ),
+      );
+    return result.count;
   }
 }

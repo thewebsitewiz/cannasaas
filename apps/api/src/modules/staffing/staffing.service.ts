@@ -1,31 +1,25 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThanOrEqual } from 'typeorm';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { Inject, Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { EmployeeProfile } from './entities/employee-profile.entity';
 import { EmployeeCertification } from './entities/employee-certification.entity';
 import { PerformanceReview } from './entities/performance-review.entity';
 import { LkpPosition, LkpCertificationType } from './entities/staffing-lookups.entity';
+import { sql } from 'drizzle-orm';
+
+export const DRIZZLE = Symbol.for('DRIZZLE');
 
 @Injectable()
 export class StaffingService {
   private readonly logger = new Logger(StaffingService.name);
 
   constructor(
-    @InjectRepository(EmployeeProfile) private profileRepo: Repository<EmployeeProfile>,
-    @InjectRepository(EmployeeCertification) private certRepo: Repository<EmployeeCertification>,
-    @InjectRepository(PerformanceReview) private reviewRepo: Repository<PerformanceReview>,
-    @InjectRepository(LkpPosition) private positionRepo: Repository<LkpPosition>,
-    @InjectRepository(LkpCertificationType) private certTypeRepo: Repository<LkpCertificationType>,
-    @InjectDataSource() private dataSource: DataSource,
+    @Inject(DRIZZLE) private db: any
   ) {}
 
   // ── Employee Roster ───────────────────────────────────────────────────────
 
   async getEmployees(dispensaryId: string, status?: string): Promise<any[]> {
-    const rows = await this.dataSource.query(
+    const rows = await this._q(
       `SELECT ep.*, u.email, u."firstName", u."lastName", u.role,
         lp.name as position_name, lp.code as position_code, lp.department as position_department,
         (SELECT COUNT(*) FROM employee_certifications ec WHERE ec.profile_id = ep.profile_id AND ec.status = 'active') as active_certs,
@@ -66,7 +60,7 @@ export class StaffingService {
   }
 
   async getEmployee(profileId: string): Promise<any> {
-    const employees = await this.dataSource.query(
+    const employees = await this._q(
       `SELECT ep.*, u.email, u."firstName", u."lastName", u.role,
         lp.name as position_name, lp.code as position_code
        FROM employee_profiles ep
@@ -123,7 +117,7 @@ export class StaffingService {
   // ── Certifications ────────────────────────────────────────────────────────
 
   async getEmployeeCertifications(profileId: string): Promise<any[]> {
-    return this.dataSource.query(
+    return this._q(
       `SELECT ec.*, ct.name as cert_name, ct.code as cert_code, ct.issuing_authority, ct.is_state_required,
         CASE
           WHEN ec.expiration_date IS NULL THEN 'no_expiry'
@@ -181,7 +175,7 @@ export class StaffingService {
   // ── Expiration Alerts ─────────────────────────────────────────────────────
 
   async getExpiringCertifications(dispensaryId: string, daysAhead = 30): Promise<any[]> {
-    return this.dataSource.query(
+    return this._q(
       `SELECT ec.*, ct.name as cert_name, ct.code as cert_code, ct.is_state_required,
         u."firstName", u."lastName", u.email,
         ep.employee_number,
@@ -200,7 +194,7 @@ export class StaffingService {
   }
 
   async getComplianceOverview(dispensaryId: string): Promise<any> {
-    const [result] = await this.dataSource.query(
+    const [result] = await this._q(
       `SELECT
         COUNT(DISTINCT ep.profile_id) as total_employees,
         COUNT(DISTINCT ep.profile_id) FILTER (WHERE ep.employment_status = 'active') as active_employees,
@@ -271,7 +265,7 @@ export class StaffingService {
   async checkExpiringCertifications(): Promise<void> {
     this.logger.log('Checking for expiring certifications...');
 
-    const expiring = await this.dataSource.query(
+    const expiring = await this._q(
       `SELECT ec.certification_id, ct.name, u.email, u."firstName", u."lastName",
         ec.expiration_date, ec.expiration_date - CURRENT_DATE as days_left
        FROM employee_certifications ec
@@ -292,7 +286,7 @@ export class StaffingService {
     }
 
     // Auto-expire past-due certs
-    const expired = await this.dataSource.query(
+    const expired = await this._q(
       `UPDATE employee_certifications SET status = 'expired', updated_at = NOW()
        WHERE status IN ('active', 'verified') AND expiration_date < CURRENT_DATE
        RETURNING certification_id`,
@@ -302,4 +296,16 @@ export class StaffingService {
       this.logger.warn(`Auto-expired ${expired.length} certification(s)`);
     }
   }
+
+  /** Raw SQL helper – bridges TypeORM .query() to Drizzle */
+  private async _q(text: string, params?: any[]): Promise<any[]> {
+    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
+    if (client?.query) {
+      const r = await client.query(text, params);
+      return r.rows ?? r;
+    }
+    const result = await this.db.execute(sql.raw(text));
+    return Array.isArray(result) ? result : (result as any).rows ?? [];
+  }
+
 }

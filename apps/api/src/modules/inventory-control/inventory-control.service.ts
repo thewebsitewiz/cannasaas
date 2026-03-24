@@ -1,25 +1,18 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { Inject, Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { InventoryTransfer, InventoryTransferItem } from './entities/inventory-control.entity';
 import { InventoryCount, InventoryCountItem } from './entities/inventory-control.entity';
 import { InventoryAdjustment, LkpAdjustmentReason } from './entities/inventory-control.entity';
+import { sql } from 'drizzle-orm';
+
+export const DRIZZLE = Symbol.for('DRIZZLE');
 
 @Injectable()
 export class InventoryControlService {
   private readonly logger = new Logger(InventoryControlService.name);
 
   constructor(
-    @InjectRepository(InventoryTransfer) private transferRepo: Repository<InventoryTransfer>,
-    @InjectRepository(InventoryTransferItem) private transferItemRepo: Repository<InventoryTransferItem>,
-    @InjectRepository(InventoryCount) private countRepo: Repository<InventoryCount>,
-    @InjectRepository(InventoryCountItem) private countItemRepo: Repository<InventoryCountItem>,
-    @InjectRepository(InventoryAdjustment) private adjustRepo: Repository<InventoryAdjustment>,
-    @InjectRepository(LkpAdjustmentReason) private reasonRepo: Repository<LkpAdjustmentReason>,
-    @InjectDataSource() private ds: DataSource,
+    @Inject(DRIZZLE) private db: any
   ) {}
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -30,14 +23,14 @@ export class InventoryControlService {
     if (input.fromDispensaryId === input.toDispensaryId) throw new BadRequestException('Cannot transfer to the same dispensary');
 
     // Verify same org
-    const dispensaries = await this.ds.query(
+    const dispensaries = await this._q(
       `SELECT d.entity_id, c.organization_id FROM dispensaries d JOIN companies c ON c.company_id = d.company_id WHERE d.entity_id IN ($1, $2)`,
       [input.fromDispensaryId, input.toDispensaryId],
     );
     const orgIds = [...new Set(dispensaries.map((d: any) => d.organization_id))];
     if (orgIds.length !== 1) throw new BadRequestException('Dispensaries must belong to the same organization');
 
-    const qr = this.ds.createQueryRunner();
+    const qr = this.db.createQueryRunner();
     await qr.connect();
     await qr.startTransaction();
     try {
@@ -88,7 +81,7 @@ export class InventoryControlService {
   }
 
   async shipTransfer(transferId: string): Promise<InventoryTransfer> {
-    const qr = this.ds.createQueryRunner();
+    const qr = this.db.createQueryRunner();
     await qr.connect();
     await qr.startTransaction();
     try {
@@ -118,7 +111,7 @@ export class InventoryControlService {
   }
 
   async receiveTransfer(transferId: string, receivedItems: Array<{ itemId: string; quantityReceived: number; notes?: string }>): Promise<InventoryTransfer> {
-    const qr = this.ds.createQueryRunner();
+    const qr = this.db.createQueryRunner();
     await qr.connect();
     await qr.startTransaction();
     try {
@@ -175,7 +168,7 @@ export class InventoryControlService {
     const where = direction === 'outgoing' ? 'it.from_dispensary_id = $1'
       : direction === 'incoming' ? 'it.to_dispensary_id = $1'
       : '(it.from_dispensary_id = $1 OR it.to_dispensary_id = $1)';
-    return this.ds.query(
+    return this._q(
       `SELECT it.*, df.name as from_name, dt.name as to_name,
         u."firstName" || ' ' || u."lastName" as requested_by,
         (SELECT COUNT(*) FROM inventory_transfer_items iti WHERE iti.transfer_id = it.transfer_id) as item_count,
@@ -197,7 +190,7 @@ export class InventoryControlService {
   // ═══════════════════════════════════════════════════════════════════════════
 
   async startCount(dispensaryId: string, userId: string, countType: string, notes?: string): Promise<InventoryCount> {
-    const items = await this.ds.query(
+    const items = await this._q(
       `SELECT i.variant_id, i.quantity_on_hand, p.name as product_name, pv.name as variant_name
        FROM inventory i JOIN product_variants pv ON pv.variant_id = i.variant_id
        JOIN products p ON p.id = pv.product_id
@@ -234,7 +227,7 @@ export class InventoryControlService {
     const saved = await this.countItemRepo.save(item);
 
     // Update count progress
-    await this.ds.query(
+    await this._q(
       `UPDATE inventory_counts SET
         items_counted = (SELECT COUNT(*) FROM inventory_count_items WHERE count_id = $1 AND counted_quantity IS NOT NULL),
         variance_count = (SELECT COUNT(*) FROM inventory_count_items WHERE count_id = $1 AND counted_quantity IS NOT NULL AND counted_quantity != expected_quantity),
@@ -249,13 +242,13 @@ export class InventoryControlService {
     const count = await this.countRepo.findOne({ where: { countId } });
     if (!count) throw new NotFoundException('Count not found');
 
-    const uncounted = await this.ds.query(
+    const uncounted = await this._q(
       `SELECT COUNT(*) as c FROM inventory_count_items WHERE count_id = $1 AND counted_quantity IS NULL`, [countId],
     );
     if (parseInt(uncounted[0].c) > 0) throw new BadRequestException(`${uncounted[0].c} items still uncounted`);
 
     if (autoAdjust) {
-      const variances = await this.ds.query(
+      const variances = await this._q(
         `SELECT * FROM inventory_count_items WHERE count_id = $1 AND counted_quantity != expected_quantity`, [countId],
       );
       for (const v of variances) {
@@ -280,7 +273,7 @@ export class InventoryControlService {
   }
 
   async getVarianceReport(countId: string): Promise<any[]> {
-    return this.ds.query(
+    return this._q(
       `SELECT ci.*, ABS(ci.variance) as abs_variance,
         CASE WHEN ci.expected_quantity > 0 THEN ROUND(ci.variance::DECIMAL / ci.expected_quantity * 100, 1) ELSE 0 END as variance_pct
        FROM inventory_count_items ci WHERE ci.count_id = $1 AND ci.variance != 0
@@ -293,10 +286,10 @@ export class InventoryControlService {
   // ═══════════════════════════════════════════════════════════════════════════
 
   async createAdjustment(input: { dispensaryId: string; variantId: string; reasonCode: string; quantityChange: number; submittedByUserId: string; notes?: string; countId?: string }): Promise<InventoryAdjustment> {
-    const [reason] = await this.ds.query(`SELECT * FROM lkp_adjustment_reasons WHERE code = $1`, [input.reasonCode]);
+    const [reason] = await this._q(`SELECT * FROM lkp_adjustment_reasons WHERE code = $1`, [input.reasonCode]);
     if (!reason) throw new BadRequestException(`Invalid reason code: ${input.reasonCode}`);
 
-    const [inv] = await this.ds.query(
+    const [inv] = await this._q(
       `SELECT i.quantity_on_hand, p.name as product_name FROM inventory i
        JOIN product_variants pv ON pv.variant_id = i.variant_id JOIN products p ON p.id = pv.product_id
        WHERE i.variant_id = $1 AND i.dispensary_id = $2`,
@@ -320,7 +313,7 @@ export class InventoryControlService {
     const saved = await this.adjustRepo.save(adj);
 
     if (autoApprove) {
-      await this.ds.query(
+      await this._q(
         `UPDATE inventory SET quantity_on_hand = quantity_on_hand + $1, quantity_available = quantity_available + $1, last_movement_at = NOW(), updated_at = NOW()
          WHERE variant_id = $2 AND dispensary_id = $3`,
         [input.quantityChange, input.variantId, input.dispensaryId],
@@ -336,7 +329,7 @@ export class InventoryControlService {
     if (!adj) throw new NotFoundException('Adjustment not found');
     if (adj.status !== 'pending') throw new BadRequestException('Already processed');
 
-    await this.ds.query(
+    await this._q(
       `UPDATE inventory SET quantity_on_hand = quantity_on_hand + $1, quantity_available = quantity_available + $1, last_movement_at = NOW(), updated_at = NOW()
        WHERE variant_id = $2 AND dispensary_id = $3`,
       [adj.quantity_change, adj.variant_id, adj.dispensary_id],
@@ -349,7 +342,7 @@ export class InventoryControlService {
   }
 
   async getAdjustments(dispensaryId: string, limit = 50): Promise<any[]> {
-    return this.ds.query(
+    return this._q(
       `SELECT ia.*, lr.name as reason_name, lr.code as reason_code,
         u."firstName" || ' ' || u."lastName" as submitted_by
        FROM inventory_adjustments ia
@@ -361,7 +354,7 @@ export class InventoryControlService {
   }
 
   async getAdjustmentReasons(): Promise<LkpAdjustmentReason[]> {
-    return this.ds.query(`SELECT reason_id as "reasonId", code, name, direction, requires_approval as "requiresApproval", is_active as "isActive" FROM lkp_adjustment_reasons WHERE is_active = true ORDER BY reason_id`);
+    return this._q(`SELECT reason_id as "reasonId", code, name, direction, requires_approval as "requiresApproval", is_active as "isActive" FROM lkp_adjustment_reasons WHERE is_active = true ORDER BY reason_id`);
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -369,7 +362,7 @@ export class InventoryControlService {
   // ═══════════════════════════════════════════════════════════════════════════
 
   async getExpiringInventory(dispensaryId: string, daysAhead = 30): Promise<any[]> {
-    return this.ds.query(
+    return this._q(
       `SELECT i.inventory_id, i.variant_id, i.quantity_on_hand, i.expiration_date, i.lot_number,
         p.name as product_name, pv.name as variant_name,
         i.expiration_date - CURRENT_DATE as days_until_expiry,
@@ -383,7 +376,7 @@ export class InventoryControlService {
   }
 
   async getReorderAlerts(dispensaryId: string): Promise<any[]> {
-    return this.ds.query(
+    return this._q(
       `SELECT i.inventory_id, i.variant_id, i.quantity_on_hand, i.quantity_available,
         i.reorder_threshold, i.reorder_quantity, i.auto_reorder_enabled,
         p.name as product_name, pv.name as variant_name
@@ -397,7 +390,7 @@ export class InventoryControlService {
   }
 
   async getDeadStock(dispensaryId: string, daysSinceMovement = 30): Promise<any[]> {
-    return this.ds.query(
+    return this._q(
       `SELECT i.inventory_id, i.variant_id, i.quantity_on_hand, i.last_movement_at,
         CURRENT_DATE - i.last_movement_at::DATE as days_stale,
         p.name as product_name, pv.name as variant_name
@@ -411,7 +404,7 @@ export class InventoryControlService {
   }
 
   async getInventoryHealthDashboard(dispensaryId: string): Promise<any> {
-    const [stats] = await this.ds.query(
+    const [stats] = await this._q(
       `SELECT
         COUNT(*) as total_skus,
         SUM(quantity_on_hand) as total_units,
@@ -423,11 +416,11 @@ export class InventoryControlService {
        FROM inventory WHERE dispensary_id = $1`, [dispensaryId],
     );
 
-    const [pendingTransfers] = await this.ds.query(
+    const [pendingTransfers] = await this._q(
       `SELECT COUNT(*) as c FROM inventory_transfers WHERE (from_dispensary_id = $1 OR to_dispensary_id = $1) AND status IN ('requested','approved','in_transit')`, [dispensaryId],
     );
 
-    const [pendingAdjustments] = await this.ds.query(
+    const [pendingAdjustments] = await this._q(
       `SELECT COUNT(*) as c FROM inventory_adjustments WHERE dispensary_id = $1 AND status = 'pending'`, [dispensaryId],
     );
 
@@ -446,7 +439,7 @@ export class InventoryControlService {
   @Cron('0 7 * * *')
   async dailyInventoryAlerts(): Promise<void> {
     this.logger.log('Running daily inventory alerts...');
-    const dispensaries = await this.ds.query(`SELECT entity_id, name FROM dispensaries WHERE is_active = true`);
+    const dispensaries = await this._q(`SELECT entity_id, name FROM dispensaries WHERE is_active = true`);
     for (const d of dispensaries) {
       const expiring = await this.getExpiringInventory(d.entity_id, 14);
       const reorder = await this.getReorderAlerts(d.entity_id);
@@ -454,4 +447,16 @@ export class InventoryControlService {
       if (reorder.length > 0) this.logger.warn(`${d.name}: ${reorder.length} items below reorder threshold`);
     }
   }
+
+  /** Raw SQL helper – bridges TypeORM .query() to Drizzle */
+  private async _q(text: string, params?: any[]): Promise<any[]> {
+    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
+    if (client?.query) {
+      const r = await client.query(text, params);
+      return r.rows ?? r;
+    }
+    const result = await this.db.execute(sql.raw(text));
+    return Array.isArray(result) ? result : (result as any).rows ?? [];
+  }
+
 }

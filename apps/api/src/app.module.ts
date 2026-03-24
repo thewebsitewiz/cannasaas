@@ -15,6 +15,7 @@ import { complexityLimitPlugin } from './common/plugins/complexity-limit.plugin'
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { DatabaseModule } from './database/database.module';
+import { DrizzleModule } from './database/drizzle.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { OrganizationsModule } from './modules/organizations/organizations.module';
@@ -54,7 +55,9 @@ import { KnowledgeModule } from './modules/knowledge/knowledge.module';
 import { MarketingModule } from './modules/marketing/marketing.module';
 import { SearchModule } from './modules/search/search.module';
 import { BiotrackModule } from './modules/biotrack/biotrack.module';
+import { WebhookModule } from './modules/webhooks/webhook.module';
 import { IdVerificationModule } from './modules/verification/id-verification.module';
+import { ReviewModule } from './modules/reviews/review.module';
 import { CacheModule } from './common/services/cache.module';
 import { SentryModule } from './common/services/sentry.module';
 import { MetricsModule } from './common/services/metrics.module';
@@ -84,6 +87,7 @@ import { MetricsModule } from './common/services/metrics.module';
     }),
     CacheModule,
     DatabaseModule,
+    DrizzleModule,
     AuthModule,
     UsersModule,
     OrganizationsModule,
@@ -123,6 +127,8 @@ import { MetricsModule } from './common/services/metrics.module';
     RecommendationModule,
     KnowledgeModule,
     SearchModule,
+    ReviewModule,
+    WebhookModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

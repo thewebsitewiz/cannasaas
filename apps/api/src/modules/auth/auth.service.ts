@@ -1,41 +1,52 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Injectable, Inject, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
+import { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { eq, and } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
-import { User } from '../users/entities/user.entity';
-import { RefreshToken } from './entities/refresh-token.entity';
+import * as schema from '../../database/schema';
 import { LoginInput } from './dto/login.input';
 import { RegisterInput } from './dto/register.input';
 import { Role } from './enums/role.enum';
 
+export const DRIZZLE = Symbol.for('DRIZZLE');
+type DB = NodePgDatabase<typeof schema>;
+
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(User) private userRepo: Repository<User>,
-    @InjectRepository(RefreshToken) private tokenRepo: Repository<RefreshToken>,
+    @Inject(DRIZZLE) private db: DB,
     private jwt: JwtService,
     private config: ConfigService,
   ) {}
 
   async register(dto: RegisterInput, meta?: { userAgent?: string; ipAddress?: string }) {
-    const existing = await this.userRepo.findOne({ where: { email: dto.email } });
+    const [existing] = await this.db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.email, dto.email));
     if (existing) throw new ConflictException('Email already registered');
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
-    const user = this.userRepo.create({
-      email: dto.email,
-      passwordHash,
-      role: Role.CUSTOMER,
-    });
-    await this.userRepo.save(user);
+    const [user] = await this.db
+      .insert(schema.users)
+      .values({
+        email: dto.email,
+        passwordHash,
+        role: Role.CUSTOMER,
+      })
+      .returning();
+
     return this.generateTokens(user, meta);
   }
 
   async login(dto: LoginInput, meta?: { userAgent?: string; ipAddress?: string }) {
-    const user = await this.userRepo.findOne({ where: { email: dto.email } });
+    const [user] = await this.db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.email, dto.email));
     if (!user || !user.passwordHash) throw new UnauthorizedException('Invalid credentials');
 
     const valid = await bcrypt.compare(dto.password, user.passwordHash);
@@ -43,39 +54,71 @@ export class AuthService {
 
     if (!user.isActive) throw new UnauthorizedException('Account disabled');
 
-    await this.userRepo.update(user.id, { lastLoginAt: new Date() });
+    await this.db
+      .update(schema.users)
+      .set({ lastLoginAt: new Date() })
+      .where(eq(schema.users.id, user.id));
+
     return this.generateTokens(user, meta);
   }
 
   async refresh(userId: string, rawToken: string) {
     const tokenHash = this.hashToken(rawToken);
-    const stored = await this.tokenRepo.findOne({
-      where: { userId, tokenHash, isRevoked: false },
-    });
+    const [stored] = await this.db
+      .select()
+      .from(schema.refreshTokens)
+      .where(
+        and(
+          eq(schema.refreshTokens.userId, userId),
+          eq(schema.refreshTokens.tokenHash, tokenHash),
+          eq(schema.refreshTokens.isRevoked, false),
+        ),
+      );
 
     if (!stored || stored.expiresAt < new Date()) {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
 
-    await this.tokenRepo.update(stored.id, { isRevoked: true, revokedAt: new Date() });
-    const user = await this.userRepo.findOneOrFail({ where: { id: userId } });
+    await this.db
+      .update(schema.refreshTokens)
+      .set({ isRevoked: true, revokedAt: new Date() })
+      .where(eq(schema.refreshTokens.id, stored.id));
+
+    const [user] = await this.db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.id, userId));
+    if (!user) throw new UnauthorizedException('User not found');
+
     return this.generateTokens(user);
   }
 
   async logout(userId: string, rawToken: string) {
     const tokenHash = this.hashToken(rawToken);
-    await this.tokenRepo.update({ userId, tokenHash }, { isRevoked: true, revokedAt: new Date() });
+    await this.db
+      .update(schema.refreshTokens)
+      .set({ isRevoked: true, revokedAt: new Date() })
+      .where(
+        and(
+          eq(schema.refreshTokens.userId, userId),
+          eq(schema.refreshTokens.tokenHash, tokenHash),
+        ),
+      );
   }
 
   async logoutAll(userId: string) {
-    await this.tokenRepo.update(
-      { userId, isRevoked: false },
-      { isRevoked: true, revokedAt: new Date() }
-    );
+    await this.db
+      .update(schema.refreshTokens)
+      .set({ isRevoked: true, revokedAt: new Date() })
+      .where(
+        and(
+          eq(schema.refreshTokens.userId, userId),
+          eq(schema.refreshTokens.isRevoked, false),
+        ),
+      );
   }
 
-  private async generateTokens(user: User, meta?: { userAgent?: string; ipAddress?: string }) {
-    const expiresIn = 15 * 60; // 15 minutes in seconds
+  private async generateTokens(user: any, meta?: { userAgent?: string; ipAddress?: string }) {
     const payload = {
       sub: user.id,
       email: user.email,
@@ -94,17 +137,17 @@ export class AuthService {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
 
-    await this.tokenRepo.save(
-      this.tokenRepo.create({
-        userId: user.id,
-        tokenHash,
-        expiresAt,
-        dispensaryId: user.dispensaryId,
-        organizationId: user.organizationId,
-        ...meta,
-      })
-    );
+    await this.db.insert(schema.refreshTokens).values({
+      userId: user.id,
+      tokenHash,
+      expiresAt,
+      dispensaryId: user.dispensaryId,
+      organizationId: user.organizationId,
+      ...(meta?.userAgent ? { userAgent: meta.userAgent } : {}),
+      ...(meta?.ipAddress ? { ipAddress: meta.ipAddress } : {}),
+    });
 
+    const expiresIn = this.config.get<number>('jwt.accessTtl', 900);
     return { accessToken, refreshToken: rawRefresh, expiresIn };
   }
 

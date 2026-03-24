@@ -1,32 +1,13 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Product } from './entities/product.entity';
-import { ProductVariant } from './entities/product-variant.entity';
-import { ProductPricing } from './entities/product-pricing.entity';
-import { ProductBatch } from './entities/product-batch.entity';
-import { LabTest, LabTestResult } from './entities/lab-test.entity';
-import {
-  LkpProductType, LkpProductCategory, LkpUnitOfMeasure,
-  LkpPackagingType, LkpExtractionMethod, LkpMetrcItemCategory,
-  LkpTaxCategory, LkpEffect, LkpFlavor, LkpTerpene,
-  LkpCannabinoid, LkpAllergen, LkpWarningStatement,
-  LkpLabTestCategory, LkpMetrcAdjustmentReason,
-} from './entities/lookups/lookups.entity';
 import { ProductsResolver, ProductVariantResolver } from './products.resolver';
 import { ProductsService } from './products.service';
 import { ProductSearchService } from './product-search.service';
+import { ProductImportService } from './product-import.service';
+import { ProductImportController } from './product-import.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([
-    Product, ProductVariant, ProductPricing, ProductBatch,
-    LabTest, LabTestResult,
-    LkpProductType, LkpProductCategory, LkpUnitOfMeasure,
-    LkpPackagingType, LkpExtractionMethod, LkpMetrcItemCategory,
-    LkpTaxCategory, LkpEffect, LkpFlavor, LkpTerpene,
-    LkpCannabinoid, LkpAllergen, LkpWarningStatement,
-    LkpLabTestCategory, LkpMetrcAdjustmentReason,
-  ])],
-  providers: [ProductsResolver, ProductVariantResolver, ProductsService, ProductSearchService],
-  exports: [ProductsService],
+  controllers: [ProductImportController],
+  providers: [ProductsResolver, ProductVariantResolver, ProductsService, ProductSearchService, ProductImportService],
+  exports: [ProductsService, ProductImportService],
 })
 export class ProductsModule {}

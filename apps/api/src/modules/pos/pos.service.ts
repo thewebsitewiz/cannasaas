@@ -1,8 +1,4 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { Inject, Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PosIntegration } from './entities/pos-integration.entity';
 import { PosProductMapping } from './entities/pos-product-mapping.entity';
@@ -10,16 +6,16 @@ import { PosSyncLog } from './entities/pos-sync-log.entity';
 import { PosProvider, PosCredentials } from './interfaces/pos-provider.interface';
 import { DutchieAdapter } from './adapters/dutchie.adapter';
 import { TreezAdapter } from './adapters/treez.adapter';
+import { sql } from 'drizzle-orm';
+
+export const DRIZZLE = Symbol.for('DRIZZLE');
 
 @Injectable()
 export class PosService {
   private readonly logger = new Logger(PosService.name);
 
   constructor(
-    @InjectRepository(PosIntegration) private integrationRepo: Repository<PosIntegration>,
-    @InjectRepository(PosProductMapping) private mappingRepo: Repository<PosProductMapping>,
-    @InjectRepository(PosSyncLog) private syncLogRepo: Repository<PosSyncLog>,
-    @InjectDataSource() private dataSource: DataSource,
+    @Inject(DRIZZLE) private db: any
   ) {}
 
   // ── Adapter Factory ───────────────────────────────────────────────────────
@@ -238,7 +234,7 @@ export class PosService {
 
           if (mapping?.internal_variant_id) {
             // Update local inventory from POS
-            await this.dataSource.query(
+            await this._q(
               `UPDATE inventory SET quantity_on_hand = $1, quantity_available = $1 - quantity_reserved, updated_at = NOW()
                WHERE dispensary_id = $2 AND variant_id = $3`,
               [item.quantity, dispensaryId, mapping.internal_variant_id],
@@ -270,13 +266,13 @@ export class PosService {
     const { adapter } = await this.getAdapterForDispensary(dispensaryId);
 
     // Get order + line items with mappings
-    const [order] = await this.dataSource.query(
+    const [order] = await this._q(
       `SELECT o.*, d.state FROM orders o JOIN dispensaries d ON d.entity_id = o."dispensaryId" WHERE o."orderId" = $1`,
       [orderId],
     );
     if (!order) return { success: false, error: 'Order not found' };
 
-    const lineItems = await this.dataSource.query(
+    const lineItems = await this._q(
       `SELECT li.*, pm.external_product_id, pm.external_variant_id
        FROM order_line_items li
        LEFT JOIN pos_product_mappings pm ON pm.internal_product_id = li."productId"
@@ -363,7 +359,7 @@ export class PosService {
   private async autoMatchProduct(dispensaryId: string, posProduct: any): Promise<string | null> {
     // Try SKU match first
     if (posProduct.variants?.[0]?.sku) {
-      const [match] = await this.dataSource.query(
+      const [match] = await this._q(
         `SELECT p.id FROM products p JOIN product_variants pv ON pv.product_id = p.id
          WHERE p.dispensary_id = $1 AND pv.sku = $2 LIMIT 1`,
         [dispensaryId, posProduct.variants[0].sku],
@@ -372,7 +368,7 @@ export class PosService {
     }
 
     // Try name match
-    const [nameMatch] = await this.dataSource.query(
+    const [nameMatch] = await this._q(
       `SELECT id FROM products WHERE dispensary_id = $1 AND LOWER(name) = LOWER($2) LIMIT 1`,
       [dispensaryId, posProduct.name],
     );
@@ -380,7 +376,7 @@ export class PosService {
   }
 
   private async createProductFromPos(dispensaryId: string, posProduct: any): Promise<string> {
-    const [result] = await this.dataSource.query(
+    const [result] = await this._q(
       `INSERT INTO products (id, dispensary_id, name, description, strain_type, thc_percent, cbd_percent, is_active, created_at, updated_at)
        VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, true, NOW(), NOW()) RETURNING id`,
       [dispensaryId, posProduct.name, posProduct.description, posProduct.strainType, posProduct.thcContent, posProduct.cbdContent],
@@ -389,7 +385,7 @@ export class PosService {
   }
 
   private async updateProductFromPos(productId: string, dispensaryId: string, posProduct: any): Promise<void> {
-    await this.dataSource.query(
+    await this._q(
       `UPDATE products SET description = COALESCE($1, description), strain_type = COALESCE($2, strain_type),
        thc_percent = COALESCE($3, thc_percent), cbd_percent = COALESCE($4, cbd_percent), updated_at = NOW()
        WHERE id = $5 AND dispensary_id = $6`,
@@ -400,7 +396,7 @@ export class PosService {
   private async findOrCreateVariant(productId: string, dispensaryId: string, variant: any): Promise<string | null> {
     // Try find by SKU
     if (variant.sku) {
-      const [existing] = await this.dataSource.query(
+      const [existing] = await this._q(
         `SELECT variant_id FROM product_variants WHERE product_id = $1 AND sku = $2 LIMIT 1`,
         [productId, variant.sku],
       );
@@ -408,11 +404,23 @@ export class PosService {
     }
 
     // Create new variant
-    const [result] = await this.dataSource.query(
+    const [result] = await this._q(
       `INSERT INTO product_variants (variant_id, product_id, dispensary_id, name, sku, is_active, created_at, updated_at)
        VALUES (gen_random_uuid(), $1, $2, $3, $4, true, NOW(), NOW()) RETURNING variant_id`,
       [productId, dispensaryId, variant.name ?? 'Default', variant.sku],
     );
     return result?.variant_id ?? null;
   }
+
+  /** Raw SQL helper – bridges TypeORM .query() to Drizzle */
+  private async _q(text: string, params?: any[]): Promise<any[]> {
+    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
+    if (client?.query) {
+      const r = await client.query(text, params);
+      return r.rows ?? r;
+    }
+    const result = await this.db.execute(sql.raw(text));
+    return Array.isArray(result) ? result : (result as any).rows ?? [];
+  }
+
 }

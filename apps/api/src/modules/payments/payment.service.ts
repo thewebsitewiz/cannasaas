@@ -1,26 +1,24 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
-import { Payment } from './entities/payment.entity';
+import { Injectable, Inject, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { eq, desc, sql } from 'drizzle-orm';
+import * as schema from '../../database/schema';
+
+export const DRIZZLE = Symbol.for('DRIZZLE');
+type DB = NodePgDatabase<typeof schema>;
 
 @Injectable()
 export class PaymentService {
   private readonly logger = new Logger(PaymentService.name);
 
-  constructor(
-    @InjectRepository(Payment) private paymentRepo: Repository<Payment>,
-    @InjectDataSource() private dataSource: DataSource,
-  ) {}
+  constructor(@Inject(DRIZZLE) private db: DB) {}
 
   // ── Cash Discount Config (Admin) ──────────────────────────────────────────
 
   async getCashDiscount(dispensaryId: string): Promise<{ cashDiscountPercent: number; isCashEnabled: boolean; cashDeliveryEnabled: boolean }> {
-    const [disp] = await this.dataSource.query(
-      `SELECT cash_discount_percent, is_cash_enabled, cash_delivery_enabled FROM dispensaries WHERE entity_id = $1`,
-      [dispensaryId],
+    const result = await this.db.execute(
+      sql`SELECT cash_discount_percent, is_cash_enabled, cash_delivery_enabled FROM dispensaries WHERE entity_id = ${dispensaryId}`,
     );
+    const disp = result.rows[0] as any;
     if (!disp) throw new NotFoundException('Dispensary not found');
     return {
       cashDiscountPercent: parseFloat(disp.cash_discount_percent ?? 0),
@@ -32,18 +30,20 @@ export class PaymentService {
   async setCashDiscount(dispensaryId: string, percent: number, cashDeliveryEnabled?: boolean): Promise<{ cashDiscountPercent: number; isCashEnabled: boolean; cashDeliveryEnabled: boolean }> {
     if (percent < 0 || percent > 20) throw new BadRequestException('Cash discount must be between 0% and 20%');
 
-    let sql = `UPDATE dispensaries SET cash_discount_percent = $1, is_cash_enabled = $2, updated_at = NOW()`;
-    const params: any[] = [percent, percent > 0];
-
     if (cashDeliveryEnabled !== undefined) {
-      sql += `, cash_delivery_enabled = $3 WHERE entity_id = $4`;
-      params.push(cashDeliveryEnabled, dispensaryId);
+      await this.db.execute(sql`
+        UPDATE dispensaries SET cash_discount_percent = ${percent}, is_cash_enabled = ${percent > 0},
+        cash_delivery_enabled = ${cashDeliveryEnabled}, updated_at = NOW()
+        WHERE entity_id = ${dispensaryId}
+      `);
     } else {
-      sql += ` WHERE entity_id = $3`;
-      params.push(dispensaryId);
+      await this.db.execute(sql`
+        UPDATE dispensaries SET cash_discount_percent = ${percent}, is_cash_enabled = ${percent > 0},
+        updated_at = NOW()
+        WHERE entity_id = ${dispensaryId}
+      `);
     }
 
-    await this.dataSource.query(sql, params);
     this.logger.log(`Cash discount set to ${percent}% for ${dispensaryId}`);
     return this.getCashDiscount(dispensaryId);
   }
@@ -68,18 +68,14 @@ export class PaymentService {
     cashTendered: number;
     staffUserId: string;
     applyDiscount: boolean;
-  }): Promise<Payment> {
-    const qr = this.dataSource.createQueryRunner();
-    await qr.connect();
-    await qr.startTransaction();
-
-    try {
+  }): Promise<any> {
+    return this.db.transaction(async (tx) => {
       // Get order
-      const [order] = await qr.query(
-        `SELECT "orderId", subtotal, "taxTotal", total, "discountTotal", "orderStatus", payment_method
-         FROM orders WHERE "orderId" = $1 AND "dispensaryId" = $2`,
-        [input.orderId, input.dispensaryId],
-      );
+      const orderResult = await tx.execute(sql`
+        SELECT "orderId", subtotal, "taxTotal", total, "discountTotal", "orderStatus", payment_method
+        FROM orders WHERE "orderId" = ${input.orderId} AND "dispensaryId" = ${input.dispensaryId}
+      `);
+      const order = orderResult.rows[0] as any;
       if (!order) throw new NotFoundException('Order not found');
       if (order.orderStatus === 'cancelled') throw new BadRequestException('Cannot pay for a cancelled order');
 
@@ -95,24 +91,20 @@ export class PaymentService {
           finalTotal = parseFloat(order.subtotal) - newDiscountTotal + parseFloat(order.taxTotal);
           finalTotal = parseFloat(finalTotal.toFixed(2));
 
-          // Update order with cash discount
-          await qr.query(
-            `UPDATE orders SET
-              "discountTotal" = $1,
-              total = $2,
-              cash_discount_applied = $3,
+          await tx.execute(sql`
+            UPDATE orders SET
+              "discountTotal" = ${newDiscountTotal},
+              total = ${finalTotal},
+              cash_discount_applied = ${cashDiscountApplied},
               payment_method = 'cash',
               "updatedAt" = NOW()
-             WHERE "orderId" = $4`,
-            [newDiscountTotal, finalTotal, cashDiscountApplied, input.orderId],
-          );
+            WHERE "orderId" = ${input.orderId}
+          `);
         }
       } else {
-        // Just mark as cash payment
-        await qr.query(
-          `UPDATE orders SET payment_method = 'cash', "updatedAt" = NOW() WHERE "orderId" = $1`,
-          [input.orderId],
-        );
+        await tx.execute(sql`
+          UPDATE orders SET payment_method = 'cash', "updatedAt" = NOW() WHERE "orderId" = ${input.orderId}
+        `);
       }
 
       // Validate tendered amount
@@ -123,31 +115,26 @@ export class PaymentService {
       const changeGiven = parseFloat((input.cashTendered - finalTotal).toFixed(2));
 
       // Create payment record
-      const payment = this.paymentRepo.create({
-        orderId: input.orderId,
-        dispensaryId: input.dispensaryId,
-        method: 'cash',
-        amount: finalTotal,
-        cashTendered: input.cashTendered,
-        changeGiven,
-        status: 'completed',
-      });
-
-      const saved = await this.paymentRepo.save(payment);
+      const [payment] = await tx
+        .insert(schema.payments)
+        .values({
+          orderId: input.orderId,
+          dispensaryId: input.dispensaryId,
+          method: 'cash',
+          amount: finalTotal,
+          cashTendered: input.cashTendered,
+          changeGiven,
+          status: 'completed',
+        })
+        .returning();
 
       this.logger.log(
         `Cash payment: order=${input.orderId} total=$${finalTotal} tendered=$${input.cashTendered} change=$${changeGiven}` +
         (cashDiscountApplied > 0 ? ` discount=$${cashDiscountApplied}` : ''),
       );
 
-      await qr.commitTransaction();
-      return saved;
-    } catch (err) {
-      await qr.rollbackTransaction();
-      throw err;
-    } finally {
-      await qr.release();
-    }
+      return payment;
+    });
   }
 
   // ── Process Card Payment (placeholder) ────────────────────────────────────
@@ -156,33 +143,41 @@ export class PaymentService {
     orderId: string;
     dispensaryId: string;
     stripePaymentIntentId: string;
-  }): Promise<Payment> {
-    const [order] = await this.dataSource.query(
-      `SELECT "orderId", total FROM orders WHERE "orderId" = $1 AND "dispensaryId" = $2`,
-      [input.orderId, input.dispensaryId],
+  }): Promise<any> {
+    const orderResult = await this.db.execute(
+      sql`SELECT "orderId", total FROM orders WHERE "orderId" = ${input.orderId} AND "dispensaryId" = ${input.dispensaryId}`,
     );
+    const order = orderResult.rows[0] as any;
     if (!order) throw new NotFoundException('Order not found');
 
-    await this.dataSource.query(
-      `UPDATE orders SET payment_method = 'card', "updatedAt" = NOW() WHERE "orderId" = $1`,
-      [input.orderId],
+    await this.db.execute(
+      sql`UPDATE orders SET payment_method = 'card', "updatedAt" = NOW() WHERE "orderId" = ${input.orderId}`,
     );
 
-    const payment = this.paymentRepo.create({
-      orderId: input.orderId,
-      dispensaryId: input.dispensaryId,
-      method: 'card',
-      amount: parseFloat(order.total),
-      stripePaymentIntentId: input.stripePaymentIntentId,
-      status: 'completed',
-    });
+    const [payment] = await this.db
+      .insert(schema.payments)
+      .values({
+        orderId: input.orderId,
+        dispensaryId: input.dispensaryId,
+        method: 'card',
+        amount: parseFloat(order.total),
+        stripePaymentIntentId: input.stripePaymentIntentId,
+        status: 'completed',
+      })
+      .returning();
 
-    return this.paymentRepo.save(payment);
+    return payment;
   }
 
   // ── Get Payment for Order ─────────────────────────────────────────────────
 
-  async getPaymentForOrder(orderId: string): Promise<Payment | null> {
-    return this.paymentRepo.findOne({ where: { orderId }, order: { createdAt: 'DESC' } });
+  async getPaymentForOrder(orderId: string): Promise<any | null> {
+    const [payment] = await this.db
+      .select()
+      .from(schema.payments)
+      .where(eq(schema.payments.orderId, orderId))
+      .orderBy(desc(schema.payments.createdAt))
+      .limit(1);
+    return payment ?? null;
   }
 }

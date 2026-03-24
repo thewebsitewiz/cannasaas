@@ -1,13 +1,12 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { OnEvent } from '@nestjs/event-emitter';
 import * as nodemailer from 'nodemailer';
 import { NotificationTemplate, NotificationLog } from './entities/notification.entity';
 import { CircuitBreaker } from '../../common/services/circuit-breaker';
+import { sql } from 'drizzle-orm';
+
+export const DRIZZLE = Symbol.for('DRIZZLE');
 
 @Injectable()
 export class NotificationService {
@@ -19,10 +18,8 @@ export class NotificationService {
   private readonly smsBreaker = new CircuitBreaker({ name: 'sms-twilio', failureThreshold: 5, resetTimeoutMs: 30000 });
 
   constructor(
-    @InjectRepository(NotificationTemplate) private templateRepo: Repository<NotificationTemplate>,
-    @InjectRepository(NotificationLog) private logRepo: Repository<NotificationLog>,
-    @InjectDataSource() private ds: DataSource,
-    private config: ConfigService,
+    @Inject(DRIZZLE) private db: any,
+    private config: ConfigService
   ) {
     // Email setup — uses SMTP or SendGrid
     const smtpHost = this.config.get<string>('SMTP_HOST', 'smtp.sendgrid.net');
@@ -187,7 +184,7 @@ export class NotificationService {
   // ── Notify Customer (both channels based on prefs) ────────────────────────
 
   async notifyCustomer(userId: string, eventCode: string, vars: Record<string, any>): Promise<NotificationLog[]> {
-    const [customer] = await this.ds.query(
+    const [customer] = await this._q(
       `SELECT u.email, u."firstName", u.phone, cp.email_order_updates, cp.sms_order_updates,
         cp.sms_opt_in, cp.marketing_opt_in
        FROM users u LEFT JOIN customer_profiles cp ON cp.user_id = u.id WHERE u.id = $1`,
@@ -223,7 +220,7 @@ export class NotificationService {
   @OnEvent('order.completed')
   async onOrderCompleted(payload: any): Promise<void> {
     if (!payload.customerUserId) return;
-    const [disp] = await this.ds.query(
+    const [disp] = await this._q(
       `SELECT name, address_line1 || ', ' || city || ' ' || state || ' ' || zip as address FROM dispensaries WHERE entity_id = $1`,
       [payload.dispensaryId],
     );
@@ -253,7 +250,7 @@ export class NotificationService {
     const templateCode = statusTemplateMap[payload.status];
     if (!templateCode) return;
 
-    const [disp] = await this.ds.query(
+    const [disp] = await this._q(
       `SELECT name, address_line1 || ', ' || city || ' ' || state || ' ' || zip as address FROM dispensaries WHERE entity_id = $1`,
       [payload.dispensaryId],
     );
@@ -271,7 +268,7 @@ export class NotificationService {
   @OnEvent('customer.registered')
   async onCustomerRegistered(payload: { userId: string; email: string; firstName?: string; dispensaryId?: string }): Promise<void> {
     const [disp] = payload.dispensaryId
-      ? await this.ds.query(`SELECT name FROM dispensaries WHERE entity_id = $1`, [payload.dispensaryId])
+      ? await this._q(`SELECT name FROM dispensaries WHERE entity_id = $1`, [payload.dispensaryId])
       : [{ name: 'CannaSaas' }];
 
     await this.sendByTemplate('welcome', {
@@ -295,7 +292,7 @@ export class NotificationService {
   }
 
   async getDispensaryNotificationStats(dispensaryId: string, days = 30): Promise<any> {
-    const [stats] = await this.ds.query(
+    const [stats] = await this._q(
       `SELECT
         COUNT(*) as total,
         COUNT(*) FILTER (WHERE status = 'sent') as sent,
@@ -312,4 +309,16 @@ export class NotificationService {
       emails: parseInt(stats.emails), sms: parseInt(stats.sms),
     };
   }
+
+  /** Raw SQL helper – bridges TypeORM .query() to Drizzle */
+  private async _q(text: string, params?: any[]): Promise<any[]> {
+    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
+    if (client?.query) {
+      const r = await client.query(text, params);
+      return r.rows ?? r;
+    }
+    const result = await this.db.execute(sql.raw(text));
+    return Array.isArray(result) ? result : (result as any).rows ?? [];
+  }
+
 }

@@ -1,9 +1,11 @@
 import { Resolver, Query, Args, ID, Int } from '@nestjs/graphql';
 import { ForbiddenException } from '@nestjs/common';
 import { AnalyticsService } from './analytics.service';
+import { AnalyticsDigestService } from './analytics-digest.service';
 import {
   DashboardData, SalesOverview, SalesTrend, TopProduct,
   InventoryOverview, LowStockItem, MetrcSyncOverview, ComplianceSummary,
+  WeeklyDigestData,
 } from './dto/dashboard.types';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -11,7 +13,10 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
 
 @Resolver()
 export class AnalyticsResolver {
-  constructor(private readonly analytics: AnalyticsService) {}
+  constructor(
+    private readonly analytics: AnalyticsService,
+    private readonly digest: AnalyticsDigestService,
+  ) {}
 
   private resolveDispensary(user: JwtPayload, dispensaryId?: string): string {
     const targetId = dispensaryId ?? user.dispensaryId;
@@ -95,5 +100,14 @@ export class AnalyticsResolver {
     @Args('dispensaryId', { type: () => ID, nullable: true }) dispensaryId?: string,
   ): Promise<ComplianceSummary> {
     return this.analytics.getComplianceSummary(this.resolveDispensary(user, dispensaryId));
+  }
+
+  @Roles('dispensary_admin', 'org_admin', 'super_admin')
+  @Query(() => WeeklyDigestData, { name: 'weeklyDigest' })
+  async weeklyDigest(
+    @CurrentUser() user: JwtPayload,
+    @Args('dispensaryId', { type: () => ID, nullable: true }) dispensaryId?: string,
+  ): Promise<WeeklyDigestData> {
+    return this.digest.generateWeeklyDigest(this.resolveDispensary(user, dispensaryId)) as any;
   }
 }

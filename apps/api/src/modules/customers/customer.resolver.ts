@@ -1,6 +1,7 @@
 import { Resolver, Query, Mutation, Args, ID, Int, Float } from '@nestjs/graphql';
 import { ObjectType, Field, InputType } from '@nestjs/graphql';
 import { CustomerService } from './customer.service';
+import { SegmentationService } from './segmentation.service';
 import { CustomerProfile, CustomerAddress, AgeVerification } from './entities/customer.entity';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -28,6 +29,26 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field(() => Date) createdAt!: Date;
 }
 
+@ObjectType() class CustomerSegment {
+  @Field() name!: string;
+  @Field() description!: string;
+  @Field(() => Int) count!: number;
+}
+
+@ObjectType() class SegmentMember {
+  @Field(() => ID) user_id!: string;
+  @Field({ nullable: true }) first_name?: string;
+  @Field({ nullable: true }) last_name?: string;
+  @Field({ nullable: true }) email?: string;
+  @Field(() => Float, { nullable: true }) total_spent?: number;
+  @Field(() => Int, { nullable: true }) total_orders?: number;
+}
+
+@ObjectType() class SegmentStatsResult {
+  @Field(() => Int) totalCustomers!: number;
+  @Field(() => [CustomerSegment]) segments!: CustomerSegment[];
+}
+
 @ObjectType() class PurchaseLimitResult {
   @Field() allowed!: boolean;
   @Field(() => Float, { nullable: true }) limit?: number;
@@ -50,7 +71,10 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
 
 @Resolver()
 export class CustomerResolver {
-  constructor(private readonly customers: CustomerService) {}
+  constructor(
+    private readonly customers: CustomerService,
+    private readonly segmentation: SegmentationService,
+  ) {}
 
   // ── Profile ───────────────────────────────────────────────────────────────
 
@@ -196,5 +220,34 @@ export class CustomerResolver {
   ): Promise<any[]> {
     const limit = Math.min(rawLimit, 100);
     return this.customers.getCustomers(dispensaryId, limit, offset);
+  }
+
+  // ── Segmentation ───────────────────────────────────────────────────────────
+
+  @Roles('dispensary_admin', 'org_admin', 'super_admin')
+  @Query(() => [CustomerSegment], { name: 'customerSegments' })
+  async customerSegments(
+    @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
+  ): Promise<any[]> {
+    return this.segmentation.getSegments(dispensaryId);
+  }
+
+  @Roles('dispensary_admin', 'org_admin', 'super_admin')
+  @Query(() => [SegmentMember], { name: 'customerSegmentMembers' })
+  async segmentMembers(
+    @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
+    @Args('segmentName') segmentName: string,
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) rawLimit: number,
+    @Args('offset', { type: () => Int, nullable: true, defaultValue: 0 }) offset: number,
+  ): Promise<any[]> {
+    return this.segmentation.getSegmentMembers(dispensaryId, segmentName, Math.min(rawLimit, 100), offset);
+  }
+
+  @Roles('dispensary_admin', 'org_admin', 'super_admin')
+  @Query(() => SegmentStatsResult, { name: 'customerSegmentStats' })
+  async segmentStats(
+    @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
+  ): Promise<any> {
+    return this.segmentation.getSegmentStats(dispensaryId);
   }
 }

@@ -1,21 +1,22 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { Inject, Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { CacheService } from '../../common/services/cache.service';
+import { sql } from 'drizzle-orm';
+
+export const DRIZZLE = Symbol.for('DRIZZLE');
 
 @Injectable()
 export class PlatformService {
   private readonly logger = new Logger(PlatformService.name);
 
   constructor(
-    @InjectDataSource() private ds: DataSource,
-    private readonly cache: CacheService,
+    @Inject(DRIZZLE) private db: any,
+    private readonly cache: CacheService
   ) {}
 
   // ═══ DASHBOARD ═══
 
   async getDashboard(): Promise<any> {
-    const [orgStats] = await this.ds.query(`SELECT
+    const [orgStats] = await this._q(`SELECT
       COUNT(*) as total_tenants,
       COUNT(*) FILTER (WHERE billing_status = 'active') as active_tenants,
       COUNT(*) FILTER (WHERE billing_status = 'trial') as trial_tenants,
@@ -24,13 +25,13 @@ export class PlatformService {
       COALESCE(SUM(total_locations), 0) as total_locations
     FROM organizations`);
 
-    const [dispStats] = await this.ds.query(`SELECT
+    const [dispStats] = await this._q(`SELECT
       COUNT(*) as total_dispensaries,
       COUNT(*) FILTER (WHERE is_active = true) as active_dispensaries,
       COUNT(DISTINCT state) as states_covered
     FROM dispensaries`);
 
-    const [userStats] = await this.ds.query(`SELECT
+    const [userStats] = await this._q(`SELECT
       COUNT(*) as total_users,
       COUNT(*) FILTER (WHERE role = 'customer') as customers,
       COUNT(*) FILTER (WHERE role != 'customer') as staff_users,
@@ -38,14 +39,14 @@ export class PlatformService {
       COUNT(*) FILTER (WHERE "lastLoginAt" >= NOW() - INTERVAL '7 days') as active_7d
     FROM users WHERE "isActive" = true`);
 
-    const [orderStats] = await this.ds.query(`SELECT
+    const [orderStats] = await this._q(`SELECT
       COUNT(*) as total_orders,
       COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '30 days') as orders_30d,
       COALESCE(SUM(total) FILTER (WHERE "orderStatus" = 'completed'), 0)::DECIMAL(12,2) as gmv_total,
       COALESCE(SUM(total) FILTER (WHERE "orderStatus" = 'completed' AND "createdAt" >= NOW() - INTERVAL '30 days'), 0)::DECIMAL(12,2) as gmv_30d
     FROM orders`);
 
-    const tierBreakdown = await this.ds.query(`SELECT
+    const tierBreakdown = await this._q(`SELECT
       COALESCE(subscription_tier, 'starter') as tier,
       COUNT(*) as count,
       COALESCE(SUM(monthly_revenue), 0)::DECIMAL(10,2) as revenue
@@ -65,7 +66,7 @@ export class PlatformService {
   // ═══ TENANT MANAGEMENT ═══
 
   async getTenants(): Promise<any[]> {
-    return this.ds.query(`SELECT o.org_id as "orgId", o.name, o.subscription_tier as "subscriptionTier",
+    return this._q(`SELECT o.org_id as "orgId", o.name, o.subscription_tier as "subscriptionTier",
       o.billing_status as "billingStatus", o.billing_email as "billingEmail",
       o.monthly_revenue as "monthlyRevenue", o.total_locations as "totalLocations",
       o.onboarded_at as "onboardedAt", o.trial_ends_at as "trialEndsAt", o.notes,
@@ -78,7 +79,7 @@ export class PlatformService {
   }
 
   async getTenant(orgId: string): Promise<any> {
-    const [tenant] = await this.ds.query(`SELECT o.*, 
+    const [tenant] = await this._q(`SELECT o.*, 
       (SELECT COUNT(*) FROM dispensaries d WHERE d.company_id IN (SELECT c.company_id FROM companies c WHERE c.org_id = o.org_id)) as "dispensaryCount",
       (SELECT COUNT(*) FROM users u WHERE u."organizationId" = o.org_id) as "userCount"
     FROM organizations o WHERE o.org_id = $1`, [orgId]);
@@ -106,9 +107,9 @@ export class PlatformService {
     sets.push('updated_at = NOW()');
     params.push(orgId);
 
-    await this.ds.query('UPDATE organizations SET ' + sets.join(', ') + ' WHERE org_id = $' + i, params);
+    await this._q('UPDATE organizations SET ' + sets.join(', ') + ' WHERE org_id = $' + i, params);
 
-    await this.ds.query('INSERT INTO platform_activity (organization_id, activity_type, description, metadata) VALUES ($1, $2, $3, $4)',
+    await this._q('INSERT INTO platform_activity (organization_id, activity_type, description, metadata) VALUES ($1, $2, $3, $4)',
       [orgId, 'tenant_updated', 'Tenant updated: ' + sets.filter(s => !s.startsWith('updated')).join(', '), JSON.stringify(input)]);
 
     return this.getTenant(orgId);
@@ -118,24 +119,24 @@ export class PlatformService {
     const prices: Record<string, number> = { starter: 299, professional: 499, enterprise: 799 };
     const price = prices[input.subscriptionTier] || 299;
 
-    const [org] = await this.ds.query(
+    const [org] = await this._q(
       'INSERT INTO organizations (name, subscription_tier, billing_status, billing_email, monthly_revenue, onboarded_at) VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *',
       [input.name, input.subscriptionTier, 'active', input.billingEmail, price],
     );
 
-    const [company] = await this.ds.query(
+    const [company] = await this._q(
       'INSERT INTO companies (org_id, name) VALUES ($1, $2) RETURNING *',
       [org.org_id, input.name],
     );
 
     const slug = input.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+$/, '');
-    await this.ds.query(
+    await this._q(
       'INSERT INTO dispensaries (company_id, name, slug, state, is_active) VALUES ($1, $2, $3, $4, true)',
       [company.company_id, input.name + ' - Main', slug, input.state],
     );
 
-    await this.ds.query('UPDATE organizations SET total_locations = 1 WHERE org_id = $1', [org.org_id]);
-    await this.ds.query('INSERT INTO platform_activity (organization_id, activity_type, description, metadata) VALUES ($1, $2, $3, $4)',
+    await this._q('UPDATE organizations SET total_locations = 1 WHERE org_id = $1', [org.org_id]);
+    await this._q('INSERT INTO platform_activity (organization_id, activity_type, description, metadata) VALUES ($1, $2, $3, $4)',
       [org.org_id, 'tenant_onboarded', input.name + ' onboarded — ' + input.subscriptionTier, JSON.stringify(input)]);
 
     this.logger.log('New tenant created: ' + input.name + ' (' + input.subscriptionTier + ')');
@@ -143,10 +144,10 @@ export class PlatformService {
   }
 
   async suspendTenant(orgId: string, reason: string): Promise<any> {
-    await this.ds.query('UPDATE organizations SET billing_status = $1, notes = COALESCE(notes, $3) || $2, updated_at = NOW() WHERE org_id = $3',
+    await this._q('UPDATE organizations SET billing_status = $1, notes = COALESCE(notes, $3) || $2, updated_at = NOW() WHERE org_id = $3',
       ['suspended', '\n[SUSPENDED] ' + reason, orgId]);
-    await this.ds.query('UPDATE dispensaries SET is_active = false WHERE company_id IN (SELECT company_id FROM companies WHERE org_id = $1)', [orgId]);
-    await this.ds.query('INSERT INTO platform_activity (organization_id, activity_type, description) VALUES ($1, $2, $3)',
+    await this._q('UPDATE dispensaries SET is_active = false WHERE company_id IN (SELECT company_id FROM companies WHERE org_id = $1)', [orgId]);
+    await this._q('INSERT INTO platform_activity (organization_id, activity_type, description) VALUES ($1, $2, $3)',
       [orgId, 'tenant_suspended', 'Suspended: ' + reason]);
     return this.getTenant(orgId);
   }
@@ -158,17 +159,17 @@ export class PlatformService {
     const cached = await this.cache.get<any[]>(cacheKey);
     if (cached) return cached;
 
-    const rules = await this.ds.query('SELECT * FROM lkp_tax_categories ORDER BY state, tax_category_id');
+    const rules = await this._q('SELECT * FROM lkp_tax_categories ORDER BY state, tax_category_id');
     await this.cache.set(cacheKey, rules, 600);
     return rules;
   }
 
   async addTaxRule(input: { state: string; code: string; name: string; rate: number; taxBasis: string; statutoryReference?: string }): Promise<any> {
-    const [rule] = await this.ds.query(
+    const [rule] = await this._q(
       'INSERT INTO lkp_tax_categories (state, code, name, rate, tax_basis, statutory_reference, effective_date, is_active) VALUES ($1, $2, $3, $4, $5, $6, CURRENT_DATE, true) RETURNING *',
       [input.state, input.code, input.name, input.rate, input.taxBasis, input.statutoryReference],
     );
-    await this.ds.query('INSERT INTO platform_activity (activity_type, description, metadata) VALUES ($1, $2, $3)',
+    await this._q('INSERT INTO platform_activity (activity_type, description, metadata) VALUES ($1, $2, $3)',
       ['tax_rule_added', 'New tax rule: ' + input.code + ' (' + input.state + ')', JSON.stringify(input)]);
     // Invalidate tax rules cache
     await this.cache.del('taxRules:all');
@@ -184,21 +185,21 @@ export class PlatformService {
     if (input.name) { sets.push('name = $' + i++); params.push(input.name); }
     if (sets.length === 0) throw new BadRequestException('Nothing to update');
     params.push(taxCategoryId);
-    await this.ds.query('UPDATE lkp_tax_categories SET ' + sets.join(', ') + ' WHERE tax_category_id = $' + i, params);
+    await this._q('UPDATE lkp_tax_categories SET ' + sets.join(', ') + ' WHERE tax_category_id = $' + i, params);
     // Invalidate tax rules cache
     await this.cache.del('taxRules:all');
-    const [rule] = await this.ds.query('SELECT * FROM lkp_tax_categories WHERE tax_category_id = $1', [taxCategoryId]);
+    const [rule] = await this._q('SELECT * FROM lkp_tax_categories WHERE tax_category_id = $1', [taxCategoryId]);
     return rule;
   }
 
   async getStates(): Promise<any[]> {
-    return this.ds.query(`SELECT state, COUNT(DISTINCT d.entity_id) as dispensaries, COUNT(DISTINCT tc.tax_category_id) as tax_rules
+    return this._q(`SELECT state, COUNT(DISTINCT d.entity_id) as dispensaries, COUNT(DISTINCT tc.tax_category_id) as tax_rules
       FROM dispensaries d LEFT JOIN lkp_tax_categories tc ON tc.state = d.state
       GROUP BY d.state ORDER BY state`);
   }
 
   async getPurchaseLimitRules(): Promise<any[]> {
-    return this.ds.query('SELECT * FROM purchase_limit_rules ORDER BY state, product_category');
+    return this._q('SELECT * FROM purchase_limit_rules ORDER BY state, product_category');
   }
 
   // ═══ BILLING ═══
@@ -209,11 +210,11 @@ export class PlatformService {
     if (orgId) { sql += ' WHERE bi.organization_id = $1'; params.push(orgId); }
     sql += ' ORDER BY bi.created_at DESC LIMIT $' + (params.length + 1);
     params.push(limit);
-    return this.ds.query(sql, params);
+    return this._q(sql, params);
   }
 
   async getRevenueByMonth(months = 12): Promise<any[]> {
-    return this.ds.query(`SELECT DATE_TRUNC('month', bi.created_at)::DATE as month,
+    return this._q(`SELECT DATE_TRUNC('month', bi.created_at)::DATE as month,
       COUNT(*) as invoices, SUM(bi.total)::DECIMAL(10,2) as revenue
       FROM billing_invoices bi WHERE bi.created_at >= NOW() - ($1 || ' months')::INTERVAL
       GROUP BY month ORDER BY month`, [months]);
@@ -227,19 +228,19 @@ export class PlatformService {
     if (activityType) { sql += ' WHERE pa.activity_type = $1'; params.push(activityType); }
     params.push(limit);
     sql += ' ORDER BY pa.created_at DESC LIMIT $' + params.length;
-    return this.ds.query(sql, params);
+    return this._q(sql, params);
   }
 
   // ═══ PLATFORM REPORTS ═══
 
   async getPlatformReport(): Promise<any> {
-    const tenantHealth = await this.ds.query(`SELECT o.name, o.subscription_tier as tier, o.billing_status as status,
+    const tenantHealth = await this._q(`SELECT o.name, o.subscription_tier as tier, o.billing_status as status,
       o.monthly_revenue as mrr, o.total_locations as locations,
       (SELECT COUNT(*) FROM orders ord WHERE ord."dispensaryId" IN (SELECT d.entity_id FROM dispensaries d JOIN companies c ON c.company_id = d.company_id WHERE c.org_id = o.org_id) AND ord."createdAt" >= NOW() - INTERVAL '30 days') as orders_30d,
       (SELECT COALESCE(SUM(ord2.total), 0)::DECIMAL(10,2) FROM orders ord2 WHERE ord2."dispensaryId" IN (SELECT d2.entity_id FROM dispensaries d2 JOIN companies c2 ON c2.company_id = d2.company_id WHERE c2.org_id = o.org_id) AND ord2."orderStatus" = 'completed' AND ord2."createdAt" >= NOW() - INTERVAL '30 days') as gmv_30d
     FROM organizations o ORDER BY gmv_30d DESC`);
 
-    const [churn] = await this.ds.query(`SELECT
+    const [churn] = await this._q(`SELECT
       COUNT(*) FILTER (WHERE billing_status = 'suspended') as churned,
       COUNT(*) as total,
       CASE WHEN COUNT(*) > 0 THEN ROUND(COUNT(*) FILTER (WHERE billing_status = 'suspended')::DECIMAL / COUNT(*) * 100, 1) ELSE 0 END as churn_rate
@@ -254,6 +255,18 @@ export class PlatformService {
   }
 
   async getSubscriptionTiers(): Promise<any[]> {
-    return this.ds.query('SELECT * FROM subscription_tiers WHERE is_active = true ORDER BY monthly_price');
+    return this._q('SELECT * FROM subscription_tiers WHERE is_active = true ORDER BY monthly_price');
   }
+
+  /** Raw SQL helper – bridges TypeORM .query() to Drizzle */
+  private async _q(text: string, params?: any[]): Promise<any[]> {
+    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
+    if (client?.query) {
+      const r = await client.query(text, params);
+      return r.rows ?? r;
+    }
+    const result = await this.db.execute(sql.raw(text));
+    return Array.isArray(result) ? result : (result as any).rows ?? [];
+  }
+
 }

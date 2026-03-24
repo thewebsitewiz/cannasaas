@@ -1,6 +1,4 @@
 import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import { MetrcCredential } from './entities/metrc-credential.entity';
@@ -11,6 +9,9 @@ import { SetMetrcCategoryInput } from './dto/set-metrc-category.input';
 import { CredentialValidationResult } from './dto/credential-validation-result.type';
 import { ComplianceReport, ComplianceIssue } from './dto/compliance-report.type';
 import { CircuitBreaker } from '../../common/services/circuit-breaker';
+import { sql } from 'drizzle-orm';
+
+export const DRIZZLE = Symbol.for('DRIZZLE');
 
 const METRC_BASE_URLS: Record<string, string> = {
   NY: 'https://api-mn.metrc.com',
@@ -24,9 +25,7 @@ export class MetrcService {
   private readonly breaker = new CircuitBreaker({ name: 'metrc', failureThreshold: 3, resetTimeoutMs: 60000 });
 
   constructor(
-    @InjectRepository(MetrcCredential)
-    private credentialRepo: Repository<MetrcCredential>,
-    private config: ConfigService,
+    private config: ConfigService
   ) {
     const keyStr = this.config.get<string>('ENCRYPTION_KEY', 'cannasaas-dev-key-change-in-prod-32b');
     const saltBytes = crypto.createHash('sha256').update(keyStr).digest().subarray(0, 16);
@@ -359,7 +358,6 @@ export class MetrcService {
     }
   }
 
-
   // ── Metrc Sales Receipt Sync ──────────────────────────────────────────────
 
   async syncSaleToMetrc(orderId: string, dispensaryId: string, dataSource: any): Promise<any> {
@@ -479,7 +477,6 @@ export class MetrcService {
       await qr.release();
     }
   }
-
 
   async getFailedSyncDashboard(dispensaryId: string, dataSource: any): Promise<any> {
     const qr = dataSource.createQueryRunner();

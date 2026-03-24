@@ -1,42 +1,65 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { User } from './entities/user.entity';
+import { Injectable, Inject, ConflictException, NotFoundException } from '@nestjs/common';
+import { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { eq, desc } from 'drizzle-orm';
+import * as schema from '../../database/schema';
+
+export const DRIZZLE = Symbol.for('DRIZZLE');
+type DB = NodePgDatabase<typeof schema>;
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectRepository(User) private readonly repo: Repository<User>) {}
+  constructor(@Inject(DRIZZLE) private readonly db: DB) {}
 
-  findById(id: string): Promise<User | null> {
-    return this.repo.findOneBy({ id });
+  async findById(id: string) {
+    const [user] = await this.db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.id, id));
+    return user ?? null;
   }
 
-  findByEmail(email: string): Promise<User | null> {
-    return this.repo.findOneBy({ email: email.toLowerCase() });
+  async findByEmail(email: string) {
+    const [user] = await this.db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.email, email.toLowerCase()));
+    return user ?? null;
   }
 
-  findByDispensary(dispensaryId: string): Promise<User[]> {
-    return this.repo.find({ where: { dispensaryId }, order: { createdAt: 'DESC' } });
+  async findByDispensary(dispensaryId: string) {
+    return this.db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.dispensaryId, dispensaryId))
+      .orderBy(desc(schema.users.createdAt));
   }
 
-  async create(email: string, passwordHash: string): Promise<User> {
+  async create(email: string, passwordHash: string) {
     const existing = await this.findByEmail(email);
     if (existing) throw new ConflictException('Email already registered');
-    const user = this.repo.create({ email: email.toLowerCase(), passwordHash });
-    return this.repo.save(user);
+    const [user] = await this.db
+      .insert(schema.users)
+      .values({ email: email.toLowerCase(), passwordHash })
+      .returning();
+    return user;
   }
 
-  async updateRole(id: string, role: string): Promise<User> {
-    const user = await this.repo.findOneBy({ id });
+  async updateRole(id: string, role: string) {
+    const [user] = await this.db
+      .update(schema.users)
+      .set({ role })
+      .where(eq(schema.users.id, id))
+      .returning();
     if (!user) throw new NotFoundException('User not found');
-    user.role = role;
-    return this.repo.save(user);
+    return user;
   }
 
   async deactivate(id: string): Promise<void> {
-    const user = await this.repo.findOneBy({ id });
+    const [user] = await this.db
+      .update(schema.users)
+      .set({ isActive: false })
+      .where(eq(schema.users.id, id))
+      .returning();
     if (!user) throw new NotFoundException('User not found');
-    user.isActive = false;
-    await this.repo.save(user);
   }
 }

@@ -1,22 +1,18 @@
-import { Injectable, Logger, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { Inject, Injectable, Logger, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { CustomerProfile } from './entities/customer.entity';
 import { CustomerAddress } from './entities/customer.entity';
 import { AgeVerification } from './entities/customer.entity';
+import { sql } from 'drizzle-orm';
+
+export const DRIZZLE = Symbol.for('DRIZZLE');
 
 @Injectable()
 export class CustomerService {
   private readonly logger = new Logger(CustomerService.name);
 
   constructor(
-    @InjectRepository(CustomerProfile) private profileRepo: Repository<CustomerProfile>,
-    @InjectRepository(CustomerAddress) private addressRepo: Repository<CustomerAddress>,
-    @InjectRepository(AgeVerification) private verificationRepo: Repository<AgeVerification>,
-    @InjectDataSource() private ds: DataSource,
+    @Inject(DRIZZLE) private db: any
   ) {}
 
   // ── Registration Enhancement ──────────────────────────────────────────────
@@ -39,7 +35,7 @@ export class CustomerService {
 
     // Update user phone/dob
     if (input.phone || input.dateOfBirth) {
-      await this.ds.query(
+      await this._q(
         `UPDATE users SET phone = COALESCE($1, phone), "dateOfBirth" = COALESCE($2::DATE, "dateOfBirth"), "updatedAt" = NOW() WHERE id = $3`,
         [input.phone, input.dateOfBirth, userId],
       );
@@ -49,7 +45,7 @@ export class CustomerService {
   }
 
   async getProfile(userId: string): Promise<any> {
-    const [result] = await this.ds.query(
+    const [result] = await this._q(
       `SELECT cp.*, u.email, u."firstName", u."lastName", u."ageVerified"
        FROM customer_profiles cp JOIN users u ON u.id = cp.user_id WHERE cp.user_id = $1`,
       [userId],
@@ -70,7 +66,7 @@ export class CustomerService {
     if (input.medicalCardNumber !== undefined) profile.medical_card_number = input.medicalCardNumber;
 
     if (input.firstName || input.lastName || input.phone) {
-      await this.ds.query(
+      await this._q(
         `UPDATE users SET "firstName" = COALESCE($1, "firstName"), "lastName" = COALESCE($2, "lastName"), phone = COALESCE($3, phone), "updatedAt" = NOW() WHERE id = $4`,
         [input.firstName, input.lastName, input.phone, userId],
       );
@@ -111,14 +107,14 @@ export class CustomerService {
 
     if (verified) {
       // Update profile and user
-      await this.ds.query(
+      await this._q(
         `UPDATE customer_profiles SET age_verified = true, age_verified_at = NOW(),
           age_verification_method = $1, id_document_type = $2, date_of_birth = $3,
           id_document_state = $4, id_expiration_date = $5::DATE, updated_at = NOW()
          WHERE user_id = $6`,
         [input.method || 'self_declared', input.idType, input.dateOfBirth, input.idState, input.idExpiration, userId],
       );
-      await this.ds.query(
+      await this._q(
         `UPDATE users SET "ageVerified" = true, "dateOfBirth" = $1::DATE, "updatedAt" = NOW() WHERE id = $2`,
         [input.dateOfBirth, userId],
       );
@@ -199,11 +195,11 @@ export class CustomerService {
   // ── Order History ─────────────────────────────────────────────────────────
 
   async getOrderHistory(userId: string, limit = 20, offset = 0): Promise<{ orders: any[]; total: number }> {
-    const [countResult] = await this.ds.query(
+    const [countResult] = await this._q(
       `SELECT COUNT(*) as total FROM orders WHERE "customerUserId" = $1`, [userId],
     );
 
-    const orders = await this.ds.query(
+    const orders = await this._q(
       `SELECT o.*, d.name as dispensary_name,
         (SELECT COUNT(*) FROM order_items oi WHERE oi.order_id = o."orderId") as item_count
        FROM orders o
@@ -219,7 +215,7 @@ export class CustomerService {
   // ── Purchase Limit Check ──────────────────────────────────────────────────
 
   async checkPurchaseLimit(userId: string, dispensaryId: string, productCategory: string, quantityGrams: number): Promise<{ allowed: boolean; limit?: number; remaining?: number; reason?: string }> {
-    const [disp] = await this.ds.query(
+    const [disp] = await this._q(
       `SELECT state FROM dispensaries WHERE entity_id = $1`, [dispensaryId],
     );
     if (!disp) return { allowed: false, reason: 'Dispensary not found' };
@@ -227,7 +223,7 @@ export class CustomerService {
     const profile = await this.profileRepo.findOne({ where: { user_id: userId } });
     const customerType = profile?.is_medical_patient ? 'medical' : 'adult_use';
 
-    const rules = await this.ds.query(
+    const rules = await this._q(
       `SELECT * FROM purchase_limit_rules
        WHERE state = $1 AND customer_type = $2 AND (product_category = $3 OR product_category IS NULL) AND is_active = true`,
       [disp.state, customerType, productCategory],
@@ -246,7 +242,7 @@ export class CustomerService {
         }
       } else if (rule.period_days) {
         // Check rolling period
-        const [purchased] = await this.ds.query(
+        const [purchased] = await this._q(
           `SELECT COALESCE(SUM(oi.quantity * COALESCE(pv.weight_grams, 3.5)), 0) as total_grams
            FROM orders o JOIN order_items oi ON oi.order_id = o."orderId"
            LEFT JOIN product_variants pv ON pv.variant_id = oi.variant_id
@@ -271,7 +267,7 @@ export class CustomerService {
   // ── Admin: Customer List ──────────────────────────────────────────────────
 
   async getCustomers(dispensaryId: string, limit = 50, offset = 0): Promise<any[]> {
-    return this.ds.query(
+    return this._q(
       `SELECT cp.*, u.email, u."firstName", u."lastName", u."ageVerified", u."createdAt" as registered_at
        FROM customer_profiles cp
        JOIN users u ON u.id = cp.user_id
@@ -282,4 +278,16 @@ export class CustomerService {
       [dispensaryId, limit, offset],
     );
   }
+
+  /** Raw SQL helper – bridges TypeORM .query() to Drizzle */
+  private async _q(text: string, params?: any[]): Promise<any[]> {
+    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
+    if (client?.query) {
+      const r = await client.query(text, params);
+      return r.rows ?? r;
+    }
+    const result = await this.db.execute(sql.raw(text));
+    return Array.isArray(result) ? result : (result as any).rows ?? [];
+  }
+
 }

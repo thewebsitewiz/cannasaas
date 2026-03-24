@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@cannasaas/i18n": "workspace:^",
     "@cannasaas/ui": "workspace:^",
     "@stripe/stripe-js": "^8.9.0",
     "@tanstack/react-query": "^5.95.2",

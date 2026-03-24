@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { MetrcCredential } from './entities/metrc-credential.entity';
 import { MetrcSyncLog } from './entities/metrc-sync-log.entity';
 import { CircuitBreaker } from '../../common/services/circuit-breaker';
+
+export const DRIZZLE = Symbol.for('DRIZZLE');
 
 const STATE_BASE_URLS: Record<string, string> = {
   NY: 'https://api-ny.metrc.com',
@@ -28,11 +28,7 @@ export class MetrcApiClient {
   private readonly breaker = new CircuitBreaker({ name: 'metrc', failureThreshold: 3, resetTimeoutMs: 60000 });
 
   constructor(
-    @InjectRepository(MetrcCredential)
-    private credentialRepo: Repository<MetrcCredential>,
-    @InjectRepository(MetrcSyncLog)
-    private syncLogRepo: Repository<MetrcSyncLog>,
-    private config: ConfigService,
+    private config: ConfigService
   ) {}
 
   // ── Core API Caller ───────────────────────────────────────────────────────

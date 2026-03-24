@@ -1,22 +1,15 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { Inject, Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ScheduledShift, ShiftTemplate, ShiftSwapRequest, TimeOffRequest, DriverProfile, DeliveryTrip } from './entities/scheduling.entity';
+import { sql } from 'drizzle-orm';
+
+export const DRIZZLE = Symbol.for('DRIZZLE');
 
 @Injectable()
 export class SchedulingService {
   private readonly logger = new Logger(SchedulingService.name);
 
   constructor(
-    @InjectRepository(ScheduledShift) private shiftRepo: Repository<ScheduledShift>,
-    @InjectRepository(ShiftTemplate) private templateRepo: Repository<ShiftTemplate>,
-    @InjectRepository(ShiftSwapRequest) private swapRepo: Repository<ShiftSwapRequest>,
-    @InjectRepository(TimeOffRequest) private timeOffRepo: Repository<TimeOffRequest>,
-    @InjectRepository(DriverProfile) private driverRepo: Repository<DriverProfile>,
-    @InjectRepository(DeliveryTrip) private tripRepo: Repository<DeliveryTrip>,
-    @InjectDataSource() private ds: DataSource,
+    @Inject(DRIZZLE) private db: any
   ) {}
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -33,7 +26,7 @@ export class SchedulingService {
      LEFT JOIN lkp_positions lp ON lp.position_id = ep.position_id
      WHERE ss.dispensary_id = $1 AND ss.shift_date >= $2::DATE AND ss.shift_date < $2::DATE + INTERVAL '7 days'
      ORDER BY ss.shift_date, ss.start_time, u."lastName"`;
-    return this.ds.query(sql, [dispensaryId, weekStart]);
+    return this._q(sql, [dispensaryId, weekStart]);
   }
 
   async getMyShifts(profileId: string, startDate: string, endDate: string): Promise<ScheduledShift[]> {
@@ -47,13 +40,13 @@ export class SchedulingService {
   }
 
   async createShift(input: { dispensaryId: string; profileId: string; shiftDate: string; startTime: string; endTime: string; notes?: string; createdByUserId: string }): Promise<ScheduledShift> {
-    const [conflict] = await this.ds.query(
+    const [conflict] = await this._q(
       `SELECT shift_id FROM scheduled_shifts WHERE profile_id = $1 AND shift_date = $2 AND ((start_time < $4::TIME AND end_time > $3::TIME))`,
       [input.profileId, input.shiftDate, input.startTime, input.endTime],
     );
     if (conflict) throw new BadRequestException('Shift conflicts with existing schedule');
 
-    const [timeOff] = await this.ds.query(
+    const [timeOff] = await this._q(
       `SELECT request_id FROM time_off_requests WHERE profile_id = $1 AND status = 'approved' AND $2::DATE BETWEEN start_date AND end_date`,
       [input.profileId, input.shiftDate],
     );
@@ -77,7 +70,7 @@ export class SchedulingService {
   }
 
   async publishWeek(dispensaryId: string, weekStart: string): Promise<number> {
-    const result = await this.ds.query(
+    const result = await this._q(
       `UPDATE scheduled_shifts SET published = true, updated_at = NOW() WHERE dispensary_id = $1 AND shift_date >= $2::DATE AND shift_date < $2::DATE + INTERVAL '7 days' AND published = false RETURNING shift_id`,
       [dispensaryId, weekStart],
     );
@@ -87,7 +80,7 @@ export class SchedulingService {
 
   async autoGenerateWeek(dispensaryId: string, weekStart: string, createdByUserId: string): Promise<number> {
     const templates = await this.templateRepo.find({ where: { dispensary_id: dispensaryId, is_active: true } });
-    const employees = await this.ds.query(
+    const employees = await this._q(
       `SELECT ep.profile_id, ep.position_id FROM employee_profiles ep WHERE ep.dispensary_id = $1 AND ep.employment_status = 'active' AND ep.is_exempt = false`,
       [dispensaryId],
     );
@@ -128,7 +121,7 @@ export class SchedulingService {
      GROUP BY st.template_id, st.name, st.day_of_week, st.start_time, st.end_time, st.min_staff, lp.name
      HAVING COUNT(ss.shift_id) < st.min_staff
      ORDER BY st.day_of_week, st.start_time`;
-    return this.ds.query(sql, [dispensaryId, weekStart]);
+    return this._q(sql, [dispensaryId, weekStart]);
   }
 
   // ── Shift Swaps ───────────────────────────────────────────────────────────
@@ -180,7 +173,7 @@ export class SchedulingService {
      LEFT JOIN lkp_positions lp ON lp.position_id = ep.position_id
      WHERE tor.dispensary_id = $1 ${status ? 'AND tor.status = $2' : ''}
      ORDER BY tor.start_date ASC`;
-    return this.ds.query(sql, status ? [dispensaryId, status] : [dispensaryId]);
+    return this._q(sql, status ? [dispensaryId, status] : [dispensaryId]);
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -197,7 +190,7 @@ export class SchedulingService {
      JOIN users u ON u.id = ep.user_id
      WHERE dp.dispensary_id = $1
      ORDER BY u."lastName"`;
-    return this.ds.query(sql, [dispensaryId]);
+    return this._q(sql, [dispensaryId]);
   }
 
   async updateDriverStatus(driverId: string, status: string, lat?: number, lng?: number): Promise<DriverProfile> {
@@ -215,7 +208,7 @@ export class SchedulingService {
     if (!driver) throw new NotFoundException('Driver not found');
     if (driver.status === 'off_duty') throw new BadRequestException('Driver is off duty');
 
-    const [trip] = await this.ds.query(
+    const [trip] = await this._q(
       'INSERT INTO delivery_trips (driver_id, dispensary_id, order_id, delivery_address, delivery_latitude, delivery_longitude, distance_miles, estimated_minutes, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
       [driverId, dispensaryId, input.orderId || null, input.deliveryAddress, input.lat || null, input.lng || null, input.distanceMiles || null, input.estimatedMinutes || null, 'assigned'],
     );
@@ -241,7 +234,7 @@ export class SchedulingService {
 
   async getDriverTrips(driverId: string, days = 7): Promise<DeliveryTrip[]> {
     const sql = 'SELECT * FROM delivery_trips WHERE driver_id = $1 AND created_at >= NOW() - ($2 || \' days\')::INTERVAL ORDER BY created_at DESC';
-    return this.ds.query(sql, [driverId, days]);
+    return this._q(sql, [driverId, days]);
   }
 
   async getDriverStats(dispensaryId: string, days = 30): Promise<any> {
@@ -253,7 +246,7 @@ export class SchedulingService {
       COUNT(*) FILTER (WHERE customer_rating >= 4) as positive_ratings,
       ROUND(SUM(distance_miles) FILTER (WHERE status = 'completed'), 1) as total_miles
      FROM delivery_trips WHERE dispensary_id = $1 AND created_at >= NOW() - INTERVAL '1 day' * $2`;
-    const [stats] = await this.ds.query(sql, [dispensaryId, days]);
+    const [stats] = await this._q(sql, [dispensaryId, days]);
     return {
       totalTrips: parseInt(stats.total_trips),
       completed: parseInt(stats.completed),
@@ -264,4 +257,16 @@ export class SchedulingService {
       totalMiles: parseFloat(stats.total_miles) || 0,
     };
   }
+
+  /** Raw SQL helper – bridges TypeORM .query() to Drizzle */
+  private async _q(text: string, params?: any[]): Promise<any[]> {
+    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
+    if (client?.query) {
+      const r = await client.query(text, params);
+      return r.rows ?? r;
+    }
+    const result = await this.db.execute(sql.raw(text));
+    return Array.isArray(result) ? result : (result as any).rows ?? [];
+  }
+
 }
