@@ -45,6 +45,7 @@ import { ImageModule } from './modules/image/image.module';
 import { StripeModule } from './modules/stripe/stripe.module';
 import { PlatformModule } from './modules/platform/platform.module';
 import { ThemeModule } from './modules/theme/theme.module';
+import { HealthModule } from './modules/health/health.module';
 
 @Module({
   imports: [
@@ -99,6 +100,7 @@ import { ThemeModule } from './modules/theme/theme.module';
     StripeModule,
     PlatformModule,
     ThemeModule,
+    HealthModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

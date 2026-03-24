@@ -12,7 +12,7 @@ import {
   LkpCannabinoid, LkpAllergen, LkpWarningStatement,
   LkpLabTestCategory, LkpMetrcAdjustmentReason,
 } from './entities/lookups/lookups.entity';
-import { ProductsResolver } from './products.resolver';
+import { ProductsResolver, ProductVariantResolver } from './products.resolver';
 import { ProductsService } from './products.service';
 import { ProductSearchService } from './product-search.service';
 
@@ -26,7 +26,7 @@ import { ProductSearchService } from './product-search.service';
     LkpCannabinoid, LkpAllergen, LkpWarningStatement,
     LkpLabTestCategory, LkpMetrcAdjustmentReason,
   ])],
-  providers: [ProductsResolver, ProductsService, ProductSearchService],
+  providers: [ProductsResolver, ProductVariantResolver, ProductsService, ProductSearchService],
   exports: [ProductsService],
 })
 export class ProductsModule {}

@@ -7,7 +7,7 @@ import { Leaf, ShoppingCart, Check, Minus, Plus } from 'lucide-react';
 
 const QUERY = `query($id: ID!) { products(dispensaryId: $id) {
   id name description strainType thcPercent cbdPercent effects
-  variants { variantId name sku }
+  variants { variantId name sku retailPrice }
 }}`;
 
 export function ProductPage() {
@@ -30,7 +30,7 @@ export function ProductPage() {
 
   const variants = product.variants ?? [];
   const active = selVariant ? variants.find((v: any) => v.variantId === selVariant) : variants[0];
-  const price = 25.00; // Placeholder
+  const price = active?.retailPrice ? Number(active.retailPrice) : 0;
   const effects = product.effects ? (typeof product.effects === 'string' ? (() => { try { return JSON.parse(product.effects); } catch { return []; } })() : Array.isArray(product.effects) ? product.effects : []) : [];
 
   const handleAdd = () => {

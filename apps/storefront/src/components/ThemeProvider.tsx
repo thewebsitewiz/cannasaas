@@ -16,14 +16,42 @@ const THEME_QUERY = `
  * Fetches the saved theme for this dispensary and applies it via data-theme attribute.
  * Renders nothing visible — side-effect only.
  *
- * TODO: resolve dispensaryId from domain/subdomain in production.
+ * dispensaryId resolution:
+ *   1. NEXT_PUBLIC_DISPENSARY_ID env var (explicit override)
+ *   2. Subdomain extraction from window.location.hostname (e.g. tappan.greenstack.io → lookup by slug)
+ *   3. Fallback to default seed dispensary
  */
 export function ThemeProvider() {
   useEffect(() => {
     async function loadTheme() {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-        const dispensaryId = process.env.NEXT_PUBLIC_DISPENSARY_ID || 'c0000000-0000-0000-0000-000000000001';
+
+        // Resolve dispensary: env override → subdomain slug → default
+        let dispensaryId = process.env.NEXT_PUBLIC_DISPENSARY_ID || '';
+        if (!dispensaryId && typeof window !== 'undefined') {
+          const host = window.location.hostname;
+          const parts = host.split('.');
+          if (parts.length >= 3) {
+            // Subdomain-based: e.g. tappan.greenstack.io
+            const slug = parts[0];
+            try {
+              const slugRes = await fetch(`${apiUrl}/graphql`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  query: `query($slug: String!) { tenantBySlug(slug: $slug) { dispensaryId } }`,
+                  variables: { slug },
+                }),
+              });
+              const slugData = await slugRes.json();
+              dispensaryId = slugData?.data?.tenantBySlug?.dispensaryId || '';
+            } catch {
+              // Slug resolution failed — fall through to default
+            }
+          }
+        }
+        if (!dispensaryId) dispensaryId = 'c0000000-0000-0000-0000-000000000001';
 
         const res = await fetch(`${apiUrl}/graphql`, {
           method: 'POST',

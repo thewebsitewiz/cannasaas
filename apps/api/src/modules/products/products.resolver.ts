@@ -1,4 +1,4 @@
-import { Resolver, Query, Args, ID, Int, ResolveField, Parent } from '@nestjs/graphql';
+import { Resolver, Query, Args, ID, Int, Float, ResolveField, Parent } from '@nestjs/graphql';
 import { ForbiddenException } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { ProductSearchService } from './product-search.service';
@@ -133,5 +133,16 @@ export class ProductsResolver {
     @Args('limit', { type: () => Int, nullable: true }) limit?: number,
   ): Promise<AutocompleteResult[]> {
     return this.search.autocomplete(dispensaryId, query, limit);
+  }
+}
+
+@Resolver(() => ProductVariant)
+export class ProductVariantResolver {
+  constructor(private readonly products: ProductsService) {}
+
+  @ResolveField(() => Float, { name: 'retailPrice', nullable: true })
+  async retailPrice(@Parent() variant: ProductVariant): Promise<number | null> {
+    const pricing = await this.products.findCurrentPricing(variant.variant_id);
+    return pricing ? Number(pricing.price) : null;
   }
 }
