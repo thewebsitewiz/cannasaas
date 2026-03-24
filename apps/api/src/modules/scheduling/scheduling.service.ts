@@ -1,30 +1,23 @@
-import { Inject, Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { Inject, ScheduledShift, ShiftTemplate, ShiftSwapRequest, TimeOffRequest, DriverProfile, DeliveryTrip } from './entities/scheduling.entity';
-import { sql } from 'drizzle-orm';
-
-export const DRIZZLE = Symbol.for('DRIZZLE');
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
+import { ScheduledShift, ShiftTemplate, ShiftSwapRequest, TimeOffRequest, DriverProfile, DeliveryTrip } from './entities/scheduling.entity';
 
 @Injectable()
 export class SchedulingService {
-  private shiftRepo: any;
-  private templateRepo: any;
-  private swapRepo: any;
-  private timeOffRepo: any;
-  private driverRepo: any;
-  private tripRepo: any;
   private readonly logger = new Logger(SchedulingService.name);
 
   constructor(
-
-    @Inject(DRIZZLE) private db: any
-  ) {
-    this.shiftRepo = this._makeRepo('scheduled_shifts');
-    this.templateRepo = this._makeRepo('notification_templates');
-    this.swapRepo = this._makeRepo('shift_swap_requests');
-    this.timeOffRepo = this._makeRepo('time_off_requests');
-    this.driverRepo = this._makeRepo('driver_profiles');
-    this.tripRepo = this._makeRepo('delivery_trips');
-  }
+    @InjectRepository(ScheduledShift) private shiftRepo: Repository<ScheduledShift>,
+    @InjectRepository(ShiftTemplate) private templateRepo: Repository<ShiftTemplate>,
+    @InjectRepository(ShiftSwapRequest) private swapRepo: Repository<ShiftSwapRequest>,
+    @InjectRepository(TimeOffRequest) private timeOffRepo: Repository<TimeOffRequest>,
+    @InjectRepository(DriverProfile) private driverRepo: Repository<DriverProfile>,
+    @InjectRepository(DeliveryTrip) private tripRepo: Repository<DeliveryTrip>,
+    @InjectDataSource() private ds: DataSource,
+  ) {}
 
   // ═══════════════════════════════════════════════════════════════════════════
   // SHIFT SCHEDULING
@@ -40,7 +33,7 @@ export class SchedulingService {
      LEFT JOIN lkp_positions lp ON lp.position_id = ep.position_id
      WHERE ss.dispensary_id = $1 AND ss.shift_date >= $2::DATE AND ss.shift_date < $2::DATE + INTERVAL '7 days'
      ORDER BY ss.shift_date, ss.start_time, u."lastName"`;
-    return this._q(sql, [dispensaryId, weekStart]);
+    return this.ds.query(sql, [dispensaryId, weekStart]);
   }
 
   async getMyShifts(profileId: string, startDate: string, endDate: string): Promise<ScheduledShift[]> {
@@ -54,13 +47,13 @@ export class SchedulingService {
   }
 
   async createShift(input: { dispensaryId: string; profileId: string; shiftDate: string; startTime: string; endTime: string; notes?: string; createdByUserId: string }): Promise<ScheduledShift> {
-    const [conflict] = await this._q(
+    const [conflict] = await this.ds.query(
       `SELECT shift_id FROM scheduled_shifts WHERE profile_id = $1 AND shift_date = $2 AND ((start_time < $4::TIME AND end_time > $3::TIME))`,
       [input.profileId, input.shiftDate, input.startTime, input.endTime],
     );
     if (conflict) throw new BadRequestException('Shift conflicts with existing schedule');
 
-    const [timeOff] = await this._q(
+    const [timeOff] = await this.ds.query(
       `SELECT request_id FROM time_off_requests WHERE profile_id = $1 AND status = 'approved' AND $2::DATE BETWEEN start_date AND end_date`,
       [input.profileId, input.shiftDate],
     );
@@ -84,7 +77,7 @@ export class SchedulingService {
   }
 
   async publishWeek(dispensaryId: string, weekStart: string): Promise<number> {
-    const result = await this._q(
+    const result = await this.ds.query(
       `UPDATE scheduled_shifts SET published = true, updated_at = NOW() WHERE dispensary_id = $1 AND shift_date >= $2::DATE AND shift_date < $2::DATE + INTERVAL '7 days' AND published = false RETURNING shift_id`,
       [dispensaryId, weekStart],
     );
@@ -94,7 +87,7 @@ export class SchedulingService {
 
   async autoGenerateWeek(dispensaryId: string, weekStart: string, createdByUserId: string): Promise<number> {
     const templates = await this.templateRepo.find({ where: { dispensary_id: dispensaryId, is_active: true } });
-    const employees = await this._q(
+    const employees = await this.ds.query(
       `SELECT ep.profile_id, ep.position_id FROM employee_profiles ep WHERE ep.dispensary_id = $1 AND ep.employment_status = 'active' AND ep.is_exempt = false`,
       [dispensaryId],
     );
@@ -135,7 +128,7 @@ export class SchedulingService {
      GROUP BY st.template_id, st.name, st.day_of_week, st.start_time, st.end_time, st.min_staff, lp.name
      HAVING COUNT(ss.shift_id) < st.min_staff
      ORDER BY st.day_of_week, st.start_time`;
-    return this._q(sql, [dispensaryId, weekStart]);
+    return this.ds.query(sql, [dispensaryId, weekStart]);
   }
 
   // ── Shift Swaps ───────────────────────────────────────────────────────────
@@ -187,7 +180,7 @@ export class SchedulingService {
      LEFT JOIN lkp_positions lp ON lp.position_id = ep.position_id
      WHERE tor.dispensary_id = $1 ${status ? 'AND tor.status = $2' : ''}
      ORDER BY tor.start_date ASC`;
-    return this._q(sql, status ? [dispensaryId, status] : [dispensaryId]);
+    return this.ds.query(sql, status ? [dispensaryId, status] : [dispensaryId]);
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -204,7 +197,7 @@ export class SchedulingService {
      JOIN users u ON u.id = ep.user_id
      WHERE dp.dispensary_id = $1
      ORDER BY u."lastName"`;
-    return this._q(sql, [dispensaryId]);
+    return this.ds.query(sql, [dispensaryId]);
   }
 
   async updateDriverStatus(driverId: string, status: string, lat?: number, lng?: number): Promise<DriverProfile> {
@@ -222,7 +215,7 @@ export class SchedulingService {
     if (!driver) throw new NotFoundException('Driver not found');
     if (driver.status === 'off_duty') throw new BadRequestException('Driver is off duty');
 
-    const [trip] = await this._q(
+    const [trip] = await this.ds.query(
       'INSERT INTO delivery_trips (driver_id, dispensary_id, order_id, delivery_address, delivery_latitude, delivery_longitude, distance_miles, estimated_minutes, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
       [driverId, dispensaryId, input.orderId || null, input.deliveryAddress, input.lat || null, input.lng || null, input.distanceMiles || null, input.estimatedMinutes || null, 'assigned'],
     );
@@ -248,7 +241,7 @@ export class SchedulingService {
 
   async getDriverTrips(driverId: string, days = 7): Promise<DeliveryTrip[]> {
     const sql = 'SELECT * FROM delivery_trips WHERE driver_id = $1 AND created_at >= NOW() - ($2 || \' days\')::INTERVAL ORDER BY created_at DESC';
-    return this._q(sql, [driverId, days]);
+    return this.ds.query(sql, [driverId, days]);
   }
 
   async getDriverStats(dispensaryId: string, days = 30): Promise<any> {
@@ -260,7 +253,7 @@ export class SchedulingService {
       COUNT(*) FILTER (WHERE customer_rating >= 4) as positive_ratings,
       ROUND(SUM(distance_miles) FILTER (WHERE status = 'completed'), 1) as total_miles
      FROM delivery_trips WHERE dispensary_id = $1 AND created_at >= NOW() - INTERVAL '1 day' * $2`;
-    const [stats] = await this._q(sql, [dispensaryId, days]);
+    const [stats] = await this.ds.query(sql, [dispensaryId, days]);
     return {
       totalTrips: parseInt(stats.total_trips),
       completed: parseInt(stats.completed),
@@ -269,71 +262,6 @@ export class SchedulingService {
       avgRating: parseFloat(stats.avg_rating) || 0,
       positiveRatings: parseInt(stats.positive_ratings),
       totalMiles: parseFloat(stats.total_miles) || 0,
-    };
-  }
-
-  private async _q(text: string, params?: any[]): Promise<any[]> {
-    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
-    if (client?.query) { const r = await client.query(text, params); return r.rows ?? r; }
-    const result = await this.db.execute(sql.raw(text));
-    return Array.isArray(result) ? result : (result as any).rows ?? [];
-  }
-
-  private _makeRepo(table: string) {
-    const q = this._q.bind(this);
-    return {
-      async find(opts?: any): Promise<any[]> {
-        let s = 'SELECT * FROM ' + table; const p: any[] = []; let i = 1;
-        if (opts?.where) { const cd: string[] = []; for (const [k,v] of Object.entries(opts.where)) { if (v !== undefined) { cd.push(k+' = $'+i++); p.push(v); } } if (cd.length) s += ' WHERE ' + cd.join(' AND '); }
-        if (opts?.order) { const sr = Object.entries(opts.order).map(([k,d]) => k+' '+d); if (sr.length) s += ' ORDER BY ' + sr.join(', '); }
-        if (opts?.take) { s += ' LIMIT $'+i++; p.push(opts.take); }
-        return q(s, p.length ? p : undefined);
-      },
-      async findOne(opts?: any): Promise<any> { const rows = await this.find({...opts, take: 1}); return rows[0] ?? null; },
-      async findOneOrFail(opts?: any): Promise<any> { const r = await this.findOne(opts); if (!r) throw new Error('Entity not found'); return r; },
-      create(data: any): any { return {...data}; },
-      async save(entity: any): Promise<any> {
-        const cols = Object.keys(entity).filter(k => entity[k] !== undefined);
-        const vals = cols.map(k => entity[k]);
-        const ph = cols.map((_,i) => '$'+(i+1));
-        const [row] = await q('INSERT INTO '+table+' ('+cols.join(',')+') VALUES ('+ph.join(',')+') ON CONFLICT DO NOTHING RETURNING *', vals);
-        return row ?? entity;
-      },
-      async update(criteria: any, values: any): Promise<any> {
-        const sets: string[] = []; const p: any[] = []; let i = 1;
-        for (const [k,v] of Object.entries(values)) { if (v !== undefined) { sets.push(k+' = $'+i++); p.push(v); } }
-        if (!sets.length) return {affected:0};
-        const cd: string[] = [];
-        if (typeof criteria === 'string' || typeof criteria === 'number') { cd.push('id = $'+i++); p.push(criteria); }
-        else { for (const [k,v] of Object.entries(criteria)) { cd.push(k+' = $'+i++); p.push(v); } }
-        await q('UPDATE '+table+' SET '+sets.join(',')+' WHERE '+cd.join(' AND '), p);
-        return {affected:1};
-      },
-      async delete(criteria: any): Promise<any> {
-        const cd: string[] = []; const p: any[] = []; let i = 1;
-        for (const [k,v] of Object.entries(criteria)) { cd.push(k+' = $'+i++); p.push(v); }
-        await q('DELETE FROM '+table+(cd.length ? ' WHERE '+cd.join(' AND ') : ''), p);
-        return {affected:1};
-      },
-      async count(opts?: any): Promise<number> {
-        let s = 'SELECT COUNT(*)::int as count FROM '+table; const p: any[] = []; let i = 1;
-        if (opts?.where) { const cd: string[] = []; for (const [k,v] of Object.entries(opts.where)) { if (v !== undefined) { cd.push(k+' = $'+i++); p.push(v); } } if (cd.length) s += ' WHERE ' + cd.join(' AND '); }
-        const [r] = await q(s, p.length ? p : undefined); return r?.count ?? 0;
-      },
-      async remove(entity: any): Promise<void> { const keys = Object.keys(entity); await q('DELETE FROM '+table+' WHERE '+keys[0]+' = $1', [entity[keys[0]]]); },
-      createQueryBuilder(alias: string) {
-        let s = 'SELECT '+alias+'.* FROM '+table+' '+alias;
-        const wheres: string[] = []; const p: any[] = []; let i = 1;
-        const obs: string[] = []; let lim: number|undefined;
-        return {
-          where(cond: string, params?: any) { let c2=cond; if (params) for (const [k,v] of Object.entries(params)) { c2=c2.replace(':'+k,'$'+i++); p.push(v); } wheres.push(c2); return this; },
-          andWhere(cond: string, params?: any) { return this.where(cond, params); },
-          orderBy(col: string, dir: string) { obs.push(col+' '+dir); return this; },
-          addOrderBy(col: string, dir: string) { obs.push(col+' '+dir); return this; },
-          take(n: number) { lim=n; return this; },
-          async getMany() { let full=s; if (wheres.length) full+=' WHERE '+wheres.join(' AND '); if (obs.length) full+=' ORDER BY '+obs.join(', '); if (lim) { full+=' LIMIT $'+i++; p.push(lim); } return q(full, p.length?p:undefined); },
-        };
-      },
     };
   }
 }

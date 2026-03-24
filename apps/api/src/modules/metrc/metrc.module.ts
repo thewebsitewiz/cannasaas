@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { BullModule } from '@nestjs/bullmq';
 import { MetrcCredential } from './entities/metrc-credential.entity';
 import { MetrcSyncLog } from './entities/metrc-sync-log.entity';
@@ -14,7 +15,10 @@ import { OrderCompletedListener } from './listeners/order-completed.listener';
 import { MetrcInventorySyncCron } from './cron/metrc-inventory-sync.cron';
 
 @Module({
-  imports: [BullModule.registerQueue({ name: METRC_SYNC_QUEUE })],
+  imports: [
+    TypeOrmModule.forFeature([MetrcCredential, MetrcSyncLog, ComplianceLog, RegulatoryLibrary]),
+    BullModule.registerQueue({ name: METRC_SYNC_QUEUE }),
+  ],
   providers: [
     MetrcService,
     MetrcApiClient,
@@ -22,7 +26,8 @@ import { MetrcInventorySyncCron } from './cron/metrc-inventory-sync.cron';
     MetrcSyncProcessor,
     MetrcSyncQueueService,
     OrderCompletedListener,
-    MetrcInventorySyncCron],
+    MetrcInventorySyncCron,
+  ],
   exports: [MetrcService, MetrcApiClient, MetrcSyncQueueService],
 })
 export class MetrcModule {}

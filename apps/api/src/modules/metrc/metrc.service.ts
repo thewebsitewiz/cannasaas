@@ -1,4 +1,6 @@
-import { Inject, Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import { MetrcCredential } from './entities/metrc-credential.entity';
@@ -9,9 +11,6 @@ import { SetMetrcCategoryInput } from './dto/set-metrc-category.input';
 import { CredentialValidationResult } from './dto/credential-validation-result.type';
 import { ComplianceReport, ComplianceIssue } from './dto/compliance-report.type';
 import { CircuitBreaker } from '../../common/services/circuit-breaker';
-import { sql } from 'drizzle-orm';
-
-export const DRIZZLE = Symbol.for('DRIZZLE');
 
 const METRC_BASE_URLS: Record<string, string> = {
   NY: 'https://api-mn.metrc.com',
@@ -21,19 +20,17 @@ const METRC_BASE_URLS: Record<string, string> = {
 
 @Injectable()
 export class MetrcService {
-  private credentialRepo: any;
   private encryptionKey: Buffer;
   private readonly breaker = new CircuitBreaker({ name: 'metrc', failureThreshold: 3, resetTimeoutMs: 60000 });
 
   constructor(
-    @Inject(DRIZZLE) private db: any,
-    private config: ConfigService
+    @InjectRepository(MetrcCredential)
+    private credentialRepo: Repository<MetrcCredential>,
+    private config: ConfigService,
   ) {
     const keyStr = this.config.get<string>('ENCRYPTION_KEY', 'cannasaas-dev-key-change-in-prod-32b');
     const saltBytes = crypto.createHash('sha256').update(keyStr).digest().subarray(0, 16);
     this.encryptionKey = crypto.scryptSync(keyStr, saltBytes, 32);
-  
-    this.credentialRepo = this._makeRepo('metrc_credentials');
   }
 
   private encrypt(plaintext: string): string {
@@ -159,10 +156,11 @@ export class MetrcService {
   // ── Product UID Tagging ───────────────────────────────────────────────────
 
   async tagProductUid(input: TagProductUidInput, dataSource: any): Promise<any> {
-    // Transaction handled inline
-        try {
+    const qr = dataSource.createQueryRunner();
+    await qr.connect();
+    try {
       // Check for duplicate UID within dispensary
-      const existing = await this._q(
+      const existing = await qr.query(
         `SELECT id FROM products WHERE metrc_item_uid = $1 AND dispensary_id = $2 AND id != $3`,
         [input.metrcItemUid, input.dispensaryId, input.productId]
       );
@@ -170,27 +168,29 @@ export class MetrcService {
         throw new ConflictException(`Metrc Item UID "${input.metrcItemUid}" already assigned to another product`);
       }
 
-      await this._q(
+      await qr.query(
         `UPDATE products SET metrc_item_uid = $1, updated_at = NOW() WHERE id = $2 AND dispensary_id = $3`,
         [input.metrcItemUid, input.productId, input.dispensaryId]
       );
 
-      const [product] = await this._q(
+      const [product] = await qr.query(
         `SELECT id, name, metrc_item_uid, metrc_item_category_id FROM products WHERE id = $1`,
         [input.productId]
       );
       return product;
     } finally {
-          }
+      await qr.release();
+    }
   }
 
   // ── Package Label Tagging ─────────────────────────────────────────────────
 
   async tagPackageLabel(input: TagPackageLabelInput, dataSource: any): Promise<any> {
-    // Transaction handled inline
-        try {
+    const qr = dataSource.createQueryRunner();
+    await qr.connect();
+    try {
       // Check for duplicate label within dispensary
-      const existing = await this._q(
+      const existing = await qr.query(
         `SELECT variant_id FROM product_variants WHERE metrc_package_label = $1 AND dispensary_id = $2 AND variant_id != $3`,
         [input.metrcPackageLabel, input.dispensaryId, input.variantId]
       );
@@ -198,52 +198,56 @@ export class MetrcService {
         throw new ConflictException(`Package label "${input.metrcPackageLabel}" already assigned to another variant`);
       }
 
-      await this._q(
+      await qr.query(
         `UPDATE product_variants SET metrc_package_label = $1, updated_at = NOW() WHERE variant_id = $2 AND dispensary_id = $3`,
         [input.metrcPackageLabel, input.variantId, input.dispensaryId]
       );
 
-      const [variant] = await this._q(
+      const [variant] = await qr.query(
         `SELECT variant_id, name, metrc_package_label FROM product_variants WHERE variant_id = $1`,
         [input.variantId]
       );
       return variant;
     } finally {
-          }
+      await qr.release();
+    }
   }
 
   // ── Metrc Item Category ───────────────────────────────────────────────────
 
   async setMetrcCategory(input: SetMetrcCategoryInput, dataSource: any): Promise<any> {
-    // Transaction handled inline
-        try {
+    const qr = dataSource.createQueryRunner();
+    await qr.connect();
+    try {
       // Validate category exists
-      const [category] = await this._q(
+      const [category] = await qr.query(
         `SELECT metrc_category_id, state, product_type_code FROM lkp_metrc_item_categories WHERE metrc_category_id = $1`,
         [input.metrcItemCategoryId]
       );
       if (!category) throw new NotFoundException(`Metrc item category ${input.metrcItemCategoryId} not found`);
 
-      await this._q(
+      await qr.query(
         `UPDATE products SET metrc_item_category_id = $1, updated_at = NOW() WHERE id = $2 AND dispensary_id = $3`,
         [input.metrcItemCategoryId, input.productId, input.dispensaryId]
       );
 
-      const [product] = await this._q(
+      const [product] = await qr.query(
         `SELECT id, name, metrc_item_uid, metrc_item_category_id FROM products WHERE id = $1`,
         [input.productId]
       );
       return product;
     } finally {
-          }
+      await qr.release();
+    }
   }
 
   // ── Compliance Report ─────────────────────────────────────────────────────
 
   async generateComplianceReport(dispensaryId: string, dataSource: any): Promise<ComplianceReport> {
-    // Transaction handled inline
-        try {
-      const products = await this._q(
+    const qr = dataSource.createQueryRunner();
+    await qr.connect();
+    try {
+      const products = await qr.query(
         `SELECT 
           p.id, p.name, p.metrc_item_uid, p.metrc_item_category_id,
           p.product_type_id, p.thc_percent, p.is_approved,
@@ -295,18 +299,20 @@ export class MetrcService {
         generatedAt: new Date(),
       };
     } finally {
-          }
+      await qr.release();
+    }
   }
 
   // ── Bulk UID Tagging ──────────────────────────────────────────────────────
 
   async bulkTagUids(input: any, dataSource: any): Promise<any> {
-    // Transaction handled inline
-        const results = [];
+    const qr = dataSource.createQueryRunner();
+    await qr.connect();
+    const results = [];
 
     for (const pair of input.pairs) {
       try {
-        const existing = await this._q(
+        const existing = await qr.query(
           `SELECT id FROM products WHERE metrc_item_uid = $1 AND dispensary_id = $2 AND id != $3`,
           [pair.metrcItemUid, input.dispensaryId, pair.productId]
         );
@@ -315,19 +321,20 @@ export class MetrcService {
           continue;
         }
 
-        await this._q(
+        await qr.query(
           `UPDATE products SET metrc_item_uid = $1, updated_at = NOW() WHERE id = $2 AND dispensary_id = $3`,
           [pair.metrcItemUid, pair.productId, input.dispensaryId]
         );
 
-        const [product] = await this._q(`SELECT name FROM products WHERE id = $1`, [pair.productId]);
+        const [product] = await qr.query(`SELECT name FROM products WHERE id = $1`, [pair.productId]);
         results.push({ productId: pair.productId, productName: product?.name ?? '', success: true });
       } catch (err: any) {
         results.push({ productId: pair.productId, productName: '', success: false, error: err.message });
       }
     }
 
-        return {
+    await qr.release();
+    return {
       total: results.length,
       succeeded: results.filter(r => r.success).length,
       failed: results.filter(r => !r.success).length,
@@ -338,23 +345,27 @@ export class MetrcService {
   // ── Approve Product ───────────────────────────────────────────────────────
 
   async approveProduct(productId: string, dispensaryId: string, userId: string, dataSource: any): Promise<boolean> {
-    // Transaction handled inline
-        try {
-      const result = await this._q(
+    const qr = dataSource.createQueryRunner();
+    await qr.connect();
+    try {
+      const result = await qr.query(
         `UPDATE products SET is_approved = true, approved_by_user_id = $1, approved_at = NOW(), updated_at = NOW()
          WHERE id = $2 AND dispensary_id = $3`,
         [userId, productId, dispensaryId]
       );
       return (result[1] ?? 0) > 0;
     } finally {
-          }
+      await qr.release();
+    }
   }
+
 
   // ── Metrc Sales Receipt Sync ──────────────────────────────────────────────
 
   async syncSaleToMetrc(orderId: string, dispensaryId: string, dataSource: any): Promise<any> {
-    // Transaction handled inline
-    
+    const qr = dataSource.createQueryRunner();
+    await qr.connect();
+
     try {
       // Get credential
       const credential = await this.credentialRepo.findOne({ where: { dispensaryId, isActive: true } });
@@ -363,7 +374,7 @@ export class MetrcService {
       }
 
       // Get order + line items
-      const [order] = await this._q(
+      const [order] = await qr.query(
         `SELECT o.*, d.state, d.license_number FROM orders o
          JOIN dispensaries d ON d.entity_id = o."dispensaryId"
          WHERE o."orderId" = $1 AND o."dispensaryId" = $2`,
@@ -371,7 +382,7 @@ export class MetrcService {
       );
       if (!order) return { success: false, message: 'Order not found' };
 
-      const lineItems = await this._q(
+      const lineItems = await qr.query(
         `SELECT li.*, p.name as product_name
          FROM order_line_items li
          JOIN products p ON p.id = li."productId"
@@ -391,7 +402,7 @@ export class MetrcService {
         }));
 
       if (transactions.length === 0) {
-        await this._q(
+        await qr.query(
           `UPDATE orders SET "metrcSyncStatus" = 'skipped', "updatedAt" = NOW() WHERE "orderId" = $1`,
           [orderId]
         );
@@ -408,7 +419,7 @@ export class MetrcService {
       }];
 
       // Create sync log entry
-      const [syncLog] = await this._q(
+      const [syncLog] = await qr.query(
         `INSERT INTO metrc_sync_logs (
           sync_id, dispensary_id, credential_id, sync_type,
           reference_entity_type, reference_entity_id, status,
@@ -441,7 +452,7 @@ export class MetrcService {
       const success = response.ok;
 
       // Update sync log
-      await this._q(
+      await qr.query(
         `UPDATE metrc_sync_logs SET
           status = $1, metrc_response = $2, updated_at = NOW()
          WHERE sync_id = $3`,
@@ -449,7 +460,7 @@ export class MetrcService {
       );
 
       // Update order metrc sync status
-      await this._q(
+      await qr.query(
         `UPDATE orders SET "metrcSyncStatus" = $1, "metrcReportedAt" = $2, "updatedAt" = NOW()
          WHERE "orderId" = $3`,
         [success ? 'synced' : 'failed', success ? new Date() : null, orderId]
@@ -465,13 +476,16 @@ export class MetrcService {
     } catch (err: any) {
       return { success: false, message: err.message ?? 'Sync error' };
     } finally {
-          }
+      await qr.release();
+    }
   }
 
+
   async getFailedSyncDashboard(dispensaryId: string, dataSource: any): Promise<any> {
-    // Transaction handled inline
-        try {
-      const items = await this._q(
+    const qr = dataSource.createQueryRunner();
+    await qr.connect();
+    try {
+      const items = await qr.query(
         `SELECT
            o."orderId", o."orderStatus", o."metrcSyncStatus",
            o."metrcReportedAt", o.subtotal, o.total,
@@ -514,72 +528,8 @@ export class MetrcService {
         })),
       };
     } finally {
-          }
+      await qr.release();
+    }
   }
 
-
-  private async _q(text: string, params?: any[]): Promise<any[]> {
-    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
-    if (client?.query) { const r = await client.query(text, params); return r.rows ?? r; }
-    const result = await this.db.execute(sql.raw(text));
-    return Array.isArray(result) ? result : (result as any).rows ?? [];
-  }
-
-  private _makeRepo(table: string) {
-    const q = this._q.bind(this);
-    return {
-      async find(opts?: any): Promise<any[]> {
-        let s = 'SELECT * FROM ' + table; const p: any[] = []; let i = 1;
-        if (opts?.where) { const cd: string[] = []; for (const [k,v] of Object.entries(opts.where)) { if (v !== undefined) { cd.push(k+' = $'+i++); p.push(v); } } if (cd.length) s += ' WHERE ' + cd.join(' AND '); }
-        if (opts?.order) { const sr = Object.entries(opts.order).map(([k,d]) => k+' '+d); if (sr.length) s += ' ORDER BY ' + sr.join(', '); }
-        if (opts?.take) { s += ' LIMIT $'+i++; p.push(opts.take); }
-        return q(s, p.length ? p : undefined);
-      },
-      async findOne(opts?: any): Promise<any> { const rows = await this.find({...opts, take: 1}); return rows[0] ?? null; },
-      async findOneOrFail(opts?: any): Promise<any> { const r = await this.findOne(opts); if (!r) throw new Error('Entity not found'); return r; },
-      create(data: any): any { return {...data}; },
-      async save(entity: any): Promise<any> {
-        const cols = Object.keys(entity).filter(k => entity[k] !== undefined);
-        const vals = cols.map(k => entity[k]);
-        const ph = cols.map((_,i) => '$'+(i+1));
-        const [row] = await q('INSERT INTO '+table+' ('+cols.join(',')+') VALUES ('+ph.join(',')+') ON CONFLICT DO NOTHING RETURNING *', vals);
-        return row ?? entity;
-      },
-      async update(criteria: any, values: any): Promise<any> {
-        const sets: string[] = []; const p: any[] = []; let i = 1;
-        for (const [k,v] of Object.entries(values)) { if (v !== undefined) { sets.push(k+' = $'+i++); p.push(v); } }
-        if (!sets.length) return {affected:0};
-        const cd: string[] = [];
-        if (typeof criteria === 'string' || typeof criteria === 'number') { cd.push('id = $'+i++); p.push(criteria); }
-        else { for (const [k,v] of Object.entries(criteria)) { cd.push(k+' = $'+i++); p.push(v); } }
-        await q('UPDATE '+table+' SET '+sets.join(',')+' WHERE '+cd.join(' AND '), p);
-        return {affected:1};
-      },
-      async delete(criteria: any): Promise<any> {
-        const cd: string[] = []; const p: any[] = []; let i = 1;
-        for (const [k,v] of Object.entries(criteria)) { cd.push(k+' = $'+i++); p.push(v); }
-        await q('DELETE FROM '+table+(cd.length ? ' WHERE '+cd.join(' AND ') : ''), p);
-        return {affected:1};
-      },
-      async count(opts?: any): Promise<number> {
-        let s = 'SELECT COUNT(*)::int as count FROM '+table; const p: any[] = []; let i = 1;
-        if (opts?.where) { const cd: string[] = []; for (const [k,v] of Object.entries(opts.where)) { if (v !== undefined) { cd.push(k+' = $'+i++); p.push(v); } } if (cd.length) s += ' WHERE ' + cd.join(' AND '); }
-        const [r] = await q(s, p.length ? p : undefined); return r?.count ?? 0;
-      },
-      async remove(entity: any): Promise<void> { const keys = Object.keys(entity); await q('DELETE FROM '+table+' WHERE '+keys[0]+' = $1', [entity[keys[0]]]); },
-      createQueryBuilder(alias: string) {
-        let s = 'SELECT '+alias+'.* FROM '+table+' '+alias;
-        const wheres: string[] = []; const p: any[] = []; let i = 1;
-        const obs: string[] = []; let lim: number|undefined;
-        return {
-          where(cond: string, params?: any) { let c2=cond; if (params) for (const [k,v] of Object.entries(params)) { c2=c2.replace(':'+k,'$'+i++); p.push(v); } wheres.push(c2); return this; },
-          andWhere(cond: string, params?: any) { return this.where(cond, params); },
-          orderBy(col: string, dir: string) { obs.push(col+' '+dir); return this; },
-          addOrderBy(col: string, dir: string) { obs.push(col+' '+dir); return this; },
-          take(n: number) { lim=n; return this; },
-          async getMany() { let full=s; if (wheres.length) full+=' WHERE '+wheres.join(' AND '); if (obs.length) full+=' ORDER BY '+obs.join(', '); if (lim) { full+=' LIMIT $'+i++; p.push(lim); } return q(full, p.length?p:undefined); },
-        };
-      },
-    };
-  }
 }

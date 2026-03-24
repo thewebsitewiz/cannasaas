@@ -1,30 +1,26 @@
-import { Inject, Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { Inject, Cron, CronExpression } from '@nestjs/schedule';
-import { Inject, PosIntegration } from './entities/pos-integration.entity';
-import { Inject, PosProductMapping } from './entities/pos-product-mapping.entity';
-import { Inject, PosSyncLog } from './entities/pos-sync-log.entity';
-import { Inject, PosProvider, PosCredentials } from './interfaces/pos-provider.interface';
-import { Inject, DutchieAdapter } from './adapters/dutchie.adapter';
-import { Inject, TreezAdapter } from './adapters/treez.adapter';
-import { sql } from 'drizzle-orm';
-
-export const DRIZZLE = Symbol.for('DRIZZLE');
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { PosIntegration } from './entities/pos-integration.entity';
+import { PosProductMapping } from './entities/pos-product-mapping.entity';
+import { PosSyncLog } from './entities/pos-sync-log.entity';
+import { PosProvider, PosCredentials } from './interfaces/pos-provider.interface';
+import { DutchieAdapter } from './adapters/dutchie.adapter';
+import { TreezAdapter } from './adapters/treez.adapter';
 
 @Injectable()
 export class PosService {
-  private integrationRepo: any;
-  private syncLogRepo: any;
-  private mappingRepo: any;
   private readonly logger = new Logger(PosService.name);
 
   constructor(
-
-    @Inject(DRIZZLE) private db: any
-  ) {
-    this.integrationRepo = this._makeRepo('pos_integrations');
-    this.syncLogRepo = this._makeRepo('metrc_sync_logs');
-    this.mappingRepo = this._makeRepo('pos_product_mappings');
-  }
+    @InjectRepository(PosIntegration) private integrationRepo: Repository<PosIntegration>,
+    @InjectRepository(PosProductMapping) private mappingRepo: Repository<PosProductMapping>,
+    @InjectRepository(PosSyncLog) private syncLogRepo: Repository<PosSyncLog>,
+    @InjectDataSource() private dataSource: DataSource,
+  ) {}
 
   // ── Adapter Factory ───────────────────────────────────────────────────────
 
@@ -242,7 +238,7 @@ export class PosService {
 
           if (mapping?.internal_variant_id) {
             // Update local inventory from POS
-            await this._q(
+            await this.dataSource.query(
               `UPDATE inventory SET quantity_on_hand = $1, quantity_available = $1 - quantity_reserved, updated_at = NOW()
                WHERE dispensary_id = $2 AND variant_id = $3`,
               [item.quantity, dispensaryId, mapping.internal_variant_id],
@@ -274,13 +270,13 @@ export class PosService {
     const { adapter } = await this.getAdapterForDispensary(dispensaryId);
 
     // Get order + line items with mappings
-    const [order] = await this._q(
+    const [order] = await this.dataSource.query(
       `SELECT o.*, d.state FROM orders o JOIN dispensaries d ON d.entity_id = o."dispensaryId" WHERE o."orderId" = $1`,
       [orderId],
     );
     if (!order) return { success: false, error: 'Order not found' };
 
-    const lineItems = await this._q(
+    const lineItems = await this.dataSource.query(
       `SELECT li.*, pm.external_product_id, pm.external_variant_id
        FROM order_line_items li
        LEFT JOIN pos_product_mappings pm ON pm.internal_product_id = li."productId"
@@ -367,7 +363,7 @@ export class PosService {
   private async autoMatchProduct(dispensaryId: string, posProduct: any): Promise<string | null> {
     // Try SKU match first
     if (posProduct.variants?.[0]?.sku) {
-      const [match] = await this._q(
+      const [match] = await this.dataSource.query(
         `SELECT p.id FROM products p JOIN product_variants pv ON pv.product_id = p.id
          WHERE p.dispensary_id = $1 AND pv.sku = $2 LIMIT 1`,
         [dispensaryId, posProduct.variants[0].sku],
@@ -376,7 +372,7 @@ export class PosService {
     }
 
     // Try name match
-    const [nameMatch] = await this._q(
+    const [nameMatch] = await this.dataSource.query(
       `SELECT id FROM products WHERE dispensary_id = $1 AND LOWER(name) = LOWER($2) LIMIT 1`,
       [dispensaryId, posProduct.name],
     );
@@ -384,7 +380,7 @@ export class PosService {
   }
 
   private async createProductFromPos(dispensaryId: string, posProduct: any): Promise<string> {
-    const [result] = await this._q(
+    const [result] = await this.dataSource.query(
       `INSERT INTO products (id, dispensary_id, name, description, strain_type, thc_percent, cbd_percent, is_active, created_at, updated_at)
        VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, true, NOW(), NOW()) RETURNING id`,
       [dispensaryId, posProduct.name, posProduct.description, posProduct.strainType, posProduct.thcContent, posProduct.cbdContent],
@@ -393,7 +389,7 @@ export class PosService {
   }
 
   private async updateProductFromPos(productId: string, dispensaryId: string, posProduct: any): Promise<void> {
-    await this._q(
+    await this.dataSource.query(
       `UPDATE products SET description = COALESCE($1, description), strain_type = COALESCE($2, strain_type),
        thc_percent = COALESCE($3, thc_percent), cbd_percent = COALESCE($4, cbd_percent), updated_at = NOW()
        WHERE id = $5 AND dispensary_id = $6`,
@@ -404,7 +400,7 @@ export class PosService {
   private async findOrCreateVariant(productId: string, dispensaryId: string, variant: any): Promise<string | null> {
     // Try find by SKU
     if (variant.sku) {
-      const [existing] = await this._q(
+      const [existing] = await this.dataSource.query(
         `SELECT variant_id FROM product_variants WHERE product_id = $1 AND sku = $2 LIMIT 1`,
         [productId, variant.sku],
       );
@@ -412,76 +408,11 @@ export class PosService {
     }
 
     // Create new variant
-    const [result] = await this._q(
+    const [result] = await this.dataSource.query(
       `INSERT INTO product_variants (variant_id, product_id, dispensary_id, name, sku, is_active, created_at, updated_at)
        VALUES (gen_random_uuid(), $1, $2, $3, $4, true, NOW(), NOW()) RETURNING variant_id`,
       [productId, dispensaryId, variant.name ?? 'Default', variant.sku],
     );
     return result?.variant_id ?? null;
-  }
-
-  private async _q(text: string, params?: any[]): Promise<any[]> {
-    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
-    if (client?.query) { const r = await client.query(text, params); return r.rows ?? r; }
-    const result = await this.db.execute(sql.raw(text));
-    return Array.isArray(result) ? result : (result as any).rows ?? [];
-  }
-
-  private _makeRepo(table: string) {
-    const q = this._q.bind(this);
-    return {
-      async find(opts?: any): Promise<any[]> {
-        let s = 'SELECT * FROM ' + table; const p: any[] = []; let i = 1;
-        if (opts?.where) { const cd: string[] = []; for (const [k,v] of Object.entries(opts.where)) { if (v !== undefined) { cd.push(k+' = $'+i++); p.push(v); } } if (cd.length) s += ' WHERE ' + cd.join(' AND '); }
-        if (opts?.order) { const sr = Object.entries(opts.order).map(([k,d]) => k+' '+d); if (sr.length) s += ' ORDER BY ' + sr.join(', '); }
-        if (opts?.take) { s += ' LIMIT $'+i++; p.push(opts.take); }
-        return q(s, p.length ? p : undefined);
-      },
-      async findOne(opts?: any): Promise<any> { const rows = await this.find({...opts, take: 1}); return rows[0] ?? null; },
-      async findOneOrFail(opts?: any): Promise<any> { const r = await this.findOne(opts); if (!r) throw new Error('Entity not found'); return r; },
-      create(data: any): any { return {...data}; },
-      async save(entity: any): Promise<any> {
-        const cols = Object.keys(entity).filter(k => entity[k] !== undefined);
-        const vals = cols.map(k => entity[k]);
-        const ph = cols.map((_,i) => '$'+(i+1));
-        const [row] = await q('INSERT INTO '+table+' ('+cols.join(',')+') VALUES ('+ph.join(',')+') ON CONFLICT DO NOTHING RETURNING *', vals);
-        return row ?? entity;
-      },
-      async update(criteria: any, values: any): Promise<any> {
-        const sets: string[] = []; const p: any[] = []; let i = 1;
-        for (const [k,v] of Object.entries(values)) { if (v !== undefined) { sets.push(k+' = $'+i++); p.push(v); } }
-        if (!sets.length) return {affected:0};
-        const cd: string[] = [];
-        if (typeof criteria === 'string' || typeof criteria === 'number') { cd.push('id = $'+i++); p.push(criteria); }
-        else { for (const [k,v] of Object.entries(criteria)) { cd.push(k+' = $'+i++); p.push(v); } }
-        await q('UPDATE '+table+' SET '+sets.join(',')+' WHERE '+cd.join(' AND '), p);
-        return {affected:1};
-      },
-      async delete(criteria: any): Promise<any> {
-        const cd: string[] = []; const p: any[] = []; let i = 1;
-        for (const [k,v] of Object.entries(criteria)) { cd.push(k+' = $'+i++); p.push(v); }
-        await q('DELETE FROM '+table+(cd.length ? ' WHERE '+cd.join(' AND ') : ''), p);
-        return {affected:1};
-      },
-      async count(opts?: any): Promise<number> {
-        let s = 'SELECT COUNT(*)::int as count FROM '+table; const p: any[] = []; let i = 1;
-        if (opts?.where) { const cd: string[] = []; for (const [k,v] of Object.entries(opts.where)) { if (v !== undefined) { cd.push(k+' = $'+i++); p.push(v); } } if (cd.length) s += ' WHERE ' + cd.join(' AND '); }
-        const [r] = await q(s, p.length ? p : undefined); return r?.count ?? 0;
-      },
-      async remove(entity: any): Promise<void> { const keys = Object.keys(entity); await q('DELETE FROM '+table+' WHERE '+keys[0]+' = $1', [entity[keys[0]]]); },
-      createQueryBuilder(alias: string) {
-        let s = 'SELECT '+alias+'.* FROM '+table+' '+alias;
-        const wheres: string[] = []; const p: any[] = []; let i = 1;
-        const obs: string[] = []; let lim: number|undefined;
-        return {
-          where(cond: string, params?: any) { let c2=cond; if (params) for (const [k,v] of Object.entries(params)) { c2=c2.replace(':'+k,'$'+i++); p.push(v); } wheres.push(c2); return this; },
-          andWhere(cond: string, params?: any) { return this.where(cond, params); },
-          orderBy(col: string, dir: string) { obs.push(col+' '+dir); return this; },
-          addOrderBy(col: string, dir: string) { obs.push(col+' '+dir); return this; },
-          take(n: number) { lim=n; return this; },
-          async getMany() { let full=s; if (wheres.length) full+=' WHERE '+wheres.join(' AND '); if (obs.length) full+=' ORDER BY '+obs.join(', '); if (lim) { full+=' LIMIT $'+i++; p.push(lim); } return q(full, p.length?p:undefined); },
-        };
-      },
-    };
   }
 }

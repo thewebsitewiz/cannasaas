@@ -1,11 +1,10 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { Inject, InjectQueue } from '@nestjs/bullmq';
-import { Inject, Queue } from 'bullmq';
-import { Inject, METRC_SYNC_QUEUE, MetrcJobName } from './metrc-sync.queue';
-import { Inject, SyncSaleJobData } from './metrc-sync.processor';
-import { sql } from 'drizzle-orm';
-
-export const DRIZZLE = Symbol.for('DRIZZLE');
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
+import { METRC_SYNC_QUEUE, MetrcJobName } from './metrc-sync.queue';
+import { SyncSaleJobData } from './metrc-sync.processor';
 
 @Injectable()
 export class MetrcSyncQueueService {
@@ -13,7 +12,7 @@ export class MetrcSyncQueueService {
 
   constructor(
     @InjectQueue(METRC_SYNC_QUEUE) private readonly queue: Queue,
-    @Inject(DRIZZLE) private db: any
+    @InjectDataSource() private dataSource: DataSource,
   ) {}
 
   async enqueueSaleSync(orderId: string, dispensaryId: string): Promise<void> {
@@ -34,7 +33,7 @@ export class MetrcSyncQueueService {
 
   async enqueueRetryFailed(dispensaryId: string): Promise<number> {
     // Find all failed syncs for this dispensary
-    const failed = await this._q(
+    const failed = await this.dataSource.query(
       `SELECT "orderId" FROM orders
        WHERE "dispensaryId" = $1
        AND "metrcSyncStatus" = 'failed'
@@ -69,12 +68,5 @@ export class MetrcSyncQueueService {
       this.queue.getDelayedCount(),
     ]);
     return { waiting, active, failed, completed, delayed };
-  }
-
-  private async _q(text: string, params?: any[]): Promise<any[]> {
-    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
-    if (client?.query) { const r = await client.query(text, params); return r.rows ?? r; }
-    const result = await this.db.execute(sql.raw(text));
-    return Array.isArray(result) ? result : (result as any).rows ?? [];
   }
 }

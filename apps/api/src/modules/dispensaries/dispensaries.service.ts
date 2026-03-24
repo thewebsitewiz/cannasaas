@@ -1,18 +1,17 @@
-import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { sql } from 'drizzle-orm';
-
-export const DRIZZLE = Symbol.for('DRIZZLE');
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class DispensariesService {
   private readonly logger = new Logger(DispensariesService.name);
 
-  constructor(@Inject(DRIZZLE) private db: any) {}
+  constructor(@InjectDataSource() private ds: DataSource) {}
 
   // ═══ READ ═══
 
   async findById(entityId: string): Promise<any> {
-    const [row] = await this._q(
+    const [row] = await this.ds.query(
       `SELECT entity_id as "entityId", company_id as "companyId", type, name, slug,
         license_number as "licenseNumber", license_type as "licenseType",
         address_line1 as "addressLine1", city, state, zip,
@@ -32,7 +31,7 @@ export class DispensariesService {
   }
 
   async findAll(limit = 50, offset = 0): Promise<any[]> {
-    return this._q(
+    return this.ds.query(
       `SELECT entity_id as "entityId", company_id as "companyId", type, name, slug,
         license_number as "licenseNumber", city, state, zip,
         is_active as "isActive", is_delivery_enabled as "isDeliveryEnabled",
@@ -43,7 +42,7 @@ export class DispensariesService {
   }
 
   async findByCompany(companyId: string): Promise<any[]> {
-    return this._q(
+    return this.ds.query(
       `SELECT entity_id as "entityId", company_id as "companyId", type, name, slug,
         license_number as "licenseNumber", city, state, zip,
         is_active as "isActive", is_delivery_enabled as "isDeliveryEnabled",
@@ -54,7 +53,7 @@ export class DispensariesService {
   }
 
   async findByOrganization(organizationId: string): Promise<any[]> {
-    return this._q(
+    return this.ds.query(
       `SELECT d.entity_id as "entityId", d.company_id as "companyId", d.type, d.name, d.slug,
         d.city, d.state, d.is_active as "isActive"
       FROM dispensaries d
@@ -72,7 +71,7 @@ export class DispensariesService {
     addressLine1?: string; city?: string; zip?: string;
     phone?: string; email?: string; website?: string; timezone?: string;
   }): Promise<any> {
-    const [row] = await this._q(
+    const [row] = await this.ds.query(
       `INSERT INTO dispensaries (company_id, name, slug, type, state,
         license_number, license_type, address_line1, city, zip,
         phone, email, website, timezone)
@@ -122,7 +121,7 @@ export class DispensariesService {
     if (fields.length === 0) return this.findById(entityId);
 
     values.push(entityId);
-    await this._q(
+    await this.ds.query(
       'UPDATE dispensaries SET ' + fields.join(', ') + ', updated_at = NOW() WHERE entity_id = $' + idx + ' AND deleted_at IS NULL',
       values,
     );
@@ -132,7 +131,7 @@ export class DispensariesService {
   }
 
   async updateOperatingHours(entityId: string, hours: any): Promise<any> {
-    await this._q(
+    await this.ds.query(
       'UPDATE dispensaries SET updated_at = NOW() WHERE entity_id = $1 AND deleted_at IS NULL',
       [entityId],
     );
@@ -154,7 +153,7 @@ export class DispensariesService {
     if (fields.length === 0) return this.findById(entityId);
 
     values.push(entityId);
-    await this._q(
+    await this.ds.query(
       'UPDATE dispensaries SET ' + fields.join(', ') + ', updated_at = NOW() WHERE entity_id = $' + idx + ' AND deleted_at IS NULL',
       values,
     );
@@ -165,17 +164,10 @@ export class DispensariesService {
   // ═══ DELETE ═══
 
   async softDelete(entityId: string): Promise<boolean> {
-    const result = await this._q(
+    const result = await this.ds.query(
       'UPDATE dispensaries SET deleted_at = NOW() WHERE entity_id = $1 AND deleted_at IS NULL',
       [entityId],
     );
     return result[1] > 0;
-  }
-
-  private async _q(text: string, params?: any[]): Promise<any[]> {
-    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
-    if (client?.query) { const r = await client.query(text, params); return r.rows ?? r; }
-    const result = await this.db.execute(sql.raw(text));
-    return Array.isArray(result) ? result : (result as any).rows ?? [];
   }
 }

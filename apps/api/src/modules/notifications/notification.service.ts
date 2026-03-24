@@ -1,17 +1,16 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { Inject, ConfigService } from '@nestjs/config';
-import { Inject, OnEvent } from '@nestjs/event-emitter';
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
+import { OnEvent } from '@nestjs/event-emitter';
 import * as nodemailer from 'nodemailer';
-import { Inject, NotificationTemplate, NotificationLog } from './entities/notification.entity';
-import { Inject, CircuitBreaker } from '../../common/services/circuit-breaker';
-import { sql } from 'drizzle-orm';
-
-export const DRIZZLE = Symbol.for('DRIZZLE');
+import { NotificationTemplate, NotificationLog } from './entities/notification.entity';
+import { CircuitBreaker } from '../../common/services/circuit-breaker';
 
 @Injectable()
 export class NotificationService {
-  private logRepo: any;
-  private templateRepo: any;
   private readonly logger = new Logger(NotificationService.name);
   private emailTransport: nodemailer.Transporter;
   private twilioClient: any;
@@ -20,9 +19,10 @@ export class NotificationService {
   private readonly smsBreaker = new CircuitBreaker({ name: 'sms-twilio', failureThreshold: 5, resetTimeoutMs: 30000 });
 
   constructor(
-
-    @Inject(DRIZZLE) private db: any,
-    private config: ConfigService
+    @InjectRepository(NotificationTemplate) private templateRepo: Repository<NotificationTemplate>,
+    @InjectRepository(NotificationLog) private logRepo: Repository<NotificationLog>,
+    @InjectDataSource() private ds: DataSource,
+    private config: ConfigService,
   ) {
     // Email setup — uses SMTP or SendGrid
     const smtpHost = this.config.get<string>('SMTP_HOST', 'smtp.sendgrid.net');
@@ -50,9 +50,6 @@ export class NotificationService {
         this.logger.warn('Twilio SDK not available — SMS disabled');
       }
     }
-  
-    this.logRepo = this._makeRepo('notification_log');
-    this.templateRepo = this._makeRepo('notification_templates');
   }
 
   // ── Template Rendering ────────────────────────────────────────────────────
@@ -190,7 +187,7 @@ export class NotificationService {
   // ── Notify Customer (both channels based on prefs) ────────────────────────
 
   async notifyCustomer(userId: string, eventCode: string, vars: Record<string, any>): Promise<NotificationLog[]> {
-    const [customer] = await this._q(
+    const [customer] = await this.ds.query(
       `SELECT u.email, u."firstName", u.phone, cp.email_order_updates, cp.sms_order_updates,
         cp.sms_opt_in, cp.marketing_opt_in
        FROM users u LEFT JOIN customer_profiles cp ON cp.user_id = u.id WHERE u.id = $1`,
@@ -226,7 +223,7 @@ export class NotificationService {
   @OnEvent('order.completed')
   async onOrderCompleted(payload: any): Promise<void> {
     if (!payload.customerUserId) return;
-    const [disp] = await this._q(
+    const [disp] = await this.ds.query(
       `SELECT name, address_line1 || ', ' || city || ' ' || state || ' ' || zip as address FROM dispensaries WHERE entity_id = $1`,
       [payload.dispensaryId],
     );
@@ -256,7 +253,7 @@ export class NotificationService {
     const templateCode = statusTemplateMap[payload.status];
     if (!templateCode) return;
 
-    const [disp] = await this._q(
+    const [disp] = await this.ds.query(
       `SELECT name, address_line1 || ', ' || city || ' ' || state || ' ' || zip as address FROM dispensaries WHERE entity_id = $1`,
       [payload.dispensaryId],
     );
@@ -274,7 +271,7 @@ export class NotificationService {
   @OnEvent('customer.registered')
   async onCustomerRegistered(payload: { userId: string; email: string; firstName?: string; dispensaryId?: string }): Promise<void> {
     const [disp] = payload.dispensaryId
-      ? await this._q(`SELECT name FROM dispensaries WHERE entity_id = $1`, [payload.dispensaryId])
+      ? await this.ds.query(`SELECT name FROM dispensaries WHERE entity_id = $1`, [payload.dispensaryId])
       : [{ name: 'CannaSaas' }];
 
     await this.sendByTemplate('welcome', {
@@ -298,7 +295,7 @@ export class NotificationService {
   }
 
   async getDispensaryNotificationStats(dispensaryId: string, days = 30): Promise<any> {
-    const [stats] = await this._q(
+    const [stats] = await this.ds.query(
       `SELECT
         COUNT(*) as total,
         COUNT(*) FILTER (WHERE status = 'sent') as sent,
@@ -313,71 +310,6 @@ export class NotificationService {
       total: parseInt(stats.total), sent: parseInt(stats.sent),
       failed: parseInt(stats.failed), skipped: parseInt(stats.skipped),
       emails: parseInt(stats.emails), sms: parseInt(stats.sms),
-    };
-  }
-
-  private async _q(text: string, params?: any[]): Promise<any[]> {
-    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
-    if (client?.query) { const r = await client.query(text, params); return r.rows ?? r; }
-    const result = await this.db.execute(sql.raw(text));
-    return Array.isArray(result) ? result : (result as any).rows ?? [];
-  }
-
-  private _makeRepo(table: string) {
-    const q = this._q.bind(this);
-    return {
-      async find(opts?: any): Promise<any[]> {
-        let s = 'SELECT * FROM ' + table; const p: any[] = []; let i = 1;
-        if (opts?.where) { const cd: string[] = []; for (const [k,v] of Object.entries(opts.where)) { if (v !== undefined) { cd.push(k+' = $'+i++); p.push(v); } } if (cd.length) s += ' WHERE ' + cd.join(' AND '); }
-        if (opts?.order) { const sr = Object.entries(opts.order).map(([k,d]) => k+' '+d); if (sr.length) s += ' ORDER BY ' + sr.join(', '); }
-        if (opts?.take) { s += ' LIMIT $'+i++; p.push(opts.take); }
-        return q(s, p.length ? p : undefined);
-      },
-      async findOne(opts?: any): Promise<any> { const rows = await this.find({...opts, take: 1}); return rows[0] ?? null; },
-      async findOneOrFail(opts?: any): Promise<any> { const r = await this.findOne(opts); if (!r) throw new Error('Entity not found'); return r; },
-      create(data: any): any { return {...data}; },
-      async save(entity: any): Promise<any> {
-        const cols = Object.keys(entity).filter(k => entity[k] !== undefined);
-        const vals = cols.map(k => entity[k]);
-        const ph = cols.map((_,i) => '$'+(i+1));
-        const [row] = await q('INSERT INTO '+table+' ('+cols.join(',')+') VALUES ('+ph.join(',')+') ON CONFLICT DO NOTHING RETURNING *', vals);
-        return row ?? entity;
-      },
-      async update(criteria: any, values: any): Promise<any> {
-        const sets: string[] = []; const p: any[] = []; let i = 1;
-        for (const [k,v] of Object.entries(values)) { if (v !== undefined) { sets.push(k+' = $'+i++); p.push(v); } }
-        if (!sets.length) return {affected:0};
-        const cd: string[] = [];
-        if (typeof criteria === 'string' || typeof criteria === 'number') { cd.push('id = $'+i++); p.push(criteria); }
-        else { for (const [k,v] of Object.entries(criteria)) { cd.push(k+' = $'+i++); p.push(v); } }
-        await q('UPDATE '+table+' SET '+sets.join(',')+' WHERE '+cd.join(' AND '), p);
-        return {affected:1};
-      },
-      async delete(criteria: any): Promise<any> {
-        const cd: string[] = []; const p: any[] = []; let i = 1;
-        for (const [k,v] of Object.entries(criteria)) { cd.push(k+' = $'+i++); p.push(v); }
-        await q('DELETE FROM '+table+(cd.length ? ' WHERE '+cd.join(' AND ') : ''), p);
-        return {affected:1};
-      },
-      async count(opts?: any): Promise<number> {
-        let s = 'SELECT COUNT(*)::int as count FROM '+table; const p: any[] = []; let i = 1;
-        if (opts?.where) { const cd: string[] = []; for (const [k,v] of Object.entries(opts.where)) { if (v !== undefined) { cd.push(k+' = $'+i++); p.push(v); } } if (cd.length) s += ' WHERE ' + cd.join(' AND '); }
-        const [r] = await q(s, p.length ? p : undefined); return r?.count ?? 0;
-      },
-      async remove(entity: any): Promise<void> { const keys = Object.keys(entity); await q('DELETE FROM '+table+' WHERE '+keys[0]+' = $1', [entity[keys[0]]]); },
-      createQueryBuilder(alias: string) {
-        let s = 'SELECT '+alias+'.* FROM '+table+' '+alias;
-        const wheres: string[] = []; const p: any[] = []; let i = 1;
-        const obs: string[] = []; let lim: number|undefined;
-        return {
-          where(cond: string, params?: any) { let c2=cond; if (params) for (const [k,v] of Object.entries(params)) { c2=c2.replace(':'+k,'$'+i++); p.push(v); } wheres.push(c2); return this; },
-          andWhere(cond: string, params?: any) { return this.where(cond, params); },
-          orderBy(col: string, dir: string) { obs.push(col+' '+dir); return this; },
-          addOrderBy(col: string, dir: string) { obs.push(col+' '+dir); return this; },
-          take(n: number) { lim=n; return this; },
-          async getMany() { let full=s; if (wheres.length) full+=' WHERE '+wheres.join(' AND '); if (obs.length) full+=' ORDER BY '+obs.join(', '); if (lim) { full+=' LIMIT $'+i++; p.push(lim); } return q(full, p.length?p:undefined); },
-        };
-      },
     };
   }
 }

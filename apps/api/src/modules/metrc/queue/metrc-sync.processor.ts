@@ -1,11 +1,10 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { Inject, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 import { MetrcService } from '../metrc.service';
 import { METRC_SYNC_QUEUE, MetrcJobName } from './metrc-sync.queue';
-import { sql } from 'drizzle-orm';
-
-export const DRIZZLE = Symbol.for('DRIZZLE');
 
 export interface SyncSaleJobData {
   orderId: string;
@@ -19,7 +18,7 @@ export class MetrcSyncProcessor extends WorkerHost {
 
   constructor(
     private readonly metrc: MetrcService,
-    @Inject(DRIZZLE) private db: any
+    @InjectDataSource() private dataSource: DataSource,
   ) {
     super();
   }
@@ -30,7 +29,7 @@ export class MetrcSyncProcessor extends WorkerHost {
     this.logger.log(`Processing Metrc sync job: order=${orderId} attempt=${attemptNumber}`);
 
     if (job.name === MetrcJobName.SYNC_SALE || job.name === MetrcJobName.RETRY_FAILED) {
-      const result = await this.metrc.syncSaleToMetrc(orderId, dispensaryId, this.db);
+      const result = await this.metrc.syncSaleToMetrc(orderId, dispensaryId, this.dataSource);
 
       if (!result.success) {
         this.logger.warn(`Metrc sync failed for order ${orderId}: ${result.message}`);

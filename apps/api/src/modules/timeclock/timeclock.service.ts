@@ -1,25 +1,24 @@
-import { Inject, Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { Inject, TimeEntry } from './entities/time-entry.entity';
-import { sql } from 'drizzle-orm';
-
-export const DRIZZLE = Symbol.for('DRIZZLE');
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
+import { TimeEntry } from './entities/time-entry.entity';
 
 @Injectable()
 export class TimeClockService {
-  private entryRepo: any;
   private readonly logger = new Logger(TimeClockService.name);
 
   constructor(
-    @Inject(DRIZZLE) private db: any
-  ) {
-    this.entryRepo = this._makeRepo('time_entries');
-  }
+    @InjectRepository(TimeEntry) private entryRepo: Repository<TimeEntry>,
+    @InjectDataSource() private dataSource: DataSource,
+  ) {}
 
   // ── Clock In ──────────────────────────────────────────────────────────────
 
   async clockIn(userId: string, dispensaryId: string, notes?: string): Promise<TimeEntry> {
     // Find employee profile
-    const [profile] = await this._q(
+    const [profile] = await this.dataSource.query(
       `SELECT ep.profile_id, ep.is_exempt, ep.employment_status, lp.name as position_name
        FROM employee_profiles ep
        LEFT JOIN lkp_positions lp ON lp.position_id = ep.position_id
@@ -31,7 +30,7 @@ export class TimeClockService {
     if (profile.is_exempt) throw new BadRequestException(`${profile.position_name} is exempt from time tracking`);
 
     // Check not already clocked in
-    const [existing] = await this._q(
+    const [existing] = await this.dataSource.query(
       `SELECT entry_id FROM time_entries WHERE profile_id = $1 AND status = 'clocked_in'`,
       [profile.profile_id],
     );
@@ -53,7 +52,7 @@ export class TimeClockService {
   // ── Clock Out ─────────────────────────────────────────────────────────────
 
   async clockOut(userId: string, dispensaryId: string, breakMinutes = 0, notes?: string): Promise<TimeEntry> {
-    const [profile] = await this._q(
+    const [profile] = await this.dataSource.query(
       `SELECT profile_id FROM employee_profiles WHERE user_id = $1 AND dispensary_id = $2`,
       [userId, dispensaryId],
     );
@@ -83,7 +82,7 @@ export class TimeClockService {
   // ── Current Status ────────────────────────────────────────────────────────
 
   async getClockStatus(userId: string, dispensaryId: string): Promise<{ isClockedIn: boolean; isExempt: boolean; currentEntry?: TimeEntry; todayHours: number }> {
-    const [profile] = await this._q(
+    const [profile] = await this.dataSource.query(
       `SELECT profile_id, is_exempt FROM employee_profiles WHERE user_id = $1 AND dispensary_id = $2`,
       [userId, dispensaryId],
     );
@@ -98,7 +97,7 @@ export class TimeClockService {
       order: { clock_in: 'DESC' },
     });
 
-    const [todayResult] = await this._q(
+    const [todayResult] = await this.dataSource.query(
       `SELECT COALESCE(SUM(total_hours), 0) as today_hours
        FROM time_entries
        WHERE profile_id = $1 AND clock_in >= CURRENT_DATE AND status = 'completed'`,
@@ -116,7 +115,7 @@ export class TimeClockService {
   // ── Who's Clocked In ─────────────────────────────────────────────────────
 
   async getActiveClocks(dispensaryId: string): Promise<any[]> {
-    return this._q(
+    return this.dataSource.query(
       `SELECT te.entry_id, te.clock_in, te.profile_id,
         u."firstName", u."lastName", u.email,
         lp.name as position_name,
@@ -158,7 +157,7 @@ export class TimeClockService {
   // ── Payroll Report ────────────────────────────────────────────────────────
 
   async getPayrollReport(dispensaryId: string, startDate: string, endDate: string): Promise<any[]> {
-    return this._q(
+    return this.dataSource.query(
       `SELECT
         ep.employee_number,
         u."firstName", u."lastName", u.email,
@@ -199,7 +198,7 @@ export class TimeClockService {
   async generatePayrollCsv(dispensaryId: string, startDate: string, endDate: string): Promise<string> {
     const rows = await this.getPayrollReport(dispensaryId, startDate, endDate);
 
-    const [disp] = await this._q(
+    const [disp] = await this.dataSource.query(
       `SELECT name, state FROM dispensaries WHERE entity_id = $1`, [dispensaryId],
     );
     const dispName = disp?.name ?? 'Unknown';
@@ -239,70 +238,5 @@ export class TimeClockService {
     ].join('\n');
 
     return meta + headers + '\n' + csvRows.join('\n') + '\n';
-  }
-
-  private async _q(text: string, params?: any[]): Promise<any[]> {
-    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
-    if (client?.query) { const r = await client.query(text, params); return r.rows ?? r; }
-    const result = await this.db.execute(sql.raw(text));
-    return Array.isArray(result) ? result : (result as any).rows ?? [];
-  }
-
-  private _makeRepo(table: string) {
-    const q = this._q.bind(this);
-    return {
-      async find(opts?: any): Promise<any[]> {
-        let s = 'SELECT * FROM ' + table; const p: any[] = []; let i = 1;
-        if (opts?.where) { const cd: string[] = []; for (const [k,v] of Object.entries(opts.where)) { if (v !== undefined) { cd.push(k+' = $'+i++); p.push(v); } } if (cd.length) s += ' WHERE ' + cd.join(' AND '); }
-        if (opts?.order) { const sr = Object.entries(opts.order).map(([k,d]) => k+' '+d); if (sr.length) s += ' ORDER BY ' + sr.join(', '); }
-        if (opts?.take) { s += ' LIMIT $'+i++; p.push(opts.take); }
-        return q(s, p.length ? p : undefined);
-      },
-      async findOne(opts?: any): Promise<any> { const rows = await this.find({...opts, take: 1}); return rows[0] ?? null; },
-      async findOneOrFail(opts?: any): Promise<any> { const r = await this.findOne(opts); if (!r) throw new Error('Entity not found'); return r; },
-      create(data: any): any { return {...data}; },
-      async save(entity: any): Promise<any> {
-        const cols = Object.keys(entity).filter(k => entity[k] !== undefined);
-        const vals = cols.map(k => entity[k]);
-        const ph = cols.map((_,i) => '$'+(i+1));
-        const [row] = await q('INSERT INTO '+table+' ('+cols.join(',')+') VALUES ('+ph.join(',')+') ON CONFLICT DO NOTHING RETURNING *', vals);
-        return row ?? entity;
-      },
-      async update(criteria: any, values: any): Promise<any> {
-        const sets: string[] = []; const p: any[] = []; let i = 1;
-        for (const [k,v] of Object.entries(values)) { if (v !== undefined) { sets.push(k+' = $'+i++); p.push(v); } }
-        if (!sets.length) return {affected:0};
-        const cd: string[] = [];
-        if (typeof criteria === 'string' || typeof criteria === 'number') { cd.push('id = $'+i++); p.push(criteria); }
-        else { for (const [k,v] of Object.entries(criteria)) { cd.push(k+' = $'+i++); p.push(v); } }
-        await q('UPDATE '+table+' SET '+sets.join(',')+' WHERE '+cd.join(' AND '), p);
-        return {affected:1};
-      },
-      async delete(criteria: any): Promise<any> {
-        const cd: string[] = []; const p: any[] = []; let i = 1;
-        for (const [k,v] of Object.entries(criteria)) { cd.push(k+' = $'+i++); p.push(v); }
-        await q('DELETE FROM '+table+(cd.length ? ' WHERE '+cd.join(' AND ') : ''), p);
-        return {affected:1};
-      },
-      async count(opts?: any): Promise<number> {
-        let s = 'SELECT COUNT(*)::int as count FROM '+table; const p: any[] = []; let i = 1;
-        if (opts?.where) { const cd: string[] = []; for (const [k,v] of Object.entries(opts.where)) { if (v !== undefined) { cd.push(k+' = $'+i++); p.push(v); } } if (cd.length) s += ' WHERE ' + cd.join(' AND '); }
-        const [r] = await q(s, p.length ? p : undefined); return r?.count ?? 0;
-      },
-      async remove(entity: any): Promise<void> { const keys = Object.keys(entity); await q('DELETE FROM '+table+' WHERE '+keys[0]+' = $1', [entity[keys[0]]]); },
-      createQueryBuilder(alias: string) {
-        let s = 'SELECT '+alias+'.* FROM '+table+' '+alias;
-        const wheres: string[] = []; const p: any[] = []; let i = 1;
-        const obs: string[] = []; let lim: number|undefined;
-        return {
-          where(cond: string, params?: any) { let c2=cond; if (params) for (const [k,v] of Object.entries(params)) { c2=c2.replace(':'+k,'$'+i++); p.push(v); } wheres.push(c2); return this; },
-          andWhere(cond: string, params?: any) { return this.where(cond, params); },
-          orderBy(col: string, dir: string) { obs.push(col+' '+dir); return this; },
-          addOrderBy(col: string, dir: string) { obs.push(col+' '+dir); return this; },
-          take(n: number) { lim=n; return this; },
-          async getMany() { let full=s; if (wheres.length) full+=' WHERE '+wheres.join(' AND '); if (obs.length) full+=' ORDER BY '+obs.join(', '); if (lim) { full+=' LIMIT $'+i++; p.push(lim); } return q(full, p.length?p:undefined); },
-        };
-      },
-    };
   }
 }

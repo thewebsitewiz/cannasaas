@@ -1,16 +1,15 @@
-import { Inject, Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
-import { sql } from 'drizzle-orm';
-
-export const DRIZZLE = Symbol.for('DRIZZLE');
+import { Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class MarketingService implements OnModuleInit {
   private readonly logger = new Logger(MarketingService.name);
 
-  constructor(@Inject(DRIZZLE) private db: any) {}
+  constructor(@InjectDataSource() private dataSource: DataSource) {}
 
   async onModuleInit(): Promise<void> {
-    await this._q(`
+    await this.dataSource.query(`
       CREATE TABLE IF NOT EXISTS marketing_campaigns (
         campaign_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         dispensary_id UUID NOT NULL,
@@ -53,7 +52,7 @@ export class MarketingService implements OnModuleInit {
     body?: string;
     scheduledAt?: string;
   }): Promise<any> {
-    const [campaign] = await this._q(
+    const [campaign] = await this.dataSource.query(
       `INSERT INTO marketing_campaigns
         (dispensary_id, name, campaign_type, channel, audience_filter, subject, body, status, scheduled_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
@@ -74,7 +73,7 @@ export class MarketingService implements OnModuleInit {
   }
 
   async getCampaigns(dispensaryId: string): Promise<any[]> {
-    const rows = await this._q(
+    const rows = await this.dataSource.query(
       `SELECT * FROM marketing_campaigns WHERE dispensary_id = $1 ORDER BY created_at DESC`,
       [dispensaryId],
     );
@@ -82,7 +81,7 @@ export class MarketingService implements OnModuleInit {
   }
 
   async sendCampaign(campaignId: string): Promise<any> {
-    const [campaign] = await this._q(
+    const [campaign] = await this.dataSource.query(
       `SELECT * FROM marketing_campaigns WHERE campaign_id = $1`,
       [campaignId],
     );
@@ -94,7 +93,7 @@ export class MarketingService implements OnModuleInit {
       campaign.audience_filter?.type ?? 'all',
     );
 
-    await this._q(
+    await this.dataSource.query(
       `UPDATE marketing_campaigns
        SET status = 'sent', sent_at = NOW(), sent_count = $1, updated_at = NOW()
        WHERE campaign_id = $2`,
@@ -103,7 +102,7 @@ export class MarketingService implements OnModuleInit {
 
     this.logger.log(`Campaign ${campaignId} queued for delivery to ${audienceCount} recipients`);
 
-    const [updated] = await this._q(
+    const [updated] = await this.dataSource.query(
       `SELECT * FROM marketing_campaigns WHERE campaign_id = $1`,
       [campaignId],
     );
@@ -113,7 +112,7 @@ export class MarketingService implements OnModuleInit {
   // ── Automations ─────────────────────────────────────────────────────────
 
   async getAutomatedTriggers(dispensaryId: string): Promise<any[]> {
-    const rows = await this._q(
+    const rows = await this.dataSource.query(
       `SELECT * FROM marketing_automations WHERE dispensary_id = $1 ORDER BY created_at DESC`,
       [dispensaryId],
     );
@@ -127,7 +126,7 @@ export class MarketingService implements OnModuleInit {
     templateId?: string;
     channel?: string;
   }): Promise<any> {
-    const [row] = await this._q(
+    const [row] = await this.dataSource.query(
       `INSERT INTO marketing_automations (dispensary_id, trigger_event, delay_minutes, template_id, channel)
        VALUES ($1, $2, $3, $4, $5) RETURNING *`,
       [
@@ -144,7 +143,7 @@ export class MarketingService implements OnModuleInit {
   // ── Stats ───────────────────────────────────────────────────────────────
 
   async getCampaignStats(campaignId: string): Promise<any> {
-    const [campaign] = await this._q(
+    const [campaign] = await this.dataSource.query(
       `SELECT * FROM marketing_campaigns WHERE campaign_id = $1`,
       [campaignId],
     );
@@ -185,7 +184,7 @@ export class MarketingService implements OnModuleInit {
         break;
     }
 
-    const [result] = await this._q(sql, params);
+    const [result] = await this.dataSource.query(sql, params);
     return result?.cnt ?? 0;
   }
 
@@ -221,12 +220,5 @@ export class MarketingService implements OnModuleInit {
       isActive: row.is_active,
       createdAt: row.created_at,
     };
-  }
-
-  private async _q(text: string, params?: any[]): Promise<any[]> {
-    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
-    if (client?.query) { const r = await client.query(text, params); return r.rows ?? r; }
-    const result = await this.db.execute(sql.raw(text));
-    return Array.isArray(result) ? result : (result as any).rows ?? [];
   }
 }

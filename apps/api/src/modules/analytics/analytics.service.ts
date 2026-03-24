@@ -1,13 +1,12 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { sql } from 'drizzle-orm';
-
-export const DRIZZLE = Symbol.for('DRIZZLE');
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class AnalyticsService {
   private readonly logger = new Logger(AnalyticsService.name);
 
-  constructor(@Inject(DRIZZLE) private db: any) {}
+  constructor(@InjectDataSource() private dataSource: DataSource) {}
 
   async getDashboard(dispensaryId: string, days = 30): Promise<any> {
     const [sales, salesTrend, topProducts, categoryBreakdown, inventory, lowStock, metrcSync, compliance] = await Promise.all([
@@ -27,7 +26,7 @@ export class AnalyticsService {
   // ── Sales ─────────────────────────────────────────────────────────────────
 
   async getSalesOverview(dispensaryId: string, days: number): Promise<any> {
-    const [result] = await this._q(
+    const [result] = await this.dataSource.query(
       `SELECT
         COALESCE(SUM(total), 0) as total_revenue,
         COUNT(*) as total_orders,
@@ -57,7 +56,7 @@ export class AnalyticsService {
   async getSalesTrend(dispensaryId: string, days: number): Promise<any[]> {
     const interval = days <= 7 ? 'day' : days <= 30 ? 'day' : 'week';
 
-    const rows = await this._q(
+    const rows = await this.dataSource.query(
       `SELECT
         date_trunc($3, "createdAt") as period,
         COALESCE(SUM(total), 0) as revenue,
@@ -81,7 +80,7 @@ export class AnalyticsService {
   // ── Products ──────────────────────────────────────────────────────────────
 
   async getTopProducts(dispensaryId: string, days: number, limit = 10): Promise<any[]> {
-    const rows = await this._q(
+    const rows = await this.dataSource.query(
       `SELECT
         p.id as product_id, p.name as product_name, p.strain_type,
         SUM(li.quantity) as units_sold,
@@ -107,7 +106,7 @@ export class AnalyticsService {
   }
 
   async getCategoryBreakdown(dispensaryId: string, days: number): Promise<any[]> {
-    const rows = await this._q(
+    const rows = await this.dataSource.query(
       `SELECT
         COALESCE(lpt.name, 'Uncategorized') as category,
         COUNT(DISTINCT p.id) as product_count,
@@ -135,7 +134,7 @@ export class AnalyticsService {
   // ── Inventory ─────────────────────────────────────────────────────────────
 
   async getInventoryOverview(dispensaryId: string): Promise<any> {
-    const [result] = await this._q(
+    const [result] = await this.dataSource.query(
       `SELECT
         COUNT(*) as total_variants,
         COALESCE(SUM(i.quantity_on_hand), 0) as total_on_hand,
@@ -148,7 +147,7 @@ export class AnalyticsService {
       [dispensaryId],
     );
 
-    const [valueResult] = await this._q(
+    const [valueResult] = await this.dataSource.query(
       `SELECT COALESCE(SUM(i.quantity_on_hand * pp.price), 0) as est_value
        FROM inventory i
        JOIN product_pricing pp ON pp.variant_id = i.variant_id AND pp.price_type = 'retail'
@@ -169,7 +168,7 @@ export class AnalyticsService {
   }
 
   async getLowStockItems(dispensaryId: string, limit = 20): Promise<any[]> {
-    const rows = await this._q(
+    const rows = await this.dataSource.query(
       `SELECT i.variant_id, p.name as product_name, pv.name as variant_name,
         i.quantity_on_hand, i.quantity_available, i.reorder_threshold
        FROM inventory i
@@ -195,7 +194,7 @@ export class AnalyticsService {
   // ── Metrc Sync ────────────────────────────────────────────────────────────
 
   async getMetrcSyncOverview(dispensaryId: string): Promise<any> {
-    const [result] = await this._q(
+    const [result] = await this.dataSource.query(
       `SELECT
         COUNT(*) as total_syncs,
         COUNT(*) FILTER (WHERE status = 'success') as success_count,
@@ -207,7 +206,7 @@ export class AnalyticsService {
       [dispensaryId],
     );
 
-    const [orderResult] = await this._q(
+    const [orderResult] = await this.dataSource.query(
       `SELECT COUNT(*) as awaiting
        FROM orders
        WHERE "dispensaryId" = $1 AND "orderStatus" = 'completed' AND "metrcSyncStatus" IN ('pending', 'failed')`,
@@ -231,7 +230,7 @@ export class AnalyticsService {
   // ── Compliance ────────────────────────────────────────────────────────────
 
   async getComplianceSummary(dispensaryId: string): Promise<any> {
-    const [result] = await this._q(
+    const [result] = await this.dataSource.query(
       `SELECT
         COUNT(*) as total,
         COUNT(*) FILTER (WHERE metrc_item_uid IS NOT NULL AND metrc_item_category_id IS NOT NULL AND is_approved = true) as compliant,
@@ -242,7 +241,7 @@ export class AnalyticsService {
       [dispensaryId],
     );
 
-    const [labelResult] = await this._q(
+    const [labelResult] = await this.dataSource.query(
       `SELECT COUNT(*) as missing_label
        FROM product_variants pv
        JOIN products p ON p.id = pv.product_id
@@ -261,12 +260,5 @@ export class AnalyticsService {
       missingPackageLabel: parseInt(labelResult.missing_label, 10),
       compliancePercent: total > 0 ? parseFloat(((compliant / total) * 100).toFixed(1)) : 100,
     };
-  }
-
-  private async _q(text: string, params?: any[]): Promise<any[]> {
-    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
-    if (client?.query) { const r = await client.query(text, params); return r.rows ?? r; }
-    const result = await this.db.execute(sql.raw(text));
-    return Array.isArray(result) ? result : (result as any).rows ?? [];
   }
 }

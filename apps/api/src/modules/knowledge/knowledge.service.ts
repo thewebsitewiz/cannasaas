@@ -1,7 +1,6 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { sql } from 'drizzle-orm';
-
-export const DRIZZLE = Symbol.for('DRIZZLE');
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 
 const CONDITION_EFFECT_MAP: Record<string, string[]> = {
   anxiety: ['relaxing', 'calming', 'stress-relief'],
@@ -20,10 +19,10 @@ const CONDITION_EFFECT_MAP: Record<string, string[]> = {
 export class KnowledgeService {
   private readonly logger = new Logger(KnowledgeService.name);
 
-  constructor(@Inject(DRIZZLE) private db: any) {}
+  constructor(@InjectDataSource() private ds: DataSource) {}
 
   async searchByEffect(effect: string, dispensaryId: string): Promise<any[]> {
-    const rows = await this._q(
+    const rows = await this.ds.query(
       `SELECT p.id as "productId", p.name as "productName", p.strain_type as "strainType",
         p.effects, p.terpenes, p.thc_content as "thcContent", p.cbd_content as "cbdContent",
         p.description
@@ -53,7 +52,7 @@ export class KnowledgeService {
     const placeholders = effects.map((_, i) => `p.effects @> $${i + 2}::jsonb`).join(' OR ');
     const params: any[] = [dispensaryId, ...effects.map(e => JSON.stringify([e]))];
 
-    const rows = await this._q(
+    const rows = await this.ds.query(
       `SELECT p.id as "productId", p.name as "productName", p.strain_type as "strainType",
         p.effects, p.terpenes, p.thc_content as "thcContent", p.cbd_content as "cbdContent",
         p.description
@@ -83,7 +82,7 @@ export class KnowledgeService {
 
     const placeholders = productIds.map((_, i) => `$${i + 1}`).join(',');
 
-    const rows = await this._q(
+    const rows = await this.ds.query(
       `SELECT p.id as "productId", p.name as "productName", p.strain_type as "strainType",
         p.effects, p.terpenes, p.thc_content as "thcContent", p.cbd_content as "cbdContent",
         p.description,
@@ -106,12 +105,5 @@ export class KnowledgeService {
       cbdContent: r.cbdContent ? parseFloat(r.cbdContent) : null,
       description: r.description,
     }));
-  }
-
-  private async _q(text: string, params?: any[]): Promise<any[]> {
-    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
-    if (client?.query) { const r = await client.query(text, params); return r.rows ?? r; }
-    const result = await this.db.execute(sql.raw(text));
-    return Array.isArray(result) ? result : (result as any).rows ?? [];
   }
 }

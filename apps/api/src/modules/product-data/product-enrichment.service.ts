@@ -1,8 +1,7 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { Inject, OtreebaService } from './otreeba.service';
-import { sql } from 'drizzle-orm';
-
-export const DRIZZLE = Symbol.for('DRIZZLE');
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
+import { OtreebaService } from './otreeba.service';
 
 export interface EnrichmentResult {
   productId: string;
@@ -17,16 +16,17 @@ export class ProductEnrichmentService {
 
   constructor(
     private readonly otreeba: OtreebaService,
-    @Inject(DRIZZLE) private db: any
+    @InjectDataSource() private dataSource: DataSource,
   ) {}
 
   // ── Enrich Single Product ─────────────────────────────────────────────────
 
   async enrichProduct(productId: string, dispensaryId: string): Promise<EnrichmentResult> {
-    // Transaction handled inline
-    
+    const qr = this.dataSource.createQueryRunner();
+    await qr.connect();
+
     try {
-      const [product] = await this._q(
+      const [product] = await qr.query(
         `SELECT id, name, strain_name, strain_id, otreeba_ocpc FROM products WHERE id = $1 AND dispensary_id = $2`,
         [productId, dispensaryId],
       );
@@ -86,7 +86,7 @@ export class ProductEnrichmentService {
 
       if (updates.length > 2) {
         params.push(productId, dispensaryId);
-        await this._q(
+        await qr.query(
           `UPDATE products SET ${updates.join(', ')} WHERE id = $${paramIndex++} AND dispensary_id = $${paramIndex}`,
           params,
         );
@@ -95,13 +95,14 @@ export class ProductEnrichmentService {
 
       return { productId, strainMatched: true, strainName: strain.name, fieldsUpdated };
     } finally {
-          }
+      await qr.release();
+    }
   }
 
   // ── Bulk Enrich All Products for Dispensary ───────────────────────────────
 
   async enrichDispensary(dispensaryId: string): Promise<{ total: number; enriched: number; failed: number }> {
-    const products = await this._q(
+    const products = await this.dataSource.query(
       `SELECT id FROM products WHERE dispensary_id = $1 AND is_active = true AND enriched_at IS NULL`,
       [dispensaryId],
     );
@@ -133,12 +134,5 @@ export class ProductEnrichmentService {
       .replace(/\s+/g, ' ')
       .trim();
     return cleaned.length > 2 ? cleaned : null;
-  }
-
-  private async _q(text: string, params?: any[]): Promise<any[]> {
-    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
-    if (client?.query) { const r = await client.query(text, params); return r.rows ?? r; }
-    const result = await this.db.execute(sql.raw(text));
-    return Array.isArray(result) ? result : (result as any).rows ?? [];
   }
 }

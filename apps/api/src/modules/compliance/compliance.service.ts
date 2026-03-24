@@ -1,38 +1,31 @@
-import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { Inject, ConfigService } from '@nestjs/config';
-import { Inject, Cron } from '@nestjs/schedule';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
+import { Cron } from '@nestjs/schedule';
 import * as crypto from 'crypto';
-import { Inject, MetrcManifest, MetrcManifestItem, WasteDestructionLog, AuditLog, ReconciliationReport, ReconciliationItem } from './entities/compliance.entity';
-import { sql } from 'drizzle-orm';
-
-export const DRIZZLE = Symbol.for('DRIZZLE');
+import { MetrcManifest, MetrcManifestItem, WasteDestructionLog, AuditLog, ReconciliationReport, ReconciliationItem } from './entities/compliance.entity';
 
 @Injectable()
 export class ComplianceService {
-  private manifestRepo: any;
-  private manifestItemRepo: any;
-  private wasteRepo: any;
-  private auditRepo: any;
-  private reconRepo: any;
-  private reconItemRepo: any;
   private readonly logger = new Logger(ComplianceService.name);
   private encryptionKey: Buffer;
 
   constructor(
-
-    @Inject(DRIZZLE) private db: any,
-    private config: ConfigService
+    @InjectRepository(MetrcManifest) private manifestRepo: Repository<MetrcManifest>,
+    @InjectRepository(MetrcManifestItem) private manifestItemRepo: Repository<MetrcManifestItem>,
+    @InjectRepository(WasteDestructionLog) private wasteRepo: Repository<WasteDestructionLog>,
+    @InjectRepository(AuditLog) private auditRepo: Repository<AuditLog>,
+    @InjectRepository(ReconciliationReport) private reconRepo: Repository<ReconciliationReport>,
+    @InjectRepository(ReconciliationItem) private reconItemRepo: Repository<ReconciliationItem>,
+    @InjectDataSource() private ds: DataSource,
+    private config: ConfigService,
   ) {
     const keyStr = this.config.get<string>('ENCRYPTION_KEY', 'cannasaas-dev-key-change-in-prod-32b');
     const saltBytes = crypto.createHash('sha256').update(keyStr).digest().subarray(0, 16);
     this.encryptionKey = crypto.scryptSync(keyStr, saltBytes, 32);
-  
-    this.manifestRepo = this._makeRepo('metrc_manifests');
-    this.manifestItemRepo = this._makeRepo('metrc_manifest_items');
-    this.wasteRepo = this._makeRepo('waste_destruction_logs');
-    this.auditRepo = this._makeRepo('audit_logs');
-    this.reconRepo = this._makeRepo('reconciliation_reports');
-    this.reconItemRepo = this._makeRepo('reconciliation_items');
   }
 
   // ═══ ENCRYPTION ═══
@@ -55,7 +48,7 @@ export class ComplianceService {
   }
 
   async encryptCredentials(dispensaryId: string): Promise<void> {
-    const creds = await this._q(
+    const creds = await this.ds.query(
       'SELECT credential_id, user_api_key, integrator_api_key, encryption_version FROM metrc_credentials WHERE dispensary_id = $1',
       [dispensaryId],
     );
@@ -63,7 +56,7 @@ export class ComplianceService {
     const cred = creds[0];
     const encUser = cred.user_api_key ? this.encrypt(cred.user_api_key) : null;
     const encInt = cred.integrator_api_key ? this.encrypt(cred.integrator_api_key) : null;
-    await this._q(
+    await this.ds.query(
       'UPDATE metrc_credentials SET user_api_key_encrypted = $1, integrator_api_key_encrypted = $2, user_api_key = $3, integrator_api_key = $4, encryption_version = 1, updated_at = NOW() WHERE credential_id = $5',
       [encUser, encInt, '***encrypted***', cred.integrator_api_key ? '***encrypted***' : null, cred.credential_id],
     );
@@ -71,13 +64,13 @@ export class ComplianceService {
   }
 
   async encryptAllCredentials(): Promise<number> {
-    const creds = await this._q('SELECT dispensary_id FROM metrc_credentials WHERE encryption_version = 0 OR encryption_version IS NULL');
+    const creds = await this.ds.query('SELECT dispensary_id FROM metrc_credentials WHERE encryption_version = 0 OR encryption_version IS NULL');
     for (const c of creds) { await this.encryptCredentials(c.dispensary_id); }
     return creds.length;
   }
 
   async getDecryptedApiKey(dispensaryId: string): Promise<{ userApiKey: string; integratorApiKey?: string }> {
-    const creds = await this._q(
+    const creds = await this.ds.query(
       'SELECT user_api_key, user_api_key_encrypted, integrator_api_key, integrator_api_key_encrypted, encryption_version FROM metrc_credentials WHERE dispensary_id = $1',
       [dispensaryId],
     );
@@ -92,14 +85,14 @@ export class ComplianceService {
   // ═══ MANIFESTS ═══
 
   async generateManifest(transferId: string, userId: string): Promise<any> {
-    const transfers = await this._q(
+    const transfers = await this.ds.query(
       'SELECT it.*, df.name as from_name, df.license_number as from_license, dt.name as to_name, dt.license_number as to_license FROM inventory_transfers it JOIN dispensaries df ON df.entity_id = it.from_dispensary_id JOIN dispensaries dt ON dt.entity_id = it.to_dispensary_id WHERE it.transfer_id = $1',
       [transferId],
     );
     if (transfers.length === 0) throw new NotFoundException('Transfer not found');
     const t = transfers[0];
     const manifestNumber = 'MFT-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
-    const items = await this._q('SELECT * FROM inventory_transfer_items WHERE transfer_id = $1', [transferId]);
+    const items = await this.ds.query('SELECT * FROM inventory_transfer_items WHERE transfer_id = $1', [transferId]);
     const totalQty = items.reduce((s: number, i: any) => s + (i.quantity_requested || 0), 0);
 
     const manifest = this.manifestRepo.create({
@@ -182,7 +175,7 @@ export class ComplianceService {
     await this.logAudit(input.dispensaryId, input.submittedByUserId, 'create', 'waste_log', (saved as any).logId, { productName: input.productName, quantity: input.quantity });
 
     if (input.variantId) {
-      await this._q('UPDATE inventory SET quantity_on_hand = GREATEST(0, quantity_on_hand - $1), quantity_available = GREATEST(0, quantity_available - $1), updated_at = NOW() WHERE variant_id = $2 AND dispensary_id = $3', [input.quantity, input.variantId, input.dispensaryId]);
+      await this.ds.query('UPDATE inventory SET quantity_on_hand = GREATEST(0, quantity_on_hand - $1), quantity_available = GREATEST(0, quantity_available - $1), updated_at = NOW() WHERE variant_id = $2 AND dispensary_id = $3', [input.quantity, input.variantId, input.dispensaryId]);
     }
     return saved as WasteDestructionLog;
   }
@@ -204,7 +197,7 @@ export class ComplianceService {
   }
 
   async getWasteTypes(): Promise<any[]> {
-    return this._q('SELECT * FROM lkp_waste_types WHERE is_active = true ORDER BY waste_type_id');
+    return this.ds.query('SELECT * FROM lkp_waste_types WHERE is_active = true ORDER BY waste_type_id');
   }
 
   // ═══ AUDIT LOGGING ═══
@@ -212,7 +205,7 @@ export class ComplianceService {
   async logAudit(dispensaryId: string | null, userId: string | null, action: string, entityType: string, entityId: string, changes: any, ipAddress?: string): Promise<void> {
     let email: string | undefined;
     if (userId) {
-      const users = await this._q('SELECT email FROM users WHERE id = $1', [userId]);
+      const users = await this.ds.query('SELECT email FROM users WHERE id = $1', [userId]);
       email = users[0]?.email;
     }
     const entry = this.auditRepo.create({
@@ -249,15 +242,15 @@ export class ComplianceService {
     const today = new Date().toISOString().split('T')[0];
 
     // Delete existing report for today
-    await this._q('DELETE FROM reconciliation_items WHERE report_id IN (SELECT report_id FROM reconciliation_reports WHERE dispensary_id = $1 AND report_date = $2)', [dispensaryId, today]);
-    await this._q('DELETE FROM reconciliation_reports WHERE dispensary_id = $1 AND report_date = $2', [dispensaryId, today]);
+    await this.ds.query('DELETE FROM reconciliation_items WHERE report_id IN (SELECT report_id FROM reconciliation_reports WHERE dispensary_id = $1 AND report_date = $2)', [dispensaryId, today]);
+    await this.ds.query('DELETE FROM reconciliation_reports WHERE dispensary_id = $1 AND report_date = $2', [dispensaryId, today]);
 
-    const localItems = await this._q(
+    const localItems = await this.ds.query(
       'SELECT i.variant_id, i.quantity_on_hand, p.name as product_name, pv.metrc_package_label FROM inventory i JOIN product_variants pv ON pv.variant_id = i.variant_id JOIN products p ON p.id = pv.product_id WHERE i.dispensary_id = $1',
       [dispensaryId],
     );
 
-    const metrcProducts = await this._q(
+    const metrcProducts = await this.ds.query(
       'SELECT p.metrc_item_uid, p.name, SUM(i.quantity_on_hand) as expected_qty FROM products p JOIN product_variants pv ON pv.product_id = p.id JOIN inventory i ON i.variant_id = pv.variant_id WHERE p.dispensary_id = $1 AND p.metrc_item_uid IS NOT NULL GROUP BY p.metrc_item_uid, p.name',
       [dispensaryId],
     );
@@ -280,7 +273,7 @@ export class ComplianceService {
     const seen = new Set<string>();
 
     for (const local of localItems) {
-      const productMetrc = await this._q(
+      const productMetrc = await this.ds.query(
         'SELECT p.metrc_item_uid FROM products p JOIN product_variants pv ON pv.product_id = p.id WHERE pv.variant_id = $1',
         [local.variant_id],
       );
@@ -343,75 +336,10 @@ export class ComplianceService {
   @Cron('0 6 * * *')
   async dailyReconciliation(): Promise<void> {
     this.logger.log('Running daily reconciliation...');
-    const dispensaries = await this._q('SELECT entity_id FROM dispensaries WHERE is_active = true');
+    const dispensaries = await this.ds.query('SELECT entity_id FROM dispensaries WHERE is_active = true');
     for (const d of dispensaries) {
       try { await this.runReconciliation(d.entity_id, 'system'); }
       catch (err: any) { this.logger.error('Reconciliation failed for ' + d.entity_id + ': ' + err.message); }
     }
-  }
-
-  private async _q(text: string, params?: any[]): Promise<any[]> {
-    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
-    if (client?.query) { const r = await client.query(text, params); return r.rows ?? r; }
-    const result = await this.db.execute(sql.raw(text));
-    return Array.isArray(result) ? result : (result as any).rows ?? [];
-  }
-
-  private _makeRepo(table: string) {
-    const q = this._q.bind(this);
-    return {
-      async find(opts?: any): Promise<any[]> {
-        let s = 'SELECT * FROM ' + table; const p: any[] = []; let i = 1;
-        if (opts?.where) { const cd: string[] = []; for (const [k,v] of Object.entries(opts.where)) { if (v !== undefined) { cd.push(k+' = $'+i++); p.push(v); } } if (cd.length) s += ' WHERE ' + cd.join(' AND '); }
-        if (opts?.order) { const sr = Object.entries(opts.order).map(([k,d]) => k+' '+d); if (sr.length) s += ' ORDER BY ' + sr.join(', '); }
-        if (opts?.take) { s += ' LIMIT $'+i++; p.push(opts.take); }
-        return q(s, p.length ? p : undefined);
-      },
-      async findOne(opts?: any): Promise<any> { const rows = await this.find({...opts, take: 1}); return rows[0] ?? null; },
-      async findOneOrFail(opts?: any): Promise<any> { const r = await this.findOne(opts); if (!r) throw new Error('Entity not found'); return r; },
-      create(data: any): any { return {...data}; },
-      async save(entity: any): Promise<any> {
-        const cols = Object.keys(entity).filter(k => entity[k] !== undefined);
-        const vals = cols.map(k => entity[k]);
-        const ph = cols.map((_,i) => '$'+(i+1));
-        const [row] = await q('INSERT INTO '+table+' ('+cols.join(',')+') VALUES ('+ph.join(',')+') ON CONFLICT DO NOTHING RETURNING *', vals);
-        return row ?? entity;
-      },
-      async update(criteria: any, values: any): Promise<any> {
-        const sets: string[] = []; const p: any[] = []; let i = 1;
-        for (const [k,v] of Object.entries(values)) { if (v !== undefined) { sets.push(k+' = $'+i++); p.push(v); } }
-        if (!sets.length) return {affected:0};
-        const cd: string[] = [];
-        if (typeof criteria === 'string' || typeof criteria === 'number') { cd.push('id = $'+i++); p.push(criteria); }
-        else { for (const [k,v] of Object.entries(criteria)) { cd.push(k+' = $'+i++); p.push(v); } }
-        await q('UPDATE '+table+' SET '+sets.join(',')+' WHERE '+cd.join(' AND '), p);
-        return {affected:1};
-      },
-      async delete(criteria: any): Promise<any> {
-        const cd: string[] = []; const p: any[] = []; let i = 1;
-        for (const [k,v] of Object.entries(criteria)) { cd.push(k+' = $'+i++); p.push(v); }
-        await q('DELETE FROM '+table+(cd.length ? ' WHERE '+cd.join(' AND ') : ''), p);
-        return {affected:1};
-      },
-      async count(opts?: any): Promise<number> {
-        let s = 'SELECT COUNT(*)::int as count FROM '+table; const p: any[] = []; let i = 1;
-        if (opts?.where) { const cd: string[] = []; for (const [k,v] of Object.entries(opts.where)) { if (v !== undefined) { cd.push(k+' = $'+i++); p.push(v); } } if (cd.length) s += ' WHERE ' + cd.join(' AND '); }
-        const [r] = await q(s, p.length ? p : undefined); return r?.count ?? 0;
-      },
-      async remove(entity: any): Promise<void> { const keys = Object.keys(entity); await q('DELETE FROM '+table+' WHERE '+keys[0]+' = $1', [entity[keys[0]]]); },
-      createQueryBuilder(alias: string) {
-        let s = 'SELECT '+alias+'.* FROM '+table+' '+alias;
-        const wheres: string[] = []; const p: any[] = []; let i = 1;
-        const obs: string[] = []; let lim: number|undefined;
-        return {
-          where(cond: string, params?: any) { let c2=cond; if (params) for (const [k,v] of Object.entries(params)) { c2=c2.replace(':'+k,'$'+i++); p.push(v); } wheres.push(c2); return this; },
-          andWhere(cond: string, params?: any) { return this.where(cond, params); },
-          orderBy(col: string, dir: string) { obs.push(col+' '+dir); return this; },
-          addOrderBy(col: string, dir: string) { obs.push(col+' '+dir); return this; },
-          take(n: number) { lim=n; return this; },
-          async getMany() { let full=s; if (wheres.length) full+=' WHERE '+wheres.join(' AND '); if (obs.length) full+=' ORDER BY '+obs.join(', '); if (lim) { full+=' LIMIT $'+i++; p.push(lim); } return q(full, p.length?p:undefined); },
-        };
-      },
-    };
   }
 }

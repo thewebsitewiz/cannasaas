@@ -1,18 +1,17 @@
-import { Inject, Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { sql } from 'drizzle-orm';
-
-export const DRIZZLE = Symbol.for('DRIZZLE');
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class PromotionsService {
   private readonly logger = new Logger(PromotionsService.name);
 
-  constructor(@Inject(DRIZZLE) private db: any) {}
+  constructor(@InjectDataSource() private ds: DataSource) {}
 
   // ═══ READ ═══
 
   async findById(promoId: string): Promise<any> {
-    const [row] = await this._q(
+    const [row] = await this.ds.query(
       `SELECT promo_id as "promoId", dispensary_id as "dispensaryId",
         name, description, type, code,
         discount_value as "discountValue", minimum_order_total as "minimumOrderTotal",
@@ -31,7 +30,7 @@ export class PromotionsService {
   }
 
   async findByDispensary(dispensaryId: string, limit = 50, offset = 0): Promise<any[]> {
-    return this._q(
+    return this.ds.query(
       `SELECT promo_id as "promoId", dispensary_id as "dispensaryId",
         name, description, type, code,
         discount_value as "discountValue", minimum_order_total as "minimumOrderTotal",
@@ -44,7 +43,7 @@ export class PromotionsService {
   }
 
   async getActivePromotions(dispensaryId: string): Promise<any[]> {
-    return this._q(
+    return this.ds.query(
       `SELECT promo_id as "promoId", dispensary_id as "dispensaryId",
         name, description, type, code,
         discount_value as "discountValue", minimum_order_total as "minimumOrderTotal",
@@ -72,7 +71,7 @@ export class PromotionsService {
     isStaffDiscount?: boolean; isMedicalDiscount?: boolean;
     startAt?: string; endAt?: string;
   }): Promise<any> {
-    const [row] = await this._q(
+    const [row] = await this.ds.query(
       `INSERT INTO promotions (dispensary_id, name, description, type, code,
         discount_value, minimum_order_total, max_uses, max_uses_per_customer,
         applies_to, applies_to_product_type_id, applies_to_brand_id, applies_to_tax_category_id,
@@ -124,7 +123,7 @@ export class PromotionsService {
     if (fields.length === 0) return this.findById(promoId);
 
     values.push(promoId);
-    await this._q(
+    await this.ds.query(
       'UPDATE promotions SET ' + fields.join(', ') + ', updated_at = NOW() WHERE promo_id = $' + idx,
       values,
     );
@@ -136,13 +135,13 @@ export class PromotionsService {
   // ═══ ACTIVATE / DEACTIVATE ═══
 
   async activate(promoId: string): Promise<any> {
-    await this._q('UPDATE promotions SET is_active = true, updated_at = NOW() WHERE promo_id = $1', [promoId]);
+    await this.ds.query('UPDATE promotions SET is_active = true, updated_at = NOW() WHERE promo_id = $1', [promoId]);
     this.logger.log('Promotion activated: ' + promoId);
     return this.findById(promoId);
   }
 
   async deactivate(promoId: string): Promise<any> {
-    await this._q('UPDATE promotions SET is_active = false, updated_at = NOW() WHERE promo_id = $1', [promoId]);
+    await this.ds.query('UPDATE promotions SET is_active = false, updated_at = NOW() WHERE promo_id = $1', [promoId]);
     this.logger.log('Promotion deactivated: ' + promoId);
     return this.findById(promoId);
   }
@@ -170,7 +169,7 @@ export class PromotionsService {
     }
 
     if (customerId && promo.maxUsesPerCustomer) {
-      const [usage] = await this._q(
+      const [usage] = await this.ds.query(
         "SELECT COUNT(*) as count FROM promotions WHERE promo_id = $1",
         [promoId],
       );
@@ -193,7 +192,7 @@ export class PromotionsService {
     }
 
     // Increment uses count
-    await this._q('UPDATE promotions SET uses_count = uses_count + 1, updated_at = NOW() WHERE promo_id = $1', [promoId]);
+    await this.ds.query('UPDATE promotions SET uses_count = uses_count + 1, updated_at = NOW() WHERE promo_id = $1', [promoId]);
 
     this.logger.log('Discount applied: promo=' + promoId + ' discount=$' + discount.toFixed(2));
     return {
@@ -208,7 +207,7 @@ export class PromotionsService {
   // ═══ PROMO PRODUCTS & CATEGORIES ═══
 
   async getPromotionProducts(promoId: string): Promise<any[]> {
-    return this._q(
+    return this.ds.query(
       `SELECT id, promo_id as "promoId", product_id as "productId", variant_id as "variantId", is_eligible as "isEligible"
       FROM promotion_products WHERE promo_id = $1`,
       [promoId],
@@ -216,17 +215,10 @@ export class PromotionsService {
   }
 
   async getPromotionCategories(promoId: string): Promise<any[]> {
-    return this._q(
+    return this.ds.query(
       `SELECT id, promo_id as "promoId", category_id as "categoryId", is_eligible as "isEligible"
       FROM promotion_categories WHERE promo_id = $1`,
       [promoId],
     );
-  }
-
-  private async _q(text: string, params?: any[]): Promise<any[]> {
-    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
-    if (client?.query) { const r = await client.query(text, params); return r.rows ?? r; }
-    const result = await this.db.execute(sql.raw(text));
-    return Array.isArray(result) ? result : (result as any).rows ?? [];
   }
 }

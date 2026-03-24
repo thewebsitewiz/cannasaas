@@ -1,16 +1,15 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { sql } from 'drizzle-orm';
-
-export const DRIZZLE = Symbol.for('DRIZZLE');
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class ReorderSuggestionService {
   private readonly logger = new Logger(ReorderSuggestionService.name);
 
-  constructor(@Inject(DRIZZLE) private db: any) {}
+  constructor(@InjectDataSource() private ds: DataSource) {}
 
   async getSalesVelocity(variantId: string, dispensaryId: string, days = 30): Promise<number> {
-    const [result] = await this._q(
+    const [result] = await this.ds.query(
       `SELECT COALESCE(SUM(li.quantity), 0) as "totalSold"
        FROM order_line_items li
        JOIN orders o ON o."orderId" = li."orderId"
@@ -27,7 +26,7 @@ export class ReorderSuggestionService {
   async getReorderSuggestions(dispensaryId: string): Promise<any[]> {
     // For each inventory item: calculate avg daily sales, days of stock remaining,
     // vendor lead time, suggested reorder date, suggested quantity
-    const rows = await this._q(
+    const rows = await this.ds.query(
       `WITH sales_30d AS (
         SELECT pv.variant_id,
           COALESCE(SUM(li.quantity), 0) as total_sold,
@@ -101,12 +100,5 @@ export class ReorderSuggestionService {
       suggestedReorderDate: r.suggestedReorderDate ? new Date(r.suggestedReorderDate).toISOString() : null,
       suggestedQuantity: parseInt(r.suggestedQuantity, 10),
     }));
-  }
-
-  private async _q(text: string, params?: any[]): Promise<any[]> {
-    const client = (this.db as any).session?.client ?? (this.db as any).$client ?? (this.db as any);
-    if (client?.query) { const r = await client.query(text, params); return r.rows ?? r; }
-    const result = await this.db.execute(sql.raw(text));
-    return Array.isArray(result) ? result : (result as any).rows ?? [];
   }
 }
