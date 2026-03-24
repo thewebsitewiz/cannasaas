@@ -1,67 +1,83 @@
 # compiled output
 dist
-node_modules
 build
+*.tsbuildinfo
+
+# dependencies
+node_modules
+
+# Next.js
+.next
+out
+
+# Turbo
+.turbo
 
 # Logs
 logs
 *.log
 npm-debug.log*
 pnpm-debug.log*
-yarn-deb1ug.log*
+yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
 # OS
 .DS_Store
+Thumbs.db
 
 # Tests
-/coverage
-/.nyc_output
+coverage
+.nyc_output
 
-# IDEs and editors
-/.idea
+# IDEs
+.idea
 .project
 .classpath
 .c9/
 *.launch
 .settings/
 *.sublime-workspace
-
-# IDE - VSCode
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
 
-# dotenv environment variable files
-#.env
-#.env.development.local
-#.env.test.local
-#.env.production.local
-#.env.local
+# Environment files
+.env
+.env.*
+!.env.template
+!.env.example
 
-# temp directory
+# Claude Code
+.claude/
+
+# Docker volumes
+pgdata/
+redisdata/
+
+# Uploaded files
+uploads/
+
+# SWC cache
+.swc
+
+# Temp
 .temp
 .tmp
 
-# Runtime data
+# Runtime
 pids
 *.pid
 *.seed
 *.pid.lock
 
-# Diagnostic reports (https://nodejs.org/api/report.html)
+# Diagnostic reports
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
-# Environment
-.env
-.env.local
-.env.production
-!.env.template
+# Nested lockfiles (root pnpm-lock.yaml is the source of truth)
+apps/*/pnpm-lock.yaml
 
-# Docker volumes
-pgdata/
-redisdata/
-.next
+# Drizzle
+drizzle/
