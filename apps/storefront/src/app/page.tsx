@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useProductSearch } from '@/hooks/useProductSearch';
+import { useQuery } from '@tanstack/react-query';
+import { gql, DEFAULT_DISPENSARY_ID } from '@/lib/graphql';
 import { ProductCard } from '@/components/product/ProductCard';
 import { Truck, ShieldCheck, Clock, Star, ArrowRight, Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -15,15 +16,38 @@ const CATEGORIES = [
   { name: 'Topicals', emoji: '🧴', gradient: 'from-teal-500/10 to-cyan-500/5' },
 ];
 
+const FEATURED_PRODUCTS = `
+  query FeaturedProducts($dispensaryId: ID!, $limit: Int) {
+    products(dispensaryId: $dispensaryId, limit: $limit) {
+      id name description strainType thcPercent cbdPercent
+    }
+  }
+`;
+
 export default function HomePage() {
+<<<<<<< HEAD
   const { data } = useProductSearch({ limit: 8, sortBy: 'newest' });
   const products = data?.products ?? [];
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+=======
+  const { data } = useQuery({
+    queryKey: ['featuredProducts'],
+    queryFn: () =>
+      gql<{ products: any[] }>(FEATURED_PRODUCTS, {
+        dispensaryId: DEFAULT_DISPENSARY_ID,
+        limit: 8,
+      }),
+    select: (d) => d.products,
+  });
+
+  const products = data ?? [];
+>>>>>>> f0f01fc3 (Storefront product selection through cart and purchase)
 
   return (
     <div className="overflow-hidden">
       {/* Hero */}
+<<<<<<< HEAD
       <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-[#0a1a0f]">
           <div className="absolute inset-0 opacity-30" style={{
@@ -47,6 +71,28 @@ export default function HomePage() {
               Browse Menu <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link href="/products" className="inline-flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white/80 hover:text-white font-medium px-8 py-4 rounded-full border border-white/10 transition-all duration-300 backdrop-blur-sm">
+=======
+      <section className="bg-gradient-to-br from-brand-600 to-brand-500 text-txt-inverse py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
+          <div className="flex justify-center mb-4">
+            <Leaf size={48} className="opacity-70" />
+          </div>
+          <h1 className="text-4xl sm:text-5xl font-bold font-display mb-4">Welcome to GreenLeaf</h1>
+          <p className="text-lg opacity-80 max-w-2xl mx-auto mb-8">
+            Licensed cannabis dispensary in Tappan, NY. Browse our curated menu and order for pickup or delivery.
+          </p>
+          <div className="flex justify-center gap-4">
+            <Link
+              href="/products"
+              className="bg-surface text-brand-600 font-semibold px-6 py-3 rounded-xl hover:bg-bg-alt transition-colors"
+            >
+              Shop Menu
+            </Link>
+            <Link
+              href="/products"
+              className="border border-white/30 text-txt-inverse font-semibold px-6 py-3 rounded-xl hover:bg-white/10 transition-colors"
+            >
+>>>>>>> f0f01fc3 (Storefront product selection through cart and purchase)
               View Strains
             </Link>
           </div>
@@ -75,6 +121,7 @@ export default function HomePage() {
       </section>
 
       {/* Value Props */}
+<<<<<<< HEAD
       <section className="max-w-7xl mx-auto px-6 py-20">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
@@ -91,11 +138,37 @@ export default function HomePage() {
               <p className="text-sm text-gray-500 leading-relaxed">{prop.desc}</p>
             </div>
           ))}
+=======
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="flex items-start gap-4 p-6 bg-surface rounded-xl border border-bdr">
+            <Truck size={24} className="text-brand-600 shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-semibold text-txt">Delivery & Pickup</h3>
+              <p className="text-sm text-txt-muted mt-1">Free local delivery within 3 miles. Same-day pickup available.</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-4 p-6 bg-surface rounded-xl border border-bdr">
+            <ShieldCheck size={24} className="text-brand-600 shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-semibold text-txt">100% Compliant</h3>
+              <p className="text-sm text-txt-muted mt-1">All products tested and tracked via Metrc. Fully licensed in NY.</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-4 p-6 bg-surface rounded-xl border border-bdr">
+            <Clock size={24} className="text-brand-600 shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-semibold text-txt">Order Ahead</h3>
+              <p className="text-sm text-txt-muted mt-1">Schedule your pickup time and skip the wait.</p>
+            </div>
+          </div>
+>>>>>>> f0f01fc3 (Storefront product selection through cart and purchase)
         </div>
       </section>
 
       {/* Featured Products */}
       {products.length > 0 && (
+<<<<<<< HEAD
         <section className="max-w-7xl mx-auto px-6 pb-24">
           <div className="flex items-end justify-between mb-10">
             <div>
@@ -106,6 +179,13 @@ export default function HomePage() {
             </div>
             <Link href="/products" className="group hidden sm:flex items-center gap-1.5 text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors">
               View all <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+=======
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-16">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-txt">Featured Products</h2>
+            <Link href="/products" className="text-sm text-brand-600 font-medium hover:text-brand-500">
+              View all →
+>>>>>>> f0f01fc3 (Storefront product selection through cart and purchase)
             </Link>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
@@ -119,6 +199,7 @@ export default function HomePage() {
         </section>
       )}
 
+<<<<<<< HEAD
       {/* CTA */}
       <section className="bg-[#0a1a0f] text-white py-24">
         <div className="max-w-4xl mx-auto px-6 text-center">
@@ -134,6 +215,13 @@ export default function HomePage() {
           </Link>
         </div>
       </section>
+=======
+      {products.length === 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-16 text-center">
+          <p className="text-txt-muted py-12">Loading products...</p>
+        </section>
+      )}
+>>>>>>> f0f01fc3 (Storefront product selection through cart and purchase)
     </div>
   );
 }

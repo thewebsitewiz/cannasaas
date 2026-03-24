@@ -4,7 +4,7 @@ import { IsOptional, IsUUID, IsString, IsNumber, Min, Max, IsIn, IsArray } from 
 @InputType()
 export class ProductSearchInput {
   @Field(() => ID)
-  @IsUUID()
+  @IsUUID("all")
   dispensaryId!: string;
 
   @Field({ nullable: true })
