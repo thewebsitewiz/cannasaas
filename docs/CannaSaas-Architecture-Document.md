@@ -13,7 +13,7 @@
 | Frontend Applications | 5 |
 | Total Tests | 74 (32 E2E + 42 unit) |
 | CSS Themes | 10 |
-| Target Markets | New York, New Jersey, Connecticut |
+| Target Markets | All US states with legal cannabis programs (38+ states) |
 | Tech Stack | NestJS · GraphQL · PostgreSQL · React · Next.js · Docker |
 
 ---
@@ -22,7 +22,7 @@
 
 # 1. Executive Overview
 
-CannaSaas (branded as GreenStack) is a comprehensive, multi-tenant software-as-a-service platform purpose-built for licensed cannabis dispensaries operating in New York, New Jersey, and Connecticut. The platform delivers a complete technology stack covering e-commerce, point-of-sale integration, inventory management, seed-to-sale regulatory compliance, staffing operations, delivery logistics, customer loyalty, vendor management, and payment processing.
+CannaSaas (branded as GreenStack) is a comprehensive, multi-tenant software-as-a-service platform purpose-built for licensed cannabis dispensaries operating in all states with legal cannabis programs. The platform delivers a complete technology stack covering e-commerce, point-of-sale integration, inventory management, seed-to-sale regulatory compliance, staffing operations, delivery logistics, customer loyalty, vendor management, and payment processing.
 
 The architecture is designed around three core principles: regulatory compliance as a first-class concern, multi-tenancy with complete data isolation, and a modular backend that enables rapid feature development without cross-module coupling.
 
@@ -243,7 +243,7 @@ The white-label theming system is entirely CSS-driven. Each of the 10 themes def
 
 ## 6.1 Metrc Integration
 
-CannaSaas integrates with the Metrc seed-to-sale tracking system used by NY, NJ, and CT. The integration is designed for resilience:
+CannaSaas integrates with the Metrc seed-to-sale tracking system used by 20+ states including NY, NJ, CT, CA, CO, MA, MI, OR, and others. The integration is designed for resilience:
 
 - **Credentials:** API keys are encrypted with AES-256-CBC and stored in the `metrc_credentials` table. State-specific base URLs are configured via environment variables.
 - **Sync Pipeline:** Sale receipts and inventory updates are queued via BullMQ with exponential backoff (3 retries). Failed syncs are logged with full error details for admin review.
@@ -258,6 +258,10 @@ The tax engine applies state-specific multi-line calculations at checkout:
 - **New York:** 9% retail cannabis excise tax + per-milligram THC taxes that vary by product type (flower $0.005/mg, concentrate $0.008/mg, edible $0.03/mg).
 - **New Jersey:** 6.625% sales tax + 6% cannabis excise tax + up to 2% municipal transfer tax.
 - **Connecticut:** 6.35% sales tax + 3% cannabis excise tax + up to 3% municipal tax.
+- **California:** 15% cannabis excise tax + 7.25% state sales tax.
+- **Colorado:** 15% state excise tax + 2.9% state sales tax.
+- **Massachusetts:** 10.75% excise tax + 6.25% state sales tax.
+- And 10+ additional states with pre-configured tax rules.
 
 Tax rules are stored in the `lkp_tax_categories` table with statutory references (e.g., 'NY Tax Law § 493-a'). Platform admins can add, update, or toggle rules and add new states without code changes.
 
@@ -405,16 +409,16 @@ The API is configured entirely through environment variables. A documented `.env
 | `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret (whsec_) |
 | `CORS_ORIGINS` | Comma-separated allowed origins |
 | `METRC_INTEGRATOR_API_KEY` | Metrc integrator key |
-| `METRC_BASE_URL_NY/NJ/CT` | State-specific Metrc API endpoints |
+| `METRC_BASE_URL` | Metrc API base URL template (uses `{state}` placeholder, replaced at runtime) |
 | `SMTP_HOST` / `SMTP_USER` / `SMTP_PASS` | Email delivery credentials |
 | `TWILIO_SID` / `TWILIO_AUTH_TOKEN` | SMS delivery credentials |
 
 # Appendix B: Seeded Test Data
 
-The development database is pre-seeded with realistic data for all three target states:
+The development database is pre-seeded with realistic data for multiple states:
 
 - 3 organizations: Green Leaf Holdings (NY, Professional), Garden State Wellness (NJ, Enterprise), Constitution Cannabis (CT, Starter/Trial)
-- 5 dispensaries across NY, NJ, and CT with distinct license numbers
+- 5 dispensaries across multiple states with distinct license numbers
 - 10+ products with variants, pricing, THC/CBD levels, strain types, effects, and terpene profiles
 - 5 customer accounts with addresses, loyalty points, and order history
 - 5 vendors with contacts and sample purchase orders

@@ -17,7 +17,7 @@
 | Seeded Vendors | 5 |
 | Loyalty Rewards | 5 |
 | Subscription Tiers | 3 ($299 / $499 / $799) |
-| Target Markets | NY, NJ, CT |
+| Target Markets | All US states with legal cannabis programs (38+ states) |
 
 ---
 
@@ -147,7 +147,7 @@
 
 - Full order lifecycle: pending → confirmed → preparing → ready → out_for_delivery → delivered/picked_up → completed
 - Line items with product + variant + quantity
-- Tax calculation with state-specific engines (NY, NJ, CT)
+- Tax calculation with state-specific engines (NY, NJ, CT, CA, CO, MA, IL, MI, AZ, WA, OR, NV, FL, and more)
 - Order type: pickup or delivery
 - Customer user ID linking for order history
 - Order notes field
@@ -196,7 +196,7 @@
 ### Metrc Integration
 
 - API credential management with AES-256-CBC encryption
-- State-specific base URLs for NY, NJ, CT Metrc endpoints
+- Dynamic state-specific Metrc base URL resolution for all Metrc-integrated states
 - Sandbox mode toggle
 - Sync retry queues with BullMQ and exponential backoff
 - Metrc sync overview and failed sync queries
@@ -221,6 +221,10 @@
 - **NY:** 9% retail cannabis excise + per-mg THC taxes (flower $0.005, concentrate $0.008, edible $0.03)
 - **NJ:** 6.625% sales tax + 6% cannabis excise + up to 2% municipal tax
 - **CT:** 6.35% sales tax + 3% cannabis excise + up to 3% municipal tax
+- **CA:** 15% cannabis excise + 7.25% state sales tax
+- **CO:** 15% state excise + 2.9% state sales tax
+- **MA:** 10.75% excise + 6.25% state sales tax
+- And 10+ additional states with pre-configured tax rules
 - Tax category lookup table with statutory references
 - Tax report with line-item breakdown and CSV export
 - Platform admin: add/update/toggle tax rules, add new states
@@ -229,7 +233,7 @@
 
 - State-mandated limits by product category (flower, concentrate, edible)
 - Per-transaction and rolling-period tracking
-- Medical patient allowances for NJ
+- Medical patient allowances for applicable states (NJ, FL, etc.)
 - Purchase limit check query at checkout
 
 ### Age Verification

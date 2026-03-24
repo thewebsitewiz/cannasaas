@@ -1,6 +1,6 @@
 # CannaSaas — GreenStack Platform
 
-Multi-tenant SaaS platform for licensed cannabis dispensaries in NY, NJ, and CT.
+Multi-tenant SaaS platform for licensed cannabis dispensaries across all US states with legal cannabis programs.
 
 ## Architecture
 

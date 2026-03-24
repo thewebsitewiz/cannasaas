@@ -296,7 +296,7 @@ export class SeedLookupTables1999999999999 implements MigrationInterface {
       ON CONFLICT (test_category_id) DO NOTHING;
     `);
 
-    // ── lkp_tax_categories (NY / NJ / CT) ─────────────────────────────────
+    // ── lkp_tax_categories (All legal states) ──────────────────────────────
     await queryRunner.query(`
       INSERT INTO lkp_tax_categories
         (tax_category_id, code, state, name, tax_basis, rate, effective_date, statutory_reference, is_active)
@@ -313,11 +313,40 @@ export class SeedLookupTables1999999999999 implements MigrationInterface {
         -- Connecticut (PA 21-1)
         (8,  'CT_EXCISE_CANNABIS', 'CT', 'CT Cannabis Excise Tax (3% per mg THC)',  'per_mg_thc',   0.03,   '2021-07-01', 'Conn. Gen. Stat. § 12-330aa', true),
         (9,  'CT_SALES_TAX',       'CT', 'CT Sales Tax (6.35%)',                    'retail_price', 0.0635, '2021-07-01', 'Conn. Gen. Stat. § 12-408',   true),
-        (10, 'CT_MUNICIPAL',       'CT', 'CT Municipal Cannabis Tax (up to 3%)',    'retail_price', 0.03,   '2021-07-01', 'Conn. Gen. Stat. § 12-330bb', true)
+        (10, 'CT_MUNICIPAL',       'CT', 'CT Municipal Cannabis Tax (up to 3%)',    'retail_price', 0.03,   '2021-07-01', 'Conn. Gen. Stat. § 12-330bb', true),
+        -- California (Prop 64 — Rev. & Tax. Code § 34011)
+        (11, 'CA_EXCISE',          'CA', 'CA Cannabis Excise Tax (15%)',            'retail_price', 0.15,   '2018-01-01', 'Rev. & Tax. Code § 34011',    true),
+        (12, 'CA_SALES_TAX',       'CA', 'CA State Sales Tax (7.25%)',             'retail_price', 0.0725, '2018-01-01', 'Rev. & Tax. Code § 6051',     true),
+        -- Colorado (CRS § 39-28.8-302)
+        (13, 'CO_EXCISE',          'CO', 'CO State Excise Tax (15%)',              'retail_price', 0.15,   '2014-01-01', 'CRS § 39-28.8-302',           true),
+        (14, 'CO_SALES_TAX',       'CO', 'CO State Sales Tax (2.9%)',              'retail_price', 0.029,  '2014-01-01', 'CRS § 39-26-104',             true),
+        -- Massachusetts (MGL c. 64N)
+        (15, 'MA_EXCISE',          'MA', 'MA Cannabis Excise Tax (10.75%)',         'retail_price', 0.1075, '2018-11-20', 'MGL c. 64N § 2',              true),
+        (16, 'MA_SALES_TAX',       'MA', 'MA State Sales Tax (6.25%)',             'retail_price', 0.0625, '2018-11-20', 'MGL c. 64H § 2',              true),
+        -- Illinois (410 ILCS 705)
+        (17, 'IL_CANNABIS_LOW',    'IL', 'IL Cannabis Tax ≤35% THC (7%)',          'retail_price', 0.07,   '2020-01-01', '410 ILCS 705/65-10(a)',        true),
+        (18, 'IL_CANNABIS_HIGH',   'IL', 'IL Cannabis Tax >35% THC (25%)',         'retail_price', 0.25,   '2020-01-01', '410 ILCS 705/65-10(b)',        true),
+        (19, 'IL_SALES_TAX',       'IL', 'IL State Sales Tax (6.25%)',             'retail_price', 0.0625, '2020-01-01', '35 ILCS 120/2',               true),
+        (20, 'IL_LOCAL',           'IL', 'IL Local Cannabis Tax (up to 1%)',       'retail_price', 0.01,   '2020-01-01', '65 ILCS 5/11-42-7',           true),
+        -- Michigan (MCL 333.27963)
+        (21, 'MI_EXCISE',          'MI', 'MI Cannabis Excise Tax (10%)',            'retail_price', 0.10,   '2019-12-01', 'MCL 333.27963',               true),
+        (22, 'MI_SALES_TAX',       'MI', 'MI State Sales Tax (6%)',                'retail_price', 0.06,   '2019-12-01', 'MCL 205.52',                  true),
+        -- Arizona (ARS § 36-2854)
+        (23, 'AZ_EXCISE',          'AZ', 'AZ Cannabis Excise Tax (16%)',            'retail_price', 0.16,   '2021-01-22', 'ARS § 36-2854',               true),
+        (24, 'AZ_SALES_TAX',       'AZ', 'AZ Transaction Privilege Tax (5.6%)',    'retail_price', 0.056,  '2021-01-22', 'ARS § 42-5010',               true),
+        -- Washington (RCW 69.50.535)
+        (25, 'WA_EXCISE',          'WA', 'WA Cannabis Excise Tax (37%)',            'retail_price', 0.37,   '2014-07-08', 'RCW 69.50.535',               true),
+        -- Oregon (ORS 475B.705)
+        (26, 'OR_STATE_TAX',       'OR', 'OR Cannabis State Tax (17%)',             'retail_price', 0.17,   '2015-10-01', 'ORS 475B.705',                true),
+        -- Nevada (NRS 372A)
+        (27, 'NV_EXCISE',          'NV', 'NV Cannabis Excise Tax (10%)',            'retail_price', 0.10,   '2017-07-01', 'NRS 372A.290',                true),
+        (28, 'NV_SALES_TAX',       'NV', 'NV State + Local Sales Tax (8.375%)',    'retail_price', 0.08375,'2017-07-01', 'NRS 372.105',                 true),
+        -- Florida (medical only — F.S. § 381.986)
+        (29, 'FL_SALES_TAX',       'FL', 'FL State Sales Tax (6%)',                'retail_price', 0.06,   '2017-06-23', 'F.S. § 212.05',               true)
       ON CONFLICT (tax_category_id) DO NOTHING;
     `);
 
-    // ── lkp_metrc_item_categories (NY / NJ / CT) ───────────────────────────
+    // ── lkp_metrc_item_categories ───────────────────────────────────────────
     await queryRunner.query(`
       INSERT INTO lkp_metrc_item_categories
         (metrc_category_id, code, state, name, product_type_code, requires_unit_weight, effective_date, is_active)
@@ -356,7 +385,7 @@ export class SeedLookupTables1999999999999 implements MigrationInterface {
       ON CONFLICT (metrc_category_id) DO NOTHING;
     `);
 
-    // ── lkp_metrc_adjustment_reasons (NY / NJ / CT) ────────────────────────
+    // ── lkp_metrc_adjustment_reasons ────────────────────────────────────────
     await queryRunner.query(`
       INSERT INTO lkp_metrc_adjustment_reasons
         (adjustment_reason_id, code, state, name, reason_category, is_active)
@@ -390,7 +419,7 @@ export class SeedLookupTables1999999999999 implements MigrationInterface {
       ON CONFLICT (adjustment_reason_id) DO NOTHING;
     `);
 
-    // ── lkp_warning_statements (NY / NJ / CT) ─────────────────────────────
+    // ── lkp_warning_statements ──────────────────────────────────────────────
     await queryRunner.query(`
       INSERT INTO lkp_warning_statements
         (warning_id, code, jurisdiction, statement_text, applies_to_product_types,
