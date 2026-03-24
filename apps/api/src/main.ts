@@ -23,9 +23,6 @@ async function bootstrap(): Promise<void> {
     rawBody: true,
   });
 
-  // Use NestJS structured logger (outputs JSON in production)
-  app.useLogger(app.get(Logger));
-
   const config = app.get(ConfigService);
   const isProd = config.get<string>('nodeEnv') === 'production';
 

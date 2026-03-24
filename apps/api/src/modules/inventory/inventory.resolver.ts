@@ -55,7 +55,7 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field(() => InventoryTransactionResult) transaction!: InventoryTransactionResult;
 }
 
-@ObjectType() class LowStockItem {
+@ObjectType('InventoryLowStockItem') class LowStockItem {
   @Field(() => ID) inventoryId!: string;
   @Field(() => ID) variantId!: string;
   @Field(() => Float) quantityOnHand!: number;
