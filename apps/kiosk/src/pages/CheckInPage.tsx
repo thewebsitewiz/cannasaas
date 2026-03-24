@@ -50,12 +50,12 @@ export function CheckInPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gradient-to-b from-brand-50 to-white">
+    <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-[#0a1a0f]">
       <div className="w-full max-w-lg text-center space-y-8">
         {/* Header */}
         <div>
-          <div className="mx-auto w-20 h-20 bg-brand-100 rounded-full flex items-center justify-center mb-6">
-            <UserCheck size={40} className="text-brand-600" />
+          <div className="mx-auto w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-6">
+            <UserCheck size={40} className="text-emerald-600" />
           </div>
           <h1 className="text-4xl font-bold text-gray-900">Welcome</h1>
           <p className="text-lg text-gray-500 mt-2">Check in to get started</p>
@@ -78,16 +78,16 @@ export function CheckInPage() {
             </div>
 
             {customer.pointsBalance != null && (
-              <div className="bg-brand-50 rounded-xl p-4 flex items-center justify-center gap-3">
-                <Star size={24} className="text-brand-600" />
-                <span className="text-2xl font-bold text-brand-700">{customer.pointsBalance}</span>
-                <span className="text-brand-600 font-medium">points</span>
+              <div className="bg-emerald-50 rounded-full p-4 flex items-center justify-center gap-3">
+                <Star size={24} className="text-emerald-600" />
+                <span className="text-2xl font-bold text-emerald-700">{customer.pointsBalance}</span>
+                <span className="text-emerald-600 font-medium">points</span>
               </div>
             )}
 
             <button
               onClick={() => navigate('/')}
-              className="w-full flex items-center justify-center gap-3 bg-brand-600 text-white py-5 rounded-2xl text-xl font-bold hover:bg-brand-700 active:bg-brand-800 transition-colors min-h-[64px]"
+              className="w-full flex items-center justify-center gap-3 bg-emerald-600 text-white py-5 rounded-full text-xl font-bold hover:bg-emerald-700 active:bg-emerald-800 transition-colors min-h-[64px]"
             >
               Start Shopping <ArrowRight size={24} />
             </button>
@@ -107,13 +107,13 @@ export function CheckInPage() {
             <p className="text-lg text-gray-600">We didn't find an account for that number.</p>
             <button
               onClick={() => navigate('/')}
-              className="w-full flex items-center justify-center gap-3 bg-gray-800 text-white py-5 rounded-2xl text-xl font-bold hover:bg-gray-900 active:bg-black transition-colors min-h-[64px]"
+              className="w-full flex items-center justify-center gap-3 bg-gray-800 text-white py-5 rounded-full text-xl font-bold hover:bg-gray-900 active:bg-black transition-colors min-h-[64px]"
             >
               New here? Continue as guest <ArrowRight size={24} />
             </button>
             <button
               onClick={() => { setSubmitted(false); setPhone(''); }}
-              className="text-brand-600 font-semibold text-lg hover:underline"
+              className="text-emerald-600 font-semibold text-lg hover:underline"
             >
               Try a different number
             </button>
@@ -132,14 +132,14 @@ export function CheckInPage() {
                 onChange={handlePhoneChange}
                 onKeyDown={handleKeyDown}
                 autoFocus
-                className="w-full pl-14 pr-6 py-5 rounded-2xl border-2 border-gray-200 text-2xl text-center font-semibold text-gray-900 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none min-h-[72px]"
+                className="w-full pl-14 pr-6 py-5 rounded-2xl border-2 border-gray-200 text-2xl text-center font-semibold text-gray-900 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none min-h-[72px]"
               />
             </div>
 
             <button
               onClick={handleSubmit}
               disabled={phone.length < 10}
-              className="w-full flex items-center justify-center gap-3 bg-brand-600 text-white py-5 rounded-2xl text-xl font-bold hover:bg-brand-700 active:bg-brand-800 disabled:opacity-40 transition-colors min-h-[64px]"
+              className="w-full flex items-center justify-center gap-3 bg-emerald-600 text-white py-5 rounded-full text-xl font-bold hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-40 transition-colors min-h-[64px]"
             >
               <UserCheck size={24} /> Check In
             </button>
@@ -152,7 +152,7 @@ export function CheckInPage() {
 
             <button
               onClick={() => navigate('/')}
-              className="w-full flex items-center justify-center gap-3 bg-white text-gray-700 py-5 rounded-2xl text-xl font-semibold border-2 border-gray-200 hover:bg-gray-50 active:bg-gray-100 transition-colors min-h-[64px]"
+              className="w-full flex items-center justify-center gap-3 bg-white text-gray-700 py-5 rounded-full text-xl font-semibold border-2 border-gray-200 hover:bg-gray-50 active:bg-gray-100 transition-colors min-h-[64px]"
             >
               <ScanLine size={24} /> Skip — Browse as Guest
             </button>

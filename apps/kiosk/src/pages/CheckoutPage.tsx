@@ -43,7 +43,7 @@ export function CheckoutPage() {
     <div className="p-6 max-w-lg mx-auto">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Checkout</h1>
 
-      <div className="bg-white rounded-xl border border-gray-100 p-6 mb-6">
+      <div className="bg-white rounded-full border border-gray-100 p-6 mb-6">
         <h2 className="font-semibold text-gray-900 mb-3">Order Summary</h2>
         {items.map((i) => (
           <div key={i.variantId} className="flex justify-between py-2 text-sm">
@@ -58,17 +58,17 @@ export function CheckoutPage() {
         <p className="text-xs text-gray-400 mt-1">+ tax · Pay at counter</p>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-100 p-6 mb-6">
+      <div className="bg-white rounded-full border border-gray-100 p-6 mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">Your Name (for pickup)</label>
         <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="First name"
-          className="w-full px-4 py-4 border border-gray-200 rounded-xl text-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+          className="w-full px-4 py-4 border border-gray-200 rounded-full text-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
           autoFocus />
       </div>
 
-      {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4">{error}</div>}
+      {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-full mb-4">{error}</div>}
 
       <button onClick={handleOrder} disabled={loading}
-        className="w-full bg-brand-600 text-white text-lg font-bold py-5 rounded-xl hover:bg-brand-700 active:bg-brand-800 disabled:opacity-50 flex items-center justify-center gap-2">
+        className="w-full bg-emerald-600 text-white text-lg font-bold py-5 rounded-full hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-50 flex items-center justify-center gap-2">
         {loading ? <><Loader2 size={22} className="animate-spin" /> Placing Order...</> : <><Check size={22} /> Place Order</>}
       </button>
     </div>

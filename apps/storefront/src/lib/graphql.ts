@@ -27,4 +27,4 @@ export async function gqlAuth<T>(query: string, variables?: Record<string, any>)
 }
 
 // Hardcoded for dev — in production, this comes from the subdomain/slug
-export const DEFAULT_DISPENSARY_ID = 'b406186e-4d6a-425b-b7af-851cde868c5c';
+export const DEFAULT_DISPENSARY_ID = '45cd244d-7016-4db8-8e88-9c71725340c8';

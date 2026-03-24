@@ -1,14 +1,4 @@
-import '@cannasaas/ui/src/casual.css';
-import '@cannasaas/ui/src/themes/theme.casual.css';
-import '@cannasaas/ui/src/themes/theme.dark.css';
-import '@cannasaas/ui/src/themes/theme.regal.css';
-import '@cannasaas/ui/src/themes/theme.modern.css';
-import '@cannasaas/ui/src/themes/theme.minimal.css';
-import '@cannasaas/ui/src/themes/theme.apothecary.css';
-import '@cannasaas/ui/src/themes/theme.citrus.css';
-import '@cannasaas/ui/src/themes/theme.earthy.css';
-import '@cannasaas/ui/src/themes/theme.midnight.css';
-import '@cannasaas/ui/src/themes/theme.neon.css';
+import './globals.css';
 
 import type { Metadata } from 'next';
 import { Providers } from './providers';
@@ -27,9 +17,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#2d6a4f" />
+        <meta name="theme-color" content="#0a1a0f" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&display=swap" rel="stylesheet" />
       </head>
-      <body className="bg-bg text-txt antialiased min-h-screen flex flex-col">
+      <body className="bg-white text-gray-900 antialiased min-h-screen flex flex-col" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
         <Providers>
           <ThemeProvider />
           <ServiceWorkerRegistrar />
