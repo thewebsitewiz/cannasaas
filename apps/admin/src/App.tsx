@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 
 import { AdminLayout } from './layouts/AdminLayout';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { CompliancePage } from './pages/CompliancePage';
 import { DashboardPage } from './pages/DashboardPage';
 import { InventoryControlPage } from './pages/InventoryControlPage';
@@ -26,30 +27,32 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 export function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <AdminLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<DashboardPage />} />
-        <Route path="products" element={<ProductsPage />} />
-        <Route path="orders" element={<OrdersPage />} />
-        <Route path="inventory" element={<InventoryPage />} />
-        <Route path="compliance" element={<CompliancePage />} />
-        <Route path="settings" element={<SettingsPage />} />
-        <Route path="settings/theme" element={<ThemePage />} />
-        <Route path="staffing" element={<StaffingPage />} />
-        <Route path="inventory-control" element={<InventoryControlPage />} />
-        <Route path="timeclock" element={<TimeClockPage />} />
-        <Route path="scheduling" element={<SchedulingPage />} />
-        <Route path="reports" element={<ReportsPage />} />
-      </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <ErrorBoundary>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<DashboardPage />} />
+          <Route path="products" element={<ProductsPage />} />
+          <Route path="orders" element={<OrdersPage />} />
+          <Route path="inventory" element={<InventoryPage />} />
+          <Route path="compliance" element={<CompliancePage />} />
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="settings/theme" element={<ThemePage />} />
+          <Route path="staffing" element={<StaffingPage />} />
+          <Route path="inventory-control" element={<InventoryControlPage />} />
+          <Route path="timeclock" element={<TimeClockPage />} />
+          <Route path="scheduling" element={<SchedulingPage />} />
+          <Route path="reports" element={<ReportsPage />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </ErrorBoundary>
   );
 }

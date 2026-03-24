@@ -14,8 +14,8 @@ export interface JwtPayload {
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(config: ConfigService) {
-    const secret = config.get<string>('jwt.secret') ?? process.env['JWT_SECRET'];
-    console.log('JWT Strategy secret loaded:', secret ? `${secret.substring(0, 10)}...` : 'UNDEFINED');
+    const secret = config.get<string>('jwt.secret');
+    if (!secret) throw new Error('JWT_SECRET is not configured');
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,

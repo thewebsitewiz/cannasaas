@@ -145,7 +145,7 @@ export default function AccountPage() {
       </div>
 
       {/* Order History */}
-      <div className="bg-white border border-gray-100 rounded-2xl p-6">
+      <div className="bg-white border border-gray-100 rounded-2xl p-6 mb-6">
         <h2 className="font-semibold text-gray-900 flex items-center gap-2 mb-4">
           <Package size={18} /> Order History
           {orderData?.total > 0 && <span className="text-xs text-gray-400 font-normal ml-1">({orderData.total} total)</span>}
@@ -153,7 +153,7 @@ export default function AccountPage() {
         {orderData?.orders && orderData.orders.length > 0 ? (
           <div className="space-y-3">
             {orderData.orders.map((order: any) => (
-              <div key={order.orderId} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+              <Link key={order.orderId} href={`/orders/${order.orderId}`} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
                 <div>
                   <p className="text-sm font-medium text-gray-900">
                     #{order.orderId.slice(0, 8).toUpperCase()}
@@ -172,7 +172,7 @@ export default function AccountPage() {
                     {order.orderStatus.replace(/_/g, ' ')}
                   </span>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         ) : (
@@ -185,8 +185,9 @@ export default function AccountPage() {
           </div>
         )}
       </div>
+
       {/* Loyalty */}
-        <LoyaltyCard />
-      </div>
+      <LoyaltyCard />
+    </div>
   );
 }

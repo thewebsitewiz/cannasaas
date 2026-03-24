@@ -5,13 +5,23 @@ import { useAuthStore } from '../stores/auth.store';
 export function LoginPage() {
   const navigate = useNavigate();
   const setAuth = useAuthStore((s) => s.setAuth);
-  const [email, setEmail] = useState('admin@greenleaf.com');
-  const [password, setPassword] = useState('Admin123!');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [touched, setTouched] = useState<{ email?: boolean; password?: boolean }>({});
+
+  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isPasswordValid = password.length >= 8;
+  const isFormValid = isEmailValid && isPasswordValid;
+
+  const emailError = touched.email && email && !isEmailValid ? 'Please enter a valid email address' : '';
+  const passwordError = touched.password && password && !isPasswordValid ? 'Password must be at least 8 characters' : '';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isEmailValid) { setError('Please enter a valid email address'); return; }
+    if (!isPasswordValid) { setError('Password must be at least 8 characters'); return; }
     setError('');
     setLoading(true);
 
@@ -67,31 +77,43 @@ export function LoginPage() {
             <div className="bg-danger-bg text-danger text-sm rounded-lg p-3 mb-4">{error}</div>
           )}
 
-          <label className="block mb-4">
-            <span className="text-sm font-medium text-gray-700">Email</span>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full rounded-lg border border-border px-4 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none"
-              required
-            />
-          </label>
+          <div className="mb-4">
+            <label className="block">
+              <span className="text-sm font-medium text-gray-700">Email</span>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onBlur={() => setTouched((t) => ({ ...t, email: true }))}
+                className={`mt-1 block w-full rounded-lg border px-4 py-2.5 text-sm focus:ring-1 outline-none ${
+                  emailError ? 'border-red-400 focus:border-red-500 focus:ring-red-500' : 'border-border focus:border-brand-500 focus:ring-brand-500'
+                }`}
+                required
+              />
+            </label>
+            {emailError && <p className="mt-1 text-xs text-red-500">{emailError}</p>}
+          </div>
 
-          <label className="block mb-6">
-            <span className="text-sm font-medium text-gray-700">Password</span>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full rounded-lg border border-border px-4 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none"
-              required
-            />
-          </label>
+          <div className="mb-6">
+            <label className="block">
+              <span className="text-sm font-medium text-gray-700">Password</span>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onBlur={() => setTouched((t) => ({ ...t, password: true }))}
+                className={`mt-1 block w-full rounded-lg border px-4 py-2.5 text-sm focus:ring-1 outline-none ${
+                  passwordError ? 'border-red-400 focus:border-red-500 focus:ring-red-500' : 'border-border focus:border-brand-500 focus:ring-brand-500'
+                }`}
+                required
+              />
+            </label>
+            {passwordError && <p className="mt-1 text-xs text-red-500">{passwordError}</p>}
+          </div>
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !isFormValid}
             className="w-full bg-brand-600 text-txt-inverse font-semibold rounded-lg px-4 py-2.5 text-sm hover:bg-brand-700 transition-colors disabled:opacity-50"
           >
             {loading ? 'Signing in...' : 'Sign In'}

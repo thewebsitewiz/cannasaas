@@ -1,35 +1,180 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OrderCompletedEvent } from './events/order-completed.event';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { DataSource, QueryRunner } from 'typeorm';
 import { CreateOrderInput } from './dto/create-order.input';
 import { OrderSummary, TaxLineItem } from './dto/order-summary.type';
 
-// NY/NJ/CT cannabis tax rates (as of 2025)
-const TAX_RATES: Record<string, { state: number; local: number; excise: number; label: string }[]> = {
-  NY: [
-    { state: 0.09,   local: 0.04,  excise: 0.0,  label: 'NY State Tax (9%)' },
-    { state: 0.0,    local: 0.0,   excise: 0.13, label: 'NY Cannabis Excise (13%)' },
-  ],
-  NJ: [
-    { state: 0.0665, local: 0.02,  excise: 0.0,  label: 'NJ Sales Tax (6.625%)' },
-    { state: 0.0,    local: 0.0,   excise: 0.06, label: 'NJ Cannabis Excise (6%)' },
-  ],
-  CT: [
-    { state: 0.0635, local: 0.03,  excise: 0.0,  label: 'CT Sales Tax (6.35%)' },
-    { state: 0.0,    local: 0.0,   excise: 0.03, label: 'CT Cannabis Excise (3%)' },
-  ],
+/** Row shape returned from lkp_tax_categories */
+interface TaxCategoryRow {
+  tax_category_id: number;
+  code: string;
+  state: string;
+  name: string;
+  tax_basis: 'retail_price' | 'per_mg_thc' | 'wholesale_price';
+  rate: string; // numeric comes back as string from pg
+  effective_date: string;
+  statutory_reference: string;
+  is_active: boolean;
+}
+
+/** Product type code from lkp_product_types */
+type ProductTypeCode = string;
+
+/**
+ * Maps product_type codes to the per_mg_thc tax code suffix.
+ * FLOWER / PRE_ROLL -> FLOWER, VAPE / CONCENTRATE -> CONCENTRATE,
+ * EDIBLE / BEVERAGE / TINCTURE / CAPSULE -> EDIBLE.
+ * Products that don't match (TOPICAL, ACCESSORY, HEMP_CBD) are not
+ * subject to per-mg-THC excise — those rules will simply be skipped.
+ */
+const THC_TAX_CATEGORY_MAP: Record<string, string> = {
+  FLOWER: 'FLOWER',
+  PRE_ROLL: 'FLOWER',
+  VAPE: 'CONCENTRATE',
+  CONCENTRATE: 'CONCENTRATE',
+  EDIBLE: 'EDIBLE',
+  BEVERAGE: 'EDIBLE',
+  TINCTURE: 'EDIBLE',
+  CAPSULE: 'EDIBLE',
+  SUPPOSITORY: 'EDIBLE',
+  PATCH: 'EDIBLE',
 };
 
 @Injectable()
 export class OrdersService {
+  private readonly logger = new Logger(OrdersService.name);
+
   constructor(
     @InjectDataSource() private dataSource: DataSource,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
+  /**
+   * Fetches active tax rules for a given state from lkp_tax_categories.
+   * Returns an empty array (graceful fallback) if no rules exist.
+   */
+  private async getTaxRulesForState(
+    qr: QueryRunner,
+    state: string,
+  ): Promise<TaxCategoryRow[]> {
+    try {
+      const rows: TaxCategoryRow[] = await qr.query(
+        `SELECT tax_category_id, code, state, name, tax_basis, rate,
+                effective_date, statutory_reference, is_active
+         FROM lkp_tax_categories
+         WHERE state = $1 AND is_active = true
+         ORDER BY tax_category_id`,
+        [state],
+      );
+      return rows;
+    } catch (err: any) {
+      this.logger.warn(
+        `Failed to fetch tax rules for state=${state}: ${err.message}. Falling back to zero tax.`,
+      );
+      return [];
+    }
+  }
+
+  /**
+   * Calculates tax for an order based on DB-driven lkp_tax_categories rules.
+   *
+   * - retail_price / wholesale_price basis: rate * subtotal
+   * - per_mg_thc basis: rate * total THC mg across qualifying line items
+   *
+   * Returns the same shape the rest of the service expects: { taxTotal, taxBreakdown }.
+   */
+  private calculateTaxes(
+    taxRules: TaxCategoryRow[],
+    subtotal: number,
+    resolvedItems: Array<{ productTypeCode: ProductTypeCode | null; totalThcMg: number }>,
+  ): { taxTotal: number; taxBreakdown: TaxLineItem[] } {
+    const taxBreakdown: TaxLineItem[] = [];
+    let taxTotal = 0;
+
+    for (const rule of taxRules) {
+      const rate = parseFloat(rule.rate);
+      if (!rate || rate <= 0) continue;
+
+      let amount = 0;
+
+      if (rule.tax_basis === 'per_mg_thc') {
+        // Determine which product-type suffix this rule covers from its code.
+        // e.g. NY_THC_FLOWER -> FLOWER, CT_EXCISE_CANNABIS -> general THC
+        const codeSuffix = rule.code.split('_').pop()?.toUpperCase() ?? '';
+        const isGeneralThcExcise = !['FLOWER', 'CONCENTRATE', 'EDIBLE'].includes(codeSuffix);
+
+        let applicableThcMg = 0;
+        for (const item of resolvedItems) {
+          const mappedCategory = item.productTypeCode
+            ? THC_TAX_CATEGORY_MAP[item.productTypeCode]
+            : null;
+
+          if (isGeneralThcExcise) {
+            // General per-mg-THC excise applies to all products with THC
+            applicableThcMg += item.totalThcMg;
+          } else if (mappedCategory === codeSuffix) {
+            applicableThcMg += item.totalThcMg;
+          }
+        }
+
+        amount = Math.round(applicableThcMg * rate * 100) / 100;
+      } else {
+        // retail_price or wholesale_price — apply rate to subtotal
+        amount = Math.round(subtotal * rate * 100) / 100;
+      }
+
+      if (amount > 0) {
+        taxTotal += amount;
+        const ratePercent =
+          rule.tax_basis === 'per_mg_thc'
+            ? rate // per-mg rate shown as-is (dollars per mg)
+            : rate * 100; // percentage
+        taxBreakdown.push({ label: rule.name, ratePercent, amount });
+      }
+    }
+
+    return { taxTotal: Math.round(taxTotal * 100) / 100, taxBreakdown };
+  }
+
   async createOrder(input: CreateOrderInput, staffUserId?: string): Promise<OrderSummary> {
+    // Pre-transaction validation — fail fast before starting a DB transaction
+    if (!input.lineItems || input.lineItems.length === 0) {
+      throw new BadRequestException('Order must contain at least one line item');
+    }
+
+    // Verify all quantities are > 0
+    const invalidQty = input.lineItems.find(li => li.quantity <= 0);
+    if (invalidQty) {
+      throw new BadRequestException(
+        `Invalid quantity for product ${invalidQty.productId}: quantity must be greater than 0`,
+      );
+    }
+
+    // Verify the dispensary exists
+    const [dispensaryCheck] = await this.dataSource.query(
+      `SELECT entity_id FROM dispensaries WHERE entity_id = $1`,
+      [input.dispensaryId],
+    );
+    if (!dispensaryCheck) {
+      throw new BadRequestException(`Dispensary ${input.dispensaryId} does not exist`);
+    }
+
+    // Verify all product IDs exist and belong to this dispensary
+    const productIds = input.lineItems.map(li => li.productId);
+    const existingProducts = await this.dataSource.query(
+      `SELECT product_id FROM products WHERE product_id = ANY($1) AND dispensary_id = $2`,
+      [productIds, input.dispensaryId],
+    );
+    const existingProductIds = new Set(existingProducts.map((r: any) => r.product_id));
+    const missingProducts = productIds.filter(id => !existingProductIds.has(id));
+    if (missingProducts.length > 0) {
+      throw new BadRequestException(
+        `Products not found in this dispensary: ${missingProducts.join(', ')}`,
+      );
+    }
+
     const qr = this.dataSource.createQueryRunner();
     await qr.connect();
     await qr.startTransaction();
@@ -44,16 +189,28 @@ export class OrdersService {
       if (!dispensary.is_active) throw new BadRequestException('Dispensary is not active');
 
       const state = dispensary.state as string;
-      const taxRates = TAX_RATES[state] ?? TAX_RATES['NY'];
+
+      // Fetch tax rules from DB instead of using hardcoded rates
+      const taxRules = await this.getTaxRulesForState(qr, state);
+      if (taxRules.length === 0) {
+        this.logger.warn(
+          `No active tax rules found for state=${state}, dispensary=${input.dispensaryId}. Order will have zero tax.`,
+        );
+      }
 
       // Resolve products and pricing
       let subtotal = 0;
       const resolvedItems: any[] = [];
 
       for (const item of input.lineItems) {
-        // Get product
+        // Get product with product_type code and THC content for per-mg-THC tax calculation
         const [product] = await qr.query(
-          `SELECT id, name, is_active, is_approved, metrc_item_uid, dispensary_id FROM products WHERE id = $1 AND dispensary_id = $2`,
+          `SELECT p.id, p.name, p.is_active, p.is_approved, p.metrc_item_uid,
+                  p.dispensary_id, p.total_thc_mg_per_container,
+                  pt.code AS product_type_code
+           FROM products p
+           LEFT JOIN lkp_product_types pt ON pt.product_type_id = p.product_type_id
+           WHERE p.id = $1 AND p.dispensary_id = $2`,
           [item.productId, input.dispensaryId]
         );
         if (!product) throw new NotFoundException(`Product ${item.productId} not found`);
@@ -89,6 +246,10 @@ export class OrdersService {
         const lineTotal = unitPrice * item.quantity;
         subtotal += lineTotal;
 
+        // THC mg for the line item: per-container mg * quantity
+        const totalThcMg =
+          (parseFloat(product.total_thc_mg_per_container) || 0) * item.quantity;
+
         resolvedItems.push({
           productId: item.productId,
           variantId: item.variantId ?? null,
@@ -96,19 +257,20 @@ export class OrdersService {
           unitPrice,
           lineTotal,
           metrcItemUid: product.metrc_item_uid,
+          productTypeCode: product.product_type_code ?? null,
+          totalThcMg,
         });
       }
 
-      // Calculate taxes
-      const taxBreakdown: TaxLineItem[] = [];
-      let taxTotal = 0;
-
-      for (const rate of taxRates) {
-        const ratePercent = rate.state + rate.local + rate.excise;
-        const amount = Math.round(subtotal * ratePercent * 100) / 100;
-        taxTotal += amount;
-        taxBreakdown.push({ label: rate.label, ratePercent: ratePercent * 100, amount });
-      }
+      // Calculate taxes from DB-driven rules
+      const { taxTotal, taxBreakdown } = this.calculateTaxes(
+        taxRules,
+        subtotal,
+        resolvedItems.map((ri) => ({
+          productTypeCode: ri.productTypeCode,
+          totalThcMg: ri.totalThcMg,
+        })),
+      );
 
       const total = Math.round((subtotal + taxTotal) * 100) / 100;
 
@@ -210,9 +372,12 @@ export class OrdersService {
   }
 
   async listOrders(dispensaryId: string, limit = 20, offset = 0): Promise<any[]> {
+    // Explicitly select only list-view columns; exclude heavy JSONB fields
+    // (tax_breakdown, applied_promotions, metrc_receipt_data) to avoid over-fetching
     return this.dataSource.query(
       `SELECT "orderId", "dispensaryId", "customerUserId", "orderType", "orderStatus",
-              subtotal, "taxTotal", total, "createdAt", "updatedAt"
+              subtotal, "taxTotal", total, "paymentMethod", "paymentStatus",
+              "createdAt", "updatedAt"
        FROM orders WHERE "dispensaryId" = $1
        ORDER BY "createdAt" DESC LIMIT $2 OFFSET $3`,
       [dispensaryId, limit, offset]

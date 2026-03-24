@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MetrcCredential } from './entities/metrc-credential.entity';
 import { MetrcSyncLog } from './entities/metrc-sync-log.entity';
+import { CircuitBreaker } from '../../common/services/circuit-breaker';
 
 const STATE_BASE_URLS: Record<string, string> = {
   NY: 'https://api-ny.metrc.com',
@@ -24,6 +25,7 @@ export interface MetrcApiResponse<T = any> {
 @Injectable()
 export class MetrcApiClient {
   private readonly logger = new Logger(MetrcApiClient.name);
+  private readonly breaker = new CircuitBreaker({ name: 'metrc', failureThreshold: 3, resetTimeoutMs: 60000 });
 
   constructor(
     @InjectRepository(MetrcCredential)
@@ -89,8 +91,15 @@ export class MetrcApiClient {
       }
 
       this.logger.log(`Metrc ${method} ${path} [${dispensaryId}]`);
-      const response = await fetch(url, fetchOpts);
-      const responseText = await response.text();
+      const { response, responseText } = await this.breaker.exec(async () => {
+        const res = await fetch(url, fetchOpts);
+        const text = await res.text();
+        // Treat server errors as failures for the circuit breaker
+        if (res.status >= 500) {
+          throw new Error(`Metrc server error: HTTP ${res.status}`);
+        }
+        return { response: res, responseText: text };
+      });
 
       let responseData: any;
       try {

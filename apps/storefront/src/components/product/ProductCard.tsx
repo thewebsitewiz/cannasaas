@@ -31,10 +31,10 @@ export function ProductCard({ product }: ProductCardProps) {
     e.preventDefault();
     addItem({
       productId: product.id,
-      variantId: product.id, // simplified — would use real variant
+      variantId: product.variants?.[0]?.variantId ?? product.id,
       name: product.name,
-      variantName: 'Standard',
-      price: 29.99, // placeholder — would come from pricing query
+      variantName: product.variants?.[0]?.name ?? 'Standard',
+      price: product.variants?.[0]?.retailPrice ? Number(product.variants[0].retailPrice) : 0,
       strainType: product.strainType,
     });
   };

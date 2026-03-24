@@ -14,7 +14,7 @@
  *   - Page title set via document.title on mount
  *   - Empty cart state has a descriptive message and CTA
  *   - Loading state announced via aria-busy on the item list
- *   - All interactive elements meet 44×44px minimum touch target (WCAG 2.5.5)
+ *   - All interactive elements meet 44x44px minimum touch target (WCAG 2.5.5)
  *
  * Data:
  *   - Reads cart from Zustand cartStore (optimistic updates)
@@ -24,50 +24,24 @@
  * @pattern Container (page-level) — orchestrates child presentational components
  */
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CartLineItem } from '../components/cart/CartLineItem';
 import { CartSummary } from '../components/cart/CartSummary';
-import type { Cart } from '@cannasaas/types';
-
-// ── Mock / Replace with real store hooks ──────────────────────────────────────
-// In the real app:
-//   import { useCartStore } from '@cannasaas/stores';
-//   import { useUpdateCartItem, useRemoveCartItem, useApplyPromo } from '@cannasaas/api-client';
-
-// Placeholder cart for development until API hooks are wired
-const MOCK_CART: Cart = {
-  id: 'cart-1',
-  userId: 'user-1',
-  dispensaryId: 'disp-1',
-  items: [
-    {
-      id: 'item-1',
-      productId: 'prod-1',
-      variantId: 'var-1',
-      productName: 'Blue Dream',
-      variantName: '1/8 oz',
-      unitPrice: 45.00,
-      quantity: 2,
-      totalPrice: 90.00,
-      weightGrams: 3.5,
-      imageUrl: null,
-    },
-  ],
-  subtotal: 90.00,
-  appliedPromo: null,
-  promoDiscount: 0,
-  tax: 18.68,
-  taxRate: 0.2075,
-  deliveryFee: 0,
-  total: 108.68,
-  exceedsPurchaseLimit: false,
-};
+import { useCartStore } from '../stores/cart.store';
+import type { Cart, CartItem as TypesCartItem } from '@cannasaas/types';
 
 // ── CartPage ──────────────────────────────────────────────────────────────────
 
 export function CartPage() {
   const navigate = useNavigate();
+
+  // Pull state and actions from the Zustand cart store
+  const items = useCartStore((s) => s.items);
+  const updateQuantity = useCartStore((s) => s.updateQuantity);
+  const removeItem = useCartStore((s) => s.removeItem);
+  const subtotal = useCartStore((s) => s.subtotal());
+  const itemCount = useCartStore((s) => s.itemCount());
 
   /**
    * Set descriptive page title on mount.
@@ -81,29 +55,71 @@ export function CartPage() {
     };
   }, []);
 
-  // In real app: const cart = useCartStore(s => s) + mutation hooks
-  const cart = MOCK_CART;
+  /**
+   * Map the Zustand store items to the @cannasaas/types CartItem shape
+   * expected by CartLineItem and CartSummary components.
+   */
+  const cartItems: TypesCartItem[] = useMemo(
+    () =>
+      items.map((item) => ({
+        id: item.productId,
+        productId: item.productId,
+        variantId: item.variantId,
+        productName: item.name,
+        variantName: item.variantName,
+        imageUrl: item.imageUrl ?? null,
+        unitPrice: item.price,
+        quantity: item.quantity,
+        totalPrice: item.price * item.quantity,
+        weightGrams: 0,
+      })),
+    [items],
+  );
+
+  /**
+   * Build a Cart object for CartSummary.
+   * Tax and delivery are calculated at checkout; we show subtotal here.
+   */
+  const cart: Cart = useMemo(
+    () => ({
+      id: '',
+      userId: '',
+      dispensaryId: '',
+      items: cartItems,
+      subtotal,
+      appliedPromo: null,
+      promoDiscount: 0,
+      tax: 0,
+      taxRate: 0,
+      deliveryFee: 0,
+      total: subtotal,
+      exceedsPurchaseLimit: false,
+    }),
+    [cartItems, subtotal],
+  );
+
   const isLoading = false;
 
-  const handleQuantityChange = useCallback((itemId: string, qty: number) => {
-    // TODO: useCartStore.updateQuantity(itemId, qty) + server sync mutation
-    console.log('Update quantity', itemId, qty);
-  }, []);
+  const handleQuantityChange = useCallback(
+    (itemId: string, qty: number) => {
+      updateQuantity(itemId, qty);
+    },
+    [updateQuantity],
+  );
 
-  const handleRemove = useCallback((itemId: string) => {
-    // TODO: useCartStore.removeItem(itemId) + server mutation
-    console.log('Remove item', itemId);
-  }, []);
+  const handleRemove = useCallback(
+    (itemId: string) => {
+      removeItem(itemId);
+    },
+    [removeItem],
+  );
 
-  const handleApplyPromo = useCallback(async (code: string) => {
-    // TODO: POST /cart/promo mutation
-    console.log('Apply promo', code);
+  const handleApplyPromo = useCallback(async (_code: string) => {
     return { success: false, error: 'Promo code not found.' };
   }, []);
 
   const handleRemovePromo = useCallback(() => {
-    // TODO: DELETE /cart/promo mutation
-    console.log('Remove promo');
+    // No-op until promo API is wired
   }, []);
 
   const handleCheckout = useCallback(() => {
@@ -111,7 +127,7 @@ export function CartPage() {
   }, [navigate]);
 
   // ── Empty State ─────────────────────────────────────────────────────────────
-  if (!cart || cart.items.length === 0) {
+  if (items.length === 0) {
     return (
       <main id="main-content" className="max-w-2xl mx-auto px-4 sm:px-6 py-16 text-center">
         <div aria-hidden="true" className="text-6xl mb-4">🛒</div>
@@ -142,7 +158,7 @@ export function CartPage() {
       <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-8">
         Shopping Cart{' '}
         <span className="text-gray-400 font-normal text-xl">
-          ({cart.items.reduce((s, i) => s + i.quantity, 0)} items)
+          ({itemCount} items)
         </span>
       </h1>
 
@@ -163,10 +179,10 @@ export function CartPage() {
            */}
           <ul
             aria-busy={isLoading}
-            aria-label={`${cart.items.length} items in your cart`}
+            aria-label={`${cartItems.length} items in your cart`}
             className="bg-white rounded-2xl border border-gray-100 px-6"
           >
-            {cart.items.map((item) => (
+            {cartItems.map((item) => (
               <CartLineItem
                 key={item.id}
                 item={item}

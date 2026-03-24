@@ -1,12 +1,16 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
+import { CacheService } from '../../common/services/cache.service';
 
 @Injectable()
 export class PlatformService {
   private readonly logger = new Logger(PlatformService.name);
 
-  constructor(@InjectDataSource() private ds: DataSource) {}
+  constructor(
+    @InjectDataSource() private ds: DataSource,
+    private readonly cache: CacheService,
+  ) {}
 
   // ═══ DASHBOARD ═══
 
@@ -150,7 +154,13 @@ export class PlatformService {
   // ═══ TAX ADMINISTRATION ═══
 
   async getTaxRules(): Promise<any[]> {
-    return this.ds.query('SELECT * FROM lkp_tax_categories ORDER BY state, tax_category_id');
+    const cacheKey = 'taxRules:all';
+    const cached = await this.cache.get<any[]>(cacheKey);
+    if (cached) return cached;
+
+    const rules = await this.ds.query('SELECT * FROM lkp_tax_categories ORDER BY state, tax_category_id');
+    await this.cache.set(cacheKey, rules, 600);
+    return rules;
   }
 
   async addTaxRule(input: { state: string; code: string; name: string; rate: number; taxBasis: string; statutoryReference?: string }): Promise<any> {
@@ -160,6 +170,8 @@ export class PlatformService {
     );
     await this.ds.query('INSERT INTO platform_activity (activity_type, description, metadata) VALUES ($1, $2, $3)',
       ['tax_rule_added', 'New tax rule: ' + input.code + ' (' + input.state + ')', JSON.stringify(input)]);
+    // Invalidate tax rules cache
+    await this.cache.del('taxRules:all');
     return rule;
   }
 
@@ -173,6 +185,8 @@ export class PlatformService {
     if (sets.length === 0) throw new BadRequestException('Nothing to update');
     params.push(taxCategoryId);
     await this.ds.query('UPDATE lkp_tax_categories SET ' + sets.join(', ') + ' WHERE tax_category_id = $' + i, params);
+    // Invalidate tax rules cache
+    await this.cache.del('taxRules:all');
     const [rule] = await this.ds.query('SELECT * FROM lkp_tax_categories WHERE tax_category_id = $1', [taxCategoryId]);
     return rule;
   }

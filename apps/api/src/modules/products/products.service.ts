@@ -5,6 +5,7 @@ import { Product } from './entities/product.entity';
 import { ProductVariant } from './entities/product-variant.entity';
 import { ProductPricing } from './entities/product-pricing.entity';
 import { LkpProductType, LkpProductCategory } from './entities/lookups/lookups.entity';
+import { CacheService } from '../../common/services/cache.service';
 
 export interface ProductsFilter {
   dispensaryId: string;
@@ -24,9 +25,25 @@ export class ProductsService {
     @InjectRepository(ProductPricing) private pricingRepo: Repository<ProductPricing>,
     @InjectRepository(LkpProductType) private productTypeRepo: Repository<LkpProductType>,
     @InjectRepository(LkpProductCategory) private categoryRepo: Repository<LkpProductCategory>,
+    private readonly cache: CacheService,
   ) {}
 
   async findAll(filter: ProductsFilter): Promise<Product[]> {
+    // Build a stable cache key from the filter (only cache non-search queries)
+    if (!filter.search) {
+      const cacheKey = `products:${filter.dispensaryId}:${filter.productTypeId ?? ''}:${filter.categoryId ?? ''}:${filter.isActive ?? ''}:${filter.limit ?? 20}:${filter.offset ?? 0}`;
+      const cached = await this.cache.get<Product[]>(cacheKey);
+      if (cached) return cached;
+
+      const results = await this._queryProducts(filter);
+      await this.cache.set(cacheKey, results, 60);
+      return results;
+    }
+
+    return this._queryProducts(filter);
+  }
+
+  private async _queryProducts(filter: ProductsFilter): Promise<Product[]> {
     const where: any = { dispensary_id: filter.dispensaryId };
     if (filter.isActive !== undefined) where.is_active = filter.isActive;
     if (filter.productTypeId) where.product_type_id = filter.productTypeId;

@@ -3,6 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import Stripe from 'stripe';
 
 @Injectable()
@@ -15,6 +17,7 @@ export class StripeService {
     private config: ConfigService,
     @InjectDataSource() private ds: DataSource,
     private events: EventEmitter2,
+    @InjectQueue('stripe-webhooks') private webhookQueue: Queue,
   ) {
     const key = this.config.get<string>('stripe.secretKey');
     this.webhookSecret = this.config.get<string>('stripe.webhookSecret') || '';
@@ -41,11 +44,25 @@ export class StripeService {
 
     if (amountCents < 50) throw new BadRequestException('Minimum payment is $0.50');
 
+    // Check if a payment intent already exists for this order (idempotency)
+    const [existing] = await this.ds.query(
+      `SELECT stripe_payment_intent_id FROM payments WHERE order_id = $1 AND stripe_payment_intent_id IS NOT NULL`,
+      [orderId],
+    );
+    if (existing) {
+      // Retrieve the existing intent from Stripe to return its clientSecret
+      const existingIntent = await this.stripe.paymentIntents.retrieve(existing.stripe_payment_intent_id);
+      this.logger.log('Returning existing payment intent: ' + existingIntent.id + ' for order ' + orderId);
+      return { clientSecret: existingIntent.client_secret!, paymentIntentId: existingIntent.id };
+    }
+
     const intent = await this.stripe.paymentIntents.create({
       amount: amountCents,
       currency: 'usd',
       automatic_payment_methods: { enabled: true },
       metadata: { orderId, dispensaryId, ...metadata },
+    }, {
+      idempotencyKey: orderId,
     });
 
     // Save intent to DB
@@ -89,18 +106,29 @@ export class StripeService {
 
     this.logger.log('Webhook received: ' + event.type);
 
-    switch (event.type) {
-      case 'payment_intent.succeeded':
-        await this.handlePaymentSucceeded(event.data.object as Stripe.PaymentIntent);
-        break;
-      case 'payment_intent.payment_failed':
-        await this.handlePaymentFailed(event.data.object as Stripe.PaymentIntent);
-        break;
-      case 'charge.refunded':
-        await this.handleRefund(event.data.object as Stripe.Charge);
-        break;
-      default:
-        this.logger.log('Unhandled webhook event: ' + event.type);
+    // Enqueue for reliable async processing with retries (dead-letter after 5 attempts)
+    await this.webhookQueue.add(event.type, {
+      eventType: event.type,
+      eventId: event.id,
+      payload: event.data.object,
+    }, {
+      attempts: 5,
+      backoff: { type: 'exponential', delay: 2000 },
+      removeOnComplete: 100,
+      removeOnFail: 500,
+    });
+
+    // Still emit events for real-time listeners (e.g. WebSocket notifications)
+    if (event.type === 'payment_intent.succeeded') {
+      const intent = event.data.object as Stripe.PaymentIntent;
+      if (intent.metadata.orderId) {
+        this.events.emit('order.payment_received', {
+          orderId: intent.metadata.orderId,
+          dispensaryId: intent.metadata.dispensaryId,
+          amount: intent.amount / 100,
+          paymentIntentId: intent.id,
+        });
+      }
     }
 
     return { received: true };

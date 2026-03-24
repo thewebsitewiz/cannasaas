@@ -47,9 +47,10 @@ export class LoyaltyResolver {
   @Roles('customer', 'dispensary_admin')
   @Query(() => [PointTransaction], { name: 'myPointHistory' })
   async pointHistory(
-    @Args('limit', { type: () => Int, nullable: true, defaultValue: 20 }) limit: number,
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 20 }) rawLimit: number,
     @CurrentUser() user: JwtPayload,
   ): Promise<any[]> {
+    const limit = Math.min(rawLimit, 100);
     return this.loyalty.getPointHistory(user.sub, limit);
   }
 

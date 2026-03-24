@@ -151,10 +151,11 @@ export class CustomerResolver {
   @Roles('customer')
   @Query(() => OrderHistoryResult, { name: 'myOrders' })
   async myOrders(
-    @Args('limit', { type: () => Int, nullable: true, defaultValue: 20 }) limit: number,
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 20 }) rawLimit: number,
     @Args('offset', { type: () => Int, nullable: true, defaultValue: 0 }) offset: number,
     @CurrentUser() user: JwtPayload,
   ): Promise<any> {
+    const limit = Math.min(rawLimit, 100);
     const { orders, total } = await this.customers.getOrderHistory(user.sub, limit, offset);
     return {
       total,
@@ -190,9 +191,10 @@ export class CustomerResolver {
   @Query(() => [CustomerProfile], { name: 'customers' })
   async customerList(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
-    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) limit: number,
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) rawLimit: number,
     @Args('offset', { type: () => Int, nullable: true, defaultValue: 0 }) offset: number,
   ): Promise<any[]> {
+    const limit = Math.min(rawLimit, 100);
     return this.customers.getCustomers(dispensaryId, limit, offset);
   }
 }

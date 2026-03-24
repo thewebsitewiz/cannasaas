@@ -7,6 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import { OnEvent } from '@nestjs/event-emitter';
 import * as nodemailer from 'nodemailer';
 import { NotificationTemplate, NotificationLog } from './entities/notification.entity';
+import { CircuitBreaker } from '../../common/services/circuit-breaker';
 
 @Injectable()
 export class NotificationService {
@@ -14,6 +15,8 @@ export class NotificationService {
   private emailTransport: nodemailer.Transporter;
   private twilioClient: any;
   private twilioPhone: string;
+  private readonly emailBreaker = new CircuitBreaker({ name: 'email-smtp', failureThreshold: 5, resetTimeoutMs: 30000 });
+  private readonly smsBreaker = new CircuitBreaker({ name: 'sms-twilio', failureThreshold: 5, resetTimeoutMs: 30000 });
 
   constructor(
     @InjectRepository(NotificationTemplate) private templateRepo: Repository<NotificationTemplate>,
@@ -89,13 +92,15 @@ export class NotificationService {
       const fromEmail = this.config.get<string>('EMAIL_FROM', 'noreply@cannasaas.com');
       const fromName = this.config.get<string>('EMAIL_FROM_NAME', 'CannaSaas');
 
-      const info = await this.emailTransport.sendMail({
-        from: `"${fromName}" <${fromEmail}>`,
-        to: input.to,
-        subject: input.subject,
-        text: input.body,
-        html: input.body.replace(/\n/g, '<br>'),
-      });
+      const info = await this.emailBreaker.exec(() =>
+        this.emailTransport.sendMail({
+          from: `"${fromName}" <${fromEmail}>`,
+          to: input.to,
+          subject: input.subject,
+          text: input.body,
+          html: input.body.replace(/\n/g, '<br>'),
+        }),
+      );
 
       log.status = 'sent';
       log.external_id = info.messageId;
@@ -134,11 +139,13 @@ export class NotificationService {
     }
 
     try {
-      const message = await this.twilioClient.messages.create({
-        body: input.body,
-        from: this.twilioPhone,
-        to: input.to,
-      });
+      const message = await this.smsBreaker.exec(() =>
+        this.twilioClient.messages.create({
+          body: input.body,
+          from: this.twilioPhone,
+          to: input.to,
+        }),
+      );
 
       log.status = 'sent';
       log.external_id = message.sid;

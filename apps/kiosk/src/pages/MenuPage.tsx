@@ -7,7 +7,7 @@ import { Leaf, Plus, Check } from 'lucide-react';
 
 const PRODUCTS_QUERY = `query($id: ID!) { products(dispensaryId: $id) {
   id name strainType thcPercent cbdPercent description
-  variants { variantId name sku }
+  variants { variantId name sku retailPrice }
 }}`;
 
 const FILTERS = ['All', 'Flower', 'Edible', 'Vape', 'Pre-Roll', 'Concentrate'];
@@ -24,9 +24,9 @@ export function MenuPage() {
     select: (d) => d.products,
   });
 
-  // Placeholder price — in production, pricing comes from inventory/POS
   const getPrice = (p: any) => {
-    return 25.00; // Default price; will be replaced with real pricing query
+    const v = p.variants?.[0];
+    return v?.retailPrice ? Number(v.retailPrice) : 0;
   };
 
   const handleAdd = (product: any) => {

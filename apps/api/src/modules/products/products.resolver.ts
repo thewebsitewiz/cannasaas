@@ -1,4 +1,4 @@
-import { Resolver, Query, Args, ID, Int, ResolveField, Parent } from '@nestjs/graphql';
+import { Resolver, Query, Args, ID, Int, Float, ResolveField, Parent } from '@nestjs/graphql';
 import { ForbiddenException } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { ProductSearchService } from './product-search.service';
@@ -29,9 +29,10 @@ export class ProductsResolver {
     @Args('productTypeId', { type: () => Int, nullable: true }) productTypeId?: number,
     @Args('categoryId', { type: () => Int, nullable: true }) categoryId?: number,
     @Args('search', { nullable: true }) search?: string,
-    @Args('limit', { type: () => Int, nullable: true }) limit?: number,
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) rawLimit: number,
     @Args('offset', { type: () => Int, nullable: true }) offset?: number,
   ): Promise<Product[]> {
+    const limit = Math.min(rawLimit, 100);
     return this.products.findAll({
       dispensaryId,
       productTypeId,
@@ -62,9 +63,10 @@ export class ProductsResolver {
     @Args('productTypeId', { type: () => Int, nullable: true }) productTypeId?: number,
     @Args('categoryId', { type: () => Int, nullable: true }) categoryId?: number,
     @Args('search', { nullable: true }) search?: string,
-    @Args('limit', { type: () => Int, nullable: true }) limit?: number,
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) rawLimit: number,
     @Args('offset', { type: () => Int, nullable: true }) offset?: number,
   ): Promise<Product[]> {
+    const limit = Math.min(rawLimit, 100);
     const targetDispensaryId = dispensaryId ?? user.dispensaryId;
     if (!targetDispensaryId) throw new ForbiddenException('dispensaryId required');
 
@@ -130,8 +132,20 @@ export class ProductsResolver {
   async autocomplete(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @Args('query') query: string,
-    @Args('limit', { type: () => Int, nullable: true }) limit?: number,
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) rawLimit: number,
   ): Promise<AutocompleteResult[]> {
+    const limit = Math.min(rawLimit, 100);
     return this.search.autocomplete(dispensaryId, query, limit);
+  }
+}
+
+@Resolver(() => ProductVariant)
+export class ProductVariantResolver {
+  constructor(private readonly products: ProductsService) {}
+
+  @ResolveField(() => Float, { name: 'retailPrice', nullable: true })
+  async retailPrice(@Parent() variant: ProductVariant): Promise<number | null> {
+    const pricing = await this.products.findCurrentPricing(variant.variant_id);
+    return pricing ? Number(pricing.price) : null;
   }
 }

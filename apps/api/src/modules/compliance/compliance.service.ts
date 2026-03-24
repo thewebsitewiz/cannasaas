@@ -24,7 +24,8 @@ export class ComplianceService {
     private config: ConfigService,
   ) {
     const keyStr = this.config.get<string>('ENCRYPTION_KEY', 'cannasaas-dev-key-change-in-prod-32b');
-    this.encryptionKey = crypto.scryptSync(keyStr, 'salt', 32);
+    const saltBytes = crypto.createHash('sha256').update(keyStr).digest().subarray(0, 16);
+    this.encryptionKey = crypto.scryptSync(keyStr, saltBytes, 32);
   }
 
   // ═══ ENCRYPTION ═══

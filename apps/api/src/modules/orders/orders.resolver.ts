@@ -39,9 +39,10 @@ export class OrdersResolver {
   async listOrders(
     @CurrentUser() user: JwtPayload,
     @Args('dispensaryId', { type: () => ID, nullable: true }) dispensaryId?: string,
-    @Args('limit', { type: () => Int, nullable: true }) limit?: number,
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) rawLimit: number,
     @Args('offset', { type: () => Int, nullable: true }) offset?: number,
   ): Promise<any[]> {
+    const limit = Math.min(rawLimit, 100);
     const targetId = dispensaryId ?? user.dispensaryId;
     if (!targetId) throw new ForbiddenException('dispensaryId required');
     if ((user.role === 'budtender' || user.role === 'dispensary_admin') && targetId !== user.dispensaryId) {
