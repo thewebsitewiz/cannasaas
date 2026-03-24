@@ -1,5 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Building2, CreditCard, Calculator, BarChart3, Activity, LogOut, Shield } from 'lucide-react';
+import { DarkModeToggle } from '../components/DarkModeToggle';
 import { useEffect } from 'react';
 import { getUser, logout } from '../lib/api';
 
@@ -37,10 +38,13 @@ export function PlatformLayout() {
           ))}
         </nav>
         <div className="p-3 border-t border-slate-700">
-          <button onClick={() => { logout(); navigate('/login'); }}
-            className="flex items-center gap-2 text-sm text-slate-400 hover:text-white w-full px-3 py-2">
-            <LogOut size={16} /> Sign Out
-          </button>
+          <div className="flex items-center justify-between">
+            <button onClick={() => { logout(); navigate('/login'); }}
+              className="flex items-center gap-2 text-sm text-slate-400 hover:text-white px-3 py-2">
+              <LogOut size={16} /> Sign Out
+            </button>
+            <DarkModeToggle />
+          </div>
         </div>
       </aside>
       <main className="flex-1 p-6 overflow-y-auto"><Outlet /></main>

@@ -4,10 +4,11 @@ import { Inventory } from './entities/inventory.entity';
 import { InventoryTransaction } from './entities/inventory-transaction.entity';
 import { InventoryService } from './inventory.service';
 import { InventoryResolver } from './inventory.resolver';
+import { ReorderSuggestionService } from './reorder-suggestion.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Inventory, InventoryTransaction])],
-  providers: [InventoryService, InventoryResolver],
-  exports: [TypeOrmModule, InventoryService],
+  providers: [InventoryService, InventoryResolver, ReorderSuggestionService],
+  exports: [TypeOrmModule, InventoryService, ReorderSuggestionService],
 })
 export class InventoryModule {}

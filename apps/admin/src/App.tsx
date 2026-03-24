@@ -17,6 +17,8 @@ import { StaffingPage } from './pages/StaffingPage';
 import ThemePage from './pages/Settings/ThemePage';
 import { TimeClockPage } from './pages/TimeClockPage';
 import { VendorsPage } from './pages/VendorsPage';
+import { MenuBoardPage } from './pages/MenuBoardPage';
+import { OnboardingPage } from './pages/OnboardingPage';
 import { useAuthStore } from './stores/auth.store';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -30,6 +32,7 @@ export function App() {
     <ErrorBoundary>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
         <Route
           path="/"
           element={
@@ -50,6 +53,7 @@ export function App() {
           <Route path="timeclock" element={<TimeClockPage />} />
           <Route path="scheduling" element={<SchedulingPage />} />
           <Route path="reports" element={<ReportsPage />} />
+          <Route path="menu-board" element={<MenuBoardPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

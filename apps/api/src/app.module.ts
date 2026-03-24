@@ -49,6 +49,12 @@ import { StripeModule } from './modules/stripe/stripe.module';
 import { PlatformModule } from './modules/platform/platform.module';
 import { ThemeModule } from './modules/theme/theme.module';
 import { HealthModule } from './modules/health/health.module';
+import { RecommendationModule } from './modules/recommendations/recommendation.module';
+import { KnowledgeModule } from './modules/knowledge/knowledge.module';
+import { MarketingModule } from './modules/marketing/marketing.module';
+import { SearchModule } from './modules/search/search.module';
+import { BiotrackModule } from './modules/biotrack/biotrack.module';
+import { IdVerificationModule } from './modules/verification/id-verification.module';
 import { CacheModule } from './common/services/cache.module';
 import { SentryModule } from './common/services/sentry.module';
 import { MetricsModule } from './common/services/metrics.module';
@@ -111,6 +117,12 @@ import { MetricsModule } from './common/services/metrics.module';
     PlatformModule,
     ThemeModule,
     HealthModule,
+    MarketingModule,
+    BiotrackModule,
+    IdVerificationModule,
+    RecommendationModule,
+    KnowledgeModule,
+    SearchModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

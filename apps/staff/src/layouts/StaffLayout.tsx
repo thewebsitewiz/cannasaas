@@ -3,6 +3,7 @@ import { ClipboardList, Truck, Warehouse, Search, LogOut } from 'lucide-react';
 import { useAuthStore } from '../stores/auth.store';
 import { OrderToast } from '../components/OrderToast';
 import { ClockWidget } from '../components/layout/ClockWidget';
+import { DarkModeToggle } from '../components/DarkModeToggle';
 
 const NAV = [
   { to: '/', label: 'Orders', icon: ClipboardList },
@@ -44,6 +45,7 @@ export function StaffLayout() {
           <div className="flex items-center gap-4">
             <ClockWidget />
             <span className="text-xs text-gray-500 hidden sm:inline">{user?.email}</span>
+            <DarkModeToggle />
             <button onClick={() => { logout(); navigate('/login'); }} className="text-gray-400 hover:text-white">
               <LogOut size={18} />
             </button>

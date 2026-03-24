@@ -1,6 +1,7 @@
 import { Resolver, Query, Mutation, Args, ID, Int, Float } from '@nestjs/graphql';
 import { ObjectType, Field } from '@nestjs/graphql';
 import { InventoryService } from './inventory.service';
+import { ReorderSuggestionService } from './reorder-suggestion.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtPayload } from '../auth/strategies/jwt.strategy';
@@ -72,9 +73,25 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field(() => Float) totalAvailable!: number;
 }
 
+@ObjectType() class ReorderSuggestion {
+  @Field(() => ID) inventoryId!: string;
+  @Field(() => ID) variantId!: string;
+  @Field() productName!: string;
+  @Field({ nullable: true }) variantName?: string;
+  @Field(() => Float) quantityAvailable!: number;
+  @Field(() => Float) avgDailySales!: number;
+  @Field(() => Float) leadTimeDays!: number;
+  @Field(() => Float) daysOfStockRemaining!: number;
+  @Field({ nullable: true }) suggestedReorderDate?: string;
+  @Field(() => Int) suggestedQuantity!: number;
+}
+
 @Resolver()
 export class InventoryResolver {
-  constructor(private readonly inventory: InventoryService) {}
+  constructor(
+    private readonly inventory: InventoryService,
+    private readonly reorderSuggestions: ReorderSuggestionService,
+  ) {}
 
   // ── Queries ─────────────────────────────────────────────────────────
 
@@ -128,6 +145,14 @@ export class InventoryResolver {
     @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) limit: number,
   ): Promise<any[]> {
     return this.inventory.getTransactions(inventoryId, limit);
+  }
+
+  @Roles('dispensary_admin', 'org_admin', 'super_admin')
+  @Query(() => [ReorderSuggestion], { name: 'reorderSuggestions' })
+  async reorderSuggestionsQuery(
+    @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
+  ): Promise<any[]> {
+    return this.reorderSuggestions.getReorderSuggestions(dispensaryId);
   }
 
   // ── Mutations ───────────────────────────────────────────────────────

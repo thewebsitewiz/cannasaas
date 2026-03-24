@@ -12,11 +12,13 @@ import {
   ShoppingCart,
   Star,
   Users,
+  Monitor,
   Warehouse,
 } from 'lucide-react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 
 import { useAuthStore } from '../stores/auth.store';
+import { DarkModeToggle } from '../components/DarkModeToggle';
 
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -31,6 +33,7 @@ const NAV_ITEMS = [
   { to: '/vendors', label: 'Vendors', icon: Building2 },
   { to: '/loyalty', label: 'Loyalty', icon: Star },
   { to: '/reports', label: 'Reports', icon: BarChart3 },
+  { to: '/menu-board', label: 'Menu Board', icon: Monitor },
   { to: '/settings', label: 'Settings', icon: Settings },
 ];
 
@@ -76,14 +79,17 @@ export function AdminLayout() {
 
         <div className="p-4 border-t border-gs-pine">
           <div className="text-xs text-txt-secondary mb-2" aria-label="Logged in user">{user?.email}</div>
-          <button
-            onClick={handleLogout}
-            aria-label="Sign out"
-            className="flex items-center gap-2 text-sm text-txt-muted hover:text-txt-inverse transition-colors"
-          >
-            <LogOut size={16} aria-hidden="true" />
-            Sign Out
-          </button>
+          <div className="flex items-center justify-between">
+            <button
+              onClick={handleLogout}
+              aria-label="Sign out"
+              className="flex items-center gap-2 text-sm text-txt-muted hover:text-txt-inverse transition-colors"
+            >
+              <LogOut size={16} aria-hidden="true" />
+              Sign Out
+            </button>
+            <DarkModeToggle />
+          </div>
         </div>
       </aside>
 
