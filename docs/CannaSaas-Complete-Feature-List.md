@@ -6,13 +6,14 @@
 
 | Metric | Value |
 |---|---|
-| Backend Modules | 33 |
+| Backend Modules | 43+ |
 | Database Tables | 95+ |
 | GraphQL Operations | 180+ |
 | REST Endpoints | 12 |
-| Frontend Applications | 5 |
-| E2E Tests | 32 |
-| Unit Tests | 42 |
+| Frontend Applications | 6 |
+| Unit Test Suites | 8 (58 tests) |
+| Integration Tests | 2 (order flow + schema contract) |
+| Load Tests | 1 (k6) |
 | CSS Themes | 10 |
 | Seeded Vendors | 5 |
 | Loyalty Rewards | 5 |
@@ -23,52 +24,72 @@
 
 # 1. Frontend Applications
 
-## 1.1 Customer Storefront (Next.js — port 5173)
+## 1.1 Customer Storefront (Next.js 15 — port 5173)
 
+- "Botanical Luxury" design — dark heroes, Playfair Display serif headings, DM Sans body, emerald palette
+- Strain-specific gradient backgrounds on product cards (indica/sativa/hybrid)
 - Home page with featured products and dispensary branding
-- Products listing with full-text search, strain filters (indica/sativa/hybrid), THC/CBD display
-- Product detail page with variant selection, effects, terpenes, add to cart
+- Products listing with Meilisearch full-text search, vibe search (semantic similarity), strain filters, THC/CBD display
+- AI-powered product recommendations
+- Product detail page with variant selection, effects/flavors tags, terpenes, add to cart
 - Shopping cart with quantity controls, line item management, subtotal
-- Checkout with fulfillment toggle (pickup/delivery), payment method (cash/card)
+- Express checkout flow
+- Checkout with fulfillment toggle (pickup/delivery), payment method (cash/Stripe/CanPay/AeroPay)
 - Stripe PaymentIntent integration — `createPaymentIntent`, `clientSecret` flow
 - Order tracking page with live WebSocket progress bar (Confirmed → Preparing → Ready → Delivered)
 - Customer registration and login (JWT authentication)
 - Account page with profile stats, addresses, order history
 - Age verification page (21+, ID type, state, DOB)
+- Digital ID verification with OCR
 - Loyalty card — points balance, tier badge, progress to next tier, available rewards
+- Back-in-stock notifications
 - Theme provider — loads tenant CSS theme on init
+- PWA support (installable, offline-capable)
+- i18n: English + Spanish
+- Dark mode toggle
 - WCAG 2.1 AA compliant, responsive design
 
-## 1.2 Admin Portal (Vite + React — port 5174)
+## 1.2 Admin Portal (Vite 8 + React 19 — port 5174, 16+ pages)
 
 - Dashboard with revenue, orders, product mix KPIs
 - Products management with search and filtering
 - Orders management with status tracking
+- Digital menu board display
 - Inventory overview with stock levels and alerts
 - Inventory control — transfers, counts, adjustments, health dashboard
+- AI-powered reorder suggestions
 - Compliance monitoring with audit trail viewer
 - Staffing — employee roster, certification tracking, compliance KPIs
 - Time clock — active clocks with 30-second refresh, payroll report, CSV export
 - Scheduling — weekly grid, publish shifts, drivers, time-off request management
 - Reports — tabbed view (Sales/Tax/Staff/Inventory), date range filters, CSV downloads
-- Settings — theme selector with 10 visual previews, custom CSS editor
+- Settings — theme selector with 10 visual previews (casual, dark, regal, modern, minimal, apothecary, citrus, earthy, midnight, neon), custom CSS editor
 - Vendor management — vendor table with KPIs, create form, purchase order viewer
 - Loyalty admin — member stats, tier breakdown, rewards catalog, create new rewards
+- Customer segmentation — 6 auto-segments with targeted views
+- Customer reviews & ratings management
+- Marketing Suite — campaign builder, automation workflows
+- Onboarding wizard for new tenant setup
+- Changelog viewer
+- Webhooks API configuration (HMAC-SHA256 signed)
 - Image upload component — drag-and-drop product photo upload with preview
 
-## 1.3 Staff Portal (Vite + React — port 5175)
+## 1.3 Staff Portal (Vite 8 + React 19 — port 5175)
 
 - Order queue with Kanban-style lanes
 - Fulfillment zone management
 - Inventory lookup and stock alert banners
+- Barcode scanner for product lookup
 - Product search for customer assistance
+- Knowledge Base / budtender AI assistant
 - Clock-in/out widget in header — green pulse when active, live HH:MM elapsed timer
 - Real-time WebSocket toast notifications — new orders, low stock, delivery updates
 - Connection status indicator (Live/Disconnected)
 - Slide-in animation with auto-dismiss after 8 seconds
 
-## 1.4 Self-Service Kiosk (Vite + React — port 5176)
+## 1.4 Self-Service Kiosk (Vite 8 + React 19 — port 5176, PWA)
 
+- Customer check-in flow
 - Full-screen layout optimized for tablets and touch screens
 - Product grid with category filters (Flower, Edible, Vape, Pre-Roll, Concentrate)
 - Quick-add buttons with 1.5-second confirmation feedback
@@ -79,7 +100,7 @@
 - Anti-zoom, no text selection, overscroll prevention (kiosk lockdown)
 - Large touch targets (48px+ height) throughout
 
-## 1.5 Platform Manager (Vite + React — port 5177)
+## 1.5 Platform Manager (Vite 8 + React 19 — port 5177)
 
 - Dark sidebar layout with 6 pages
 - Dashboard — MRR/ARR, tenant counts (active/trial/suspended), locations, users, orders/GMV, tier breakdown
@@ -90,13 +111,14 @@
 - Activity — color-coded event feed (onboards, payments, suspensions, config changes)
 - Super admin auth gate (role check on login)
 
-# 2. Backend Modules (33 Total)
+# 2. Backend Modules (43+ Total)
 
 ## 2.1 Core Infrastructure
 
 ### Authentication & Authorization
 
 - JWT access tokens (configurable TTL, default 15 min) + refresh tokens (7 days)
+- Two-factor authentication (2FA) via TOTP (Time-based One-Time Password)
 - Role-based access control: super_admin, org_admin, dispensary_admin, shift_lead, budtender, customer
 - Registration with email validation and password strength check (8+ chars)
 - Login with last-login tracking, refresh token rotation
@@ -141,6 +163,19 @@
 - Cached strain data with effects, flavors, terpene profiles
 - OCPC (Open Cannabis Product Code) tracking
 
+### Search Engine (Meilisearch + Vibe Search)
+
+- Meilisearch-powered full-text search with typo tolerance and instant results
+- Vibe search — semantic similarity search for natural language product discovery
+- Faceted filtering by strain type, effects, THC/CBD range, price, brand
+- Search analytics for popular queries
+
+### AI Recommendations
+
+- Personalized product recommendations based on purchase history and preferences
+- "Customers also bought" and "Similar products" suggestion engines
+- Budtender Knowledge Base — AI-powered product knowledge assistant for staff
+
 ## 2.3 Orders & Payments
 
 ### Orders
@@ -152,12 +187,14 @@
 - Customer user ID linking for order history
 - Order notes field
 
-### Payments (Cash)
+### Payments (Cash + CanPay + AeroPay)
 
 - Cash payment processing with tendered/change calculation
 - Cash discount configuration per dispensary (0-20%)
 - Cash discount preview endpoint
 - Cash delivery toggle
+- CanPay integration — cannabis-specific debit payment processing
+- AeroPay integration — ACH-based cannabis payment processing
 
 ### Stripe Integration
 
@@ -170,6 +207,7 @@
 - Stripe enabled/disabled check query
 - Auto-updates order payment status on webhook
 - Graceful fallback when Stripe not configured (cash-only mode)
+- Webhook retry queue via BullMQ with exponential backoff
 
 ## 2.4 Inventory
 
@@ -178,6 +216,7 @@
 - Real-time stock tracking per variant per dispensary
 - Quantity on hand, quantity available, quantity reserved
 - Reorder thresholds with low stock alerts
+- AI-powered reorder suggestions based on sales velocity and seasonality
 - Inventory overview query with total SKUs, units, value
 - Dead stock detection
 - Expiring inventory tracking
@@ -202,6 +241,17 @@
 - Metrc sync overview and failed sync queries
 - Product UID tagging (individual and bulk)
 - Metrc item category mapping
+
+### BioTrack Integration
+
+- BioTrack seed-to-sale tracking system integration for BioTrack states
+- Credential management and sync pipeline parallel to Metrc
+
+### Compliance Alerts (CRON)
+
+- Automated compliance alert checks on schedule
+- License expiration warnings, inventory discrepancy alerts, reconciliation failure notifications
+- Configurable alert thresholds per tenant
 
 ### Compliance Suite
 
@@ -244,9 +294,10 @@
 
 ## 2.6 Customer Management
 
-### Customer Profiles
+### Customer Profiles & Segmentation
 
 - Customer profile CRUD with loyalty points, total orders, total spent
+- 6 automatic customer segments: new customers, VIP/high-value, at-risk/lapsed, frequent buyers, medical patients, birthday upcoming
 - Preferred dispensary tracking
 - Medical patient designation
 - Notification preferences (email/SMS per category)
@@ -337,12 +388,21 @@
 
 - Email via SendGrid/SMTP with nodemailer
 - SMS via Twilio (graceful fallback if not configured)
-- 18 notification templates: order lifecycle, welcome, cert expiry, low stock, etc.
+- Back-in-stock notifications — automatic alerts when out-of-stock products return
+- White-label email templates — brand-customized per tenant
+- 18+ notification templates: order lifecycle, welcome, cert expiry, low stock, back-in-stock, etc.
 - Template engine with `{{var}}` and `{{#if}}` conditional blocks
 - Event-driven: `order.completed`, `order.status_changed`, `customer.registered`
 - Customer notification preferences (email/SMS toggles per category)
 - Notification log with delivery status tracking
 - Admin: send test, view stats
+
+### Marketing Suite
+
+- Campaign builder — create targeted campaigns with audience segmentation
+- Marketing automations — trigger-based workflows (welcome series, win-back, birthday, post-purchase)
+- Campaign performance analytics — open rates, click-through, conversion tracking
+- Integration with notification channels (email/SMS)
 
 ## 2.11 Reporting & Analytics
 
@@ -372,7 +432,29 @@
 - Sync logging with status tracking
 - Extensible for additional POS providers
 
-## 2.13 Platform Administration
+## 2.13 Customer Reviews & Ratings
+
+- Product review submission with star rating (1-5) and text
+- Review moderation (approve/reject) by admin
+- Average rating calculation per product
+- Review bonus points in loyalty program (25 points per review)
+
+## 2.14 Verification (Digital ID/OCR)
+
+- Digital ID verification via document upload
+- OCR-based data extraction from government-issued IDs
+- Age verification workflow integrated with customer profiles
+- Verification status tracking and audit trail
+
+## 2.15 Webhooks API
+
+- Outbound webhook delivery for key platform events
+- HMAC-SHA256 signed payloads for security
+- Webhook endpoint configuration per tenant
+- Delivery retry with exponential backoff
+- Webhook delivery logs with response status
+
+## 2.16 Platform Administration
 
 ### Platform Manager (super_admin)
 
@@ -384,6 +466,18 @@
 - Platform activity log: tenant onboards, payments, suspensions, config changes
 - Platform report: tenant health table, churn rate calculation
 
+### Changelog
+
+- Platform changelog with version history and release notes
+- Visible in Admin and Platform Manager apps
+- Categorized entries (feature, fix, improvement)
+
+### Health, Status & Metrics
+
+- Health check endpoint for monitoring and Docker health checks
+- Status page module for public service status
+- Prometheus metrics endpoint (`/metrics`) — request counts, latencies, queue depths, custom business metrics
+
 ### Tax Administration
 
 - View all tax rules grouped by state
@@ -391,9 +485,9 @@
 - Toggle rules active/inactive
 - Add new states
 
-## 2.14 White-Label Theming
+## 2.19 White-Label Theming
 
-- 10 pre-built CSS themes: default, dark, earth, purple, minimal, luxury, ocean, sunset, forest, neon
+- 10 pre-built CSS themes: casual, dark, regal, modern, minimal, apothecary, citrus, earthy, midnight, neon
 - CSS custom properties define all visual tokens (25+ variables per theme)
 - `data-theme` attribute on root HTML element switches themes instantly
 - HTML structure never changes — CSS-only theming
@@ -403,7 +497,7 @@
 - Theme selector in admin settings with visual mini-previews
 - Dark theme scrollbar styling
 
-## 2.15 Real-Time (WebSocket)
+## 2.20 Real-Time (WebSocket)
 
 - JWT-authenticated WebSocket connections via Socket.IO
 - Auto-join rooms: `user:{id}`, `dispensary:{id}`, `staff:{id}`
@@ -413,7 +507,7 @@
 - Ping/pong keepalive
 - Connected users query for admin
 
-## 2.16 Image Management
+## 2.21 Image Management
 
 - Product image upload: `POST /v1/images/product/:id`
 - Gallery images: `POST /v1/images/product/:id/gallery` (JSONB array)
@@ -428,11 +522,12 @@
 
 ## 3.1 Production Deployment
 
-- Docker Compose production stack: 7 services (postgres, redis, api, storefront, admin, staff, nginx)
+- Docker Compose production stack with multi-stage builds (postgres, redis, api, storefront, admin, staff, kiosk, platform, nginx)
 - Multi-stage Dockerfiles: NestJS API, Next.js standalone, Vite → nginx static
 - Nginx reverse proxy with subdomain routing
 - Rate limiting: 30 requests/second API, 5 requests/minute auth (per IP)
-- Security headers: X-Frame-Options, X-Content-Type-Options, X-XSS-Protection, Referrer-Policy
+- Security headers: X-Frame-Options, X-Content-Type-Options, X-XSS-Protection, Referrer-Policy, CSP
+- HTTPS/TLS termination with gzip compression
 - WebSocket proxying via nginx
 - Health checks on all services
 - Non-root containers
@@ -456,17 +551,25 @@
 - Duplicate key → 409 Conflict, FK violation → 400 Bad Request, not-null → 400
 - Validation helpers: `validateUUID`, `validateDateString`, `validateEmail`, `ensureFound`
 - In-memory rate limit guard with `@RateLimit` decorator
+- GraphQL depth limiting (max 10 nested levels)
+- GraphQL complexity limiting (max 1000 fields)
+- CSRF protection on state-changing operations
+- Request body size limits
+- Circuit breakers on external service calls (Metrc, Stripe, Meilisearch)
+- Redis caching for products, themes, and tax rules
 - Input sanitization middleware: strips `<script>`, `<iframe>`, event handlers, `javascript:` protocol
 - Helmet security headers (relaxed CSP in dev, strict in prod)
 - Cookie parser + compression
 
 ## 3.4 Testing
 
-- 74 total tests: 32 E2E + 42 unit tests
-- E2E suite: auth (4), products (5), orders (3), platform (20 across 8 modules)
+- 8 unit test suites (58 tests) covering service logic, payment calculations, validation helpers
+- 2 integration tests: order flow end-to-end, GraphQL schema contract validation
+- k6 load test for API throughput and latency benchmarking
 - Shared test helper with proper NestJS setup (versioning, validation, filters, tenant headers)
 - Tests run against real database with seeded data
-- `jest-e2e.config.js` with `--runInBand --forceExit`
+- CI/CD: GitHub Actions with staging deployment
+- Husky + commitlint + lint-staged for pre-commit quality gates
 
 # 4. Database (95+ Tables)
 
@@ -493,11 +596,14 @@ Key tables organized by domain:
 
 ## Backend
 
-- **NestJS 10 (Node.js 20)** — modular, decorator-based framework
+- **NestJS 11 (Node.js 20)** — modular, decorator-based framework
 - **GraphQL (Apollo Server)** — 180+ operations, code-first schema
 - **PostgreSQL 16** — primary database with UUID, JSONB, FTS, pgcrypto
-- **TypeORM 0.3** — entity mapping, migrations, repository pattern
-- **Redis 7** — caching, BullMQ job queues, session store
+- **Drizzle ORM** — primary ORM with schema definitions (TypeORM retained during migration)
+- **Redis 7** — caching (products, themes, tax rules), BullMQ job queues, session store
+- **Meilisearch** — full-text search engine with vibe search (semantic similarity)
+- **Prometheus** — metrics collection and observability
+- **Sentry** — error tracking with request ID correlation (optional)
 - **BullMQ** — async job processing (Metrc sync, image processing, notifications)
 - **Socket.IO** — real-time WebSocket communication
 - **Stripe SDK** — payment processing
@@ -509,11 +615,12 @@ Key tables organized by domain:
 
 ## Frontend
 
-- **Next.js 14** — storefront (SSR, app router)
-- **Vite 6** — admin, staff, kiosk, platform (SPA)
-- **React 18** — component framework
-- **TypeScript** — type safety across all apps
-- **Tailwind CSS 3** — utility-first styling
+- **Next.js 15** — storefront (SSR, app router, PWA, i18n EN/ES)
+- **Vite 8** — admin, staff, kiosk, platform (SPA)
+- **React 19** — component framework
+- **TypeScript 5.8 + @typescript/native-preview** — type safety with tsgo fast checking
+- **Tailwind CSS v4 + @tailwindcss/postcss** — utility-first styling, "Botanical Luxury" design
+- **DM Sans + Playfair Display** — font pairing (body + serif headings)
 - **Zustand** — lightweight state management (auth, cart stores)
 - **TanStack Query (React Query)** — server state, caching, mutations
 - **React Router 6** — SPA routing (admin, staff, kiosk, platform)
@@ -528,4 +635,7 @@ Key tables organized by domain:
 - **pnpm** — package management
 - **Turborepo** — monorepo build orchestration
 - **Jest + Supertest** — testing framework
+- **k6** — load testing
 - **ts-jest** — TypeScript test compilation
+- **Husky + commitlint + lint-staged** — git hooks and code quality
+- **GitHub Actions** — CI/CD with staging deployment

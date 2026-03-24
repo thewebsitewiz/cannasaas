@@ -6,12 +6,12 @@
 
 | Metric | Value |
 |---|---|
-| Backend Modules | 33 |
+| Backend Modules | 43+ |
 | Database Tables | 95+ |
 | GraphQL Operations | 180+ |
 | REST Endpoints | 12 |
-| Frontend Applications | 5 |
-| Total Tests | 74 (32 E2E + 42 unit) |
+| Frontend Applications | 6 |
+| Total Tests | 60 (8 unit suites / 58 tests + 2 integration + k6 load) |
 | CSS Themes | 10 |
 | Target Markets | All US states with legal cannabis programs (38+ states) |
 | Tech Stack | NestJS · GraphQL · PostgreSQL · React · Next.js · Docker |
@@ -30,7 +30,7 @@ The architecture is designed around three core principles: regulatory compliance
 
 - **Compliance-First:** Every data mutation is auditable. Metrc integration, tax calculation, purchase limits, and age verification are baked into the core order and inventory flows, not bolted on as afterthoughts.
 - **Multi-Tenant Isolation:** All queries are scoped to the tenant (dispensary, company, or organization) via middleware-injected context headers. There is no global data leakage path.
-- **Module Independence:** Each of the 33 backend modules is a self-contained NestJS module with its own service, resolver (or controller), and entity definitions. Modules communicate via EventEmitter2 events, not direct imports.
+- **Module Independence:** Each of the 43+ backend modules is a self-contained NestJS module with its own service, resolver (or controller), and entity definitions. Modules communicate via EventEmitter2 events, not direct imports.
 - **API-First:** The GraphQL schema is the single source of truth. All five frontend applications consume the same API. No frontend has special server-side access.
 - **Progressive Enhancement:** Cash payments work out of the box. Stripe, Metrc, SendGrid, and Twilio are optional and gracefully degrade when not configured.
 
@@ -38,11 +38,11 @@ The architecture is designed around three core principles: regulatory compliance
 
 ## 2.1 High-Level Topology
 
-The platform consists of five frontend applications, a single NestJS API server, two data stores (PostgreSQL and Redis), and four optional external service integrations. In production, all components run as Docker containers behind an nginx reverse proxy.
+The platform consists of six frontend applications, a single NestJS API server, two data stores (PostgreSQL and Redis), and four optional external service integrations. In production, all components run as Docker containers behind an nginx reverse proxy.
 
 | Component | Technology | Port | Purpose |
 |---|---|---|---|
-| Storefront | Next.js 14 | :5173 | Customer e-commerce |
+| Storefront | Next.js 15 | :5173 | Customer e-commerce (PWA, i18n EN/ES) |
 | Admin Portal | Vite + React | :5174 | Dispensary management |
 | Staff Portal | Vite + React | :5175 | Counter operations |
 | Kiosk | Vite + React | :5176 | In-store self-service |
@@ -50,7 +50,7 @@ The platform consists of five frontend applications, a single NestJS API server,
 | API | NestJS + GraphQL | :3000 | Backend services |
 | Database | PostgreSQL 16 | :5432 | 95+ tables |
 | Cache / Queue | Redis 7 | :6379 | BullMQ, sessions |
-| Reverse Proxy | nginx | :80/:443 | TLS, rate limiting |
+| Reverse Proxy | nginx | :80/:443 | TLS, rate limiting, gzip, CSP |
 
 ## 2.2 Request Flow
 
@@ -63,7 +63,7 @@ Every client request follows the same path:
 5. RateLimitGuard applies per-endpoint limits (e.g., `@RateLimit(10, 60)` on login)
 6. ValidationPipe runs class-validator decorators on input DTOs
 7. Resolver or Controller executes business logic via injected Service
-8. Service queries PostgreSQL via TypeORM repositories or raw SQL, reads/writes Redis as needed
+8. Service queries PostgreSQL via Drizzle ORM (or TypeORM during migration), reads/writes Redis as needed
 9. GlobalExceptionFilter catches all errors: maps TypeORM errors to clean GraphQL responses, sanitizes SQL details in production
 10. Response returned to client. If WebSocket events were emitted, Socket.IO broadcasts to relevant rooms.
 
@@ -81,18 +81,20 @@ Tenant isolation is enforced at two levels. First, the TenantMiddleware extracts
 
 ## 3.1 Module Organization
 
-The API is organized into 33 NestJS modules, each following a consistent pattern: a module file that declares providers and exports, a service file containing all business logic, and a resolver file (GraphQL) or controller file (REST) that handles I/O. Modules are grouped into seven domains:
+The API is organized into 43+ NestJS modules, each following a consistent pattern: a module file that declares providers and exports, a service file containing all business logic, and a resolver file (GraphQL) or controller file (REST) that handles I/O. Modules are grouped into ten domains:
 
 | Domain | Modules | Key Responsibilities |
 |---|---|---|
-| Core (6) | Auth, Users, Organizations, Companies, Dispensaries, Brands | JWT auth, RBAC, multi-tenant hierarchy, user management |
-| Catalog (4) | Products, Manufacturers, Promotions, ProductData (Otreeba) | Product CRUD with 30+ fields, variants, pricing, FTS, strain enrichment |
-| Commerce (3) | Orders, Payments, Stripe | Order lifecycle, cash/card payments, Stripe intents/webhooks/refunds |
-| Inventory (2) | Inventory, InventoryControl | Stock tracking, transfers, counts, adjustments, reorder alerts |
-| Compliance (3) | Metrc, Compliance, Reporting | Metrc sync, manifests, waste, audit log, reconciliation, 7 reports + 4 CSV |
-| People (6) | Customers, Loyalty, Staffing, TimeClock, Scheduling, Notifications | Profiles, loyalty/rewards, employees, payroll, shifts, email/SMS |
-| Operations (5) | Delivery, Fulfillment, Vendors, POS, Analytics | Drivers, zones, POs, Dutchie/Treez adapters, dashboard KPIs |
-| Platform (4) | Platform, Theme, Image, WebSocket | Tenant admin, 10 CSS themes, image upload, real-time events |
+| Core (7) | Auth (JWT + 2FA/TOTP), Users, Organizations, Companies, Dispensaries, Brands, Manufacturers | JWT auth with 2FA, RBAC, multi-tenant hierarchy, user management |
+| Catalog (6) | Products, ProductData (Otreeba), Promotions, Search (Meilisearch + vibe search), Recommendations (AI), Knowledge Base (budtender AI) | Product CRUD with 30+ fields, variants, pricing, Meilisearch FTS, AI recommendations, strain enrichment |
+| Commerce (5) | Orders, Payments (Cash), Stripe (webhook retry via BullMQ), CanPay, AeroPay | Order lifecycle with tax engine for all legal states, cash/card/cannabis payments, Stripe intents/webhooks/refunds |
+| Inventory (3) | Inventory, InventoryControl, Reorder Suggestions (AI) | Stock tracking, transfers, counts, adjustments, AI-driven reorder alerts |
+| Compliance (4) | Metrc, BioTrack, Compliance, Compliance Alerts (CRON) | Metrc + BioTrack sync, manifests, waste, audit log, reconciliation, automated compliance alerts |
+| People (7) | Customers (6 auto-segments), Loyalty (4 tiers), Staffing, TimeClock, Scheduling, Notifications (back-in-stock + white-label templates), Marketing Suite (campaigns/automations) | Profiles with segmentation, loyalty/rewards, employees, payroll, shifts, email/SMS, marketing campaigns |
+| Operations (3) | Delivery, Fulfillment (zones/slots/tracking), Vendors | Drivers, geo-fenced zones, delivery slots, POs |
+| Platform (6) | Platform, Theme (10 presets), Changelog, Image, WebSocket, Health | Tenant admin, 10 CSS themes, changelog, image upload, real-time events, health checks |
+| Security (3) | Verification (digital ID/OCR), Webhooks API (HMAC-SHA256), Status | Digital ID verification, outbound webhook delivery, status page |
+| Observability (3) | Metrics (Prometheus), Reviews, POS (Dutchie/Treez) | Prometheus metrics, customer reviews & ratings, POS adapters |
 
 ## 3.2 Authentication and Authorization
 
@@ -157,20 +159,23 @@ Cross-module communication uses NestJS EventEmitter2. Modules emit events but ne
 Asynchronous processing uses BullMQ backed by Redis. Three categories of background work:
 
 - **Metrc Sync Queue:** Processes sale receipts, inventory updates, and package labels with exponential backoff (3 retries, 1s/4s/16s delays). Failed jobs are logged to `metrc_sync_logs` for admin review.
+- **Stripe Webhook Retry Queue:** Retries failed Stripe webhook processing with exponential backoff via BullMQ.
 - **Image Processing Queue:** Thumbnail generation via Sharp (300x300 cover crop to WebP). Falls back to file copy if Sharp is unavailable.
 - **Notification Queue:** Email delivery via nodemailer (SendGrid/SMTP) and SMS via Twilio. Graceful degradation if credentials are not configured.
+- **Marketing Automation Queue:** Processes campaign sends and automation triggers for the Marketing Suite.
 
-Three CRON jobs run on schedule:
+Four CRON jobs run on schedule:
 
 - **Daily 6:00 AM — Metrc Reconciliation:** Compares local inventory against Metrc records, generates reconciliation report, flags discrepancies.
 - **Daily 8:00 AM — Birthday Check:** Identifies customers with birthdays today for loyalty bonus eligibility.
 - **Hourly — Certification Expiry Check:** Flags employee certifications expiring within 30 days.
+- **Scheduled — Compliance Alerts:** Automated compliance alert checks across all tenants (Compliance Alerts CRON module).
 
 # 4. Data Architecture
 
 ## 4.1 Database Design
 
-The database uses PostgreSQL 16 with the `uuid-ossp` and `pgcrypto` extensions. TypeORM 0.3 is used as the ORM with `synchronize: false` — all schema changes are managed through manual SQL migrations. The database contains 95+ tables organized across 15 domains:
+The database uses PostgreSQL 16 with the `uuid-ossp` and `pgcrypto` extensions. Drizzle ORM is the primary ORM (alongside TypeORM during an ongoing migration) with `synchronize: false` — all schema changes are managed through manual SQL migrations. The database contains 95+ tables organized across 15 domains:
 
 | Domain | Tables |
 |---|---|
@@ -214,11 +219,11 @@ Beyond primary key indexes, the following index patterns are applied:
 
 | App | Framework | Port | Users | Key Pages |
 |---|---|---|---|---|
-| Storefront | Next.js 14 | :5173 | Customers | Home, Products, Detail, Cart, Checkout (Stripe), Order Tracking (WS), Account + Loyalty, Login/Register, Age Verify |
-| Admin Portal | Vite + React | :5174 | Dispensary Admins | Dashboard, Products, Orders, Inventory, InventoryControl, Compliance, Staffing, TimeClock, Scheduling, Reports, Settings/Themes, Vendors, Loyalty |
-| Staff Portal | Vite + React | :5175 | Budtenders | Orders (WS toasts), Fulfillment, Inventory, Lookup, Clock Widget |
-| Kiosk | Vite + React | :5176 | Walk-ins | Menu, Product, Cart, Checkout, Confirm (15s reset) |
-| Platform Mgr | Vite + React | :5177 | Super Admin | Dashboard, Tenants, Billing, Tax Config, Reports, Activity |
+| Storefront | Next.js 15 | :5173 | Customers | Home, Products, Detail, Cart, Checkout (Stripe), Order Tracking (WS), Account + Loyalty, Login/Register, Age Verify — PWA, i18n EN/ES, "Botanical Luxury" design |
+| Admin Portal | Vite 8 + React 19 | :5174 | Dispensary Admins | Dashboard, Products, Orders, Inventory, InventoryControl, Compliance, Staffing, TimeClock, Scheduling, Reports, Settings/Themes, Vendors, Loyalty, Menu Board, Onboarding Wizard, Changelog (16+ pages) |
+| Staff Portal | Vite 8 + React 19 | :5175 | Budtenders | Orders (WS toasts), Fulfillment, Inventory, Lookup, Clock Widget, Barcode Scanner |
+| Kiosk | Vite 8 + React 19 | :5176 | Walk-ins | Check-in, Menu, Product, Cart, Checkout, Confirm (15s reset) — PWA, touch-optimized |
+| Platform Mgr | Vite 8 + React 19 | :5177 | Super Admin | Dashboard, Tenants, Billing, Tax Config, Reports, Activity, Tenant Management |
 
 ## 5.2 State Management
 
@@ -237,7 +242,17 @@ Two custom hooks provide WebSocket integration:
 
 ## 5.4 Theming System
 
-The white-label theming system is entirely CSS-driven. Each of the 10 themes defines 25+ CSS custom properties on a `[data-theme]` attribute selector. Components use utility classes (`bg-t-primary`, `text-t-brand`, `btn-t-primary`, `card-t`) that map to these variables. The storefront's ThemeProvider fetches the dispensary's theme code via the `dispensaryTheme` GraphQL query on mount and sets the `data-theme` attribute on the root HTML element. Admin users select themes via a visual preview grid in Settings.
+The white-label theming system is entirely CSS-driven. Each of the 10 themes (casual, dark, regal, modern, minimal, apothecary, citrus, earthy, midnight, neon) defines 25+ CSS custom properties on a `[data-theme]` attribute selector. Components use utility classes (`bg-t-primary`, `text-t-brand`, `btn-t-primary`, `card-t`) that map to these variables. The storefront's ThemeProvider fetches the dispensary's theme code via the `dispensaryTheme` GraphQL query on mount and sets the `data-theme` attribute on the root HTML element. Admin users select themes via a visual preview grid in Settings.
+
+## 5.5 Design Language — "Botanical Luxury"
+
+All frontend applications share a cohesive "Botanical Luxury" design language:
+
+- **Typography:** DM Sans (body) + Playfair Display (serif headings)
+- **Color palette:** Emerald-based with dark hero sections
+- **Product cards:** Strain-specific gradient backgrounds (indica = purple, sativa = green, hybrid = amber)
+- **Effects/flavors tags** displayed on product cards
+- **Dark mode toggle** across all apps
 
 # 6. Compliance Architecture
 
@@ -316,14 +331,21 @@ The production deployment uses Docker Compose with seven services:
 - **Security Headers:** X-Frame-Options (SAMEORIGIN for storefront, DENY for admin/staff), X-Content-Type-Options (nosniff), X-XSS-Protection, Referrer-Policy (strict-origin-when-cross-origin)
 - **Helmet:** Applied to all responses with relaxed CSP in development, strict in production
 - **Input Sanitization:** SanitizeMiddleware strips `<script>`, `<iframe>`, event handlers, and `javascript:` protocol from all POST request bodies
-- **CORS:** Explicit origin allowlist for all five frontend ports; credentials enabled for cookie-based refresh
+- **GraphQL Security:** Depth limiting (max 10 nested levels), complexity limiting (max 1000 fields) to prevent abuse
+- **CSRF Protection:** CSRF tokens required for state-changing operations
+- **Request Body Size Limits:** Configurable maximum request body size to prevent denial-of-service
+- **CORS:** Explicit origin allowlist for all six frontend ports; credentials enabled for cookie-based refresh
 - **Non-Root Containers:** All Docker containers run as dedicated non-root users (cannasaas:1001)
 - **Encryption at Rest:** Metrc API credentials encrypted with AES-256-CBC; PostgreSQL volumes can be encrypted at the host level
 
 ## 8.3 Monitoring and Health
 
 - Docker health checks on all services (postgres: `pg_isready`, redis: `redis-cli ping`, api: GraphQL introspection query)
-- Structured logging via NestJS Logger with log level per module
+- **Prometheus Metrics:** `/metrics` endpoint exposing request counts, latencies, active connections, queue depths, and custom business metrics
+- **Redis Caching:** Products, themes, and tax rules cached in Redis with configurable TTLs and cache invalidation on writes
+- **Circuit Breakers:** External service calls (Metrc, Stripe, Meilisearch) wrapped in circuit breakers to prevent cascade failures
+- **Sentry Error Tracking:** Optional Sentry integration for real-time error monitoring with request ID correlation
+- **Structured Logging:** NestJS Logger with log level per module and request IDs for distributed tracing
 - Metrc sync logs with success/failure status and retry counts
 - Platform activity log for tenant lifecycle events
 
@@ -331,15 +353,13 @@ The production deployment uses Docker Compose with seven services:
 
 ## 9.1 Test Coverage
 
-The platform has 74 automated tests: 32 end-to-end integration tests and 42 unit tests.
+The platform has 8 unit test suites (58 tests), 2 integration tests, and a k6 load test.
 
 | Suite | Tests | Coverage |
 |---|---|---|
-| Auth E2E | 4 | Register, duplicate rejection, login, wrong password |
-| Products E2E | 5 | List, variants, strain types, autocomplete, count |
-| Orders E2E | 3 | List orders, single order, sales overview |
-| Platform E2E | 20 | Reporting (5), Loyalty (4), Vendors (3), Inventory (2), Staffing (2), Analytics (2), Compliance (2) |
-| Unit Tests | 42 | Service logic, POS adapters, payment calculations, validation helpers |
+| Unit Test Suites | 8 suites, 58 tests | Service logic, POS adapters, payment calculations, validation helpers |
+| Integration Tests | 2 | Order flow end-to-end, GraphQL schema contract validation |
+| Load Tests | 1 (k6) | API throughput and latency under load |
 
 ## 9.2 Test Infrastructure
 
@@ -354,11 +374,13 @@ The platform has 74 automated tests: 32 end-to-end integration tests and 42 unit
 
 | Technology | Purpose |
 |---|---|
-| NestJS 10 (Node.js 20) | Modular backend framework with decorator-based DI |
+| NestJS 11 (Node.js 20) | Modular backend framework with decorator-based DI |
 | GraphQL (Apollo Server) | API layer — 180+ operations, code-first schema |
 | PostgreSQL 16 | Primary database — UUID, JSONB, FTS, pgcrypto extensions |
-| TypeORM 0.3 | ORM — entity mapping, repository pattern, manual migrations |
-| Redis 7 | Cache, session store, BullMQ job queue backing |
+| Drizzle ORM | Primary ORM — schema definitions, migrations (TypeORM retained during migration) |
+| Redis 7 | Cache (products, themes, tax rules), session store, BullMQ job queue backing |
+| Meilisearch | Full-text search engine with vibe search (semantic similarity) |
+| Prometheus | Metrics collection and export for observability |
 | BullMQ | Async job processing — Metrc sync, image processing, notifications |
 | Socket.IO | Real-time WebSocket — order updates, driver GPS, inventory alerts |
 | Stripe SDK | Payment processing — intents, webhooks, refunds |
@@ -372,11 +394,11 @@ The platform has 74 automated tests: 32 end-to-end integration tests and 42 unit
 
 | Technology | Purpose |
 |---|---|
-| Next.js 14 | Storefront — SSR, app router, SEO optimization |
-| Vite 6 | Admin, Staff, Kiosk, Platform — fast SPA bundling |
-| React 18 | Component framework across all apps |
-| TypeScript 5 | Type safety across all frontend code |
-| Tailwind CSS 3 | Utility-first styling with theme integration |
+| Next.js 15 | Storefront — SSR, app router, SEO optimization, PWA, i18n (EN/ES) |
+| Vite 8 | Admin, Staff, Kiosk, Platform — fast SPA bundling |
+| React 19 | Component framework across all apps |
+| TypeScript 5.8 + @typescript/native-preview | Type safety across all frontend code (with tsgo for fast checking) |
+| Tailwind CSS v4 + @tailwindcss/postcss | Utility-first styling with theme integration, "Botanical Luxury" design |
 | Zustand | Client-side state (auth, cart stores) |
 | TanStack Query | Server state management, caching, mutations |
 | React Router 6 | SPA routing for admin, staff, kiosk, platform |
@@ -393,6 +415,10 @@ The platform has 74 automated tests: 32 end-to-end integration tests and 42 unit
 | pnpm | Package management (fast, disk-efficient) |
 | Turborepo | Monorepo build orchestration |
 | Jest + Supertest | Testing framework for unit and E2E tests |
+| k6 | Load testing framework |
+| Husky + commitlint + lint-staged | Git hooks for code quality enforcement |
+| GitHub Actions | CI/CD with staging deployment |
+| Sentry | Error tracking (optional) |
 
 # Appendix A: Environment Variables
 
