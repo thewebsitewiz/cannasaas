@@ -1,7 +1,7 @@
 import { InputType, Field } from '@nestjs/graphql';
-import { IsUUID } from 'class-validator';
+import { IsUUID, Matches, } from 'class-validator';
 
 @InputType()
 export class ValidateCredentialInput {
-  @Field() @IsUUID() dispensaryId!: string;
+  @Field() @Matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i) dispensaryId!: string;
 }

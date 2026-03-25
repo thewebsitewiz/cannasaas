@@ -1,11 +1,11 @@
 import { InputType, Field, ID, ObjectType } from '@nestjs/graphql';
-import { IsUUID, IsArray, ValidateNested, IsString } from 'class-validator';
+import { IsUUID, IsArray, ValidateNested, IsString, Matches, } from 'class-validator';
 import { Type } from 'class-transformer';
 
 @InputType()
 export class ProductUidPair {
   @Field(() => ID)
-  @IsUUID()
+  @Matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
   productId!: string;
 
   @Field()
@@ -16,7 +16,7 @@ export class ProductUidPair {
 @InputType()
 export class BulkTagUidInput {
   @Field(() => ID)
-  @IsUUID()
+  @Matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
   dispensaryId!: string;
 
   @Field(() => [ProductUidPair])

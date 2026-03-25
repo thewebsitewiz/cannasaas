@@ -1,10 +1,10 @@
 import { InputType, Field, ID, Int, Float } from '@nestjs/graphql';
-import { IsOptional, IsUUID, IsString, IsNumber, Min, Max, IsIn, IsArray } from 'class-validator';
+import { IsOptional, IsUUID, IsString, IsNumber, Min, Max, IsIn, IsArray, Matches, } from 'class-validator';
 
 @InputType()
 export class ProductSearchInput {
   @Field(() => ID)
-  @IsUUID("all")
+  @Matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
   dispensaryId!: string;
 
   @Field({ nullable: true })

@@ -164,10 +164,10 @@ export class OrdersService {
     // Verify all product IDs exist and belong to this dispensary
     const productIds = input.lineItems.map(li => li.productId);
     const existingProducts = await this.dataSource.query(
-      `SELECT product_id FROM products WHERE product_id = ANY($1) AND dispensary_id = $2`,
+      `SELECT id FROM products WHERE id = ANY($1) AND dispensary_id = $2`,
       [productIds, input.dispensaryId],
     );
-    const existingProductIds = new Set(existingProducts.map((r: any) => r.product_id));
+    const existingProductIds = new Set(existingProducts.map((r: any) => r.id));
     const missingProducts = productIds.filter(id => !existingProductIds.has(id));
     if (missingProducts.length > 0) {
       throw new BadRequestException(

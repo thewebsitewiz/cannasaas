@@ -40,14 +40,13 @@ export const useAuthStore = create<AuthState>()(
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
-          throw new Error(err.message || 'Login failed');
+          throw new Error(err.message || 'Invalid email or password');
         }
         const data = await res.json();
-        // Decode JWT to get user info
         const payload = JSON.parse(atob(data.accessToken.split('.')[1]));
         set({
           token: data.accessToken,
-          refreshToken: data.refreshToken,
+          refreshToken: data.refreshToken ?? null,
           user: {
             id: payload.sub,
             email: payload.email,
@@ -60,24 +59,27 @@ export const useAuthStore = create<AuthState>()(
       },
 
       register: async (email: string, password: string) => {
-        const res = await fetch(`${API_URL}/v1/auth/register`, {
+        const res = await fetch(`${API_URL}/graphql`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
+          body: JSON.stringify({
+            query: 'mutation($input: RegisterInput!) { register(input: $input) { accessToken } }',
+            variables: { input: { email, password } },
+          }),
         });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err.message || 'Registration failed');
+        const json = await res.json();
+        if (json.errors) {
+          throw new Error(json.errors[0]?.message || 'Registration failed');
         }
-        const data = await res.json();
-        const payload = JSON.parse(atob(data.accessToken.split('.')[1]));
+        const token = json.data.register.accessToken;
+        const payload = JSON.parse(atob(token.split('.')[1]));
         set({
-          token: data.accessToken,
-          refreshToken: data.refreshToken,
+          token,
+          refreshToken: null,
           user: {
             id: payload.sub,
             email: payload.email,
-            role: payload.role,
+            role: payload.role ?? 'customer',
             firstName: payload.firstName,
             lastName: payload.lastName,
             ageVerified: false,

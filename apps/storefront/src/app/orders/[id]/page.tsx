@@ -10,7 +10,6 @@ import { Package, Clock, CheckCircle, Truck, MapPin, ArrowLeft } from 'lucide-re
 const ORDER_QUERY = `query($id: ID!, $dispensaryId: ID) {
   order(orderId: $id, dispensaryId: $dispensaryId) {
     orderId orderStatus orderType subtotal taxTotal total
-    taxBreakdown
     createdAt updatedAt
   }
 }`;
@@ -52,7 +51,6 @@ export default function OrderTrackingPage() {
     }
   }, [orderId, subscribeToOrder]);
 
-  // Live updates via WebSocket
   useEffect(() => {
     if (lastUpdate && lastUpdate.orderId === orderId) {
       setOrder((prev: any) => prev ? { ...prev, orderStatus: lastUpdate.status } : prev);
@@ -77,23 +75,12 @@ export default function OrderTrackingPage() {
   const isCancelled = order.orderStatus === 'cancelled';
   const isComplete = currentStep >= 4;
 
-  // Parse tax breakdown if available
-  let taxBreakdown: { label: string; amount: number }[] = [];
-  try {
-    if (order.taxBreakdown) {
-      taxBreakdown = typeof order.taxBreakdown === 'string'
-        ? JSON.parse(order.taxBreakdown)
-        : order.taxBreakdown;
-    }
-  } catch {}
-
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
       <Link href="/account" className="flex items-center gap-1 text-sm text-txt-muted hover:text-txt mb-6">
         <ArrowLeft size={16} /> Back to Account
       </Link>
 
-      {/* Order header */}
       <div className="bg-surface rounded-xl border border-bdr p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -103,7 +90,7 @@ export default function OrderTrackingPage() {
             </p>
           </div>
           <div className="text-right">
-            <p className="text-2xl font-bold text-brand-700 tabular-nums">
+            <p className="text-2xl font-bold text-brand-600 tabular-nums">
               ${parseFloat(order.total).toFixed(2)}
             </p>
             {connected && (
@@ -114,14 +101,12 @@ export default function OrderTrackingPage() {
           </div>
         </div>
 
-        {/* Cancelled state */}
         {isCancelled && (
           <div className="bg-danger-bg border border-danger/20 rounded-lg p-4 mb-4">
             <p className="text-sm font-medium text-danger">This order has been cancelled.</p>
           </div>
         )}
 
-        {/* Progress tracker */}
         {!isCancelled && (
           <div className="mt-8">
             <div className="flex items-center justify-between relative">
@@ -147,7 +132,7 @@ export default function OrderTrackingPage() {
                     }`}>
                       <Icon size={18} />
                     </div>
-                    <span className={`mt-2 text-xs font-medium ${isActive ? 'text-brand-700' : 'text-txt-muted'}`}>
+                    <span className={`mt-2 text-xs font-medium ${isActive ? 'text-brand-600' : 'text-txt-muted'}`}>
                       {step.label}
                     </span>
                   </div>
@@ -158,7 +143,6 @@ export default function OrderTrackingPage() {
         )}
       </div>
 
-      {/* Order details */}
       <div className="bg-surface rounded-xl border border-bdr p-6 space-y-4">
         <h2 className="font-semibold text-txt">
           {isCancelled
@@ -170,25 +154,15 @@ export default function OrderTrackingPage() {
             : 'Your order is on its way!'}
         </h2>
 
-        {/* Financial breakdown */}
         <div className="border-t border-bdr pt-4 space-y-1.5 text-sm">
           <div className="flex justify-between">
             <span className="text-txt-secondary">Subtotal</span>
             <span className="tabular-nums text-txt">${parseFloat(order.subtotal).toFixed(2)}</span>
           </div>
-          {taxBreakdown.length > 0 ? (
-            taxBreakdown.map((tax: any, i: number) => (
-              <div key={i} className="flex justify-between">
-                <span className="text-txt-muted">{tax.label}</span>
-                <span className="tabular-nums text-txt">${parseFloat(tax.amount).toFixed(2)}</span>
-              </div>
-            ))
-          ) : (
-            <div className="flex justify-between">
-              <span className="text-txt-secondary">Tax</span>
-              <span className="tabular-nums text-txt">${parseFloat(order.taxTotal).toFixed(2)}</span>
-            </div>
-          )}
+          <div className="flex justify-between">
+            <span className="text-txt-secondary">Tax</span>
+            <span className="tabular-nums text-txt">${parseFloat(order.taxTotal).toFixed(2)}</span>
+          </div>
           <div className="flex justify-between border-t border-bdr pt-2 font-bold text-base">
             <span className="text-txt">Total</span>
             <span className="tabular-nums text-txt">${parseFloat(order.total).toFixed(2)}</span>

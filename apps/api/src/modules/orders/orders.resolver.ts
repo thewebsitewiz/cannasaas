@@ -22,7 +22,7 @@ export class OrdersResolver {
     @InjectDataSource() private dataSource: DataSource,
   ) {}
 
-  @Roles('budtender', 'dispensary_admin', 'org_admin', 'super_admin')
+  @Roles('customer', 'budtender', 'dispensary_admin', 'org_admin', 'super_admin')
   @Mutation(() => OrderSummary, { name: 'createOrder' })
   async createOrder(
     @Args('input') input: CreateOrderInput,
@@ -34,7 +34,7 @@ export class OrdersResolver {
     return this.orders.createOrder(input, user.sub);
   }
 
-  @Roles('budtender', 'dispensary_admin', 'org_admin', 'super_admin')
+  @Roles('customer', 'budtender', 'dispensary_admin', 'org_admin', 'super_admin')
   @Query(() => [Order], { name: 'orders' })
   async listOrders(
     @CurrentUser() user: JwtPayload,
@@ -51,7 +51,7 @@ export class OrdersResolver {
     return this.orders.listOrders(targetId, limit, offset);
   }
 
-  @Roles('budtender', 'dispensary_admin', 'org_admin', 'super_admin')
+  @Roles('customer', 'budtender', 'dispensary_admin', 'org_admin', 'super_admin')
   @Query(() => Order, { name: 'order', nullable: true })
   async getOrder(
     @Args('orderId', { type: () => ID }) orderId: string,
@@ -77,7 +77,7 @@ export class OrdersResolver {
     return this.orders.cancelOrder(orderId, targetId, reason);
   }
 
-  @Roles('budtender', 'dispensary_admin', 'org_admin', 'super_admin')
+  @Roles('customer', 'budtender', 'dispensary_admin', 'org_admin', 'super_admin')
   @Mutation(() => Boolean, { name: 'confirmOrder' })
   async confirmOrder(
     @Args('orderId', { type: () => ID }) orderId: string,
@@ -92,7 +92,7 @@ export class OrdersResolver {
     return this.orders.confirmOrder(orderId, targetId);
   }
 
-  @Roles('budtender', 'dispensary_admin', 'org_admin', 'super_admin')
+  @Roles('customer', 'budtender', 'dispensary_admin', 'org_admin', 'super_admin')
   @Mutation(() => Boolean, { name: 'startPreparingOrder' })
   async startPreparing(
     @Args('orderId', { type: () => ID }) orderId: string,
@@ -107,7 +107,7 @@ export class OrdersResolver {
     return this.orders.startPreparing(orderId, targetId);
   }
 
-  @Roles('budtender', 'dispensary_admin', 'org_admin', 'super_admin')
+  @Roles('customer', 'budtender', 'dispensary_admin', 'org_admin', 'super_admin')
   @Mutation(() => Boolean, { name: 'markOrderReady' })
   async markReady(
     @Args('orderId', { type: () => ID }) orderId: string,
@@ -122,7 +122,7 @@ export class OrdersResolver {
     return this.orders.markReady(orderId, targetId);
   }
 
-  @Roles('budtender', 'dispensary_admin', 'org_admin', 'super_admin')
+  @Roles('customer', 'budtender', 'dispensary_admin', 'org_admin', 'super_admin')
   @Mutation(() => Boolean, { name: 'completeOrder' })
   async completeOrder(
     @Args('input') input: CompleteOrderInput,
