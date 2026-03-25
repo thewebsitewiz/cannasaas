@@ -11,7 +11,7 @@ import Link from 'next/link';
 const PRODUCT_QUERY = `query($id: ID!, $dispensaryId: ID!) {
   product(id: $id, dispensaryId: $dispensaryId) {
     id name description strainType thcPercent cbdPercent
-    variants { variantId name sku quantityPerUnit }
+    variants { variantId name sku quantityPerUnit retailPrice }
   }
 }`;
 
@@ -64,11 +64,8 @@ export default function ProductDetailPage() {
   const active = selectedVariant
     ? variants.find((v: any) => v.variantId === selectedVariant)
     : variants[0];
-  const activeVariantId = active?.variantId;
 
-  // TODO: pricing should come from a dedicated query or field resolver
-  // For now, use quantity as a rough price proxy or a placeholder
-  const price = active?.quantityPerUnit ? parseFloat(active.quantityPerUnit) * 10 : 35;
+  const price = active?.retailPrice ? Number(active.retailPrice) : 0;
 
   const strainColors: Record<string, string> = {
     indica: 'bg-purple-100 text-purple-700',
@@ -94,13 +91,11 @@ export default function ProductDetailPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
-      {/* Breadcrumb */}
       <button onClick={() => router.back()} className="flex items-center gap-1 text-sm text-txt-muted hover:text-txt mb-6">
         <ChevronLeft size={16} /> Back
       </button>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-        {/* Image */}
         <div className="aspect-square bg-gradient-to-br from-brand-50 to-brand-100 rounded-2xl flex items-center justify-center relative overflow-hidden">
           <Leaf size={96} className="text-brand-400 opacity-30" />
           {product.strainType && (
@@ -112,11 +107,9 @@ export default function ProductDetailPage() {
           )}
         </div>
 
-        {/* Details */}
         <div>
           <h1 className="text-3xl font-bold font-display text-txt">{product.name}</h1>
 
-          {/* THC / CBD */}
           <div className="flex items-center gap-4 mt-3">
             {product.thcPercent != null && (
               <div className="bg-bg-alt rounded-lg px-3 py-1.5">
@@ -132,35 +125,38 @@ export default function ProductDetailPage() {
             )}
           </div>
 
-          {/* Price */}
-          <p className="text-3xl font-bold text-brand-600 mt-6">${price.toFixed(2)}</p>
+          <p className="text-3xl font-bold text-brand-600 mt-6">
+            {price > 0 ? `$${price.toFixed(2)}` : 'Price unavailable'}
+          </p>
 
-          {/* Variants */}
           {variants.length > 1 && (
             <div className="mt-6">
               <p className="text-sm font-medium text-txt-secondary mb-2">Size</p>
               <div className="flex flex-wrap gap-2">
-                {variants.map((v: any) => (
-                  <button
-                    key={v.variantId}
-                    onClick={() => setSelectedVariant(v.variantId)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                      (selectedVariant || variants[0]?.variantId) === v.variantId
-                        ? 'border-brand-600 bg-brand-50 text-brand-600'
-                        : 'border-bdr text-txt-secondary hover:border-bdr-strong'
-                    }`}
-                  >
-                    {v.name}
-                    {v.quantityPerUnit && (
-                      <span className="text-xs text-txt-muted ml-1">({v.quantityPerUnit}g)</span>
-                    )}
-                  </button>
-                ))}
+                {variants.map((v: any) => {
+                  const vPrice = v.retailPrice ? Number(v.retailPrice) : 0;
+                  return (
+                    <button
+                      key={v.variantId}
+                      onClick={() => setSelectedVariant(v.variantId)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                        (selectedVariant || variants[0]?.variantId) === v.variantId
+                          ? 'border-brand-600 bg-brand-50 text-brand-600'
+                          : 'border-bdr text-txt-secondary hover:border-bdr-strong'
+                      }`}
+                    >
+                      {v.name}
+                      {v.quantityPerUnit && (
+                        <span className="text-xs text-txt-muted ml-1">({v.quantityPerUnit}g)</span>
+                      )}
+                      {vPrice > 0 && <span className="ml-2 font-bold">${vPrice.toFixed(2)}</span>}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
 
-          {/* Single variant display */}
           {variants.length === 1 && active && (
             <p className="text-sm text-txt-muted mt-3">
               {active.name}
@@ -168,7 +164,6 @@ export default function ProductDetailPage() {
             </p>
           )}
 
-          {/* Quantity + Add to Cart */}
           <div className="flex items-center gap-4 mt-8">
             <div className="flex items-center border border-bdr rounded-lg">
               <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-3 py-2 text-txt-muted hover:text-txt">−</button>
@@ -177,10 +172,10 @@ export default function ProductDetailPage() {
             </div>
             <button
               onClick={handleAddToCart}
-              disabled={!active}
+              disabled={!active || price === 0}
               className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-txt-inverse transition-all ${
                 added ? 'bg-success' : 'bg-brand-600 hover:bg-brand-500'
-              }`}
+              } disabled:opacity-50`}
             >
               {added ? (
                 <><Check size={20} /> Added to Cart</>
@@ -190,7 +185,6 @@ export default function ProductDetailPage() {
             </button>
           </div>
 
-          {/* Description */}
           {product.description && (
             <div className="mt-8">
               <h3 className="text-sm font-semibold text-txt mb-2">About</h3>
