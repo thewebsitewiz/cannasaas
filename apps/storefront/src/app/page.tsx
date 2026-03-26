@@ -10,7 +10,7 @@ const FEATURED_PRODUCTS = `
   query FeaturedProducts($dispensaryId: ID!, $limit: Int) {
     products(dispensaryId: $dispensaryId, limit: $limit) {
       id name description strainType thcPercent cbdPercent
-      variants { variantId name retailPrice }
+      variants { variantId name retailPrice stockQuantity stockStatus }
     }
   }
 `;
@@ -30,7 +30,6 @@ export default function HomePage() {
 
   return (
     <div>
-      {/* Hero */}
       <section className="bg-gradient-to-br from-brand-600 to-brand-500 text-txt-inverse py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
           <div className="flex justify-center mb-4">
@@ -41,23 +40,16 @@ export default function HomePage() {
             Licensed cannabis dispensary in Tappan, NY. Browse our curated menu and order for pickup or delivery.
           </p>
           <div className="flex justify-center gap-4">
-            <Link
-              href="/products"
-              className="bg-surface text-brand-600 font-semibold px-6 py-3 rounded-xl hover:bg-bg-alt transition-colors"
-            >
+            <Link href="/products" className="bg-surface text-brand-600 font-semibold px-6 py-3 rounded-xl hover:bg-bg-alt transition-colors">
               Shop Menu
             </Link>
-            <Link
-              href="/products"
-              className="border border-white/30 text-txt-inverse font-semibold px-6 py-3 rounded-xl hover:bg-white/10 transition-colors"
-            >
+            <Link href="/products" className="border border-white/30 text-txt-inverse font-semibold px-6 py-3 rounded-xl hover:bg-white/10 transition-colors">
               View Strains
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Value Props */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="flex items-start gap-4 p-6 bg-surface rounded-xl border border-bdr">
@@ -84,7 +76,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured Products */}
       {products.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-16">
           <div className="flex items-center justify-between mb-6">

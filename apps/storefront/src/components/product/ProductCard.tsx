@@ -8,12 +8,11 @@ interface ProductCardProps {
   product: {
     id: string;
     name: string;
-    strainName?: string;
     strainType?: string;
     thcPercent?: number;
     cbdPercent?: number;
     description?: string;
-    variants?: { variantId: string; name: string; retailPrice?: number }[];
+    variants?: { variantId: string; name: string; retailPrice?: number; stockQuantity?: number; stockStatus?: string }[];
   };
 }
 
@@ -23,14 +22,24 @@ const STRAIN_COLORS: Record<string, string> = {
   hybrid: 'bg-green-50 text-green-700 border-green-200',
 };
 
+const STOCK_BADGE: Record<string, { label: string; className: string }> = {
+  in_stock: { label: 'In Stock', className: 'bg-success-bg text-success' },
+  low_stock: { label: 'Low Stock', className: 'bg-warning-bg text-warning' },
+  out_of_stock: { label: 'Sold Out', className: 'bg-danger-bg text-danger' },
+};
+
 export function ProductCard({ product }: ProductCardProps) {
   const addItem = useCartStore((s) => s.addItem);
 
   const firstVariant = product.variants?.[0];
   const price = firstVariant?.retailPrice ? Number(firstVariant.retailPrice) : 0;
+  const stockStatus = firstVariant?.stockStatus ?? 'in_stock';
+  const isOutOfStock = stockStatus === 'out_of_stock';
+  const badge = STOCK_BADGE[stockStatus] ?? STOCK_BADGE.in_stock;
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
+    if (isOutOfStock) return;
     addItem({
       productId: product.id,
       variantId: firstVariant?.variantId ?? product.id,
@@ -44,7 +53,7 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <Link
       href={`/products/${product.id}`}
-      className="group bg-surface rounded-xl border border-bdr overflow-hidden hover:shadow-md transition-shadow"
+      className={`group bg-surface rounded-xl border border-bdr overflow-hidden hover:shadow-md transition-shadow ${isOutOfStock ? 'opacity-70' : ''}`}
     >
       {/* Image placeholder */}
       <div className="aspect-square bg-gradient-to-br from-brand-50 to-brand-100 flex items-center justify-center relative">
@@ -54,13 +63,21 @@ export function ProductCard({ product }: ProductCardProps) {
             {product.strainType}
           </span>
         )}
-        <button
-          onClick={handleAddToCart}
-          className="absolute bottom-3 right-3 bg-brand-600 text-txt-inverse p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-brand-500"
-          aria-label={`Add ${product.name} to cart`}
-        >
-          <Plus size={16} />
-        </button>
+        {/* Stock badge */}
+        {stockStatus !== 'in_stock' && (
+          <span className={`absolute top-3 right-3 text-[10px] font-semibold px-2 py-0.5 rounded-full ${badge.className}`}>
+            {badge.label}
+          </span>
+        )}
+        {!isOutOfStock && (
+          <button
+            onClick={handleAddToCart}
+            className="absolute bottom-3 right-3 bg-brand-600 text-txt-inverse p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-brand-500"
+            aria-label={`Add ${product.name} to cart`}
+          >
+            <Plus size={16} />
+          </button>
+        )}
       </div>
 
       {/* Details */}
@@ -74,9 +91,14 @@ export function ProductCard({ product }: ProductCardProps) {
           {product.cbdPercent != null && <span>CBD {product.cbdPercent}%</span>}
         </div>
 
-        {price > 0 && (
-          <p className="text-lg font-bold text-brand-600 mt-2">${price.toFixed(2)}</p>
-        )}
+        <div className="flex items-center justify-between mt-2">
+          {price > 0 && (
+            <p className="text-lg font-bold text-brand-600">${price.toFixed(2)}</p>
+          )}
+          {stockStatus === 'in_stock' && (
+            <span className="text-[10px] text-success font-medium">In Stock</span>
+          )}
+        </div>
       </div>
     </Link>
   );

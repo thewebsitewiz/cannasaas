@@ -1,7 +1,8 @@
 {
   "dependencies": {
     "@cannasaas/ui": "workspace:^",
-    "@stripe/stripe-js": "^8.9.0",
+    "@stripe/react-stripe-js": "^6.0.0",
+    "@stripe/stripe-js": "^9.0.0",
     "@tanstack/react-query": "^5.95.2",
     "graphql": "^16.13.1",
     "graphql-request": "^7.1.2",

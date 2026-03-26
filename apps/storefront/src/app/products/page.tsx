@@ -1,4 +1,3 @@
-// Server Component — data fetched on the server with ISR
 import ProductFilters from './ProductFilters';
 
 const DEFAULT_DISPENSARY_ID = process.env['NEXT_PUBLIC_DISPENSARY_ID'] || 'c0000000-0000-0000-0000-000000000001';
@@ -14,7 +13,7 @@ async function getProducts(dispensaryId: string) {
           products(dispensaryId: $dispensaryId, limit: 50) {
             id name description strainType
             thcPercent cbdPercent
-            variants { variantId name retailPrice }
+            variants { variantId name retailPrice stockQuantity stockStatus }
           }
         }`,
         variables: { dispensaryId },

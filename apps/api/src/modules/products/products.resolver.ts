@@ -1,4 +1,6 @@
 import { Resolver, Query, Args, ID, Int, Float, ResolveField, Parent } from '@nestjs/graphql';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 import { ForbiddenException } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { ProductSearchService } from './product-search.service';
@@ -141,11 +143,37 @@ export class ProductsResolver {
 
 @Resolver(() => ProductVariant)
 export class ProductVariantResolver {
-  constructor(private readonly products: ProductsService) {}
+  constructor(
+    private readonly products: ProductsService,
+    @InjectDataSource() private readonly ds: DataSource,
+  ) {}
 
   @ResolveField(() => Float, { name: 'retailPrice', nullable: true })
   async retailPrice(@Parent() variant: ProductVariant): Promise<number | null> {
     const pricing = await this.products.findCurrentPricing(variant.variant_id);
     return pricing ? Number(pricing.price) : null;
+  }
+
+  @ResolveField(() => Float, { name: 'stockQuantity', nullable: true })
+  async stockQuantity(@Parent() variant: ProductVariant): Promise<number | null> {
+    const [row] = await this.ds.query(
+      'SELECT quantity_available FROM inventory WHERE variant_id = $1 AND dispensary_id = $2',
+      [variant.variant_id, variant.dispensary_id],
+    );
+    return row ? Number(row.quantity_available) : null;
+  }
+
+  @ResolveField(() => String, { name: 'stockStatus', nullable: true })
+  async stockStatus(@Parent() variant: ProductVariant): Promise<string | null> {
+    const [row] = await this.ds.query(
+      'SELECT quantity_available, reorder_threshold FROM inventory WHERE variant_id = $1 AND dispensary_id = $2',
+      [variant.variant_id, variant.dispensary_id],
+    );
+    if (!row) return null;
+    const qty = Number(row.quantity_available);
+    const threshold = Number(row.reorder_threshold ?? 10);
+    if (qty <= 0) return 'out_of_stock';
+    if (qty <= threshold) return 'low_stock';
+    return 'in_stock';
   }
 }
