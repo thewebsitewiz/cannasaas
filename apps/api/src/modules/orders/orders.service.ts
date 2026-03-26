@@ -376,7 +376,7 @@ export class OrdersService {
     // (tax_breakdown, applied_promotions, metrc_receipt_data) to avoid over-fetching
     return this.dataSource.query(
       `SELECT "orderId", "dispensaryId", "customerUserId", "orderType", "orderStatus",
-              subtotal, "taxTotal", total, "paymentMethod", "paymentStatus",
+              subtotal, "taxTotal", total, payment_method as "paymentMethod", 
               "createdAt", "updatedAt"
        FROM orders WHERE "dispensaryId" = $1
        ORDER BY "createdAt" DESC LIMIT $2 OFFSET $3`,
