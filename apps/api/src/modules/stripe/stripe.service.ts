@@ -46,12 +46,12 @@ export class StripeService {
 
     // Check if a payment intent already exists for this order (idempotency)
     const [existing] = await this.ds.query(
-      `SELECT stripe_payment_intent_id FROM payments WHERE order_id = $1 AND stripe_payment_intent_id IS NOT NULL`,
+      `SELECT "stripePaymentIntentId" FROM payments WHERE "orderId" = $1 AND "stripePaymentIntentId" IS NOT NULL`,
       [orderId],
     );
     if (existing) {
       // Retrieve the existing intent from Stripe to return its clientSecret
-      const existingIntent = await this.stripe.paymentIntents.retrieve(existing.stripe_payment_intent_id);
+      const existingIntent = await this.stripe.paymentIntents.retrieve(existing.stripePaymentIntentId);
       this.logger.log('Returning existing payment intent: ' + existingIntent.id + ' for order ' + orderId);
       return { clientSecret: existingIntent.client_secret!, paymentIntentId: existingIntent.id };
     }
@@ -67,9 +67,9 @@ export class StripeService {
 
     // Save intent to DB
     await this.ds.query(
-      `INSERT INTO payments (order_id, dispensary_id, method, amount, stripe_payment_intent_id, status)
+      `INSERT INTO payments ("orderId", "dispensaryId", method, amount, "stripePaymentIntentId", status)
        VALUES ($1, $2, 'card', $3, $4, 'pending')
-       ON CONFLICT (order_id) WHERE method = 'card' DO UPDATE SET stripe_payment_intent_id = $4, amount = $3, updated_at = NOW()`,
+       `,
       [orderId, dispensaryId, (amountCents / 100).toFixed(2), intent.id],
     );
 
@@ -150,7 +150,7 @@ export class StripeService {
 
   private async handlePaymentFailed(intent: Stripe.PaymentIntent): Promise<void> {
     await this.ds.query(
-      'UPDATE payments SET status = $1, updated_at = NOW() WHERE stripe_payment_intent_id = $2',
+      'UPDATE payments SET status = $1, "updatedAt" = NOW() WHERE "stripePaymentIntentId" = $2',
       ['failed', intent.id],
     );
 
@@ -160,7 +160,7 @@ export class StripeService {
 
   private async handleRefund(charge: Stripe.Charge): Promise<void> {
     await this.ds.query(
-      'UPDATE payments SET status = $1, updated_at = NOW() WHERE stripe_charge_id = $2',
+      'UPDATE payments SET status = $1, "updatedAt" = NOW() WHERE "stripeChargeId" = $2',
       ['refunded', charge.id],
     );
     this.logger.log('Refund processed: ' + charge.id);
@@ -168,18 +168,18 @@ export class StripeService {
 
   private async markPaymentSucceeded(intentId: string, chargeId: string): Promise<void> {
     await this.ds.query(
-      'UPDATE payments SET status = $1, stripe_charge_id = $2, updated_at = NOW() WHERE stripe_payment_intent_id = $3',
+      'UPDATE payments SET status = $1, "stripeChargeId" = $2, "updatedAt" = NOW() WHERE "stripePaymentIntentId" = $3',
       ['succeeded', chargeId, intentId],
     );
 
     // Update order payment status
     const [payment] = await this.ds.query(
-      'SELECT order_id FROM payments WHERE stripe_payment_intent_id = $1', [intentId],
+      'SELECT "orderId" FROM payments WHERE "stripePaymentIntentId" = $1', [intentId],
     );
     if (payment) {
       await this.ds.query(
         'UPDATE orders SET "paymentStatus" = $1, "updatedAt" = NOW() WHERE "orderId" = $2',
-        ['paid', payment.order_id],
+        ['paid', payment.orderId],
       );
     }
 
@@ -192,13 +192,13 @@ export class StripeService {
     if (!this.stripe) throw new BadRequestException('Stripe not configured');
 
     const [payment] = await this.ds.query(
-      'SELECT stripe_payment_intent_id, stripe_charge_id, amount FROM payments WHERE order_id = $1 AND method = $2 AND status = $3',
+      'SELECT "stripePaymentIntentId", "stripeChargeId", amount FROM payments WHERE "orderId" = $1 AND method = $2 AND status = $3',
       [orderId, 'card', 'succeeded'],
     );
     if (!payment) throw new NotFoundException('No successful card payment found for this order');
 
     const refundParams: Stripe.RefundCreateParams = {
-      payment_intent: payment.stripe_payment_intent_id,
+      payment_intent: payment.stripePaymentIntentId,
       reason: (reason as any) || 'requested_by_customer',
     };
     if (amountCents) refundParams.amount = amountCents;
@@ -207,8 +207,8 @@ export class StripeService {
 
     const refundAmount = (refund.amount / 100).toFixed(2);
     await this.ds.query(
-      'UPDATE payments SET status = $1, updated_at = NOW() WHERE stripe_payment_intent_id = $2',
-      [amountCents ? 'partially_refunded' : 'refunded', payment.stripe_payment_intent_id],
+      'UPDATE payments SET status = $1, "updatedAt" = NOW() WHERE "stripePaymentIntentId" = $2',
+      [amountCents ? 'partially_refunded' : 'refunded', payment.stripePaymentIntentId],
     );
 
     this.logger.log('Refund issued: $' + refundAmount + ' for order ' + orderId);
@@ -219,7 +219,7 @@ export class StripeService {
 
   async getPaymentStatus(orderId: string): Promise<any> {
     const [payment] = await this.ds.query(
-      'SELECT payment_id as "paymentId", method, amount, status, stripe_payment_intent_id as "stripePaymentIntentId", created_at as "createdAt" FROM payments WHERE order_id = $1 ORDER BY created_at DESC LIMIT 1',
+      'SELECT "paymentId" as "paymentId", method, amount, status, "stripePaymentIntentId" as "stripePaymentIntentId", "createdAt" as "createdAt" FROM payments WHERE "orderId" = $1 ORDER BY "createdAt" DESC LIMIT 1',
       [orderId],
     );
     return payment || { status: 'no_payment', method: null };

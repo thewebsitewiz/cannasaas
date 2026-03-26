@@ -1,15 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/auth.store';
-import { Leaf, LogIn } from 'lucide-react';
+import { Leaf, LogIn, AlertCircle } from 'lucide-react';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/account';
+  const expired = searchParams.get('expired') === 'true';
   const login = useAuthStore((s) => s.login);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -38,6 +39,13 @@ export default function LoginPage() {
           <h1 className="text-2xl font-bold font-display text-txt">Welcome back</h1>
           <p className="text-sm text-txt-muted mt-1">Sign in to your account</p>
         </div>
+
+        {expired && (
+          <div className="mb-4 bg-warning-bg border border-warning/20 rounded-xl p-4 flex items-center gap-3">
+            <AlertCircle size={18} className="text-warning shrink-0" />
+            <p className="text-sm text-txt">Your session has expired. Please sign in again.</p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
@@ -69,12 +77,19 @@ export default function LoginPage() {
           <Link href="/register" className="text-brand-600 hover:text-brand-500 font-medium">Create one</Link>
         </p>
 
-        {/* Dev shortcut */}
         <div className="mt-8 p-4 bg-bg-alt rounded-xl text-xs text-txt-muted">
           <p className="font-medium text-txt-secondary mb-1">Test account:</p>
           <p>customer@greenleaf.com / password123</p>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-[70vh] flex items-center justify-center text-txt-muted">Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }
