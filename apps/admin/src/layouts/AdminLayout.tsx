@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   LogOut,
   Package,
+  Receipt,
   Settings,
   ShieldCheck,
   ShoppingCart,
@@ -20,7 +21,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/auth.store';
 import { DarkModeToggle } from '../components/DarkModeToggle';
 
-const NAV_ITEMS = [
+const NAV_ITEMS: Array<{ to: string; label: string; icon: typeof LayoutDashboard; superOnly?: boolean }> = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/products', label: 'Products', icon: Package },
   { to: '/orders', label: 'Orders', icon: ShoppingCart },
@@ -34,6 +35,7 @@ const NAV_ITEMS = [
   { to: '/loyalty', label: 'Loyalty', icon: Star },
   { to: '/reports', label: 'Reports', icon: BarChart3 },
   { to: '/menu-board', label: 'Menu Board', icon: Monitor },
+  { to: '/tax-management', label: 'Tax Rules', icon: Receipt, superOnly: true },
   { to: '/settings', label: 'Settings', icon: Settings },
 ];
 
@@ -47,6 +49,10 @@ export function AdminLayout() {
     navigate('/login');
   };
 
+  const visibleNav = NAV_ITEMS.filter(
+    (item) => !item.superOnly || user?.role === 'super_admin',
+  );
+
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}
@@ -57,7 +63,7 @@ export function AdminLayout() {
         </div>
 
         <nav className="flex-1 py-4" aria-label="Admin navigation">
-          {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+          {visibleNav.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
