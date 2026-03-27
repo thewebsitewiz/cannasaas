@@ -1,7 +1,8 @@
-import { Resolver, Query, Args, ID, Int, Float, ResolveField, Parent } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, ID, Int, Float, ResolveField, Parent } from '@nestjs/graphql';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { ForbiddenException } from '@nestjs/common';
+import { CreateProductInput, UpdateProductInput, UpdateVariantPriceInput } from "./dto/product-crud.input";
 import { ProductsService } from './products.service';
 import { ProductSearchService } from './product-search.service';
 import { ProductSearchInput } from './dto/product-search.input';
@@ -139,8 +140,37 @@ export class ProductsResolver {
     const limit = Math.min(rawLimit, 100);
     return this.search.autocomplete(dispensaryId, query, limit);
   }
-}
 
+  // ═══ CRUD Mutations ═══
+
+  @Roles('dispensary_admin', 'org_admin', 'super_admin')
+  @Mutation(() => Product, { name: 'createProduct' })
+  async createProduct(@Args('input') input: CreateProductInput): Promise<Product> {
+    return this.products.createProduct(input);
+  }
+
+  @Roles('dispensary_admin', 'org_admin', 'super_admin')
+  @Mutation(() => Product, { name: 'updateProduct' })
+  async updateProduct(@Args('input') input: UpdateProductInput): Promise<Product> {
+    return this.products.updateProduct(input);
+  }
+
+  @Roles('dispensary_admin', 'org_admin', 'super_admin')
+  @Mutation(() => Boolean, { name: 'updateVariantPrice' })
+  async updateVariantPrice(@Args('input') input: UpdateVariantPriceInput): Promise<boolean> {
+    await this.products.updateVariantPrice(input.variantId, input.dispensaryId, input.price);
+    return true;
+  }
+
+  @Roles('dispensary_admin', 'org_admin', 'super_admin')
+  @Mutation(() => Boolean, { name: 'deleteProduct' })
+  async deleteProduct(
+    @Args('productId', { type: () => ID }) productId: string,
+    @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
+  ): Promise<boolean> {
+    return this.products.deleteProduct(productId, dispensaryId);
+  }
+}
 @Resolver(() => ProductVariant)
 export class ProductVariantResolver {
   constructor(

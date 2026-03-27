@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindManyOptions, ILike } from 'typeorm';
+import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
+import { Repository, FindManyOptions, ILike, DataSource } from 'typeorm';
 import { Product } from './entities/product.entity';
 import { ProductVariant } from './entities/product-variant.entity';
 import { ProductPricing } from './entities/product-pricing.entity';
@@ -25,6 +25,7 @@ export class ProductsService {
     @InjectRepository(ProductPricing) private pricingRepo: Repository<ProductPricing>,
     @InjectRepository(LkpProductType) private productTypeRepo: Repository<LkpProductType>,
     @InjectRepository(LkpProductCategory) private categoryRepo: Repository<LkpProductCategory>,
+    @InjectDataSource() private dataSource: DataSource,
     private readonly cache: CacheService,
   ) {}
 
@@ -100,5 +101,92 @@ export class ProductsService {
 
   async countByDispensary(dispensaryId: string): Promise<number> {
     return this.productRepo.count({ where: { dispensary_id: dispensaryId, is_active: true } });
+  }
+
+  // ═══ CRUD ═══
+
+  async createProduct(input: any): Promise<Product> {
+    const qr = this.dataSource.createQueryRunner();
+    await qr.connect();
+    await qr.startTransaction();
+    try {
+      const product = this.productRepo.create({
+        dispensary_id: input.dispensaryId,
+        name: input.name,
+        description: input.description,
+        strain_type: input.strainType,
+        strain_name: input.strainName,
+        thc_percent: input.thcPercent,
+        cbd_percent: input.cbdPercent,
+        is_active: input.isActive ?? true,
+      });
+      const saved = await qr.manager.save(product);
+
+      // Create default variant if name or price provided
+      const variantName = input.variantName || '3.5g Jar';
+      const variant = this.variantRepo.create({
+        product_id: saved.id,
+        dispensary_id: input.dispensaryId,
+        name: variantName,
+        quantity_per_unit: input.variantQuantityG ?? 3.5,
+        sku: `SKU-${saved.id.slice(0, 8)}`,
+        is_active: true,
+      });
+      const savedVariant = await qr.manager.save(variant);
+
+      // Create pricing if provided
+      if (input.retailPrice) {
+        await qr.query(
+          `INSERT INTO product_pricing (variant_id, dispensary_id, price_type, price, effective_from)
+           VALUES ($1, $2, 'retail', $3, NOW())`,
+          [savedVariant.variant_id, input.dispensaryId, input.retailPrice],
+        );
+      }
+
+      await qr.commitTransaction();
+      return saved;
+    } catch (err) {
+      await qr.rollbackTransaction();
+      throw err;
+    } finally {
+      await qr.release();
+    }
+  }
+
+  async updateProduct(input: any): Promise<Product> {
+    const product = await this.productRepo.findOne({
+      where: { id: input.productId, dispensary_id: input.dispensaryId },
+    });
+    if (!product) throw new NotFoundException('Product not found');
+
+    if (input.name !== undefined) product.name = input.name;
+    if (input.description !== undefined) product.description = input.description;
+    if (input.strainType !== undefined) product.strain_type = input.strainType;
+    if (input.strainName !== undefined) product.strain_name = input.strainName;
+    if (input.thcPercent !== undefined) product.thc_percent = input.thcPercent;
+    if (input.cbdPercent !== undefined) product.cbd_percent = input.cbdPercent;
+    if (input.isActive !== undefined) product.is_active = input.isActive;
+    if (input.isApproved !== undefined) product.is_approved = input.isApproved;
+
+    return this.productRepo.save(product);
+  }
+
+  async updateVariantPrice(variantId: string, dispensaryId: string, price: number): Promise<void> {
+    // Expire current pricing
+    await this.dataSource.query(
+      `UPDATE product_pricing SET effective_until = NOW() WHERE variant_id = $1 AND dispensary_id = $2 AND effective_until IS NULL`,
+      [variantId, dispensaryId],
+    );
+    // Insert new
+    await this.dataSource.query(
+      `INSERT INTO product_pricing (variant_id, dispensary_id, price_type, price, effective_from)
+       VALUES ($1, $2, 'retail', $3, NOW())`,
+      [variantId, dispensaryId, price],
+    );
+  }
+
+  async deleteProduct(productId: string, dispensaryId: string): Promise<boolean> {
+    const result = await this.productRepo.softDelete({ id: productId, dispensary_id: dispensaryId });
+    return (result.affected ?? 0) > 0;
   }
 }
