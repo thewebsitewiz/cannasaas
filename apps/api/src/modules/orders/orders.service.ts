@@ -1,4 +1,9 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OrderCompletedEvent } from './events/order-completed.event';
 import { InjectDataSource } from '@nestjs/typeorm';
@@ -88,7 +93,10 @@ export class OrdersService {
   private calculateTaxes(
     taxRules: TaxCategoryRow[],
     subtotal: number,
-    resolvedItems: Array<{ productTypeCode: ProductTypeCode | null; totalThcMg: number }>,
+    resolvedItems: Array<{
+      productTypeCode: ProductTypeCode | null;
+      totalThcMg: number;
+    }>,
   ): { taxTotal: number; taxBreakdown: TaxLineItem[] } {
     const taxBreakdown: TaxLineItem[] = [];
     let taxTotal = 0;
@@ -103,7 +111,11 @@ export class OrdersService {
         // Determine which product-type suffix this rule covers from its code.
         // e.g. NY_THC_FLOWER -> FLOWER, CT_EXCISE_CANNABIS -> general THC
         const codeSuffix = rule.code.split('_').pop()?.toUpperCase() ?? '';
-        const isGeneralThcExcise = !['FLOWER', 'CONCENTRATE', 'EDIBLE'].includes(codeSuffix);
+        const isGeneralThcExcise = ![
+          'FLOWER',
+          'CONCENTRATE',
+          'EDIBLE',
+        ].includes(codeSuffix);
 
         let applicableThcMg = 0;
         for (const item of resolvedItems) {
@@ -138,14 +150,19 @@ export class OrdersService {
     return { taxTotal: Math.round(taxTotal * 100) / 100, taxBreakdown };
   }
 
-  async createOrder(input: CreateOrderInput, staffUserId?: string): Promise<OrderSummary> {
+  async createOrder(
+    input: CreateOrderInput,
+    staffUserId?: string,
+  ): Promise<OrderSummary> {
     // Pre-transaction validation — fail fast before starting a DB transaction
     if (!input.lineItems || input.lineItems.length === 0) {
-      throw new BadRequestException('Order must contain at least one line item');
+      throw new BadRequestException(
+        'Order must contain at least one line item',
+      );
     }
 
     // Verify all quantities are > 0
-    const invalidQty = input.lineItems.find(li => li.quantity <= 0);
+    const invalidQty = input.lineItems.find((li) => li.quantity <= 0);
     if (invalidQty) {
       throw new BadRequestException(
         `Invalid quantity for product ${invalidQty.productId}: quantity must be greater than 0`,
@@ -158,17 +175,21 @@ export class OrdersService {
       [input.dispensaryId],
     );
     if (!dispensaryCheck) {
-      throw new BadRequestException(`Dispensary ${input.dispensaryId} does not exist`);
+      throw new BadRequestException(
+        `Dispensary ${input.dispensaryId} does not exist`,
+      );
     }
 
     // Verify all product IDs exist and belong to this dispensary
-    const productIds = input.lineItems.map(li => li.productId);
+    const productIds = input.lineItems.map((li) => li.productId);
     const existingProducts = await this.dataSource.query(
       `SELECT id FROM products WHERE id = ANY($1) AND dispensary_id = $2`,
       [productIds, input.dispensaryId],
     );
     const existingProductIds = new Set(existingProducts.map((r: any) => r.id));
-    const missingProducts = productIds.filter(id => !existingProductIds.has(id));
+    const missingProducts = productIds.filter(
+      (id) => !existingProductIds.has(id),
+    );
     if (missingProducts.length > 0) {
       throw new BadRequestException(
         `Products not found in this dispensary: ${missingProducts.join(', ')}`,
@@ -183,10 +204,11 @@ export class OrdersService {
       // Get dispensary state for tax calculation
       const [dispensary] = await qr.query(
         `SELECT entity_id, state, is_active FROM dispensaries WHERE entity_id = $1`,
-        [input.dispensaryId]
+        [input.dispensaryId],
       );
       if (!dispensary) throw new NotFoundException('Dispensary not found');
-      if (!dispensary.is_active) throw new BadRequestException('Dispensary is not active');
+      if (!dispensary.is_active)
+        throw new BadRequestException('Dispensary is not active');
 
       const state = dispensary.state as string;
 
@@ -211,10 +233,14 @@ export class OrdersService {
            FROM products p
            LEFT JOIN lkp_product_types pt ON pt.product_type_id = p.product_type_id
            WHERE p.id = $1 AND p.dispensary_id = $2`,
-          [item.productId, input.dispensaryId]
+          [item.productId, input.dispensaryId],
         );
-        if (!product) throw new NotFoundException(`Product ${item.productId} not found`);
-        if (!product.is_active) throw new BadRequestException(`Product "${product.name}" is not active`);
+        if (!product)
+          throw new NotFoundException(`Product ${item.productId} not found`);
+        if (!product.is_active)
+          throw new BadRequestException(
+            `Product "${product.name}" is not active`,
+          );
 
         // Get current price
         let unitPrice = 0;
@@ -225,7 +251,7 @@ export class OrdersService {
              AND effective_from <= NOW()
              AND (effective_until IS NULL OR effective_until > NOW())
              ORDER BY effective_from DESC LIMIT 1`,
-            [item.variantId]
+            [item.variantId],
           );
           unitPrice = pricing ? parseFloat(pricing.price) : 0;
         } else {
@@ -238,7 +264,7 @@ export class OrdersService {
              AND pp.effective_from <= NOW()
              AND (pp.effective_until IS NULL OR pp.effective_until > NOW())
              ORDER BY pv.sort_order ASC, pp.effective_from DESC LIMIT 1`,
-            [item.productId, input.dispensaryId]
+            [item.productId, input.dispensaryId],
           );
           unitPrice = pricing ? parseFloat(pricing.price) : 0;
         }
@@ -289,10 +315,12 @@ export class OrdersService {
           input.customerUserId ?? null,
           staffUserId ?? null,
           input.orderType ?? 'in_store',
-          subtotal, taxTotal, total,
+          subtotal,
+          taxTotal,
+          total,
           JSON.stringify(taxBreakdown),
           input.notes ?? null,
-        ]
+        ],
       );
 
       // Insert line items
@@ -311,7 +339,7 @@ export class OrdersService {
             item.unitPrice,
             Math.round((item.lineTotal / subtotal) * taxTotal * 100) / 100,
             item.metrcItemUid ?? null,
-          ]
+          ],
         );
 
         // Reserve inventory if available
@@ -321,7 +349,7 @@ export class OrdersService {
                quantity_available = quantity_available - $1,
                updated_at = NOW()
            WHERE dispensary_id = $2 AND variant_id = $3 AND quantity_available >= $1`,
-          [item.quantity, input.dispensaryId, item.variantId]
+          [item.quantity, input.dispensaryId, item.variantId],
         );
       }
 
@@ -340,7 +368,6 @@ export class OrdersService {
         lineItemCount: resolvedItems.length,
         createdAt: order.createdAt,
       };
-
     } catch (err) {
       await qr.rollbackTransaction();
       throw err;
@@ -365,13 +392,17 @@ export class OrdersService {
        LEFT JOIN order_line_items li ON li."orderId" = o."orderId"
        WHERE o."orderId" = $1 AND o."dispensaryId" = $2
        GROUP BY o."orderId"`,
-      [orderId, dispensaryId]
+      [orderId, dispensaryId],
     );
     if (!order) throw new NotFoundException(`Order ${orderId} not found`);
     return order;
   }
 
-  async listOrders(dispensaryId: string, limit = 20, offset = 0): Promise<any[]> {
+  async listOrders(
+    dispensaryId: string,
+    limit = 20,
+    offset = 0,
+  ): Promise<any[]> {
     // Explicitly select only list-view columns; exclude heavy JSONB fields
     // (tax_breakdown, applied_promotions, metrc_receipt_data) to avoid over-fetching
     return this.dataSource.query(
@@ -380,45 +411,44 @@ export class OrdersService {
               "createdAt", "updatedAt"
        FROM orders WHERE "dispensaryId" = $1
        ORDER BY "createdAt" DESC LIMIT $2 OFFSET $3`,
-      [dispensaryId, limit, offset]
+      [dispensaryId, limit, offset],
     );
-  }
-
-  async cancelOrder(orderId: string, dispensaryId: string, reason: string): Promise<boolean> {
-    const result = await this.dataSource.query(
-      `UPDATE orders SET "orderStatus" = 'cancelled', "cancellationReason" = $1,
-       "cancelledAt" = NOW(), "updatedAt" = NOW()
-       WHERE "orderId" = $2 AND "dispensaryId" = $3 AND "orderStatus" NOT IN ('completed', 'cancelled')`,
-      [reason, orderId, dispensaryId]
-    );
-    return (result[1] ?? 0) > 0;
   }
 
   async confirmOrder(orderId: string, dispensaryId: string): Promise<boolean> {
     const result = await this.dataSource.query(
       `UPDATE orders SET "orderStatus" = 'confirmed', "updatedAt" = NOW()
        WHERE "orderId" = $1 AND "dispensaryId" = $2 AND "orderStatus" = 'pending'`,
-      [orderId, dispensaryId]
+      [orderId, dispensaryId],
     );
-    return Array.isArray(result) && result.length >= 2 ? (result[1] ?? 0) > 0 : (result.rowCount ?? 0) > 0;
+    return Array.isArray(result) && result.length >= 2
+      ? (result[1] ?? 0) > 0
+      : (result.rowCount ?? 0) > 0;
   }
 
-  async startPreparing(orderId: string, dispensaryId: string): Promise<boolean> {
+  async startPreparing(
+    orderId: string,
+    dispensaryId: string,
+  ): Promise<boolean> {
     const result = await this.dataSource.query(
       `UPDATE orders SET "orderStatus" = 'preparing', "updatedAt" = NOW()
        WHERE "orderId" = $1 AND "dispensaryId" = $2 AND "orderStatus" = 'confirmed'`,
-      [orderId, dispensaryId]
+      [orderId, dispensaryId],
     );
-    return Array.isArray(result) && result.length >= 2 ? (result[1] ?? 0) > 0 : (result.rowCount ?? 0) > 0;
+    return Array.isArray(result) && result.length >= 2
+      ? (result[1] ?? 0) > 0
+      : (result.rowCount ?? 0) > 0;
   }
 
   async markReady(orderId: string, dispensaryId: string): Promise<boolean> {
     const result = await this.dataSource.query(
       `UPDATE orders SET "orderStatus" = 'ready', "updatedAt" = NOW()
        WHERE "orderId" = $1 AND "dispensaryId" = $2 AND "orderStatus" = 'preparing'`,
-      [orderId, dispensaryId]
+      [orderId, dispensaryId],
     );
-    return Array.isArray(result) && result.length >= 2 ? (result[1] ?? 0) > 0 : (result.rowCount ?? 0) > 0;
+    return Array.isArray(result) && result.length >= 2
+      ? (result[1] ?? 0) > 0
+      : (result.rowCount ?? 0) > 0;
   }
 
   async completeOrder(input: any): Promise<any> {
@@ -432,11 +462,13 @@ export class OrdersService {
         `SELECT "orderId", "dispensaryId", "orderStatus", subtotal, "taxTotal", total, "taxBreakdown",
                 "customerUserId", "orderType", "createdAt"
          FROM orders WHERE "orderId" = $1 AND "dispensaryId" = $2`,
-        [input.orderId, input.dispensaryId]
+        [input.orderId, input.dispensaryId],
       );
       if (!order) throw new Error('Order not found');
-      if (order.orderStatus === 'completed') throw new Error('Order already completed');
-      if (order.orderStatus === 'cancelled') throw new Error('Cannot complete a cancelled order');
+      if (order.orderStatus === 'completed')
+        throw new Error('Order already completed');
+      if (order.orderStatus === 'cancelled')
+        throw new Error('Cannot complete a cancelled order');
 
       // Get line items
       const lineItems = await qr.query(
@@ -446,7 +478,7 @@ export class OrdersService {
          FROM order_line_items li
          JOIN products p ON p.id = li."productId"
          WHERE li."orderId" = $1`,
-        [input.orderId]
+        [input.orderId],
       );
 
       // Update order status
@@ -457,7 +489,7 @@ export class OrdersService {
           "metrcSyncStatus" = 'pending',
           "updatedAt" = NOW()
          WHERE "orderId" = $2`,
-        [input.metrcReceiptId ?? null, input.orderId]
+        [input.metrcReceiptId ?? null, input.orderId],
       );
 
       // Move reserved inventory to sold (decrement quantity_on_hand)
@@ -469,7 +501,7 @@ export class OrdersService {
                  quantity_reserved = quantity_reserved - $1,
                  updated_at = NOW()
              WHERE dispensary_id = $2 AND variant_id = $3 AND quantity_on_hand >= $1`,
-            [item.quantity, input.dispensaryId, item.variantId]
+            [item.quantity, input.dispensaryId, item.variantId],
           );
         }
       }
@@ -491,4 +523,94 @@ export class OrdersService {
     }
   }
 
+  async cancelOrder(
+    orderId: string,
+    dispensaryId: string,
+    reason: string,
+  ): Promise<boolean> {
+    const qr = this.dataSource.createQueryRunner();
+    await qr.connect();
+    await qr.startTransaction();
+
+    try {
+      const [order] = await qr.query(
+        `SELECT "orderId", "orderStatus"
+         FROM orders
+         WHERE "orderId" = $1 AND "dispensaryId" = $2
+         FOR UPDATE`,
+        [orderId, dispensaryId],
+      );
+      if (!order) throw new NotFoundException('Order not found');
+      if (
+        order.orderStatus === 'completed' ||
+        order.orderStatus === 'cancelled'
+      ) {
+        throw new BadRequestException(
+          `Cannot cancel an order with status "${order.orderStatus}"`,
+        );
+      }
+
+      const lineItems = await qr.query(
+        `SELECT "variantId", quantity
+         FROM order_line_items
+         WHERE "orderId" = $1`,
+        [orderId],
+      );
+
+      for (const item of lineItems) {
+        if (item.variantId) {
+          await qr.query(
+            `UPDATE inventory
+             SET quantity_reserved = GREATEST(quantity_reserved - $1, 0),
+                 quantity_available = quantity_available + $1,
+                 updated_at = NOW()
+             WHERE dispensary_id = $2 AND variant_id = $3`,
+            [item.quantity, dispensaryId, item.variantId],
+          );
+        }
+      }
+
+      await qr.query(
+        `UPDATE orders
+         SET "orderStatus" = 'cancelled',
+             "cancellationReason" = $1,
+             "cancelledAt" = NOW(),
+             "updatedAt" = NOW()
+         WHERE "orderId" = $2`,
+        [reason, orderId],
+      );
+
+      await qr.commitTransaction();
+      return true;
+    } catch (err) {
+      await qr.rollbackTransaction();
+      throw err;
+    } finally {
+      await qr.release();
+    }
+  }
+
+  async myOrders(
+    customerUserId: string,
+    limit = 20,
+    offset = 0,
+    status?: string,
+  ): Promise<any[]> {
+    const params: any[] = [customerUserId, limit, offset];
+    let statusFilter = '';
+    if (status) {
+      statusFilter = `AND "orderStatus" = $4`;
+      params.push(status);
+    }
+
+    return this.dataSource.query(
+      `SELECT "orderId", "dispensaryId", "orderType", "orderStatus",
+            subtotal, "taxTotal", total, payment_method as "paymentMethod",
+            "createdAt", "updatedAt"
+     FROM orders
+     WHERE "customerUserId" = $1 ${statusFilter}
+     ORDER BY "createdAt" DESC LIMIT $2 OFFSET $3`,
+      params,
+    );
+  }
 }

@@ -22,41 +22,86 @@ export class OrdersResolver {
     @InjectDataSource() private dataSource: DataSource,
   ) {}
 
-  @Roles('customer', 'budtender', 'dispensary_admin', 'org_admin', 'super_admin')
+  @Roles(
+    'customer',
+    'budtender',
+    'dispensary_admin',
+    'org_admin',
+    'super_admin',
+  )
   @Mutation(() => OrderSummary, { name: 'createOrder' })
   async createOrder(
     @Args('input') input: CreateOrderInput,
     @CurrentUser() user: JwtPayload,
   ): Promise<OrderSummary> {
     if (user.role === 'budtender' || user.role === 'dispensary_admin') {
-      if (input.dispensaryId !== user.dispensaryId) throw new ForbiddenException('Access denied');
+      if (input.dispensaryId !== user.dispensaryId)
+        throw new ForbiddenException('Access denied');
     }
     return this.orders.createOrder(input, user.sub);
   }
 
-  @Roles('customer', 'budtender', 'dispensary_admin', 'org_admin', 'super_admin')
+  @Roles(
+    'customer',
+    'budtender',
+    'dispensary_admin',
+    'org_admin',
+    'super_admin',
+  )
+  @Query(() => [Order], { name: 'myOrders' })
+  async myOrders(
+    @CurrentUser() user: JwtPayload,
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 20 })
+    rawLimit = 20,
+    @Args('offset', { type: () => Int, nullable: true, defaultValue: 0 })
+    offset = 0,
+    @Args('status', { nullable: true }) status?: string,
+  ): Promise<any[]> {
+    const limit = Math.min(rawLimit, 100);
+    return this.orders.myOrders(user.sub, limit, offset, status);
+  }
+
+  @Roles(
+    'customer',
+    'budtender',
+    'dispensary_admin',
+    'org_admin',
+    'super_admin',
+  )
   @Query(() => [Order], { name: 'orders' })
   async listOrders(
     @CurrentUser() user: JwtPayload,
-    @Args('dispensaryId', { type: () => ID, nullable: true }) dispensaryId?: string,
-    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) rawLimit = 50,
+    @Args('dispensaryId', { type: () => ID, nullable: true })
+    dispensaryId?: string,
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 })
+    rawLimit = 50,
     @Args('offset', { type: () => Int, nullable: true }) offset?: number,
   ): Promise<any[]> {
     const limit = Math.min(rawLimit, 100);
     const targetId = dispensaryId ?? user.dispensaryId;
     if (!targetId) throw new ForbiddenException('dispensaryId required');
-    if ((user.role === 'budtender' || user.role === 'dispensary_admin') && targetId !== user.dispensaryId) {
+    if (
+      (user.role === 'budtender' || user.role === 'dispensary_admin') &&
+      targetId !== user.dispensaryId
+    ) {
       throw new ForbiddenException('Access denied');
     }
     return this.orders.listOrders(targetId, limit, offset);
   }
 
-  @Roles('customer', 'budtender', 'dispensary_admin', 'org_admin', 'super_admin')
+  @Roles(
+    'customer',
+    'budtender',
+    'dispensary_admin',
+    'org_admin',
+    'super_admin',
+  )
   @Query(() => Order, { name: 'order', nullable: true })
   async getOrder(
     @Args('orderId', { type: () => ID }) orderId: string,
     @CurrentUser() user: JwtPayload,
-    @Args('dispensaryId', { type: () => ID, nullable: true }) dispensaryId?: string,
+    @Args('dispensaryId', { type: () => ID, nullable: true })
+    dispensaryId?: string,
   ): Promise<any> {
     const targetId = dispensaryId ?? user.dispensaryId;
     if (!targetId) throw new ForbiddenException('dispensaryId required');
@@ -69,60 +114,98 @@ export class OrdersResolver {
     @Args('orderId', { type: () => ID }) orderId: string,
     @Args('reason') reason: string,
     @CurrentUser() user: JwtPayload,
-    @Args('dispensaryId', { type: () => ID, nullable: true }) dispensaryId?: string,
+    @Args('dispensaryId', { type: () => ID, nullable: true })
+    dispensaryId?: string,
   ): Promise<boolean> {
     const targetId = dispensaryId ?? user.dispensaryId;
     if (!targetId) throw new ForbiddenException('dispensaryId required');
-    if (user.role === 'dispensary_admin' && targetId !== user.dispensaryId) throw new ForbiddenException('Access denied');
+    if (user.role === 'dispensary_admin' && targetId !== user.dispensaryId)
+      throw new ForbiddenException('Access denied');
     return this.orders.cancelOrder(orderId, targetId, reason);
   }
 
-  @Roles('customer', 'budtender', 'dispensary_admin', 'org_admin', 'super_admin')
+  @Roles(
+    'customer',
+    'budtender',
+    'dispensary_admin',
+    'org_admin',
+    'super_admin',
+  )
   @Mutation(() => Boolean, { name: 'confirmOrder' })
   async confirmOrder(
     @Args('orderId', { type: () => ID }) orderId: string,
     @CurrentUser() user: JwtPayload,
-    @Args('dispensaryId', { type: () => ID, nullable: true }) dispensaryId?: string,
+    @Args('dispensaryId', { type: () => ID, nullable: true })
+    dispensaryId?: string,
   ): Promise<boolean> {
     const targetId = dispensaryId ?? user.dispensaryId;
     if (!targetId) throw new ForbiddenException('dispensaryId required');
-    if ((user.role === 'budtender' || user.role === 'dispensary_admin') && targetId !== user.dispensaryId) {
+    if (
+      (user.role === 'budtender' || user.role === 'dispensary_admin') &&
+      targetId !== user.dispensaryId
+    ) {
       throw new ForbiddenException('Access denied');
     }
     return this.orders.confirmOrder(orderId, targetId);
   }
 
-  @Roles('customer', 'budtender', 'dispensary_admin', 'org_admin', 'super_admin')
+  @Roles(
+    'customer',
+    'budtender',
+    'dispensary_admin',
+    'org_admin',
+    'super_admin',
+  )
   @Mutation(() => Boolean, { name: 'startPreparingOrder' })
   async startPreparing(
     @Args('orderId', { type: () => ID }) orderId: string,
     @CurrentUser() user: JwtPayload,
-    @Args('dispensaryId', { type: () => ID, nullable: true }) dispensaryId?: string,
+    @Args('dispensaryId', { type: () => ID, nullable: true })
+    dispensaryId?: string,
   ): Promise<boolean> {
     const targetId = dispensaryId ?? user.dispensaryId;
     if (!targetId) throw new ForbiddenException('dispensaryId required');
-    if ((user.role === 'budtender' || user.role === 'dispensary_admin') && targetId !== user.dispensaryId) {
+    if (
+      (user.role === 'budtender' || user.role === 'dispensary_admin') &&
+      targetId !== user.dispensaryId
+    ) {
       throw new ForbiddenException('Access denied');
     }
     return this.orders.startPreparing(orderId, targetId);
   }
 
-  @Roles('customer', 'budtender', 'dispensary_admin', 'org_admin', 'super_admin')
+  @Roles(
+    'customer',
+    'budtender',
+    'dispensary_admin',
+    'org_admin',
+    'super_admin',
+  )
   @Mutation(() => Boolean, { name: 'markOrderReady' })
   async markReady(
     @Args('orderId', { type: () => ID }) orderId: string,
     @CurrentUser() user: JwtPayload,
-    @Args('dispensaryId', { type: () => ID, nullable: true }) dispensaryId?: string,
+    @Args('dispensaryId', { type: () => ID, nullable: true })
+    dispensaryId?: string,
   ): Promise<boolean> {
     const targetId = dispensaryId ?? user.dispensaryId;
     if (!targetId) throw new ForbiddenException('dispensaryId required');
-    if ((user.role === 'budtender' || user.role === 'dispensary_admin') && targetId !== user.dispensaryId) {
+    if (
+      (user.role === 'budtender' || user.role === 'dispensary_admin') &&
+      targetId !== user.dispensaryId
+    ) {
       throw new ForbiddenException('Access denied');
     }
     return this.orders.markReady(orderId, targetId);
   }
 
-  @Roles('customer', 'budtender', 'dispensary_admin', 'org_admin', 'super_admin')
+  @Roles(
+    'customer',
+    'budtender',
+    'dispensary_admin',
+    'org_admin',
+    'super_admin',
+  )
   @Mutation(() => Boolean, { name: 'completeOrder' })
   async completeOrder(
     @Args('input') input: CompleteOrderInput,
@@ -130,13 +213,17 @@ export class OrdersResolver {
   ): Promise<boolean> {
     const targetId = input.dispensaryId ?? user.dispensaryId;
     if (!targetId) throw new ForbiddenException('dispensaryId required');
-    if ((user.role === 'budtender' || user.role === 'dispensary_admin') && targetId !== user.dispensaryId) {
+    if (
+      (user.role === 'budtender' || user.role === 'dispensary_admin') &&
+      targetId !== user.dispensaryId
+    ) {
       throw new ForbiddenException('Access denied');
     }
     await this.orders.completeOrder(input);
 
     // Enqueue Metrc sync with retry backoff
-    this.syncQueue.enqueueSaleSync(input.orderId, targetId)
+    this.syncQueue
+      .enqueueSaleSync(input.orderId, targetId)
       .catch((err: any) => console.warn('Metrc queue error:', err?.message));
 
     return true;
