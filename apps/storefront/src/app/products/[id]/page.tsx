@@ -25,6 +25,7 @@ export default function ProductDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const addItem = useCartStore((s) => s.addItem);
+  const cartItems = useCartStore((s) => s.items);
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
@@ -32,7 +33,7 @@ export default function ProductDetailPage() {
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', id],
     queryFn: async () => {
-      const data = await gql<any>(PRODUCT_QUERY, {
+      const data = await gql<{ product: Record<string, unknown> }>(PRODUCT_QUERY, {
         id,
         dispensaryId: DEFAULT_DISPENSARY_ID,
       });
@@ -66,9 +67,9 @@ export default function ProductDetailPage() {
     );
   }
 
-  const variants = product.variants ?? [];
+  const variants = (product.variants as Array<{ variantId: string; name: string; sku?: string; quantityPerUnit?: number; retailPrice?: number; stockQuantity?: number; stockStatus?: string }>) ?? [];
   const active = selectedVariant
-    ? variants.find((v: any) => v.variantId === selectedVariant)
+    ? variants.find((v) => v.variantId === selectedVariant)
     : variants[0];
 
   const price = active?.retailPrice ? Number(active.retailPrice) : 0;
@@ -77,6 +78,13 @@ export default function ProductDetailPage() {
   const isOutOfStock = stockStatus === 'out_of_stock';
   const stockInfo = STOCK_INFO[stockStatus] ?? STOCK_INFO.in_stock;
 
+  // Check how many are already in cart for this variant
+  const inCart = cartItems.find(
+    (i) => i.productId === (product.id as string) && i.variantId === active?.variantId,
+  );
+  const inCartQty = inCart?.quantity ?? 0;
+  const maxAddable = stockQty != null ? Math.max(0, stockQty - inCartQty) : 99;
+
   const strainColors: Record<string, string> = {
     indica: 'bg-purple-100 text-purple-700',
     sativa: 'bg-orange-50 text-orange-700',
@@ -84,18 +92,21 @@ export default function ProductDetailPage() {
   };
 
   const handleAddToCart = () => {
-    if (!active || isOutOfStock) return;
-    for (let i = 0; i < quantity; i++) {
+    if (!active || isOutOfStock || maxAddable <= 0) return;
+    const qtyToAdd = Math.min(quantity, maxAddable);
+    for (let i = 0; i < qtyToAdd; i++) {
       addItem({
-        productId: product.id,
+        productId: product.id as string,
         variantId: active.variantId,
-        name: product.name,
+        name: product.name as string,
         variantName: active.name,
         price,
-        strainType: product.strainType,
+        maxQuantity: stockQty ?? undefined,
+        strainType: product.strainType as string | undefined,
       });
     }
     setAdded(true);
+    setQuantity(1);
     setTimeout(() => setAdded(false), 2000);
   };
 
@@ -108,11 +119,11 @@ export default function ProductDetailPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
         <div className="aspect-square bg-gradient-to-br from-brand-50 to-brand-100 rounded-2xl flex items-center justify-center relative overflow-hidden">
           <Leaf size={96} className="text-brand-400 opacity-30" />
-          {product.strainType && (
+          {(product.strainType as string) && (
             <span className={`absolute top-4 left-4 text-xs font-bold uppercase px-3 py-1 rounded-full ${
-              strainColors[product.strainType] ?? strainColors.hybrid
+              strainColors[product.strainType as string] ?? strainColors.hybrid
             }`}>
-              {product.strainType}
+              {product.strainType as string}
             </span>
           )}
           {isOutOfStock && (
@@ -123,19 +134,19 @@ export default function ProductDetailPage() {
         </div>
 
         <div>
-          <h1 className="text-3xl font-bold font-display text-txt">{product.name}</h1>
+          <h1 className="text-3xl font-bold font-display text-txt">{product.name as string}</h1>
 
           <div className="flex items-center gap-4 mt-3">
-            {product.thcPercent != null && (
+            {(product.thcPercent as number) != null && (
               <div className="bg-bg-alt rounded-lg px-3 py-1.5">
                 <span className="text-xs text-txt-muted">THC</span>
-                <p className="text-sm font-bold text-txt">{product.thcPercent}%</p>
+                <p className="text-sm font-bold text-txt">{product.thcPercent as number}%</p>
               </div>
             )}
-            {product.cbdPercent != null && (
+            {(product.cbdPercent as number) != null && (
               <div className="bg-bg-alt rounded-lg px-3 py-1.5">
                 <span className="text-xs text-txt-muted">CBD</span>
-                <p className="text-sm font-bold text-txt">{product.cbdPercent}%</p>
+                <p className="text-sm font-bold text-txt">{product.cbdPercent as number}%</p>
               </div>
             )}
           </div>
@@ -153,18 +164,22 @@ export default function ProductDetailPage() {
             <p className="text-xs text-warning mt-1">Only {stockQty} left</p>
           )}
 
+          {inCartQty > 0 && (
+            <p className="text-xs text-brand-600 mt-1">{inCartQty} already in cart</p>
+          )}
+
           {/* Variants */}
           {variants.length > 1 && (
             <div className="mt-6">
               <p className="text-sm font-medium text-txt-secondary mb-2">Size</p>
               <div className="flex flex-wrap gap-2">
-                {variants.map((v: any) => {
+                {variants.map((v) => {
                   const vPrice = v.retailPrice ? Number(v.retailPrice) : 0;
                   const vOos = v.stockStatus === 'out_of_stock';
                   return (
                     <button
                       key={v.variantId}
-                      onClick={() => setSelectedVariant(v.variantId)}
+                      onClick={() => { setSelectedVariant(v.variantId); setQuantity(1); }}
                       disabled={vOos}
                       className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
                         vOos
@@ -195,18 +210,22 @@ export default function ProductDetailPage() {
 
           {/* Quantity + Add to Cart */}
           <div className="flex items-center gap-4 mt-8">
-            {!isOutOfStock && (
+            {!isOutOfStock && maxAddable > 0 && (
               <div className="flex items-center border border-bdr rounded-lg">
                 <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-3 py-2 text-txt-muted hover:text-txt">−</button>
                 <span className="px-3 py-2 font-medium tabular-nums text-txt">{quantity}</span>
-                <button onClick={() => setQuantity(Math.min(quantity + 1, stockQty ?? 99))} className="px-3 py-2 text-txt-muted hover:text-txt">+</button>
+                <button
+                  onClick={() => setQuantity(Math.min(quantity + 1, maxAddable))}
+                  disabled={quantity >= maxAddable}
+                  className="px-3 py-2 text-txt-muted hover:text-txt disabled:opacity-40 disabled:cursor-not-allowed"
+                >+</button>
               </div>
             )}
             <button
               onClick={handleAddToCart}
-              disabled={!active || isOutOfStock || price === 0}
+              disabled={!active || isOutOfStock || price === 0 || maxAddable <= 0}
               className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-semibold transition-all ${
-                isOutOfStock
+                isOutOfStock || maxAddable <= 0
                   ? 'bg-bg-alt text-txt-muted cursor-not-allowed'
                   : added
                   ? 'bg-success text-txt-inverse'
@@ -215,18 +234,20 @@ export default function ProductDetailPage() {
             >
               {isOutOfStock ? (
                 'Out of Stock'
+              ) : maxAddable <= 0 ? (
+                'Maximum in Cart'
               ) : added ? (
                 <><Check size={20} /> Added to Cart</>
               ) : (
-                <><ShoppingCart size={20} /> Add to Cart — ${(price * quantity).toFixed(2)}</>
+                <><ShoppingCart size={20} /> Add to Cart — ${(price * Math.min(quantity, maxAddable)).toFixed(2)}</>
               )}
             </button>
           </div>
 
-          {product.description && (
+          {(product.description as string) && (
             <div className="mt-8">
               <h3 className="text-sm font-semibold text-txt mb-2">About</h3>
-              <p className="text-sm text-txt-secondary leading-relaxed">{product.description}</p>
+              <p className="text-sm text-txt-secondary leading-relaxed">{product.description as string}</p>
             </div>
           )}
         </div>

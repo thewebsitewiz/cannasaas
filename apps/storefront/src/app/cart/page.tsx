@@ -30,25 +30,43 @@ export default function CartPage() {
 
       <div className="lg:grid lg:grid-cols-[1fr_18rem] lg:gap-8">
         <div className="space-y-3">
-          {items.map((item: CartItem) => (
-            <div key={`${item.productId}-${item.variantId}`} className="bg-surface rounded-xl border border-bdr p-4 flex items-center gap-4">
-              <div className="w-16 h-16 bg-bg-alt rounded-lg flex items-center justify-center text-txt-muted text-xs shrink-0">
-                IMG
+          {items.map((item: CartItem) => {
+            const atMax = item.maxQuantity != null && item.quantity >= item.maxQuantity;
+
+            return (
+              <div key={`${item.productId}-${item.variantId}`} className="bg-surface rounded-xl border border-bdr p-4 flex items-center gap-4">
+                <div className="w-16 h-16 bg-bg-alt rounded-lg flex items-center justify-center text-txt-muted text-xs shrink-0">
+                  IMG
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-txt truncate">{item.name}</p>
+                  <p className="text-sm text-txt-muted">{item.variantName}</p>
+                  {item.strainType && <span className="text-xs text-txt-faint capitalize">{item.strainType}</span>}
+                  {atMax && (
+                    <p className="text-[10px] text-warning font-medium mt-0.5">Max available qty</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-1 border border-bdr rounded-lg">
+                  <button
+                    onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                    className="p-2 hover:bg-surface-hover rounded-l-lg transition-colors"
+                  >
+                    <Minus size={14} className="text-txt-muted" />
+                  </button>
+                  <span className="px-2 text-sm font-medium tabular-nums w-8 text-center text-txt">{item.quantity}</span>
+                  <button
+                    onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                    disabled={atMax}
+                    className="p-2 hover:bg-surface-hover rounded-r-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <Plus size={14} className={atMax ? 'text-txt-faint' : 'text-txt-muted'} />
+                  </button>
+                </div>
+                <p className="text-sm font-bold tabular-nums w-16 text-right text-txt">${(item.price * item.quantity).toFixed(2)}</p>
+                <button onClick={() => removeItem(item.productId)} className="p-1.5 text-txt-muted hover:text-danger transition-colors"><Trash2 size={16} /></button>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-txt truncate">{item.name}</p>
-                <p className="text-sm text-txt-muted">{item.variantName}</p>
-                {item.strainType && <span className="text-xs text-txt-faint capitalize">{item.strainType}</span>}
-              </div>
-              <div className="flex items-center gap-1 border border-bdr rounded-lg">
-                <button onClick={() => updateQuantity(item.productId, item.quantity - 1)} className="p-2 hover:bg-surface-hover rounded-l-lg transition-colors"><Minus size={14} className="text-txt-muted" /></button>
-                <span className="px-2 text-sm font-medium tabular-nums w-8 text-center text-txt">{item.quantity}</span>
-                <button onClick={() => updateQuantity(item.productId, item.quantity + 1)} className="p-2 hover:bg-surface-hover rounded-r-lg transition-colors"><Plus size={14} className="text-txt-muted" /></button>
-              </div>
-              <p className="text-sm font-bold tabular-nums w-16 text-right text-txt">${(item.price * item.quantity).toFixed(2)}</p>
-              <button onClick={() => removeItem(item.productId)} className="p-1.5 text-txt-muted hover:text-danger transition-colors"><Trash2 size={16} /></button>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <aside className="mt-6 lg:mt-0">

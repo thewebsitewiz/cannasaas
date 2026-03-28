@@ -30,22 +30,31 @@ const STOCK_BADGE: Record<string, { label: string; className: string }> = {
 
 export function ProductCard({ product }: ProductCardProps) {
   const addItem = useCartStore((s) => s.addItem);
+  const cartItems = useCartStore((s) => s.items);
 
   const firstVariant = product.variants?.[0];
   const price = firstVariant?.retailPrice ? Number(firstVariant.retailPrice) : 0;
   const stockStatus = firstVariant?.stockStatus ?? 'in_stock';
+  const stockQuantity = firstVariant?.stockQuantity ?? undefined;
   const isOutOfStock = stockStatus === 'out_of_stock';
   const badge = STOCK_BADGE[stockStatus] ?? STOCK_BADGE.in_stock;
 
+  // Check if already at max in cart
+  const inCart = cartItems.find(
+    (i) => i.productId === product.id && i.variantId === (firstVariant?.variantId ?? product.id),
+  );
+  const atMax = stockQuantity != null && inCart != null && inCart.quantity >= stockQuantity;
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (isOutOfStock) return;
+    if (isOutOfStock || atMax) return;
     addItem({
       productId: product.id,
       variantId: firstVariant?.variantId ?? product.id,
       name: product.name,
       variantName: firstVariant?.name ?? 'Standard',
       price,
+      maxQuantity: stockQuantity,
       strainType: product.strainType,
     });
   };
@@ -72,8 +81,13 @@ export function ProductCard({ product }: ProductCardProps) {
         {!isOutOfStock && (
           <button
             onClick={handleAddToCart}
-            className="absolute bottom-3 right-3 bg-brand-600 text-txt-inverse p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-brand-500"
-            aria-label={`Add ${product.name} to cart`}
+            disabled={atMax}
+            className={`absolute bottom-3 right-3 p-2 rounded-full transition-opacity ${
+              atMax
+                ? 'bg-gray-400 text-white cursor-not-allowed opacity-100'
+                : 'bg-brand-600 text-txt-inverse opacity-0 group-hover:opacity-100 hover:bg-brand-500'
+            }`}
+            aria-label={atMax ? `${product.name} — maximum quantity in cart` : `Add ${product.name} to cart`}
           >
             <Plus size={16} />
           </button>
