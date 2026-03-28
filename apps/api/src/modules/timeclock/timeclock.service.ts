@@ -1,4 +1,9 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
@@ -16,7 +21,11 @@ export class TimeClockService {
 
   // ── Clock In ──────────────────────────────────────────────────────────────
 
-  async clockIn(userId: string, dispensaryId: string, notes?: string): Promise<TimeEntry> {
+  async clockIn(
+    userId: string,
+    dispensaryId: string,
+    notes?: string,
+  ): Promise<TimeEntry> {
     // Find employee profile
     const [profile] = await this.dataSource.query(
       `SELECT ep.profile_id, ep.is_exempt, ep.employment_status, lp.name as position_name
@@ -26,15 +35,20 @@ export class TimeClockService {
       [userId, dispensaryId],
     );
     if (!profile) throw new NotFoundException('Employee profile not found');
-    if (profile.employment_status !== 'active') throw new BadRequestException('Employee is not active');
-    if (profile.is_exempt) throw new BadRequestException(`${profile.position_name} is exempt from time tracking`);
+    if (profile.employment_status !== 'active')
+      throw new BadRequestException('Employee is not active');
+    if (profile.is_exempt)
+      throw new BadRequestException(
+        `${profile.position_name} is exempt from time tracking`,
+      );
 
     // Check not already clocked in
     const [existing] = await this.dataSource.query(
       `SELECT entry_id FROM time_entries WHERE profile_id = $1 AND status = 'clocked_in'`,
       [profile.profile_id],
     );
-    if (existing) throw new BadRequestException('Already clocked in. Clock out first.');
+    if (existing)
+      throw new BadRequestException('Already clocked in. Clock out first.');
 
     const entry = this.entryRepo.create({
       profile_id: profile.profile_id,
@@ -51,7 +65,12 @@ export class TimeClockService {
 
   // ── Clock Out ─────────────────────────────────────────────────────────────
 
-  async clockOut(userId: string, dispensaryId: string, breakMinutes = 0, notes?: string): Promise<TimeEntry> {
+  async clockOut(
+    userId: string,
+    dispensaryId: string,
+    breakMinutes = 0,
+    notes?: string,
+  ): Promise<TimeEntry> {
     const [profile] = await this.dataSource.query(
       `SELECT profile_id FROM employee_profiles WHERE user_id = $1 AND dispensary_id = $2`,
       [userId, dispensaryId],
@@ -65,8 +84,12 @@ export class TimeClockService {
     if (!entry) throw new BadRequestException('Not currently clocked in');
 
     const clockOut = new Date();
-    const rawHours = (clockOut.getTime() - entry.clock_in.getTime()) / (1000 * 60 * 60);
-    const totalHours = Math.max(0, parseFloat((rawHours - breakMinutes / 60).toFixed(2)));
+    const rawHours =
+      (clockOut.getTime() - entry.clock_in.getTime()) / (1000 * 60 * 60);
+    const totalHours = Math.max(
+      0,
+      parseFloat((rawHours - breakMinutes / 60).toFixed(2)),
+    );
 
     entry.clock_out = clockOut;
     entry.break_minutes = breakMinutes;
@@ -75,13 +98,23 @@ export class TimeClockService {
     if (notes) entry.notes = entry.notes ? entry.notes + ' | ' + notes : notes;
 
     const saved = await this.entryRepo.save(entry);
-    this.logger.log(`Clock OUT: profile=${profile.profile_id} hours=${totalHours}`);
+    this.logger.log(
+      `Clock OUT: profile=${profile.profile_id} hours=${totalHours}`,
+    );
     return saved;
   }
 
   // ── Current Status ────────────────────────────────────────────────────────
 
-  async getClockStatus(userId: string, dispensaryId: string): Promise<{ isClockedIn: boolean; isExempt: boolean; currentEntry?: TimeEntry; todayHours: number }> {
+  async getClockStatus(
+    userId: string,
+    dispensaryId: string,
+  ): Promise<{
+    isClockedIn: boolean;
+    isExempt: boolean;
+    currentEntry?: TimeEntry;
+    todayHours: number;
+  }> {
     const [profile] = await this.dataSource.query(
       `SELECT profile_id, is_exempt FROM employee_profiles WHERE user_id = $1 AND dispensary_id = $2`,
       [userId, dispensaryId],
@@ -132,7 +165,11 @@ export class TimeClockService {
 
   // ── Time Entries for Employee ─────────────────────────────────────────────
 
-  async getTimeEntries(profileId: string, startDate: string, endDate: string): Promise<TimeEntry[]> {
+  async getTimeEntries(
+    profileId: string,
+    startDate: string,
+    endDate: string,
+  ): Promise<TimeEntry[]> {
     return this.entryRepo
       .createQueryBuilder('te')
       .where('te.profile_id = :profileId', { profileId })
@@ -144,10 +181,14 @@ export class TimeClockService {
 
   // ── Approve Timesheet ─────────────────────────────────────────────────────
 
-  async approveEntry(entryId: string, approverUserId: string): Promise<TimeEntry> {
+  async approveEntry(
+    entryId: string,
+    approverUserId: string,
+  ): Promise<TimeEntry> {
     const entry = await this.entryRepo.findOne({ where: { entryId } });
     if (!entry) throw new NotFoundException('Time entry not found');
-    if (entry.status !== 'completed') throw new BadRequestException('Can only approve completed entries');
+    if (entry.status !== 'completed')
+      throw new BadRequestException('Can only approve completed entries');
     entry.status = 'approved';
     entry.approved_by_user_id = approverUserId;
     entry.approved_at = new Date();
@@ -156,7 +197,11 @@ export class TimeClockService {
 
   // ── Payroll Report ────────────────────────────────────────────────────────
 
-  async getPayrollReport(dispensaryId: string, startDate: string, endDate: string): Promise<any[]> {
+  async getPayrollReport(
+    dispensaryId: string,
+    startDate: string,
+    endDate: string,
+  ): Promise<any[]> {
     return this.dataSource.query(
       `SELECT
         ep.employee_number,
@@ -195,19 +240,37 @@ export class TimeClockService {
 
   // ── CSV Export ────────────────────────────────────────────────────────────
 
-  async generatePayrollCsv(dispensaryId: string, startDate: string, endDate: string): Promise<string> {
+  async generatePayrollCsv(
+    dispensaryId: string,
+    startDate: string,
+    endDate: string,
+  ): Promise<string> {
     const rows = await this.getPayrollReport(dispensaryId, startDate, endDate);
 
     const [disp] = await this.dataSource.query(
-      `SELECT name, state FROM dispensaries WHERE entity_id = $1`, [dispensaryId],
+      `SELECT name, state FROM dispensaries WHERE entity_id = $1`,
+      [dispensaryId],
     );
     const dispName = disp?.name ?? 'Unknown';
 
     const headers = [
-      'Employee #', 'First Name', 'Last Name', 'Email', 'Position',
-      'Pay Type', 'Hourly Rate', 'Exempt', 'OT Eligible',
-      'Total Hours', 'Regular Hours', 'OT Hours', 'Shifts',
-      'Break Minutes', 'Regular Pay', 'OT Pay', 'Gross Pay',
+      'Employee #',
+      'First Name',
+      'Last Name',
+      'Email',
+      'Position',
+      'Pay Type',
+      'Hourly Rate',
+      'Exempt',
+      'OT Eligible',
+      'Total Hours',
+      'Regular Hours',
+      'OT Hours',
+      'Shifts',
+      'Break Minutes',
+      'Regular Pay',
+      'OT Pay',
+      'Gross Pay',
     ].join(',');
 
     const csvRows = rows.map((r: any) => {
@@ -215,19 +278,36 @@ export class TimeClockService {
       const regHrs = Math.min(totalHrs, 40);
       const otHrs = Math.max(0, totalHrs - 40);
       const rate = parseFloat(r.hourly_rate) || 0;
-      const regPay = r.is_exempt ? (parseFloat(r.salary) || 0) : parseFloat((regHrs * rate).toFixed(2));
-      const otPay = r.overtime_eligible && !r.is_exempt ? parseFloat((otHrs * rate * 1.5).toFixed(2)) : 0;
+      const regPay = r.is_exempt
+        ? parseFloat(r.salary) || 0
+        : parseFloat((regHrs * rate).toFixed(2));
+      const otPay =
+        r.overtime_eligible && !r.is_exempt
+          ? parseFloat((otHrs * rate * 1.5).toFixed(2))
+          : 0;
       const grossPay = parseFloat((regPay + otPay).toFixed(2));
 
       return [
         r.employee_number ?? '',
-        r.firstName, r.lastName, r.email,
+        r.firstName,
+        r.lastName,
+        r.email,
         r.position_name ?? '',
-        r.pay_type, rate.toFixed(2), r.is_exempt ? 'Yes' : 'No', r.overtime_eligible ? 'Yes' : 'No',
-        totalHrs.toFixed(2), regHrs.toFixed(2), otHrs.toFixed(2), r.shifts_worked,
+        r.pay_type,
+        rate.toFixed(2),
+        r.is_exempt ? 'Yes' : 'No',
+        r.overtime_eligible ? 'Yes' : 'No',
+        totalHrs.toFixed(2),
+        regHrs.toFixed(2),
+        otHrs.toFixed(2),
+        r.shifts_worked,
         r.total_break_minutes,
-        regPay.toFixed(2), otPay.toFixed(2), grossPay.toFixed(2),
-      ].map(v => `"${v}"`).join(',');
+        regPay.toFixed(2),
+        otPay.toFixed(2),
+        grossPay.toFixed(2),
+      ]
+        .map((v) => `"${v}"`)
+        .join(',');
     });
 
     const meta = [
@@ -238,5 +318,19 @@ export class TimeClockService {
     ].join('\n');
 
     return meta + headers + '\n' + csvRows.join('\n') + '\n';
+  }
+
+  async getMyTimeEntries(
+    userId: string,
+    dispensaryId: string,
+    startDate: string,
+    endDate: string,
+  ): Promise<TimeEntry[]> {
+    const [profile] = await this.dataSource.query(
+      `SELECT profile_id FROM employee_profiles WHERE user_id = $1 AND dispensary_id = $2`,
+      [userId, dispensaryId],
+    );
+    if (!profile) throw new NotFoundException('Employee profile not found');
+    return this.getTimeEntries(profile.profile_id, startDate, endDate);
   }
 }

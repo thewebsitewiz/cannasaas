@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { ClipboardList, Truck, Warehouse, Search, LogOut } from 'lucide-react';
+import { ClipboardList, Truck, Warehouse, Search, LogOut, CalendarDays } from 'lucide-react';
 import { useAuthStore } from '../stores/auth.store';
 import { OrderToast } from '../components/OrderToast';
 import { ClockWidget } from '../components/layout/ClockWidget';
@@ -10,6 +10,7 @@ const NAV = [
   { to: '/fulfillment', label: 'Fulfillment', icon: Truck },
   { to: '/inventory', label: 'Inventory', icon: Warehouse },
   { to: '/products', label: 'Lookup', icon: Search },
+  { to: '/timesheets', label: 'Timesheets', icon: CalendarDays },
 ];
 
 export function StaffLayout() {
@@ -18,45 +19,59 @@ export function StaffLayout() {
   const logout = useAuthStore((s) => s.logout);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="bg-gray-900 text-white">
-        <div className="flex items-center justify-between px-4 h-14">
-          <div className="flex items-center gap-6">
-            <span className="font-bold text-brand-400">Staff Portal</span>
-            <nav className="flex items-center gap-1">
-              {NAV.map(({ to, label, icon: Icon }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  end={to === '/'}
-                  className={({ isActive }) =>
-                    `flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      isActive ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'
-                    }`
-                  }
-                >
-                  <Icon size={16} />
-                  <span className="hidden sm:inline">{label}</span>
-                </NavLink>
-              ))}
-            </nav>
-          </div>
+    <div className="min-h-screen flex">
+      {/* Sidebar */}
+      <aside className="w-56 bg-gray-900 text-white flex flex-col" role="navigation" aria-label="Staff navigation">
+        <div className="p-5 border-b border-gray-800">
+          <h1 className="text-lg font-bold text-brand-400">CannaSaas</h1>
+          <p className="text-xs text-gray-500 mt-0.5">Staff Portal</p>
+        </div>
 
-          <div className="flex items-center gap-4">
-            <ClockWidget />
-            <span className="text-xs text-gray-500 hidden sm:inline">{user?.email}</span>
-            <DarkModeToggle />
-            <button onClick={() => { logout(); navigate('/login'); }} className="text-gray-400 hover:text-white">
-              <LogOut size={18} />
+        <nav className="flex-1 py-3" aria-label="Staff navigation">
+          {NAV.map(({ to, label, icon: Icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={to === '/'}
+              aria-label={label}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'bg-gray-800 text-white border-r-2 border-brand-500'
+                    : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+                }`
+              }
+            >
+              <Icon size={18} aria-hidden="true" />
+              {label}
+            </NavLink>
+          ))}
+        </nav>
+
+        <div className="p-4 border-t border-gray-800 space-y-3">
+          <ClockWidget />
+          <div className="text-xs text-gray-500 truncate">{user?.email}</div>
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => { logout(); navigate('/login'); }}
+              aria-label="Sign out"
+              className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
+            >
+              <LogOut size={16} aria-hidden="true" />
+              Sign Out
             </button>
+            <DarkModeToggle />
           </div>
         </div>
-      </header>
+      </aside>
 
-      <OrderToast />
-      <main className="flex-1 p-4 sm:p-6">
-        <Outlet />
-      </main>
+      {/* Main content */}
+      <div className="flex-1 flex flex-col overflow-auto">
+        <OrderToast />
+        <main className="flex-1 p-6" role="main" aria-label="Page content">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }

@@ -6,69 +6,108 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 interface ClockStatus {
   isClockedIn: boolean;
-  entryId?: string;
-  clockIn?: string;
-  hoursSoFar?: number;
+  isExempt: boolean;
+  currentEntry?: {
+    entryId: string;
+    clockIn: string;
+  };
+  todayHours: number;
 }
 
 export function ClockWidget() {
   const token = useAuthStore((s) => s.token);
   const user = useAuthStore((s) => s.user);
-  const [status, setStatus] = useState<ClockStatus>({ isClockedIn: false });
+  const [status, setStatus] = useState<ClockStatus>({ isClockedIn: false, isExempt: false, todayHours: 0 });
   const [loading, setLoading] = useState(false);
   const [elapsed, setElapsed] = useState('0:00');
 
+  const dispensaryId = user?.dispensaryId;
+
   const fetchStatus = async () => {
-    if (!token) return;
+    if (!token || !dispensaryId) return;
     try {
       const res = await fetch(API_URL + '/graphql', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-        body: JSON.stringify({ query: '{ clockStatus { isClockedIn entryId clockIn hoursSoFar } }' }),
+        body: JSON.stringify({
+          query: `query($dispensaryId: ID!) {
+            clockStatus(dispensaryId: $dispensaryId) {
+              isClockedIn isExempt todayHours
+              currentEntry { entryId clockIn }
+            }
+          }`,
+          variables: { dispensaryId },
+        }),
       });
       const data = await res.json();
       if (data.data?.clockStatus) setStatus(data.data.clockStatus);
-    } catch {}
+    } catch { /* silent */ }
   };
 
   const clockIn = async () => {
-    if (!token || loading) return;
+    if (!token || !dispensaryId || loading) return;
     setLoading(true);
     try {
       const res = await fetch(API_URL + '/graphql', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-        body: JSON.stringify({ query: 'mutation($id: ID!) { clockIn(dispensaryId: $id) { entryId clockIn } }', variables: { id: user?.dispensaryId } }),
+        body: JSON.stringify({
+          query: `mutation($dispensaryId: ID!) {
+            clockIn(dispensaryId: $dispensaryId) { entryId clockIn }
+          }`,
+          variables: { dispensaryId },
+        }),
       });
       const data = await res.json();
       if (data.data?.clockIn) {
-        setStatus({ isClockedIn: true, entryId: data.data.clockIn.entryId, clockIn: data.data.clockIn.clockIn, hoursSoFar: 0 });
+        setStatus({
+          isClockedIn: true,
+          isExempt: false,
+          currentEntry: {
+            entryId: data.data.clockIn.entryId,
+            clockIn: data.data.clockIn.clockIn,
+          },
+          todayHours: status.todayHours,
+        });
       } else if (data.errors) {
         alert(data.errors[0]?.message || 'Clock in failed');
       }
-    } catch (e: any) { alert(e.message); }
-    finally { setLoading(false); }
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Unknown error';
+      alert(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const clockOut = async () => {
-    if (!token || loading || !status.entryId) return;
+    if (!token || !dispensaryId || loading) return;
     setLoading(true);
     try {
       const res = await fetch(API_URL + '/graphql', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-        body: JSON.stringify({ query: 'mutation($id: ID!) { clockOut(entryId: $id) { entryId totalHours } }', variables: { id: status.entryId } }),
+        body: JSON.stringify({
+          query: `mutation($dispensaryId: ID!) {
+            clockOut(dispensaryId: $dispensaryId) { entryId totalHours }
+          }`,
+          variables: { dispensaryId },
+        }),
       });
       const data = await res.json();
       if (data.data?.clockOut) {
         const hrs = data.data.clockOut.totalHours;
-        setStatus({ isClockedIn: false });
-        alert('Clocked out! Total: ' + hrs.toFixed(2) + ' hours');
+        setStatus({ isClockedIn: false, isExempt: false, currentEntry: undefined, todayHours: status.todayHours + hrs });
+        alert('Clocked out! Total: ' + parseFloat(hrs).toFixed(2) + ' hours');
       } else if (data.errors) {
         alert(data.errors[0]?.message || 'Clock out failed');
       }
-    } catch (e: any) { alert(e.message); }
-    finally { setLoading(false); }
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Unknown error';
+      alert(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Fetch on mount + every 60s
@@ -76,13 +115,16 @@ export function ClockWidget() {
     fetchStatus();
     const iv = setInterval(fetchStatus, 60000);
     return () => clearInterval(iv);
-  }, [token]);
+  }, [token, dispensaryId]);
 
   // Update elapsed timer every second when clocked in
   useEffect(() => {
-    if (!status.isClockedIn || !status.clockIn) { setElapsed('0:00'); return; }
+    if (!status.isClockedIn || !status.currentEntry?.clockIn) {
+      setElapsed('0:00');
+      return;
+    }
     const update = () => {
-      const start = new Date(status.clockIn!).getTime();
+      const start = new Date(status.currentEntry!.clockIn).getTime();
       const diff = Date.now() - start;
       const h = Math.floor(diff / 3600000);
       const m = Math.floor((diff % 3600000) / 60000);
@@ -91,7 +133,9 @@ export function ClockWidget() {
     update();
     const iv = setInterval(update, 1000);
     return () => clearInterval(iv);
-  }, [status.isClockedIn, status.clockIn]);
+  }, [status.isClockedIn, status.currentEntry?.clockIn]);
+
+  if (status.isExempt) return null;
 
   return (
     <div className="flex items-center gap-2">

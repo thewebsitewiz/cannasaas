@@ -6,6 +6,7 @@ import { OrderQueuePage } from './pages/OrderQueuePage';
 import { FulfillmentPage } from './pages/FulfillmentPage';
 import { InventoryPage } from './pages/InventoryPage';
 import { ProductLookupPage } from './pages/ProductLookupPage';
+import { TimesheetsPage } from './pages/TimesheetsPage';
 import { useAuthStore } from './stores/auth.store';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -24,6 +25,7 @@ export function App() {
           <Route path="fulfillment" element={<FulfillmentPage />} />
           <Route path="inventory" element={<InventoryPage />} />
           <Route path="products" element={<ProductLookupPage />} />
+          <Route path="timesheets" element={<TimesheetsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

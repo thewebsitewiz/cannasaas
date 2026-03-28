@@ -1,4 +1,12 @@
-import { Resolver, Query, Mutation, Args, ID, Float, Int } from '@nestjs/graphql';
+import {
+  Resolver,
+  Query,
+  Mutation,
+  Args,
+  ID,
+  Float,
+  Int,
+} from '@nestjs/graphql';
 import { ObjectType, Field } from '@nestjs/graphql';
 import { ForbiddenException } from '@nestjs/common';
 import { TimeClockService } from './timeclock.service';
@@ -71,7 +79,8 @@ export class TimeClockResolver {
   @Mutation(() => TimeEntry, { name: 'clockOut' })
   async clockOut(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
-    @Args('breakMinutes', { type: () => Int, nullable: true, defaultValue: 0 }) breakMinutes: number,
+    @Args('breakMinutes', { type: () => Int, nullable: true, defaultValue: 0 })
+    breakMinutes: number,
     @Args('notes', { nullable: true }) notes: string,
     @CurrentUser() user: JwtPayload,
   ): Promise<TimeEntry> {
@@ -139,10 +148,17 @@ export class TimeClockResolver {
     @Args('endDate') endDate: string,
     @CurrentUser() user: JwtPayload,
   ): Promise<any[]> {
-    if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId) {
+    if (
+      user.role === 'dispensary_admin' &&
+      dispensaryId !== user.dispensaryId
+    ) {
       throw new ForbiddenException('Access denied');
     }
-    const rows = await this.timeClock.getPayrollReport(dispensaryId, startDate, endDate);
+    const rows = await this.timeClock.getPayrollReport(
+      dispensaryId,
+      startDate,
+      endDate,
+    );
     return rows.map((r: any) => ({
       employeeNumber: r.employee_number,
       firstName: r.firstName,
@@ -159,7 +175,25 @@ export class TimeClockResolver {
       shiftsWorked: parseInt(r.shifts_worked, 10),
       totalBreakMinutes: parseInt(r.total_break_minutes, 10),
       regularPay: r.regular_pay ? parseFloat(r.regular_pay) : null,
-      grossPayWithOt: r.gross_pay_with_ot ? parseFloat(r.gross_pay_with_ot) : null,
+      grossPayWithOt: r.gross_pay_with_ot
+        ? parseFloat(r.gross_pay_with_ot)
+        : null,
     }));
+  }
+
+  @Roles('budtender', 'dispensary_admin', 'org_admin', 'super_admin')
+  @Query(() => [TimeEntry], { name: 'myTimeEntries' })
+  async myTimeEntries(
+    @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
+    @Args('startDate') startDate: string,
+    @Args('endDate') endDate: string,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<TimeEntry[]> {
+    return this.timeClock.getMyTimeEntries(
+      user.sub,
+      dispensaryId,
+      startDate,
+      endDate,
+    );
   }
 }
