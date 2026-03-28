@@ -19,22 +19,26 @@ const ORDERS_QUERY = `
   }
 `;
 
-const UPDATE_STATUS = `
-  mutation UpdateStatus($orderId: ID!, $dispensaryId: ID!, $status: String!, $notes: String) {
-    updateFulfillmentStatus(orderId: $orderId, dispensaryId: $dispensaryId, status: $status, notes: $notes) {
-      trackingId status
-    }
-  }
-`;
+const CONFIRM_ORDER = `mutation($orderId: ID!, $dispensaryId: ID) { confirmOrder(orderId: $orderId, dispensaryId: $dispensaryId) }`;
+const START_PREPARING = `mutation($orderId: ID!, $dispensaryId: ID) { startPreparingOrder(orderId: $orderId, dispensaryId: $dispensaryId) }`;
+const MARK_READY = `mutation($orderId: ID!, $dispensaryId: ID) { markOrderReady(orderId: $orderId, dispensaryId: $dispensaryId) }`;
+const COMPLETE_ORDER = `mutation($orderId: ID!, $dispensaryId: ID) { completeOrder(input: { orderId: $orderId, dispensaryId: $dispensaryId }) }`;
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any; next?: string; nextLabel?: string }> = {
-  pending:          { label: 'Pending',   color: 'text-yellow-800', bg: 'bg-yellow-50 border-yellow-200', icon: Clock,       next: 'confirmed',        nextLabel: 'Confirm' },
-  confirmed:        { label: 'Confirmed', color: 'text-blue-800',   bg: 'bg-blue-50 border-blue-200',     icon: CheckCircle, next: 'preparing',        nextLabel: 'Start Prep' },
-  preparing:        { label: 'Preparing', color: 'text-purple-800', bg: 'bg-purple-50 border-purple-200', icon: ChefHat,     next: 'ready_for_pickup', nextLabel: 'Mark Ready' },
-  ready_for_pickup: { label: 'Ready',     color: 'text-green-800',  bg: 'bg-green-50 border-green-200',   icon: Package,     next: 'picked_up',        nextLabel: 'Complete' },
+const MUTATION_MAP: Record<string, string> = {
+  pending: CONFIRM_ORDER,
+  confirmed: START_PREPARING,
+  preparing: MARK_READY,
+  ready: COMPLETE_ORDER,
 };
 
-const LANE_STATUSES = ['pending', 'confirmed', 'preparing', 'ready_for_pickup'] as const;
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: typeof Clock; next?: string; nextLabel?: string }> = {
+  pending:   { label: 'Pending',   color: 'text-yellow-800', bg: 'bg-yellow-50 border-yellow-200', icon: Clock,       next: 'confirmed', nextLabel: 'Confirm' },
+  confirmed: { label: 'Confirmed', color: 'text-blue-800',   bg: 'bg-blue-50 border-blue-200',     icon: CheckCircle, next: 'preparing', nextLabel: 'Start Prep' },
+  preparing: { label: 'Preparing', color: 'text-purple-800', bg: 'bg-purple-50 border-purple-200', icon: ChefHat,     next: 'ready',     nextLabel: 'Mark Ready' },
+  ready:     { label: 'Ready',     color: 'text-green-800',  bg: 'bg-green-50 border-green-200',   icon: Package,     next: 'completed', nextLabel: 'Complete' },
+};
+
+const LANE_STATUSES = ['pending', 'confirmed', 'preparing', 'ready'] as const;
 
 export function OrderQueuePage() {
   const dispensaryId = useAuthStore((s) => s.user?.dispensaryId);
@@ -42,20 +46,23 @@ export function OrderQueuePage() {
 
   const { data } = useQuery({
     queryKey: ['staffDashboard'],
-    queryFn: () => gqlRequest<{ dashboard: any }>(DASHBOARD_QUERY),
+    queryFn: () => gqlRequest<{ dashboard: Record<string, unknown> }>(DASHBOARD_QUERY),
     refetchInterval: 15_000,
   });
 
   const { data: ordersData, isLoading: ordersLoading } = useQuery({
     queryKey: ['activeOrders', dispensaryId],
-    queryFn: () => gqlRequest<{ orders: any[] }>(ORDERS_QUERY, { dispensaryId, limit: 100, offset: 0 }),
+    queryFn: () => gqlRequest<{ orders: OrderRow[] }>(ORDERS_QUERY, { dispensaryId, limit: 100, offset: 0 }),
     enabled: !!dispensaryId,
     refetchInterval: 10_000,
   });
 
-  const updateStatus = useMutation({
-    mutationFn: (vars: { orderId: string; status: string }) =>
-      gqlRequest(UPDATE_STATUS, { ...vars, dispensaryId, notes: null }),
+  const advanceOrder = useMutation({
+    mutationFn: (vars: { orderId: string; currentStatus: string }) => {
+      const mutation = MUTATION_MAP[vars.currentStatus];
+      if (!mutation) throw new Error(`No transition from ${vars.currentStatus}`);
+      return gqlRequest(mutation, { orderId: vars.orderId, dispensaryId });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['activeOrders'] });
       queryClient.invalidateQueries({ queryKey: ['staffDashboard'] });
@@ -63,11 +70,11 @@ export function OrderQueuePage() {
   });
 
   const allOrders = ordersData?.orders ?? [];
-  const sales = data?.dashboard?.sales;
-  const metrc = data?.dashboard?.metrcSync;
+  const sales = data?.dashboard?.sales as Record<string, number> | undefined;
+  const metrc = data?.dashboard?.metrcSync as Record<string, number> | undefined;
 
   const ordersByStatus = (status: string) =>
-    allOrders.filter((o: any) => o.orderStatus === status);
+    allOrders.filter((o) => o.orderStatus === status);
 
   const formatTime = (iso: string) => {
     const d = new Date(iso);
@@ -157,7 +164,7 @@ export function OrderQueuePage() {
                         No orders
                       </div>
                     ) : (
-                      orders.map((order: any) => (
+                      orders.map((order) => (
                         <div
                           key={order.orderId}
                           className={`rounded-lg border p-3 ${config.bg}`}
@@ -186,15 +193,15 @@ export function OrderQueuePage() {
 
                           {config.next && (
                             <button
-                              onClick={() => updateStatus.mutate({ orderId: order.orderId, status: config.next! })}
-                              disabled={updateStatus.isPending}
+                              onClick={() => advanceOrder.mutate({ orderId: order.orderId, currentStatus: status })}
+                              disabled={advanceOrder.isPending}
                               className={`w-full text-center text-xs font-semibold py-2 rounded-md transition-colors ${
-                                updateStatus.isPending
+                                advanceOrder.isPending
                                   ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                   : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
                               }`}
                             >
-                              {updateStatus.isPending ? 'Updating...' : config.nextLabel}
+                              {advanceOrder.isPending ? 'Updating...' : config.nextLabel}
                             </button>
                           )}
                         </div>
@@ -207,7 +214,7 @@ export function OrderQueuePage() {
           </div>
         )}
 
-        {updateStatus.isError && (
+        {advanceOrder.isError && (
           <div className="mt-3 flex items-center gap-2 text-sm text-red-600 bg-red-50 rounded-lg px-4 py-2">
             <AlertCircle size={16} />
             Failed to update order status. Please try again.
@@ -216,4 +223,17 @@ export function OrderQueuePage() {
       </div>
     </div>
   );
+}
+
+interface OrderRow {
+  orderId: string;
+  dispensaryId: string;
+  customerUserId: string | null;
+  orderType: string;
+  orderStatus: string;
+  subtotal: string;
+  taxTotal: string;
+  total: string;
+  createdAt: string;
+  updatedAt: string;
 }
