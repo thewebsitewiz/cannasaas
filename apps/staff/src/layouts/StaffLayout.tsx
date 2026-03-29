@@ -1,11 +1,13 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { ClipboardList, Truck, Warehouse, Search, LogOut, CalendarDays } from 'lucide-react';
+import { ClipboardList, Truck, Warehouse, Search, LogOut, CalendarDays, ShoppingCart as ShoppingCartIcon,
+} from 'lucide-react';
 import { useAuthStore } from '../stores/auth.store';
 import { OrderToast } from '../components/OrderToast';
 import { ClockWidget } from '../components/layout/ClockWidget';
 import { DarkModeToggle } from '../components/DarkModeToggle';
 
 const NAV = [
+    { to: '/new-order', label: 'New Order', icon: ShoppingCartIcon },
   { to: '/', label: 'Orders', icon: ClipboardList },
   { to: '/fulfillment', label: 'Fulfillment', icon: Truck },
   { to: '/inventory', label: 'Inventory', icon: Warehouse },

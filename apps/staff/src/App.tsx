@@ -8,6 +8,7 @@ import { InventoryPage } from './pages/InventoryPage';
 import { ProductLookupPage } from './pages/ProductLookupPage';
 import { TimesheetsPage } from './pages/TimesheetsPage';
 import { useAuthStore } from './stores/auth.store';
+import { NewOrderPage } from './pages/NewOrderPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.token);
@@ -22,6 +23,7 @@ export function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/" element={<ProtectedRoute><StaffLayout /></ProtectedRoute>}>
           <Route index element={<OrderQueuePage />} />
+          <Route path="new-order" element={<NewOrderPage />} />
           <Route path="fulfillment" element={<FulfillmentPage />} />
           <Route path="inventory" element={<InventoryPage />} />
           <Route path="products" element={<ProductLookupPage />} />
