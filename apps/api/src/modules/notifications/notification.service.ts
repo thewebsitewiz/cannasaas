@@ -220,8 +220,32 @@ export class NotificationService {
 
   // ── Event Listeners ───────────────────────────────────────────────────────
 
+
+  @OnEvent('order.created')
+  async onOrderCreated(payload: any): Promise<void> {
+    // Skip in-store orders (placed by staff via POS)
+    if (payload.orderType === 'in_store') return;
+    if (!payload.customerUserId) return;
+
+    const [disp] = await this.ds.query(
+      `SELECT name, address_line1 || ', ' || city || ' ' || state || ' ' || zip as address FROM dispensaries WHERE entity_id = $1`,
+      [payload.dispensaryId],
+    );
+
+    await this.notifyCustomer(payload.customerUserId, 'order_created', {
+      orderNumber: payload.orderId?.slice(0, 8).toUpperCase(),
+      dispensaryName: disp?.name || 'Your Dispensary',
+      dispensaryAddress: disp?.address || '',
+      total: payload.total?.toFixed(2),
+      orderType: payload.orderType || 'pickup',
+      dispensaryId: payload.dispensaryId,
+    });
+  }
+
   @OnEvent('order.completed')
   async onOrderCompleted(payload: any): Promise<void> {
+    // Skip in-store orders (placed by staff via POS)
+    if (payload.orderType === 'in_store') return;
     if (!payload.customerUserId) return;
     const [disp] = await this.ds.query(
       `SELECT name, address_line1 || ', ' || city || ' ' || state || ' ' || zip as address FROM dispensaries WHERE entity_id = $1`,
@@ -238,15 +262,20 @@ export class NotificationService {
   }
 
   @OnEvent('order.status_changed')
-  async onOrderStatusChanged(payload: { orderId: string; dispensaryId: string; customerUserId?: string; status: string; total?: number; orderType?: string }): Promise<void> {
+  async onOrderStatusChanged(payload: { orderId: string; dispensaryId: string; customerUserId?: string | null; status: string; total?: number | null; orderType?: string | null }): Promise<void> {
+    // Skip in-store orders (placed by staff via POS)
+    if (payload.orderType === 'in_store') return;
     if (!payload.customerUserId) return;
 
     const statusTemplateMap: Record<string, string> = {
+      confirmed: 'order_confirmed',
       preparing: 'order_preparing',
+      ready: 'order_ready',
       ready_for_pickup: 'order_ready',
       out_for_delivery: 'order_out_for_delivery',
       delivered: 'order_delivered',
       picked_up: 'order_delivered',
+      completed: 'order_completed',
       cancelled: 'order_cancelled',
     };
 
