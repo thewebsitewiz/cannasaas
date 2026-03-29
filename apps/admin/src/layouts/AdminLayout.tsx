@@ -15,6 +15,7 @@ import {
   Users,
   Monitor,
   Warehouse,
+  List,
 } from 'lucide-react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 
@@ -36,6 +37,7 @@ const NAV_ITEMS: Array<{ to: string; label: string; icon: typeof LayoutDashboard
   { to: '/reports', label: 'Reports', icon: BarChart3 },
   { to: '/menu-board', label: 'Menu Board', icon: Monitor },
   { to: '/tax-management', label: 'Tax Rules', icon: Receipt, superOnly: true },
+  { to: '/menu-categories', label: 'Menu Categories', icon: List },
   { to: '/settings', label: 'Settings', icon: Settings },
 ];
 
