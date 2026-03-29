@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OrderCompletedEvent } from './events/order-completed.event';
+import { OrderEvent } from './events/order-event';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, QueryRunner } from 'typeorm';
 import { CreateOrderInput } from './dto/create-order.input';
@@ -60,6 +61,31 @@ export class OrdersService {
    * Fetches active tax rules for a given state from lkp_tax_categories.
    * Returns an empty array (graceful fallback) if no rules exist.
    */
+
+  /**
+   * Fetches order context and emits an OrderEvent.
+   * Notifications are handled by the NotificationService listener.
+   */
+  private async emitOrderEvent(orderId: string, dispensaryId: string, status: string): Promise<void> {
+    try {
+      const [order] = await this.dataSource.query(
+        `SELECT "customerUserId", "orderType", total FROM orders WHERE "orderId" = $1`,
+        [orderId],
+      );
+      if (!order) return;
+      this.eventEmitter.emit(
+        status === 'pending' ? 'order.created' : 'order.status_changed',
+        new OrderEvent(
+          orderId, dispensaryId, status,
+          order.customerUserId, order.orderType,
+          order.total ? parseFloat(order.total) : null,
+        ),
+      );
+    } catch (err: any) {
+      this.logger.warn(`Failed to emit order event: ${err.message}`);
+    }
+  }
+
   private async getTaxRulesForState(
     qr: QueryRunner,
     state: string,
@@ -373,6 +399,9 @@ export class OrdersService {
 
       await qr.commitTransaction();
 
+      // Emit order.created event (async, non-blocking)
+      this.emitOrderEvent(order.orderId, input.dispensaryId, 'pending').catch(() => {});
+
       return {
         orderId: order.orderId,
         dispensaryId: input.dispensaryId,
@@ -439,9 +468,11 @@ export class OrdersService {
        WHERE "orderId" = $1 AND "dispensaryId" = $2 AND "orderStatus" = 'pending'`,
       [orderId, dispensaryId],
     );
-    return Array.isArray(result) && result.length >= 2
+    const updated = Array.isArray(result) && result.length >= 2
       ? (result[1] ?? 0) > 0
       : (result.rowCount ?? 0) > 0;
+    if (updated) this.emitOrderEvent(orderId, dispensaryId, 'confirmed').catch(() => {});
+    return updated;
   }
 
   async startPreparing(
@@ -453,9 +484,11 @@ export class OrdersService {
        WHERE "orderId" = $1 AND "dispensaryId" = $2 AND "orderStatus" = 'confirmed'`,
       [orderId, dispensaryId],
     );
-    return Array.isArray(result) && result.length >= 2
+    const updated = Array.isArray(result) && result.length >= 2
       ? (result[1] ?? 0) > 0
       : (result.rowCount ?? 0) > 0;
+    if (updated) this.emitOrderEvent(orderId, dispensaryId, 'preparing').catch(() => {});
+    return updated;
   }
 
   async markReady(orderId: string, dispensaryId: string): Promise<boolean> {
@@ -464,9 +497,11 @@ export class OrdersService {
        WHERE "orderId" = $1 AND "dispensaryId" = $2 AND "orderStatus" = 'preparing'`,
       [orderId, dispensaryId],
     );
-    return Array.isArray(result) && result.length >= 2
+    const updated = Array.isArray(result) && result.length >= 2
       ? (result[1] ?? 0) > 0
       : (result.rowCount ?? 0) > 0;
+    if (updated) this.emitOrderEvent(orderId, dispensaryId, 'ready').catch(() => {});
+    return updated;
   }
 
   async completeOrder(input: any): Promise<any> {
@@ -531,6 +566,9 @@ export class OrdersService {
         'order.completed',
         new OrderCompletedEvent(input.orderId, input.dispensaryId, new Date()),
       );
+
+      // Notify customer of completion
+      this.emitOrderEvent(input.orderId, input.dispensaryId, 'completed').catch(() => {});
 
       return { order, lineItems };
     } catch (err) {
@@ -599,6 +637,10 @@ export class OrdersService {
       );
 
       await qr.commitTransaction();
+
+      // Notify customer of cancellation
+      this.emitOrderEvent(orderId, dispensaryId, 'cancelled').catch(() => {});
+
       return true;
     } catch (err) {
       await qr.rollbackTransaction();
