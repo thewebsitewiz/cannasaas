@@ -9,8 +9,8 @@ import { Leaf, LogIn, AlertCircle } from 'lucide-react';
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get('redirect') || '/account';
-  const expired = searchParams.get('expired') === 'true';
+  const redirect = searchParams?.get('redirect') || '/account';
+  const expired = searchParams?.get('expired') === 'true';
   const login = useAuthStore((s) => s.login);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

@@ -12,7 +12,7 @@
 
 import { useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import type { OrderStatus } from '@cannasaas/types';
+type OrderStatus = string;
 
 export type OrderSortKey = 'createdAt_desc' | 'createdAt_asc' | 'total_desc' | 'total_asc';
 

@@ -17,7 +17,7 @@
  */
 
 import React, { memo, useCallback, useId } from 'react';
-import type { CartItem } from '@cannasaas/types';
+import type { CartItem } from '@/stores/cart.store';
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 
@@ -54,21 +54,21 @@ export const CartLineItem = memo(function CartLineItem({
 
   /**
    * Stable callback references prevent child button re-renders.
-   * useCallback deps: [item.id] — the identity of this line item.
+   * useCallback deps: [item.productId] — the identity of this line item.
    */
   const handleIncrement = useCallback(
-    () => onQuantityChange(item.id, item.quantity + 1),
-    [item.id, item.quantity, onQuantityChange],
+    () => onQuantityChange(item.productId, item.quantity + 1),
+    [item.productId, item.quantity, onQuantityChange],
   );
 
   const handleDecrement = useCallback(
-    () => onQuantityChange(item.id, Math.max(1, item.quantity - 1)),
-    [item.id, item.quantity, onQuantityChange],
+    () => onQuantityChange(item.productId, Math.max(1, item.quantity - 1)),
+    [item.productId, item.quantity, onQuantityChange],
   );
 
   const handleRemove = useCallback(
-    () => onRemove(item.id),
-    [item.id, onRemove],
+    () => onRemove(item.productId),
+    [item.productId, onRemove],
   );
 
   /**
@@ -85,7 +85,7 @@ export const CartLineItem = memo(function CartLineItem({
      * the list without visual context.
      */
     <li
-      aria-label={`${item.productName}, ${item.variantName} — ${formatCurrency(item.totalPrice)}`}
+      aria-label={`${item.name}, ${item.variantName} — ${formatCurrency((item.price * item.quantity))}`}
       className={[
         'flex flex-col sm:flex-row gap-4 py-6',
         'border-b border-gray-100 last:border-0',
@@ -103,7 +103,7 @@ export const CartLineItem = memo(function CartLineItem({
              * Screen readers already announce the product name from aria-label
              * on the <li>, so we add variant context here (WCAG 1.1.1).
              */
-            alt={`${item.productName} — ${item.variantName}`}
+            alt={`${item.name} — ${item.variantName}`}
             className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg"
             loading="lazy"
             decoding="async"
@@ -132,17 +132,17 @@ export const CartLineItem = memo(function CartLineItem({
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
           <div>
             <h3 className="font-semibold text-gray-900 text-sm sm:text-base leading-tight">
-              {item.productName}
+              {item.name}
             </h3>
             <p className="text-sm text-gray-500 mt-0.5">{item.variantName}</p>
           </div>
 
           {/* Unit price — hidden on mobile (shown in subtotal area) */}
           <p
-            aria-label={`Unit price: ${formatCurrency(item.unitPrice)}`}
+            aria-label={`Unit price: ${formatCurrency(item.price)}`}
             className="hidden sm:block text-sm text-gray-600 flex-shrink-0"
           >
-            {formatCurrency(item.unitPrice)} each
+            {formatCurrency(item.price)} each
           </p>
         </div>
 
@@ -160,14 +160,14 @@ export const CartLineItem = memo(function CartLineItem({
           >
             {/* Visually hidden label — read by SR before the group controls */}
             <span id={quantityGroupId} className="sr-only">
-              Quantity for {item.productName}
+              Quantity for {item.name}
             </span>
 
             <button
               type="button"
               onClick={handleDecrement}
               disabled={isDisabled || item.quantity <= 1}
-              aria-label={`Decrease quantity of ${item.productName}`}
+              aria-label={`Decrease quantity of ${item.name}`}
               className={[
                 'w-9 h-9 flex items-center justify-center',
                 'text-gray-600 hover:bg-gray-50 active:bg-gray-100',
@@ -198,7 +198,7 @@ export const CartLineItem = memo(function CartLineItem({
               type="button"
               onClick={handleIncrement}
               disabled={isDisabled}
-              aria-label={`Increase quantity of ${item.productName}`}
+              aria-label={`Increase quantity of ${item.name}`}
               className={[
                 'w-9 h-9 flex items-center justify-center',
                 'text-gray-600 hover:bg-gray-50 active:bg-gray-100',
@@ -220,17 +220,17 @@ export const CartLineItem = memo(function CartLineItem({
              */}
             <p
               aria-live="polite"
-              aria-label={`Subtotal for ${item.productName}: ${formatCurrency(item.totalPrice)}`}
+              aria-label={`Subtotal for ${item.name}: ${formatCurrency((item.price * item.quantity))}`}
               className="font-semibold text-gray-900"
             >
-              {formatCurrency(item.totalPrice)}
+              {formatCurrency((item.price * item.quantity))}
             </p>
 
             <button
               type="button"
               onClick={handleRemove}
               disabled={isDisabled}
-              aria-label={`Remove ${item.productName} from cart`}
+              aria-label={`Remove ${item.name} from cart`}
               className={[
                 'text-gray-400 hover:text-red-500',
                 'transition-colors p-1 rounded',
@@ -262,9 +262,9 @@ export const CartLineItem = memo(function CartLineItem({
 },
 // Custom memo comparator — compare value fields, not object reference
 (prev, next) =>
-  prev.item.id === next.item.id &&
+  prev.item.productId === next.item.productId &&
   prev.item.quantity === next.item.quantity &&
-  prev.item.totalPrice === next.item.totalPrice &&
+  prev.item.price * prev.item.quantity === next.item.price * next.item.quantity &&
   prev.isDisabled === next.isDisabled,
 );
 

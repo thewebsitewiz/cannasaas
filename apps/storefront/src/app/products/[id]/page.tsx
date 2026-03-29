@@ -22,7 +22,7 @@ const STOCK_INFO: Record<string, { label: string; className: string }> = {
 };
 
 export default function ProductDetailPage() {
-  const { id } = useParams();
+  const params = useParams(); const id = params?.id;
   const router = useRouter();
   const addItem = useCartStore((s) => s.addItem);
   const cartItems = useCartStore((s) => s.items);

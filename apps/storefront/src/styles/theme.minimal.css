@@ -1,0 +1,34 @@
+/**
+ * GreenStack Theme: Minimal
+ * Near-monochrome. Off-white, charcoal, single green accent.
+ * Ultra-refined, editorial, luxury apothecary aesthetic.
+ */
+:root[data-theme="minimal"] {
+  --color-bg:             #fafafa;
+  --color-bg-alt:         #f4f4f4;
+  --color-surface:        #ffffff;
+  --color-surface-alt:    #f8f8f8;
+  --color-surface-hover:  #f0f0f0;
+  --color-border:         #e8e8e8;
+  --color-border-strong:  #d4d4d4;
+  --color-text:           #141414;
+  --color-text-secondary: #282828;
+  --color-text-muted:     #787878;
+  --color-text-faint:     #b0b0b0;
+  --color-primary:        #1a1a1a;
+  --color-primary-hover:  #000000;
+  --color-primary-light:  #484848;
+  --color-primary-xlight: #f0f0f0;
+  --color-accent:         #2a7a40;
+  --color-accent-hover:   #1e6030;
+  --color-accent-light:   #60a878;
+  --color-accent-xlight:  #e8f4ec;
+  --gs-forest:            #0a0a0a;
+  --gs-pine:              #141414;
+  --gs-fern:              #1a1a1a;
+  --gs-sage:              #484848;
+  --gs-cream:             #fafafa;
+  --gs-amber:             #2a7a40;
+  --font-display:         'Lora', Georgia, serif;
+  --font-body:            'Plus Jakarta Sans', system-ui, sans-serif;
+}

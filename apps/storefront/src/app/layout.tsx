@@ -1,15 +1,4 @@
 import './globals.css';
-import '@cannasaas/ui/src/casual.css';
-import '@cannasaas/ui/src/themes/theme.casual.css';
-import '@cannasaas/ui/src/themes/theme.dark.css';
-import '@cannasaas/ui/src/themes/theme.regal.css';
-import '@cannasaas/ui/src/themes/theme.modern.css';
-import '@cannasaas/ui/src/themes/theme.minimal.css';
-import '@cannasaas/ui/src/themes/theme.apothecary.css';
-import '@cannasaas/ui/src/themes/theme.citrus.css';
-import '@cannasaas/ui/src/themes/theme.earthy.css';
-import '@cannasaas/ui/src/themes/theme.midnight.css';
-import '@cannasaas/ui/src/themes/theme.neon.css';
 
 import type { Metadata } from 'next';
 import { Providers } from './providers';
@@ -26,6 +15,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="stylesheet" href="/all-themes.css" />
+      </head>
       <body suppressHydrationWarning className="bg-bg text-txt antialiased min-h-screen flex flex-col">
         <Providers>
           <ThemeProvider />

@@ -12,7 +12,7 @@
  */
 
 import React, { memo } from 'react';
-import type { OrderStatusEvent, OrderStatus } from '@cannasaas/types';
+type OrderStatus = string; type OrderStatusEvent = { status: OrderStatus; timestamp: string; note?: string };
 
 interface OrderTimelineProps {
   statusHistory: OrderStatusEvent[];

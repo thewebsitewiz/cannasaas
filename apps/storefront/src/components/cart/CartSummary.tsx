@@ -1,22 +1,27 @@
 /**
  * @file CartSummary.tsx
  * @description Order summary panel — subtotal, promo, tax, total.
- *
- * Accessibility:
- *   - Summary section uses <section> with aria-label="Order summary"
- *   - Total price announced via aria-live when cart updates
- *   - Promo code input has visible label + error role="alert"
- *   - Checkout button describes its action and disabled state
- *
- * Responsive:
- *   - Mobile: full-width below cart items (stacked)
- *   - lg+: sticky sidebar (position: sticky, top: 2rem)
- *
- * @pattern Presentational — receives data from CartPage, no direct store access
  */
 
 import React, { useState, useId } from 'react';
-import type { Cart } from '@cannasaas/types';
+
+interface CartItem {
+  productId: string;
+  quantity: number;
+  price: number;
+}
+
+interface Cart {
+  items: CartItem[];
+  subtotal: number;
+  promoDiscount: number;
+  appliedPromo: { code: string; description?: string } | null;
+  deliveryFee: number;
+  taxRate: number;
+  tax: number;
+  total: number;
+  exceedsPurchaseLimit: boolean;
+}
 
 interface CartSummaryProps {
   cart: Cart;
@@ -62,20 +67,13 @@ export function CartSummary({
   };
 
   return (
-    /**
-     * <section> with aria-labelledby ties the heading to the region.
-     * Screen readers announce "Order summary region" when navigating
-     * by landmark (WCAG 1.3.1, 2.4.6).
-     */
     <section
       aria-label="Order summary"
       className="bg-white rounded-2xl border border-gray-100 p-6 lg:sticky lg:top-8"
     >
       <h2 className="text-lg font-semibold text-gray-900 mb-6">Order Summary</h2>
 
-      {/* ── Line Items ────────────────────────────────────────────────────── */}
       <dl className="space-y-3">
-        {/* Subtotal */}
         <div className="flex justify-between text-sm">
           <dt className="text-gray-600">
             Subtotal ({cart.items.reduce((sum, i) => sum + i.quantity, 0)} items)
@@ -83,7 +81,6 @@ export function CartSummary({
           <dd className="font-medium text-gray-900">{formatCurrency(cart.subtotal)}</dd>
         </div>
 
-        {/* Promo discount */}
         {cart.promoDiscount > 0 && cart.appliedPromo && (
           <div className="flex justify-between text-sm">
             <dt className="text-green-700 flex items-center gap-1">
@@ -104,7 +101,6 @@ export function CartSummary({
           </div>
         )}
 
-        {/* Delivery fee */}
         <div className="flex justify-between text-sm">
           <dt className="text-gray-600">Delivery fee</dt>
           <dd className="font-medium text-gray-900">
@@ -116,7 +112,6 @@ export function CartSummary({
           </dd>
         </div>
 
-        {/* Tax */}
         <div className="flex justify-between text-sm">
           <dt className="text-gray-600">
             Tax ({(cart.taxRate * 100).toFixed(2)}%)
@@ -124,21 +119,14 @@ export function CartSummary({
           <dd className="font-medium text-gray-900">{formatCurrency(cart.tax)}</dd>
         </div>
 
-        {/* Divider */}
         <div
           role="separator"
           aria-hidden="true"
           className="border-t border-gray-100 my-2"
         />
 
-        {/* Total */}
         <div className="flex justify-between">
           <dt className="font-semibold text-gray-900">Total</dt>
-          {/*
-           * aria-live="polite" — screen reader announces the new total
-           * after promo codes or quantity changes update the cart
-           * without interrupting other announcements (WCAG 4.1.3).
-           */}
           <dd
             aria-live="polite"
             aria-label={`Order total: ${formatCurrency(cart.total)}`}
@@ -149,7 +137,6 @@ export function CartSummary({
         </div>
       </dl>
 
-      {/* ── Promo Code ────────────────────────────────────────────────────── */}
       {!cart.appliedPromo && (
         <form
           onSubmit={handlePromoSubmit}
@@ -158,10 +145,6 @@ export function CartSummary({
           aria-label="Apply a promo code"
         >
           <div>
-            {/*
-             * Explicit <label> with htmlFor — never use placeholder as label
-             * (WCAG 1.3.1, 3.3.2).
-             */}
             <label
               htmlFor={promoInputId}
               className="block text-sm font-medium text-gray-700 mb-1.5"
@@ -183,10 +166,6 @@ export function CartSummary({
                 autoCapitalize="characters"
                 spellCheck={false}
                 disabled={isApplyingPromo || isLoading}
-                /**
-                 * aria-describedby links the input to the error message.
-                 * Only set when there is an error (WCAG 3.3.1).
-                 */
                 aria-describedby={promoError ? promoErrorId : undefined}
                 aria-invalid={promoError ? 'true' : undefined}
                 className={[
@@ -216,10 +195,6 @@ export function CartSummary({
               </button>
             </div>
 
-            {/*
-             * Error message uses role="alert" so it's announced immediately
-             * by screen readers without waiting for focus (WCAG 3.3.1, 4.1.3).
-             */}
             {promoError && (
               <p
                 id={promoErrorId}
@@ -233,7 +208,6 @@ export function CartSummary({
         </form>
       )}
 
-      {/* ── Checkout CTA ──────────────────────────────────────────────────── */}
       <button
         type="button"
         onClick={onCheckout}
@@ -252,7 +226,6 @@ export function CartSummary({
         {isLoading ? 'Processing…' : 'Proceed to Checkout'}
       </button>
 
-      {/* Purchase limit warning */}
       {cart.exceedsPurchaseLimit && (
         <p
           id="purchase-limit-warning"
@@ -264,7 +237,6 @@ export function CartSummary({
         </p>
       )}
 
-      {/* Legal notice */}
       <p className="mt-4 text-xs text-gray-400 text-center">
         Cannabis purchases are subject to applicable state and local taxes.
         Must be 21+ to purchase.

@@ -1,6 +1,5 @@
 'use client';
 
-import { setThemePreset } from '@cannasaas/ui';
 import { useEffect } from 'react';
 
 const THEME_QUERY = `
@@ -34,6 +33,15 @@ const DS_LINK_ID = 'design-system-css';
  * is already statically imported in layout.tsx.
  */
 export function ThemeProvider() {
+  function setThemePreset(themeId: string): void {
+    const root = document.documentElement;
+    if (themeId === 'casual') {
+      root.removeAttribute('data-theme');
+    } else {
+      root.setAttribute('data-theme', themeId);
+    }
+  }
+
   useEffect(() => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
     const dispensaryId =

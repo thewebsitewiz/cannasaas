@@ -1,0 +1,35 @@
+/**
+ * GreenStack Theme: Apothecary
+ * Clinical, medical-grade aesthetic. Cool whites, navy, slate blue.
+ * Trust, precision, pharmaceutical credibility.
+ * Activate: <html data-theme="apothecary">
+ */
+:root[data-theme="apothecary"] {
+  --color-bg:             #f4f6fb;
+  --color-bg-alt:         #edf0f8;
+  --color-surface:        #ffffff;
+  --color-surface-alt:    #f7f9fd;
+  --color-surface-hover:  #eef1f8;
+  --color-border:         #d8dff0;
+  --color-border-strong:  #b8c4e0;
+  --color-text:           #0f1628;
+  --color-text-secondary: #1e2e50;
+  --color-text-muted:     #4a5880;
+  --color-text-faint:     #8090b8;
+  --color-primary:        #2660b8;
+  --color-primary-hover:  #1a4a98;
+  --color-primary-light:  #6090d8;
+  --color-primary-xlight: #e8f0fb;
+  --color-accent:         #20a89a;
+  --color-accent-hover:   #168878;
+  --color-accent-light:   #60d8d0;
+  --color-accent-xlight:  #e0faf8;
+  --gs-forest:            #0a1428;
+  --gs-pine:              #122040;
+  --gs-fern:              #2660b8;
+  --gs-sage:              #6090d8;
+  --gs-cream:             #f4f6fb;
+  --gs-amber:             #20a89a;
+  --font-display:         'Lora', Georgia, serif;
+  --font-body:            'Plus Jakarta Sans', system-ui, sans-serif;
+}

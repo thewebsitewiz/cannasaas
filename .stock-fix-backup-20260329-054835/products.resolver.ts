@@ -185,24 +185,21 @@ export class ProductVariantResolver {
   }
 
   @ResolveField(() => Float, { name: 'stockQuantity', nullable: true })
-  async stockQuantity(@Parent() variant: ProductVariant): Promise<number> {
+  async stockQuantity(@Parent() variant: ProductVariant): Promise<number | null> {
     const [row] = await this.ds.query(
       'SELECT quantity_available FROM inventory WHERE variant_id = $1 AND dispensary_id = $2',
       [variant.variant_id, variant.dispensary_id],
     );
-    // Return 0 when no inventory row exists — NOT null.
-    // null tells the frontend "no limit" which lets customers add unlimited qty.
-    return row ? Number(row.quantity_available) : 0;
+    return row ? Number(row.quantity_available) : null;
   }
 
   @ResolveField(() => String, { name: 'stockStatus', nullable: true })
-  async stockStatus(@Parent() variant: ProductVariant): Promise<string> {
+  async stockStatus(@Parent() variant: ProductVariant): Promise<string | null> {
     const [row] = await this.ds.query(
       'SELECT quantity_available, reorder_threshold FROM inventory WHERE variant_id = $1 AND dispensary_id = $2',
       [variant.variant_id, variant.dispensary_id],
     );
-    // No inventory row = out of stock, not unknown
-    if (!row) return 'out_of_stock';
+    if (!row) return null;
     const qty = Number(row.quantity_available);
     const threshold = Number(row.reorder_threshold ?? 10);
     if (qty <= 0) return 'out_of_stock';

@@ -288,24 +288,6 @@ export class OrdersService {
         });
       }
 
-      // ── Stock validation: reject if any item exceeds available inventory ──
-      for (const item of resolvedItems) {
-        if (item.variantId) {
-          const [inv] = await qr.query(
-            `SELECT quantity_available FROM inventory
-             WHERE dispensary_id = $1 AND variant_id = $2
-             FOR UPDATE`,
-            [input.dispensaryId, item.variantId],
-          );
-          const available = inv ? parseFloat(inv.quantity_available) : 0;
-          if (item.quantity > available) {
-            throw new BadRequestException(
-              `Insufficient stock: requested ${item.quantity}, only ${Math.floor(available)} available`,
-            );
-          }
-        }
-      }
-
       // Calculate taxes from DB-driven rules
       const { taxTotal, taxBreakdown } = this.calculateTaxes(
         taxRules,
@@ -360,7 +342,7 @@ export class OrdersService {
           ],
         );
 
-        // Reserve inventory (pre-validated above)
+        // Reserve inventory if available
         await qr.query(
           `UPDATE inventory
            SET quantity_reserved = quantity_reserved + $1,
