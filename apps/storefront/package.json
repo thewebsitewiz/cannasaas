@@ -25,7 +25,7 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "dev": "next dev --port 5173",
+    "dev": "next dev --turbopack --port 5173",
     "lint": "next lint",
     "start": "next start --port 5173"
   },

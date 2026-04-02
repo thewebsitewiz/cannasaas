@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="default">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Nunito+Sans:ital,opsz,wght@0,6..12,300;0,6..12,400;0,6..12,500;0,6..12,600;0,6..12,700;0,6..12,800;1,6..12,400;1,6..12,500&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{colors:{brand:{50:'#F2F9EE',100:'#E0F1D5',200:'#C3E4AE',300:'#9BD37D',400:'#73BF52',500:'#56A638',600:'#3F852A',700:'#336A24',800:'#2B5522',900:'#26481F'},secondary:{50:'#F8F5FE',100:'#F0EAFD',200:'#E2D7FB',300:'#CDBAF7',400:'#B496F0',500:'#9B72E8',600:'#8651D9',700:'#7340C1',800:'#5F359F',900:'#4F2D81'},accent:{50:'#FFF6F0',100:'#FFE9D9',200:'#FFD0B2',300:'#FFB080',400:'#FF884D',500:'#FF6B25',600:'#F04F0D',700:'#C73C0A',800:'#9E3110',900:'#802B11'}},fontFamily:{heading:['Sora','sans-serif'],body:['Nunito Sans','sans-serif']}}}}</script>
+<link rel="stylesheet" href="cannasaas-design-system.css">
+<title>Design System — CannaSaas "Spring Bloom"</title>
+<style>
+  .ds-section { margin-bottom: 4rem; }
+  .ds-section-title { font-family: var(--font-heading); font-weight: 800; font-size: 1.75rem; letter-spacing: -0.03em; margin-bottom: 0.5rem; }
+  .ds-section-desc { color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem; }
+  .ds-grid { display: grid; gap: 0.75rem; }
+  .ds-swatch {
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s var(--ease-spring), box-shadow 0.2s;
+  }
+  .ds-swatch:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .ds-swatch-color { height: 64px; }
+  .ds-swatch-info { padding: 0.5rem 0.75rem; background: var(--bg-surface); border-top: 1px solid var(--border-subtle); }
+  .ds-swatch-info p:first-child { font-family: var(--font-heading); font-weight: 600; font-size: 0.75rem; }
+  .ds-swatch-info p:last-child { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); margin-top: 2px; }
+  .ds-var-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .ds-var-table th { text-align: left; font-family: var(--font-heading); font-weight: 600; padding: 0.75rem; border-bottom: 2px solid var(--border-default); color: var(--text-muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .ds-var-table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border-subtle); }
+  .ds-var-table code { font-family: var(--font-mono); font-size: 0.8rem; background: var(--bg-muted); padding: 2px 6px; border-radius: 4px; }
+  .ds-dot { width: 16px; height: 16px; border-radius: 50%; display: inline-block; vertical-align: middle; margin-right: 6px; box-shadow: var(--shadow-xs); }
+  .theme-toggle { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 100; }
+</style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<!-- THEME TOGGLE -->
+<div class="theme-toggle">
+  <button onclick="toggleTheme()" class="bg-brand-600 text-white px-5 py-3 rounded-xl font-semibold text-sm flex items-center gap-2 hover:bg-brand-700" style="font-family:var(--font-heading)">
+    <span id="theme-icon">🌙</span>
+    <span id="theme-label">Dark Mode</span>
+  </button>
+</div>
+
+<div class="max-w-6xl mx-auto px-6 py-12">
+
+  <!-- HERO -->
+  <div class="mb-16">
+    <p class="text-sm font-semibold tracking-wider uppercase mb-3" style="color:var(--brand-500); font-family:var(--font-heading)">CannaSaas / GreenStack</p>
+    <h1 class="text-4xl font-bold mb-4" style="font-family:var(--font-heading);font-weight:800;letter-spacing:-0.04em;line-height:1.1">
+      Spring Bloom<br>Design System
+    </h1>
+    <p class="text-lg max-w-2xl" style="color:var(--text-secondary)">
+      A playful yet professional design system for cannabis dispensary software.
+      Built with CSS custom properties for runtime theming, Google Fonts, and Tailwind CSS.
+    </p>
+    <div class="flex gap-3 mt-6">
+      <span class="text-xs px-3 py-1.5 rounded-full font-semibold" style="background:var(--brand-100);color:var(--brand-700);font-family:var(--font-heading)">v1.0</span>
+      <span class="text-xs px-3 py-1.5 rounded-full font-semibold" style="background:var(--secondary-100);color:var(--secondary-700);font-family:var(--font-heading)">Spring 2026</span>
+      <span class="text-xs px-3 py-1.5 rounded-full font-semibold" style="background:var(--accent-100);color:var(--accent-700);font-family:var(--font-heading)">42 Pages</span>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════ COLOR PALETTE ════════════════════════════ -->
+  <div class="ds-section">
+    <h2 class="ds-section-title">Color Palette</h2>
+    <p class="ds-section-desc">Three core palettes, 10 shades each. Every value is a CSS custom property on <code>:root</code> for runtime swapping.</p>
+
+    <!-- Brand / Meadow -->
+    <h3 class="text-lg font-bold mb-3" style="color:var(--brand-600)">Brand — "Meadow"</h3>
+    <div class="ds-grid" style="grid-template-columns: repeat(10, 1fr); margin-bottom: 2rem;">
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--brand-50)"></div><div class="ds-swatch-info"><p>50</p><p>#F2F9EE</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--brand-100)"></div><div class="ds-swatch-info"><p>100</p><p>#E0F1D5</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--brand-200)"></div><div class="ds-swatch-info"><p>200</p><p>#C3E4AE</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--brand-300)"></div><div class="ds-swatch-info"><p>300</p><p>#9BD37D</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--brand-400)"></div><div class="ds-swatch-info"><p>400</p><p>#73BF52</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--brand-500)"></div><div class="ds-swatch-info"><p>500</p><p>#56A638</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--brand-600)"></div><div class="ds-swatch-info"><p style="color:#fff">600</p><p style="color:rgba(255,255,255,0.7)">#3F852A</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--brand-700)"></div><div class="ds-swatch-info"><p style="color:#fff">700</p><p style="color:rgba(255,255,255,0.7)">#336A24</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--brand-800)"></div><div class="ds-swatch-info"><p style="color:#fff">800</p><p style="color:rgba(255,255,255,0.7)">#2B5522</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--brand-900)"></div><div class="ds-swatch-info"><p style="color:#fff">900</p><p style="color:rgba(255,255,255,0.7)">#26481F</p></div></div>
+    </div>
+
+    <!-- Secondary / Wisteria -->
+    <h3 class="text-lg font-bold mb-3" style="color:var(--secondary-600)">Secondary — "Wisteria"</h3>
+    <div class="ds-grid" style="grid-template-columns: repeat(10, 1fr); margin-bottom: 2rem;">
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--secondary-50)"></div><div class="ds-swatch-info"><p>50</p><p>#F8F5FE</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--secondary-100)"></div><div class="ds-swatch-info"><p>100</p><p>#F0EAFD</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--secondary-200)"></div><div class="ds-swatch-info"><p>200</p><p>#E2D7FB</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--secondary-300)"></div><div class="ds-swatch-info"><p>300</p><p>#CDBAF7</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--secondary-400)"></div><div class="ds-swatch-info"><p>400</p><p>#B496F0</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--secondary-500)"></div><div class="ds-swatch-info"><p style="color:#fff">500</p><p style="color:rgba(255,255,255,0.7)">#9B72E8</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--secondary-600)"></div><div class="ds-swatch-info"><p style="color:#fff">600</p><p style="color:rgba(255,255,255,0.7)">#8651D9</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--secondary-700)"></div><div class="ds-swatch-info"><p style="color:#fff">700</p><p style="color:rgba(255,255,255,0.7)">#7340C1</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--secondary-800)"></div><div class="ds-swatch-info"><p style="color:#fff">800</p><p style="color:rgba(255,255,255,0.7)">#5F359F</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--secondary-900)"></div><div class="ds-swatch-info"><p style="color:#fff">900</p><p style="color:rgba(255,255,255,0.7)">#4F2D81</p></div></div>
+    </div>
+
+    <!-- Accent / Poppy -->
+    <h3 class="text-lg font-bold mb-3" style="color:var(--accent-600)">Accent — "Poppy"</h3>
+    <div class="ds-grid" style="grid-template-columns: repeat(10, 1fr); margin-bottom: 2rem;">
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--accent-50)"></div><div class="ds-swatch-info"><p>50</p><p>#FFF6F0</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--accent-100)"></div><div class="ds-swatch-info"><p>100</p><p>#FFE9D9</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--accent-200)"></div><div class="ds-swatch-info"><p>200</p><p>#FFD0B2</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--accent-300)"></div><div class="ds-swatch-info"><p>300</p><p>#FFB080</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--accent-400)"></div><div class="ds-swatch-info"><p>400</p><p>#FF884D</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--accent-500)"></div><div class="ds-swatch-info"><p style="color:#fff">500</p><p style="color:rgba(255,255,255,0.7)">#FF6B25</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--accent-600)"></div><div class="ds-swatch-info"><p style="color:#fff">600</p><p style="color:rgba(255,255,255,0.7)">#F04F0D</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--accent-700)"></div><div class="ds-swatch-info"><p style="color:#fff">700</p><p style="color:rgba(255,255,255,0.7)">#C73C0A</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--accent-800)"></div><div class="ds-swatch-info"><p style="color:#fff">800</p><p style="color:rgba(255,255,255,0.7)">#9E3110</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--accent-900)"></div><div class="ds-swatch-info"><p style="color:#fff">900</p><p style="color:rgba(255,255,255,0.7)">#802B11</p></div></div>
+    </div>
+
+    <!-- Semantic Colors -->
+    <h3 class="text-lg font-bold mb-3">Semantic / Functional</h3>
+    <div class="ds-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 2rem;">
+      <div class="ds-swatch"><div class="ds-swatch-color flex items-center justify-center gap-2" style="background:var(--success-500)"><span style="color:#fff;font-family:var(--font-heading);font-weight:700;font-size:0.85rem">Success</span></div><div class="ds-swatch-info"><p>success-500</p><p>#10B981</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color flex items-center justify-center gap-2" style="background:var(--warning-500)"><span style="color:#fff;font-family:var(--font-heading);font-weight:700;font-size:0.85rem">Warning</span></div><div class="ds-swatch-info"><p>warning-500</p><p>#F59E0B</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color flex items-center justify-center gap-2" style="background:var(--error-500)"><span style="color:#fff;font-family:var(--font-heading);font-weight:700;font-size:0.85rem">Error</span></div><div class="ds-swatch-info"><p>error-500</p><p>#EF4444</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color flex items-center justify-center gap-2" style="background:var(--info-500)"><span style="color:#fff;font-family:var(--font-heading);font-weight:700;font-size:0.85rem">Info</span></div><div class="ds-swatch-info"><p>info-500</p><p>#3B82F6</p></div></div>
+    </div>
+
+    <!-- Neutrals -->
+    <h3 class="text-lg font-bold mb-3">Neutral — "Warm Stone"</h3>
+    <div class="ds-grid" style="grid-template-columns: repeat(10, 1fr);">
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--neutral-50)"></div><div class="ds-swatch-info"><p>50</p><p>#FAFAF8</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--neutral-100)"></div><div class="ds-swatch-info"><p>100</p><p>#F3F2EE</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--neutral-200)"></div><div class="ds-swatch-info"><p>200</p><p>#E8E6DF</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--neutral-300)"></div><div class="ds-swatch-info"><p>300</p><p>#D5D2C8</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--neutral-400)"></div><div class="ds-swatch-info"><p>400</p><p>#B8B4A7</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--neutral-500)"></div><div class="ds-swatch-info"><p style="color:#fff">500</p><p style="color:rgba(255,255,255,0.7)">#9D9888</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--neutral-600)"></div><div class="ds-swatch-info"><p style="color:#fff">600</p><p style="color:rgba(255,255,255,0.7)">#847E6F</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--neutral-700)"></div><div class="ds-swatch-info"><p style="color:#fff">700</p><p style="color:rgba(255,255,255,0.7)">#6E695D</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--neutral-800)"></div><div class="ds-swatch-info"><p style="color:#fff">800</p><p style="color:rgba(255,255,255,0.7)">#5C584F</p></div></div>
+      <div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--neutral-900)"></div><div class="ds-swatch-info"><p style="color:#fff">900</p><p style="color:rgba(255,255,255,0.7)">#4D4A43</p></div></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════ TYPOGRAPHY ════════════════════════════ -->
+  <div class="ds-section">
+    <h2 class="ds-section-title">Typography</h2>
+    <p class="ds-section-desc">Headings use <strong>Sora</strong> (bold, geometric, sassy). Body uses <strong>Nunito Sans</strong> (warm, highly readable). Both loaded from Google Fonts.</p>
+
+    <div class="bg-white rounded-xl border border-gray-200 p-8 mb-6">
+      <div class="space-y-6">
+        <div><p class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--text-muted);font-family:var(--font-heading)">H1 — Sora ExtraBold 36px</p>
+        <h1 class="text-4xl" style="font-weight:800;letter-spacing:-0.04em">Fresh from the garden, crafted for you</h1></div>
+
+        <div><p class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--text-muted);font-family:var(--font-heading)">H2 — Sora Bold 24px</p>
+        <h2 class="text-2xl font-bold">Dispensary Management, Simplified</h2></div>
+
+        <div><p class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--text-muted);font-family:var(--font-heading)">H3 — Sora Bold 20px</p>
+        <h3 class="text-xl font-bold">Top-Shelf Products</h3></div>
+
+        <div><p class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--text-muted);font-family:var(--font-heading)">H4 — Sora SemiBold 18px</p>
+        <h4 class="text-lg font-semibold">Order Details</h4></div>
+
+        <hr style="border-color:var(--border-subtle)">
+
+        <div><p class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--text-muted);font-family:var(--font-heading)">Body — Nunito Sans Regular 16px</p>
+        <p class="text-base" style="max-width:42em">GreenStack helps independent dispensary owners manage inventory, stay compliant, and delight customers — all from one platform. Our tools are built for the real world of cannabis retail.</p></div>
+
+        <div><p class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--text-muted);font-family:var(--font-heading)">Body Small — Nunito Sans 14px</p>
+        <p class="text-sm" style="color:var(--text-secondary)">THC 22% · CBD 0.5% · Hybrid · 3.5g jar</p></div>
+
+        <div><p class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--text-muted);font-family:var(--font-heading)">Caption — Nunito Sans 12px</p>
+        <p class="text-xs" style="color:var(--text-muted)">Must be 21+ with valid ID · Licensed by NYS OCM</p></div>
+
+        <div><p class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--text-muted);font-family:var(--font-heading)">Mono — JetBrains Mono 14px</p>
+        <p class="font-mono text-sm">#ORD-A1B2C3 · $66.58 · 2024-01-15</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════ BUTTONS ════════════════════════════ -->
+  <div class="ds-section">
+    <h2 class="ds-section-title">Buttons</h2>
+    <p class="ds-section-desc">Five variants: Primary, Secondary, Accent, Ghost, and Destructive. All with hover/active states and spring-physics transitions.</p>
+
+    <div class="bg-white rounded-xl border border-gray-200 p-8">
+      <div class="flex flex-wrap gap-4 items-center mb-6">
+        <button class="bg-brand-600 text-white px-6 py-2.5 rounded-lg font-semibold text-sm hover:bg-brand-700">Primary</button>
+        <button class="bg-white text-gray-700 border border-gray-200 px-6 py-2.5 rounded-lg font-semibold text-sm">Secondary</button>
+        <button class="px-6 py-2.5 rounded-lg font-semibold text-sm text-white" style="background:linear-gradient(135deg,var(--accent-500),var(--accent-600));box-shadow:var(--shadow-sm),inset 0 1px 0 rgba(255,255,255,0.15);font-family:var(--font-heading)">Accent</button>
+        <button class="px-6 py-2.5 rounded-lg font-semibold text-sm border-2 border-transparent hover:border-gray-200" style="color:var(--text-secondary);font-family:var(--font-body)">Ghost</button>
+        <button class="bg-red-600 text-white px-6 py-2.5 rounded-lg font-semibold text-sm">Destructive</button>
+      </div>
+      <div class="flex flex-wrap gap-4 items-center mb-6">
+        <button class="bg-brand-600 text-white px-5 py-2 rounded-lg font-semibold text-xs hover:bg-brand-700">Small Primary</button>
+        <button class="bg-brand-600 text-white px-8 py-3.5 rounded-xl font-semibold text-base hover:bg-brand-700">Large Primary</button>
+        <button class="bg-brand-600 text-white w-full py-2.5 rounded-lg font-semibold text-sm hover:bg-brand-700 mt-2">Full Width</button>
+      </div>
+      <p class="text-xs mt-4" style="color:var(--text-muted)">Primary uses <code>linear-gradient(135deg, brand-500, brand-600)</code> with inset highlight. Hover lifts -1px with brand shadow. Active compresses via scale(0.98).</p>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════ CARDS ════════════════════════════ -->
+  <div class="ds-section">
+    <h2 class="ds-section-title">Cards</h2>
+    <p class="ds-section-desc">Cards have rounded-14px corners, subtle shadow, and hover transitions with lift + shadow expansion.</p>
+
+    <div class="grid grid-cols-3 gap-6">
+      <!-- Stat card -->
+      <div class="bg-white rounded-xl border border-gray-100 p-5">
+        <p class="text-xs" style="color:var(--text-muted)">Revenue (30d)</p>
+        <p class="text-2xl font-bold mt-1" style="color:var(--brand-600)">$12,450</p>
+      </div>
+      <!-- Product card -->
+      <div class="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-md">
+        <div class="aspect-[4/3] flex items-center justify-center" style="background:linear-gradient(135deg,var(--brand-50),rgba(155,114,232,0.06),var(--brand-100))">
+          <span class="text-4xl">🌿</span>
+        </div>
+        <div class="p-3">
+          <h3 class="font-semibold text-gray-900 text-sm">Blue Dream</h3>
+          <p class="text-xs mt-0.5" style="color:var(--text-muted)">THC 22% · Hybrid</p>
+          <div class="flex items-center justify-between mt-2">
+            <span class="font-bold text-brand-700">$35.00</span>
+            <button class="bg-brand-600 text-white text-xs px-3 py-1.5 rounded-lg font-medium">Add</button>
+          </div>
+        </div>
+      </div>
+      <!-- Info card -->
+      <div class="bg-white rounded-xl border border-gray-100 p-5">
+        <h2 class="font-semibold text-gray-900 mb-3">Recent Activity</h2>
+        <div class="space-y-2">
+          <p class="text-sm py-1 border-b" style="color:var(--text-secondary);border-color:var(--border-subtle)">Order #A1B2 completed — $45</p>
+          <p class="text-sm py-1 border-b" style="color:var(--text-secondary);border-color:var(--border-subtle)">New customer registered</p>
+          <p class="text-sm py-1" style="color:var(--text-secondary)">Low stock: Purple Haze (3)</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════ BADGES ════════════════════════════ -->
+  <div class="ds-section">
+    <h2 class="ds-section-title">Badges & Status Indicators</h2>
+    <p class="ds-section-desc">Pill-shaped badges using semantic color tokens. Strain-type badges use Sora with wide letter-spacing.</p>
+
+    <div class="bg-white rounded-xl border border-gray-200 p-8">
+      <div class="flex flex-wrap gap-3 mb-6">
+        <span class="text-xs font-bold uppercase px-3 py-1 rounded-full" style="background:var(--success-50);color:var(--success-700);font-family:var(--font-heading);letter-spacing:0.05em">Hybrid</span>
+        <span class="text-xs font-bold uppercase px-3 py-1 rounded-full" style="background:var(--secondary-100);color:var(--secondary-700);font-family:var(--font-heading);letter-spacing:0.05em">Indica</span>
+        <span class="text-xs font-bold uppercase px-3 py-1 rounded-full" style="background:var(--warning-50);color:var(--warning-700);font-family:var(--font-heading);letter-spacing:0.05em">Sativa</span>
+      </div>
+      <div class="flex flex-wrap gap-3 mb-6">
+        <span class="text-xs font-semibold px-2.5 py-1 rounded-full" style="background:var(--success-50);color:var(--success-700)">● Completed</span>
+        <span class="text-xs font-semibold px-2.5 py-1 rounded-full" style="background:var(--warning-50);color:var(--warning-700)">● Pending</span>
+        <span class="text-xs font-semibold px-2.5 py-1 rounded-full" style="background:var(--error-50);color:var(--error-700)">● Cancelled</span>
+        <span class="text-xs font-semibold px-2.5 py-1 rounded-full" style="background:var(--info-50);color:var(--info-700)">● Processing</span>
+        <span class="text-xs font-semibold px-2.5 py-1 rounded-full" style="background:var(--secondary-50);color:var(--secondary-700)">● Synced</span>
+      </div>
+      <div class="flex flex-wrap gap-3">
+        <span class="text-xs font-bold px-2.5 py-1 rounded-full" style="background:var(--brand-100);color:var(--brand-700);font-family:var(--font-heading)">Current: default</span>
+        <span class="text-xs font-bold px-2.5 py-1 rounded-full" style="background:linear-gradient(135deg,var(--accent-500),var(--accent-600));color:#fff;font-family:var(--font-heading);box-shadow:0 2px 6px rgba(240,79,13,0.35)">3</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════ FORM INPUTS ════════════════════════════ -->
+  <div class="ds-section">
+    <h2 class="ds-section-title">Form Inputs</h2>
+    <p class="ds-section-desc">Inputs use 1.5px borders with warm stone neutrals. Focus state shows brand ring with subtle shadow.</p>
+
+    <div class="bg-white rounded-xl border border-gray-200 p-8 max-w-lg">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <input type="email" placeholder="you@email.com" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+          <input type="password" placeholder="••••••••" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Select State</label>
+          <select class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm">
+            <option>New York</option><option>New Jersey</option><option>Connecticut</option>
+          </select>
+        </div>
+        <button class="w-full bg-brand-600 text-white py-2.5 rounded-lg font-semibold hover:bg-brand-700">Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════ SHADOWS & ELEVATION ════════════════════════════ -->
+  <div class="ds-section">
+    <h2 class="ds-section-title">Shadows & Elevation</h2>
+    <p class="ds-section-desc">A 6-level shadow system using warm-tinted rgba values for organic depth.</p>
+
+    <div class="grid grid-cols-3 gap-6">
+      <div class="bg-white rounded-xl p-6 text-center" style="box-shadow:var(--shadow-xs)"><p class="text-xs font-semibold" style="font-family:var(--font-heading)">shadow-xs</p><p class="text-xs mt-1 font-mono" style="color:var(--text-muted)">Resting</p></div>
+      <div class="bg-white rounded-xl p-6 text-center" style="box-shadow:var(--shadow-sm)"><p class="text-xs font-semibold" style="font-family:var(--font-heading)">shadow-sm</p><p class="text-xs mt-1 font-mono" style="color:var(--text-muted)">Default card</p></div>
+      <div class="bg-white rounded-xl p-6 text-center" style="box-shadow:var(--shadow-md)"><p class="text-xs font-semibold" style="font-family:var(--font-heading)">shadow-md</p><p class="text-xs mt-1 font-mono" style="color:var(--text-muted)">Card hover</p></div>
+      <div class="bg-white rounded-xl p-6 text-center" style="box-shadow:var(--shadow-lg)"><p class="text-xs font-semibold" style="font-family:var(--font-heading)">shadow-lg</p><p class="text-xs mt-1 font-mono" style="color:var(--text-muted)">Elevated</p></div>
+      <div class="bg-white rounded-xl p-6 text-center" style="box-shadow:var(--shadow-xl)"><p class="text-xs font-semibold" style="font-family:var(--font-heading)">shadow-xl</p><p class="text-xs mt-1 font-mono" style="color:var(--text-muted)">Modal</p></div>
+      <div class="bg-white rounded-xl p-6 text-center" style="box-shadow:var(--shadow-float)"><p class="text-xs font-semibold" style="font-family:var(--font-heading)">shadow-float</p><p class="text-xs mt-1 font-mono" style="color:var(--text-muted)">Popover</p></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════ BORDER RADIUS ════════════════════════════ -->
+  <div class="ds-section">
+    <h2 class="ds-section-title">Border Radius</h2>
+    <p class="ds-section-desc">Rounded 12px system with graduated scale from tight to pill.</p>
+
+    <div class="flex flex-wrap gap-6 items-end">
+      <div class="text-center"><div class="w-16 h-16 bg-brand-200 mb-2" style="border-radius:var(--radius-sm)"></div><p class="text-xs font-mono" style="color:var(--text-muted)">sm · 6px</p></div>
+      <div class="text-center"><div class="w-16 h-16 bg-brand-300 mb-2" style="border-radius:var(--radius-md)"></div><p class="text-xs font-mono" style="color:var(--text-muted)">md · 10px</p></div>
+      <div class="text-center"><div class="w-16 h-16 bg-brand-400 mb-2" style="border-radius:var(--radius-lg)"></div><p class="text-xs font-mono" style="color:var(--text-muted)">lg · 14px</p></div>
+      <div class="text-center"><div class="w-16 h-16 bg-brand-500 mb-2" style="border-radius:var(--radius-xl)"></div><p class="text-xs font-mono" style="color:var(--text-muted)">xl · 20px</p></div>
+      <div class="text-center"><div class="w-16 h-16 bg-brand-600 mb-2" style="border-radius:var(--radius-2xl)"></div><p class="text-xs font-mono" style="color:var(--text-muted)">2xl · 24px</p></div>
+      <div class="text-center"><div class="w-24 h-10 bg-brand-700 mb-2" style="border-radius:var(--radius-pill)"></div><p class="text-xs font-mono" style="color:var(--text-muted)">pill · 9999px</p></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════ SIDEBAR PREVIEW ════════════════════════════ -->
+  <div class="ds-section">
+    <h2 class="ds-section-title">Sidebar Navigation</h2>
+    <p class="ds-section-desc">Dark sidebar with gradient brand highlight on active item and slide-in hover animation.</p>
+
+    <div class="flex gap-6">
+      <aside class="w-52 bg-gray-900 text-white flex flex-col shrink-0 rounded-xl overflow-hidden" style="height:400px">
+        <div class="p-4 border-b border-gray-700"><span class="font-bold text-brand-400">Admin Portal</span></div>
+        <nav class="flex-1 p-2 space-y-0.5">
+          <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-gray-700 text-white font-medium">📊 Dashboard</a>
+          <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-gray-800">📦 Products</a>
+          <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-gray-800">📋 Orders</a>
+          <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-gray-800">📊 Inventory</a>
+          <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-gray-800">🔒 Compliance</a>
+          <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-gray-800">👤 Staffing</a>
+          <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-gray-800">⚙️ Settings</a>
+        </nav>
+        <div class="p-3 border-t border-gray-700 text-xs text-gray-500">admin@greenleaf.com</div>
+      </aside>
+      <div class="flex-1 bg-white rounded-xl border border-gray-200 p-6">
+        <p class="text-sm" style="color:var(--text-secondary)">Active link gets a <code>linear-gradient(135deg, brand-600, brand-700)</code> background with brand shadow glow. Hover slides link 3px right with subtle bg tint. Staggered fade-in animation on load.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════ CSS VARIABLES REFERENCE ════════════════════════════ -->
+  <div class="ds-section">
+    <h2 class="ds-section-title">CSS Variables Reference</h2>
+    <p class="ds-section-desc">All custom properties defined on <code>:root</code>. Override these for runtime theme switching.</p>
+
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <table class="ds-var-table">
+        <thead><tr><th>Category</th><th>Variable</th><th>Light Value</th><th>Preview</th></tr></thead>
+        <tbody>
+          <tr><td rowspan="3" class="font-semibold" style="vertical-align:top">Surface</td><td><code>--bg-body</code></td><td><code>#FAFAF8</code></td><td><span class="ds-dot" style="background:#FAFAF8;border:1px solid #E8E6DF"></span></td></tr>
+          <tr><td><code>--bg-surface</code></td><td><code>#FFFFFF</code></td><td><span class="ds-dot" style="background:#FFFFFF;border:1px solid #E8E6DF"></span></td></tr>
+          <tr><td><code>--bg-sidebar</code></td><td><code>#1C2118</code></td><td><span class="ds-dot" style="background:#1C2118"></span></td></tr>
+
+          <tr><td rowspan="3" class="font-semibold" style="vertical-align:top">Text</td><td><code>--text-primary</code></td><td><code>#292722</code></td><td><span class="ds-dot" style="background:#292722"></span></td></tr>
+          <tr><td><code>--text-secondary</code></td><td><code>#6E695D</code></td><td><span class="ds-dot" style="background:#6E695D"></span></td></tr>
+          <tr><td><code>--text-muted</code></td><td><code>#9D9888</code></td><td><span class="ds-dot" style="background:#9D9888"></span></td></tr>
+
+          <tr><td rowspan="3" class="font-semibold" style="vertical-align:top">Border</td><td><code>--border-default</code></td><td><code>#E8E6DF</code></td><td><span class="ds-dot" style="background:#E8E6DF;border:1px solid #D5D2C8"></span></td></tr>
+          <tr><td><code>--border-subtle</code></td><td><code>#F3F2EE</code></td><td><span class="ds-dot" style="background:#F3F2EE;border:1px solid #E8E6DF"></span></td></tr>
+          <tr><td><code>--border-brand</code></td><td><code>var(--brand-400)</code></td><td><span class="ds-dot" style="background:#73BF52"></span></td></tr>
+
+          <tr><td rowspan="3" class="font-semibold" style="vertical-align:top">Typography</td><td><code>--font-heading</code></td><td colspan="2"><code>'Sora', system-ui, sans-serif</code></td></tr>
+          <tr><td><code>--font-body</code></td><td colspan="2"><code>'Nunito Sans', system-ui, sans-serif</code></td></tr>
+          <tr><td><code>--font-mono</code></td><td colspan="2"><code>'JetBrains Mono', 'SF Mono', monospace</code></td></tr>
+
+          <tr><td rowspan="3" class="font-semibold" style="vertical-align:top">Motion</td><td><code>--ease-spring</code></td><td colspan="2"><code>cubic-bezier(0.34, 1.56, 0.64, 1)</code></td></tr>
+          <tr><td><code>--ease-smooth</code></td><td colspan="2"><code>cubic-bezier(0.4, 0, 0.2, 1)</code></td></tr>
+          <tr><td><code>--duration-normal</code></td><td colspan="2"><code>250ms</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════ TAILWIND CONFIG ════════════════════════════ -->
+  <div class="ds-section">
+    <h2 class="ds-section-title">Tailwind Config</h2>
+    <p class="ds-section-desc">Drop-in config for all HTML pages. Extends default theme with the full palette + font families.</p>
+
+    <div class="bg-white rounded-xl border border-gray-200 p-6 overflow-x-auto">
+      <pre class="text-xs font-mono leading-relaxed" style="color:var(--text-primary)"><code>tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        brand: {
+          50:  '#F2F9EE', 100: '#E0F1D5', 200: '#C3E4AE',
+          300: '#9BD37D', 400: '#73BF52', 500: '#56A638',
+          600: '#3F852A', 700: '#336A24', 800: '#2B5522',
+          900: '#26481F'
+        },
+        secondary: {
+          50:  '#F8F5FE', 100: '#F0EAFD', 200: '#E2D7FB',
+          300: '#CDBAF7', 400: '#B496F0', 500: '#9B72E8',
+          600: '#8651D9', 700: '#7340C1', 800: '#5F359F',
+          900: '#4F2D81'
+        },
+        accent: {
+          50:  '#FFF6F0', 100: '#FFE9D9', 200: '#FFD0B2',
+          300: '#FFB080', 400: '#FF884D', 500: '#FF6B25',
+          600: '#F04F0D', 700: '#C73C0A', 800: '#9E3110',
+          900: '#802B11'
+        }
+      },
+      fontFamily: {
+        heading: ['Sora', 'sans-serif'],
+        body:    ['Nunito Sans', 'sans-serif']
+      }
+    }
+  }
+}</code></pre>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════ FILE MAP ════════════════════════════ -->
+  <div class="ds-section">
+    <h2 class="ds-section-title">File Map</h2>
+    <p class="ds-section-desc">All 42 pages across 5 applications restyled with this design system.</p>
+
+    <div class="grid grid-cols-2 gap-6">
+      <div class="bg-white rounded-xl border border-gray-200 p-5">
+        <h3 class="text-sm font-bold mb-3" style="font-family:var(--font-heading)">Storefront <span class="font-normal" style="color:var(--text-muted)">(10 pages)</span></h3>
+        <div class="text-xs space-y-1 font-mono" style="color:var(--text-secondary)">
+          <p>index.html · products.html · product-detail.html</p>
+          <p>cart.html · checkout.html · login.html</p>
+          <p>register.html · account.html · verify.html</p>
+          <p>order-tracking.html</p>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl border border-gray-200 p-5">
+        <h3 class="text-sm font-bold mb-3" style="font-family:var(--font-heading)">Admin Portal <span class="font-normal" style="color:var(--text-muted)">(14 pages)</span></h3>
+        <div class="text-xs space-y-1 font-mono" style="color:var(--text-secondary)">
+          <p>dashboard.html · products.html · orders.html</p>
+          <p>inventory.html · inventory-control.html</p>
+          <p>compliance.html · staffing.html · timeclock.html</p>
+          <p>scheduling.html · vendors.html · loyalty.html</p>
+          <p>reports.html · settings.html · login.html</p>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl border border-gray-200 p-5">
+        <h3 class="text-sm font-bold mb-3" style="font-family:var(--font-heading)">Staff Portal <span class="font-normal" style="color:var(--text-muted)">(5 pages)</span></h3>
+        <div class="text-xs space-y-1 font-mono" style="color:var(--text-secondary)">
+          <p>orders.html · fulfillment.html</p>
+          <p>inventory.html · lookup.html · login.html</p>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl border border-gray-200 p-5">
+        <h3 class="text-sm font-bold mb-3" style="font-family:var(--font-heading)">Kiosk <span class="font-normal" style="color:var(--text-muted)">(5)</span> + Platform <span class="font-normal" style="color:var(--text-muted)">(7)</span></h3>
+        <div class="text-xs space-y-1 font-mono" style="color:var(--text-secondary)">
+          <p>Kiosk: menu · product · cart · checkout · confirm</p>
+          <p>Platform: dashboard · tenants · billing</p>
+          <p>Platform: tax · reports · activity · login</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="text-center py-12" style="border-top: 1px solid var(--border-default)">
+    <p class="text-sm" style="color:var(--text-muted);font-family:var(--font-heading)">CannaSaas / GreenStack · Spring Bloom Design System v1.0</p>
+  </div>
+
+</div>
+
+<script>
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  const next = current === 'dark' ? 'default' : 'dark';
+  html.setAttribute('data-theme', next);
+  document.getElementById('theme-icon').textContent = next === 'dark' ? '☀️' : '🌙';
+  document.getElementById('theme-label').textContent = next === 'dark' ? 'Light Mode' : 'Dark Mode';
+}
+</script>
+</body>
+</html>

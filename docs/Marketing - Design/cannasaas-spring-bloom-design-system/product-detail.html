@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="default">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Nunito+Sans:ital,opsz,wght@0,6..12,300;0,6..12,400;0,6..12,500;0,6..12,600;0,6..12,700;0,6..12,800;1,6..12,400;1,6..12,500&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{colors:{brand:{50:'#F2F9EE',100:'#E0F1D5',200:'#C3E4AE',300:'#9BD37D',400:'#73BF52',500:'#56A638',600:'#3F852A',700:'#336A24',800:'#2B5522',900:'#26481F'},secondary:{50:'#F8F5FE',100:'#F0EAFD',200:'#E2D7FB',300:'#CDBAF7',400:'#B496F0',500:'#9B72E8',600:'#8651D9',700:'#7340C1',800:'#5F359F',900:'#4F2D81'},accent:{50:'#FFF6F0',100:'#FFE9D9',200:'#FFD0B2',300:'#FFB080',400:'#FF884D',500:'#FF6B25',600:'#F04F0D',700:'#C73C0A',800:'#9E3110',900:'#802B11'}},fontFamily:{heading:['Sora','sans-serif'],body:['Nunito Sans','sans-serif']}}}}</script>
+<link rel="stylesheet" href="cannasaas-design-system.css">
+<title>Product Detail — CannaSaas storefront</title>
+</head>
+<body class="bg-gray-50 min-h-screen">
+<!-- APP: storefront | PAGE: product-detail -->
+<header class="bg-white border-b border-gray-100 sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3F852A" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg><span class="font-bold text-lg text-gray-900">GreenLeaf</span></a>
+    <nav class="flex items-center gap-6">
+      <a href="products.html" class="text-sm text-gray-500 hover:text-gray-900">Menu</a>
+      <a href="cart.html" class="relative p-2 text-gray-500 hover:text-gray-900"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span class="absolute -top-0.5 -right-0.5 bg-brand-600 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">3</span></a>
+      <a href="account.html" class="p-2 text-gray-500 hover:text-gray-900"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
+      <a href="login.html" class="text-sm bg-brand-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-brand-700">Sign In</a>
+    </nav>
+  </div>
+</header>
+<main class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+  <a href="products.html" class="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1 mb-6"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg> Back to Menu</a>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div class="aspect-square bg-gradient-to-br from-brand-50 to-emerald-50 rounded-2xl flex items-center justify-center"><svg width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="#C3E4AE" stroke-width="1"><path d="M12 2L2 7l10 5 10-5-10-5z"/></svg></div>
+    <div>
+      <span class="inline-block text-xs font-bold uppercase px-3 py-1 rounded-full bg-green-100 text-green-700 mb-3">Hybrid</span>
+      <h1 class="text-3xl font-bold text-gray-900">Blue Dream</h1>
+      <div class="flex gap-4 mt-3">
+        <div class="bg-gray-100 rounded-xl px-4 py-2"><span class="text-xs text-gray-500">THC</span><p class="text-lg font-bold">22.5%</p></div>
+        <div class="bg-gray-100 rounded-xl px-4 py-2"><span class="text-xs text-gray-500">CBD</span><p class="text-lg font-bold">0.8%</p></div>
+      </div>
+      <p class="text-gray-600 mt-4 leading-relaxed">A legendary West Coast strain. Blue Dream delivers full-body relaxation with gentle cerebral invigoration. Sweet berry aroma with hints of blueberry.</p>
+      <div class="flex flex-wrap gap-2 mt-4">
+        <span class="bg-emerald-50 text-emerald-700 text-sm px-3 py-1 rounded-full">Relaxed</span><span class="bg-emerald-50 text-emerald-700 text-sm px-3 py-1 rounded-full">Euphoric</span><span class="bg-emerald-50 text-emerald-700 text-sm px-3 py-1 rounded-full">Creative</span><span class="bg-emerald-50 text-emerald-700 text-sm px-3 py-1 rounded-full">Uplifted</span>
+      </div>
+      <div class="flex gap-2 mt-6">
+        <button class="border-gray-200 text-gray-600 px-4 py-2 rounded-xl text-sm font-semibold border">1g — $15</button><button class="border-brand-600 bg-brand-50 text-brand-700 px-4 py-2 rounded-xl text-sm font-semibold border">3.5g — $35</button><button class="border-gray-200 text-gray-600 px-4 py-2 rounded-xl text-sm font-semibold border">7g — $60</button><button class="border-gray-200 text-gray-600 px-4 py-2 rounded-xl text-sm font-semibold border">14g — $100</button>
+      </div>
+      <p class="text-3xl font-bold text-brand-700 mt-6">$35.00</p>
+      <div class="flex items-center gap-4 mt-6">
+        <div class="flex items-center border border-gray-200 rounded-xl"><button class="p-3">−</button><span class="px-4 text-lg font-bold">1</span><button class="p-3">+</button></div>
+        <button class="flex-1 bg-brand-600 text-white py-3 rounded-xl text-lg font-bold hover:bg-brand-700 flex items-center justify-center gap-2"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> Add to Cart — $35.00</button>
+      </div>
+    </div>
+  </div>
+</main>
+<footer class="bg-gray-900 text-gray-400 mt-12">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div class="grid grid-cols-3 gap-8 text-sm">
+      <div><h3 class="text-white font-semibold mb-3">GreenLeaf Dispensary</h3><p>Licensed cannabis retailer<br/>Tappan, NY 10983</p></div>
+      <div><h3 class="text-white font-semibold mb-3">Hours</h3><p>Mon-Sat: 10am - 8pm<br/>Sun: 11am - 6pm</p></div>
+      <div><h3 class="text-white font-semibold mb-3">Contact</h3><p>(845) 555-0100<br/>info@greenleaf.com</p></div>
+    </div>
+    <div class="border-t border-gray-800 mt-6 pt-6 text-xs text-center">Must be 21+ with valid ID · Licensed by NYS OCM</div>
+  </div>
+</footer>
+</body></html>

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="default">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Nunito+Sans:ital,opsz,wght@0,6..12,300;0,6..12,400;0,6..12,500;0,6..12,600;0,6..12,700;0,6..12,800;1,6..12,400;1,6..12,500&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{colors:{brand:{50:'#F2F9EE',100:'#E0F1D5',200:'#C3E4AE',300:'#9BD37D',400:'#73BF52',500:'#56A638',600:'#3F852A',700:'#336A24',800:'#2B5522',900:'#26481F'},secondary:{50:'#F8F5FE',100:'#F0EAFD',200:'#E2D7FB',300:'#CDBAF7',400:'#B496F0',500:'#9B72E8',600:'#8651D9',700:'#7340C1',800:'#5F359F',900:'#4F2D81'},accent:{50:'#FFF6F0',100:'#FFE9D9',200:'#FFD0B2',300:'#FFB080',400:'#FF884D',500:'#FF6B25',600:'#F04F0D',700:'#C73C0A',800:'#9E3110',900:'#802B11'}},fontFamily:{heading:['Sora','sans-serif'],body:['Nunito Sans','sans-serif']}}}}</script>
+<link rel="stylesheet" href="../../../../../cannasaas-design-system.css">
+<title>Cart — CannaSaas kiosk</title>
+</head>
+<body class="bg-gray-50 min-h-screen">
+<!-- APP: kiosk | PAGE: cart -->
+<div class="h-screen flex flex-col bg-gray-50 select-none"><header class="bg-white border-b border-gray-200 px-6 h-20 flex items-center justify-between shrink-0">
+  <a href="menu.html" class="flex items-center gap-3"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#3F852A" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/></svg><span class="text-2xl font-bold text-gray-900">GreenLeaf</span></a>
+  <div class="flex items-center gap-3"><a href="cart.html" class="relative flex items-center gap-2 bg-brand-600 text-white px-6 py-3 rounded-xl text-lg font-semibold">🛒 Cart<span class="absolute -top-2 -right-2 bg-red-500 text-white text-sm font-bold rounded-full w-7 h-7 flex items-center justify-center">2</span></a><button class="p-3 rounded-xl bg-gray-100 text-gray-500">↻</button></div>
+</header>
+<main class="flex-1 overflow-y-auto p-6"><div class="max-w-2xl mx-auto"><h1 class="text-2xl font-bold text-gray-900 mb-6">Your Cart</h1>
+<div class="space-y-3"><div class="bg-white rounded-xl border border-gray-100 p-4 flex items-center gap-4"><div class="flex-1"><p class="font-semibold text-gray-900 text-lg">Blue Dream</p><p class="text-sm text-gray-500">3.5g · $35 each</p></div><div class="flex items-center gap-2 border border-gray-200 rounded-xl"><button class="p-3">−</button><span class="px-2 text-lg font-bold">2</span><button class="p-3">+</button></div><p class="text-lg font-bold tabular-nums w-20 text-right">$70.00</p></div><div class="bg-white rounded-xl border border-gray-100 p-4 flex items-center gap-4"><div class="flex-1"><p class="font-semibold text-gray-900 text-lg">OG Kush</p><p class="text-sm text-gray-500">1g Pre-Roll · $12 each</p></div><div class="flex items-center gap-2 border border-gray-200 rounded-xl"><button class="p-3">−</button><span class="px-2 text-lg font-bold">1</span><button class="p-3">+</button></div><p class="text-lg font-bold tabular-nums w-20 text-right">$12.00</p></div></div>
+<div class="mt-8 bg-white rounded-xl border border-gray-100 p-6"><div class="flex justify-between text-xl font-bold"><span>Subtotal</span><span class="tabular-nums">$82.00</span></div><a href="checkout.html" class="w-full mt-4 bg-brand-600 text-white text-lg font-bold py-4 rounded-xl flex items-center justify-center gap-2">Checkout →</a></div>
+</div></main><footer class="bg-white border-t border-gray-200 px-6 py-3 text-center text-xs text-gray-400 shrink-0">Must be 21+ with valid ID to purchase · Tap to browse our menu</footer></div>
+</body></html>

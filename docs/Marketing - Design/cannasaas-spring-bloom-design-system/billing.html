@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="default">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Nunito+Sans:ital,opsz,wght@0,6..12,300;0,6..12,400;0,6..12,500;0,6..12,600;0,6..12,700;0,6..12,800;1,6..12,400;1,6..12,500&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{colors:{brand:{50:'#F2F9EE',100:'#E0F1D5',200:'#C3E4AE',300:'#9BD37D',400:'#73BF52',500:'#56A638',600:'#3F852A',700:'#336A24',800:'#2B5522',900:'#26481F'},secondary:{50:'#F8F5FE',100:'#F0EAFD',200:'#E2D7FB',300:'#CDBAF7',400:'#B496F0',500:'#9B72E8',600:'#8651D9',700:'#7340C1',800:'#5F359F',900:'#4F2D81'},accent:{50:'#FFF6F0',100:'#FFE9D9',200:'#FFD0B2',300:'#FFB080',400:'#FF884D',500:'#FF6B25',600:'#F04F0D',700:'#C73C0A',800:'#9E3110',900:'#802B11'}},fontFamily:{heading:['Sora','sans-serif'],body:['Nunito Sans','sans-serif']}}}}</script>
+<link rel="stylesheet" href="cannasaas-design-system.css">
+<title>Billing — CannaSaas platform</title>
+</head>
+<body class="bg-gray-50 min-h-screen">
+<!-- APP: platform | PAGE: billing -->
+<div class="min-h-screen flex bg-slate-50">
+  <aside class="w-56 bg-slate-900 text-white flex flex-col shrink-0">
+    <div class="p-4 border-b border-slate-700"><div class="flex items-center gap-2"><span class="text-brand-400">🛡️</span><span class="font-bold text-sm">Platform Manager</span></div></div>
+    <nav class="flex-1 p-3 space-y-1"><a href="dashboard.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Dashboard</a><a href="tenants.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Tenants</a><a href="billing.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium bg-slate-700 text-white">Billing</a><a href="tax.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Tax Config</a><a href="reports.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Reports</a><a href="activity.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Activity</a></nav>
+    <div class="p-3 border-t border-slate-700"><button class="text-sm text-slate-400 hover:text-white">Sign Out</button></div>
+  </aside>
+  <main class="flex-1 p-6 overflow-y-auto"><h1 class="text-2xl font-bold text-slate-900 mb-6">Billing & Invoices</h1>
+<div class="bg-white rounded-xl border border-slate-200 overflow-hidden"><table class="w-full text-sm"><thead class="bg-slate-50 border-b"><tr><th class="text-left px-4 py-3 text-slate-500">Tenant</th><th class="text-right px-4 py-3 text-slate-500">Amount</th><th class="text-center px-4 py-3 text-slate-500">Status</th><th class="text-right px-4 py-3 text-slate-500">Date</th></tr></thead>
+<tbody class="divide-y divide-slate-100"><tr><td class="px-4 py-3 font-medium text-slate-900">Green Leaf Holdings</td><td class="px-4 py-3 text-right tabular-nums font-medium">$499.00</td><td class="px-4 py-3 text-center"><span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">paid</span></td><td class="px-4 py-3 text-right text-slate-500">Mar 10</td></tr><tr><td class="px-4 py-3 font-medium text-slate-900">Garden State Wellness</td><td class="px-4 py-3 text-right tabular-nums font-medium">$799.00</td><td class="px-4 py-3 text-center"><span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">paid</span></td><td class="px-4 py-3 text-right text-slate-500">Mar 10</td></tr></tbody></table></div></main>
+</div>
+</body></html>

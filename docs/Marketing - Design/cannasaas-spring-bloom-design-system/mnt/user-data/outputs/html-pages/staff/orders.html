@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="default">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Nunito+Sans:ital,opsz,wght@0,6..12,300;0,6..12,400;0,6..12,500;0,6..12,600;0,6..12,700;0,6..12,800;1,6..12,400;1,6..12,500&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{colors:{brand:{50:'#F2F9EE',100:'#E0F1D5',200:'#C3E4AE',300:'#9BD37D',400:'#73BF52',500:'#56A638',600:'#3F852A',700:'#336A24',800:'#2B5522',900:'#26481F'},secondary:{50:'#F8F5FE',100:'#F0EAFD',200:'#E2D7FB',300:'#CDBAF7',400:'#B496F0',500:'#9B72E8',600:'#8651D9',700:'#7340C1',800:'#5F359F',900:'#4F2D81'},accent:{50:'#FFF6F0',100:'#FFE9D9',200:'#FFD0B2',300:'#FFB080',400:'#FF884D',500:'#FF6B25',600:'#F04F0D',700:'#C73C0A',800:'#9E3110',900:'#802B11'}},fontFamily:{heading:['Sora','sans-serif'],body:['Nunito Sans','sans-serif']}}}}</script>
+<link rel="stylesheet" href="../../../../../cannasaas-design-system.css">
+<title>Order Queue — CannaSaas staff</title>
+</head>
+<body class="bg-gray-50 min-h-screen">
+<!-- APP: staff | PAGE: orders -->
+<div class="min-h-screen flex flex-col">
+  <header class="bg-gray-900 text-white"><div class="flex items-center justify-between px-4 h-14">
+    <div class="flex items-center gap-6"><span class="font-bold text-brand-400">Staff Portal</span>
+    <nav class="flex items-center gap-1"><a href="orders.html" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-gray-700 text-white">Orders</a><a href="fulfillment.html" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800">Fulfillment</a><a href="inventory.html" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800">Inventory</a><a href="lookup.html" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800">Lookup</a></nav></div>
+    <div class="flex items-center gap-4">
+      <div class="flex items-center gap-1.5 bg-green-900/50 border border-green-700 rounded-lg px-3 py-1.5"><div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div><span class="text-green-300 text-xs font-mono font-bold">4:32</span></div>
+      <button class="flex items-center gap-1 bg-red-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg">■ Out</button>
+      <span class="text-xs text-gray-500">staff@greenleaf.com</span>
+    </div>
+  </div></header>
+  <main class="flex-1 p-4 sm:p-6"><h1 class="text-xl font-bold text-gray-900 mb-4">Order Queue</h1>
+<div class="grid grid-cols-4 gap-4"><div><h3 class="text-sm font-semibold text-gray-500 mb-2">Pending (2)</h3><div class="space-y-2"><div class="bg-white rounded-lg border border-gray-200 p-3"><div class="flex justify-between mb-1"><span class="font-mono text-xs font-bold">#A1B2</span><span class="text-xs text-gray-400">2m ago</span></div><p class="text-sm text-gray-700">Blue Dream 3.5g × 2</p><p class="text-xs text-gray-500">Pickup · $70.00</p></div><div class="bg-white rounded-lg border border-gray-200 p-3"><div class="flex justify-between mb-1"><span class="font-mono text-xs font-bold">#D4E5</span><span class="text-xs text-gray-400">2m ago</span></div><p class="text-sm text-gray-700">Blue Dream 3.5g × 2</p><p class="text-xs text-gray-500">Pickup · $70.00</p></div></div></div><div><h3 class="text-sm font-semibold text-gray-500 mb-2">Preparing (1)</h3><div class="space-y-2"><div class="bg-white rounded-lg border border-gray-200 p-3"><div class="flex justify-between mb-1"><span class="font-mono text-xs font-bold">#G7H8</span><span class="text-xs text-gray-400">2m ago</span></div><p class="text-sm text-gray-700">Blue Dream 3.5g × 2</p><p class="text-xs text-gray-500">Pickup · $70.00</p></div></div></div><div><h3 class="text-sm font-semibold text-gray-500 mb-2">Ready (1)</h3><div class="space-y-2"><div class="text-xs text-gray-400 text-center py-4">1 ready for pickup</div></div></div><div><h3 class="text-sm font-semibold text-gray-500 mb-2">Completed (8)</h3><div class="space-y-2"><div class="text-xs text-gray-400 text-center py-4">8 today</div></div></div></div></main>
+  <div class="fixed bottom-4 left-4 z-40"><span class="text-[10px] px-2 py-0.5 rounded-full font-medium bg-green-100 text-green-700">● Live</span></div>
+</div>
+</body></html>

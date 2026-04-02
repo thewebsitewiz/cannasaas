@@ -1,0 +1,278 @@
+/* ═══════════════════════════════════════════════════════════════
+   CannaSaas Design System Tokens
+   v1.0 — Cultivated Precision
+   
+   Import this file at the root of any app in the monorepo.
+   These tokens power the entire visual system across
+   storefront, admin, staff, and kiosk applications.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── FOUNDATIONS ─────────────────────────────────────────── */
+
+:root {
+  /* ── Color: Core Palette ── */
+  --cs-forest: #0a1f0a;
+  --cs-primary: #1b5e20;
+  --cs-primary-mid: #2e7d32;
+  --cs-accent: #4caf50;
+  --cs-accent-light: #66bb6a;
+  --cs-gold: #c9a84c;
+  --cs-gold-light: #d4b86a;
+  --cs-cream: #f0f4e8;
+  --cs-white: #ffffff;
+  --cs-dark: #0d0d0d;
+  --cs-sage: #6b8e6b;
+
+  /* ── Color: Semantic ── */
+  --cs-success: #4caf50;
+  --cs-success-bg: #4caf5012;
+  --cs-warning: #c9a84c;
+  --cs-warning-bg: #c9a84c12;
+  --cs-error: #c62828;
+  --cs-error-bg: #c6282812;
+  --cs-info: #1565c0;
+  --cs-info-bg: #1565c012;
+
+  /* ── Color: Surface & Borders ── */
+  --cs-surface: #ffffff;
+  --cs-surface-alt: #fafbf7;
+  --cs-surface-cream: #f0f4e8;
+  --cs-surface-dark: #0a1f0a;
+  --cs-border: rgba(27, 94, 32, 0.1);
+  --cs-border-strong: rgba(27, 94, 32, 0.2);
+  --cs-border-light: rgba(27, 94, 32, 0.05);
+
+  /* ── Color: Text ── */
+  --cs-text-primary: #0a1f0a;
+  --cs-text-secondary: #6b8e6b;
+  --cs-text-muted: #6b8e6b;
+  --cs-text-inverse: #ffffff;
+  --cs-text-accent: #4caf50;
+  --cs-text-gold: #c9a84c;
+
+  /* ── Color: Interactive ── */
+  --cs-interactive: #1b5e20;
+  --cs-interactive-hover: #2e7d32;
+  --cs-interactive-active: #0a1f0a;
+  --cs-interactive-focus: #4caf5040;
+
+  /* ── Color: Gradients ── */
+  --cs-gradient-primary: linear-gradient(135deg, #0a1f0a 0%, #1b5e20 100%);
+  --cs-gradient-growth: linear-gradient(135deg, #1b5e20 0%, #4caf50 100%);
+  --cs-gradient-premium: linear-gradient(135deg, #0a1f0a 0%, #c9a84c 100%);
+  --cs-gradient-hero: linear-gradient(
+    160deg,
+    #0a1f0a 0%,
+    #1b5e20 60%,
+    #2e7d32 100%
+  );
+
+  /* ── Typography: Font Families ── */
+  --cs-font-display: 'Outfit', system-ui, sans-serif;
+  --cs-font-body: 'DM Sans', system-ui, sans-serif;
+  --cs-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* ── Typography: Font Sizes ── */
+  --cs-text-xs: 0.75rem; /* 12px */
+  --cs-text-sm: 0.875rem; /* 14px */
+  --cs-text-base: 1rem; /* 16px */
+  --cs-text-lg: 1.125rem; /* 18px */
+  --cs-text-xl: 1.25rem; /* 20px */
+  --cs-text-2xl: 1.5rem; /* 24px */
+  --cs-text-3xl: 2rem; /* 32px */
+  --cs-text-4xl: 2.5rem; /* 40px */
+  --cs-text-5xl: 3rem; /* 48px */
+  --cs-text-display: 4rem; /* 64px */
+
+  /* ── Typography: Line Heights ── */
+  --cs-leading-none: 1;
+  --cs-leading-tight: 1.1;
+  --cs-leading-snug: 1.25;
+  --cs-leading-normal: 1.5;
+  --cs-leading-relaxed: 1.6;
+  --cs-leading-loose: 1.8;
+
+  /* ── Typography: Letter Spacing ── */
+  --cs-tracking-tight: -0.03em;
+  --cs-tracking-snug: -0.02em;
+  --cs-tracking-normal: 0;
+  --cs-tracking-wide: 0.02em;
+  --cs-tracking-wider: 0.04em;
+  --cs-tracking-widest: 0.08em;
+
+  /* ── Typography: Font Weights ── */
+  --cs-weight-regular: 400;
+  --cs-weight-medium: 500;
+  --cs-weight-semibold: 600;
+  --cs-weight-bold: 700;
+
+  /* ── Spacing Scale ── */
+  --cs-space-1: 0.25rem; /* 4px */
+  --cs-space-2: 0.5rem; /* 8px */
+  --cs-space-3: 0.75rem; /* 12px */
+  --cs-space-4: 1rem; /* 16px */
+  --cs-space-5: 1.25rem; /* 20px */
+  --cs-space-6: 1.5rem; /* 24px */
+  --cs-space-8: 2rem; /* 32px */
+  --cs-space-10: 2.5rem; /* 40px */
+  --cs-space-12: 3rem; /* 48px */
+  --cs-space-16: 4rem; /* 64px */
+  --cs-space-20: 5rem; /* 80px */
+
+  /* ── Border Radius ── */
+  --cs-radius-xs: 4px;
+  --cs-radius-sm: 6px;
+  --cs-radius-md: 10px;
+  --cs-radius-lg: 14px;
+  --cs-radius-xl: 16px;
+  --cs-radius-2xl: 20px;
+  --cs-radius-full: 9999px;
+
+  /* ── Shadows ── */
+  --cs-shadow-xs: 0 1px 2px rgba(10, 31, 10, 0.05);
+  --cs-shadow-sm: 0 1px 3px rgba(10, 31, 10, 0.08);
+  --cs-shadow-md: 0 4px 12px rgba(10, 31, 10, 0.08);
+  --cs-shadow-lg: 0 8px 24px rgba(10, 31, 10, 0.1);
+  --cs-shadow-xl: 0 16px 48px rgba(10, 31, 10, 0.12);
+  --cs-shadow-glow: 0 0 24px rgba(76, 175, 80, 0.15);
+  --cs-shadow-gold: 0 0 24px rgba(201, 168, 76, 0.15);
+
+  /* ── Transitions ── */
+  --cs-transition-fast: 150ms ease;
+  --cs-transition-base: 200ms ease;
+  --cs-transition-slow: 300ms ease;
+  --cs-transition-spring: 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ── Z-Index Scale ── */
+  --cs-z-base: 0;
+  --cs-z-dropdown: 100;
+  --cs-z-sticky: 200;
+  --cs-z-overlay: 300;
+  --cs-z-modal: 400;
+  --cs-z-toast: 500;
+  --cs-z-tooltip: 600;
+
+  /* ── Container Widths ── */
+  --cs-max-width-xs: 480px;
+  --cs-max-width-sm: 640px;
+  --cs-max-width-md: 768px;
+  --cs-max-width-lg: 1024px;
+  --cs-max-width-xl: 1200px;
+  --cs-max-width-2xl: 1440px;
+}
+
+/* ─── DARK MODE OVERRIDES ────────────────────────────────── */
+
+[data-theme='dark'],
+.cs-dark {
+  --cs-surface: #0a1f0a;
+  --cs-surface-alt: #0d2910;
+  --cs-surface-cream: #122712;
+  --cs-border: rgba(76, 175, 80, 0.12);
+  --cs-border-strong: rgba(76, 175, 80, 0.25);
+  --cs-border-light: rgba(76, 175, 80, 0.06);
+  --cs-text-primary: #f0f4e8;
+  --cs-text-secondary: #6b8e6b;
+  --cs-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --cs-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --cs-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* ─── TYPOGRAPHY UTILITIES ───────────────────────────────── */
+
+.cs-display-xl {
+  font-family: var(--cs-font-display);
+  font-weight: var(--cs-weight-bold);
+  font-size: var(--cs-text-display);
+  line-height: var(--cs-leading-none);
+  letter-spacing: var(--cs-tracking-tight);
+}
+
+.cs-display {
+  font-family: var(--cs-font-display);
+  font-weight: var(--cs-weight-bold);
+  font-size: var(--cs-text-4xl);
+  line-height: var(--cs-leading-tight);
+  letter-spacing: var(--cs-tracking-snug);
+}
+
+.cs-h1 {
+  font-family: var(--cs-font-display);
+  font-weight: var(--cs-weight-bold);
+  font-size: var(--cs-text-3xl);
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+.cs-h2 {
+  font-family: var(--cs-font-display);
+  font-weight: var(--cs-weight-semibold);
+  font-size: var(--cs-text-2xl);
+  line-height: var(--cs-leading-snug);
+  letter-spacing: -0.01em;
+}
+
+.cs-h3 {
+  font-family: var(--cs-font-display);
+  font-weight: var(--cs-weight-semibold);
+  font-size: var(--cs-text-lg);
+  line-height: 1.3;
+  letter-spacing: var(--cs-tracking-normal);
+}
+
+.cs-body {
+  font-family: var(--cs-font-body);
+  font-weight: var(--cs-weight-regular);
+  font-size: var(--cs-text-base);
+  line-height: var(--cs-leading-relaxed);
+  letter-spacing: var(--cs-tracking-normal);
+}
+
+.cs-body-sm {
+  font-family: var(--cs-font-body);
+  font-weight: var(--cs-weight-regular);
+  font-size: var(--cs-text-sm);
+  line-height: var(--cs-leading-normal);
+  letter-spacing: 0.01em;
+}
+
+.cs-label {
+  font-family: var(--cs-font-body);
+  font-weight: var(--cs-weight-bold);
+  font-size: var(--cs-text-xs);
+  line-height: var(--cs-leading-normal);
+  letter-spacing: var(--cs-tracking-widest);
+  text-transform: uppercase;
+}
+
+.cs-mono {
+  font-family: var(--cs-font-mono);
+  font-weight: var(--cs-weight-regular);
+  font-size: var(--cs-text-sm);
+  line-height: var(--cs-leading-relaxed);
+  letter-spacing: var(--cs-tracking-wide);
+}
+
+/* ─── BRAND WORDMARK RULE ────────────────────────────────── */
+/* The wordmark always renders "Canna" in primary/white
+   and "Saas" in accent green: */
+
+.cs-wordmark {
+  font-family: var(--cs-font-display);
+  font-weight: var(--cs-weight-bold);
+  letter-spacing: var(--cs-tracking-snug);
+}
+
+.cs-wordmark-canna {
+  color: var(--cs-primary);
+}
+
+.cs-wordmark-saas {
+  color: var(--cs-accent);
+}
+
+/* Reversed variant (on dark backgrounds) */
+.cs-dark .cs-wordmark-canna,
+[data-theme='dark'] .cs-wordmark-canna {
+  color: var(--cs-white);
+}
