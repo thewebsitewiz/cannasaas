@@ -83,3 +83,14 @@ apps/*/pnpm-lock.yaml
 
 # Drizzle
 drizzle/
+
+# ============ Added 2026-04-18 — dev assets not in repo ============
+docs/Marketing - Design/leafly-strain-images/
+docs/Marketing - Design/leafly_brand_logos/
+docs/Testing - QA/
+docs/csdocs/
+docs/html files/
+docs/html files.zip
+docs/old scripts and sections/
+docs/package-lock.json
+docs/package.json
