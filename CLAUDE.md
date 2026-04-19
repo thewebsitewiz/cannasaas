@@ -127,6 +127,61 @@ The "unification sprint" cleaned up file duplication but didn't actually merge t
 
 ---
 
+## Post-launch capability additions
+
+### CannaSaas MCP server
+
+**Status:** not started · **Priority:** high value, post-launch · **Effort:** 1–2 days for v1
+
+Expose CannaSaas's GraphQL API as an MCP (Model Context Protocol) server so Claude Code (and any MCP-compatible client) can query/mutate the dev database directly without any paste-and-run ceremony.
+
+**Why this matters for us specifically.** Every CannaSaas session currently starts with Claude needing context about current DB state — what dispensaries exist, what products are seeded, what the `theme_configs` row for the test tenant looks like, what orders are in-flight. We solve this today by running discovery scripts and pasting output. An MCP server eliminates that round-trip: Claude queries the API directly, reads the live schema, and operates on real data.
+
+**Minimum viable v1** — Python MCP server (FastMCP) running locally that exposes:
+
+- **Tool** `graphql_query(query, variables)` — proxies to `localhost:3000/graphql` with dev auth
+- **Tool** `describe_schema()` — dumps the current GraphQL schema
+- **Resource** `dispensaries://all` — list of dispensaries with IDs and names (so Claude can reference them without lookup)
+- **Resource** `schema://graphql` — the current SDL as a resource
+- **Prompt** `new-resolver` — templated workflow for adding a new GraphQL resolver following CannaSaas conventions
+- **Prompt** `new-migration` — templated workflow for TypeORM migrations with `synchronize: false` and the seed-data pattern
+
+**v2 additions** (after v1 proves value):
+
+- **Tool** `run_migration(name)` — wraps `pnpm migration:run` with safety checks
+- **Tool** `seed_test_dispensary()` — idempotent setup for the `c0000000-…-000001` test tenant
+- **Tool** `metrc_sync_status(dispensaryId)` — check BullMQ queue state for Metrc jobs
+- **Resource** `metrc://compliance-rules` — current compliance patterns as reference
+
+**Implementation notes.** Put it at `tools/mcp-server/` (not `apps/` — it's tooling, not a deployable). Python + FastMCP SDK; don't add TypeScript MCP tooling to the stack. Authenticate to the local API with a dev-only token via `.env.local`. The server should refuse to run if `NODE_ENV=production` — dev-only guardrail. Document setup in `tools/mcp-server/README.md` and reference it from this file.
+
+**Dependency.** Don't start this cold. It's the natural capstone for Phase 2 of the Claude learning curriculum (Intro MCP + Advanced MCP from Anthropic Academy). Building it before doing the courses will take 3× longer.
+
+**Success criteria.** From a fresh Claude Code session in the repo, you can ask "show me all dispensaries with active theme overrides" and get a real answer without pasting schema or running a script. When that works reliably, v1 is done.
+
+### Claude skills for repeated CannaSaas patterns
+
+Live at `.claude/skills/` in the repo root. Check them into git so the team (and future-you) shares them. Candidates in rough priority order:
+
+- `metrc-compliance-check` — knows CannaSaas compliance patterns and flag states
+- `add-migration` — scaffolds TypeORM migrations matching repo conventions
+- `dispensary-scoped-query` — enforces tenant isolation on new resolvers
+- `new-nestjs-module` — scaffolds `apps/api/src/modules/{feature}/` structure
+
+Build these alongside the MCP server — the skills depend on Phase 4 of the learning curriculum (Building Claude Skills on Anthropic Academy).
+
+### Recommended sequencing
+
+These shouldn't block Stripe + inventory. Once those ship:
+
+1. Finish learning curriculum Phases 1–2 (prompt engineering, Claude Code, both MCP courses)
+2. Build skills files (~1 week of evening work, immediate return)
+3. Build MCP server v1 (1–2 days)
+4. Use v1 for a sprint before building v2 — make sure the abstractions hold up under real use
+5. Revisit the two-theme-system unification using the MCP server — it'll go faster when Claude can query `theme_configs` directly
+
+---
+
 ## Gotchas that cost time to rediscover
 
 **Next.js storefront `_next/static/chunks/*.js` 404s are always a stale build cache** — not missing files, not a bad import, not a theme problem. Fix: `rm -rf apps/storefront/.next apps/storefront/node_modules/.cache` then restart. The `nuclearClean` alias does exactly this. Don't chase CSS imports when `_next` chunks are 404ing; clear the cache first.
