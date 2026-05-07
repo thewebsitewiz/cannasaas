@@ -1,0 +1,10 @@
+@import '../../../dist/ui/themes/theme.casual.css';
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family: var(--cs-font-sans, system-ui, sans-serif);
+  background: var(--cs-color-bg);
+  color: var(--cs-color-text);
+}

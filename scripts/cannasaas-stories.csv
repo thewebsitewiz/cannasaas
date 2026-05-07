@@ -1,0 +1,110 @@
+name,description,type,epic,labels,state
+Test and fix register page,Customers cannot reliably create accounts - blocks all customer-facing flows.,bug,Customer Accounts & Authentication,tier-2,to do
+Build customer account portal with order history,"Logged-in customer experience: profile, past orders, reorder, saved addresses.",feature,Customer Accounts & Authentication,tier-2,to do
+Wire real product images end-to-end,Replace placeholder leaf icons with real product imagery in storefront.,feature,Product Catalog & Discovery,tier-2,to do
+Implement full-text search with autocomplete,"Customers need to find products by name, strain, effects, etc.",feature,Product Catalog & Discovery,tier-2,to do
+Wire /products page to searchProducts query,Switch /products listing to use the searchProducts GraphQL query.,feature,Product Catalog & Discovery,tier-4,to do
+Integrate Otreeba for strain enrichment,"Pull strain metadata (effects, terpenes, lineage) into product detail.",feature,Product Catalog & Discovery,tier-3,to do
+Build product image upload with S3 wiring,Admin/staff product image upload flow backed by S3.,feature,Product Catalog & Discovery,tier-5,to do
+Implement taxBreakdown GraphQL JSON scalar,"Receipts need itemized tax breakdown - state, local, excise, etc.",feature,Payments & Tax,tier-2,to do
+Build promotions/discounts engine,"Percentage off, BOGO, bundle discounts, time-windowed promotions per dispensary.",feature,Promotions & Loyalty,tier-3,to do
+Build loyalty/rewards system,"Points accrual, tiers, redemption flow.",feature,Promotions & Loyalty,tier-4,to do
+Wire kiosk app to API,Connect kiosk app (port 5176 or assigned) to API for in-store self-service ordering.,feature,Sales Channels & Fulfillment,tier-3,to do
+Build delivery/fulfillment module,"Delivery zones, driver assignment, status updates - critical for NY/NJ market.",feature,Sales Channels & Fulfillment,tier-3,to do
+Integrate POS systems (Dutchie/Treez),Bidirectional sync with Dutchie and Treez for migration paths.,feature,Sales Channels & Fulfillment,tier-5,to do
+Build staffing module with cert/expiration tracking,Track staff certifications and expirations - regulatory compliance requirement.,feature,Staff Management & HR,"tier-3,compliance",to do
+Build time clock and payroll export,"Clock in/out, hours tracking, payroll-ready export (CSV/QuickBooks).",feature,Staff Management & HR,tier-4,to do
+Build staff scheduling,"Shift creation, assignment, swaps, coverage requests.",feature,Staff Management & HR,tier-4,to do
+Add timesheet submission to staff portal,Staff submit timesheets for approval.,feature,Staff Management & HR,tier-6,to do
+Add timesheet approval workflow to admin portal,Admin approves/unapproves staff timesheets.,feature,Staff Management & HR,tier-6,to do
+Add inventory filters to staff inventory screen,"Filter by category, stock level, supplier, etc.",feature,Inventory Management,tier-6,to do
+Add inventory filters to admin inventory screen,Same filtering capability on admin side.,feature,Inventory Management,tier-6,to do
+Build analytics/reporting dashboards,"Sales, inventory turnover, top products, customer cohorts, staff performance.",feature,Analytics & Reporting,tier-4,to do
+Build Spring Bloom theme in admin,Finish Spring Bloom and surface in admin theme picker.,feature,Design System,tier-4,to do
+Add additional design themes,"Expand beyond the 10 current themes (apothecary, casual, citrus, dark, earthy, midnight, minimal, modern, neon, regal).",feature,Design System,tier-4,to do
+Build admin theme preview,Live preview of theme in admin before committing change.,feature,Design System,tier-4,to do
+Unify theme-presets and design-systems mechanisms,Tech debt: collapse parallel theme systems into single source of truth.,chore,Design System,tech-debt,to do
+Fix dispensary UUID issue,Ticking time bomb for multi-tenant data integrity.,bug,Data Integrity & Code Quality,tier-2,to do
+Add CRON job for failed Metrc retries,Compliance cannot have silent Metrc sync failures.,chore,Data Integrity & Code Quality,"tier-3,compliance",to do
+Fix ESLint config,Restore linting across monorepo - code quality degrades fast without it.,chore,Data Integrity & Code Quality,tier-3,to do
+Implement WebSocket real-time updates,"Live order status, inventory updates, notifications.",feature,Real-time & Mobile,tier-5,to do
+Add PWA mobile support,Installable PWA with offline shell and push notifications.,feature,Real-time & Mobile,tier-5,to do
+Production Docker Compose setup,"Production-ready compose with proper networking, volumes, secrets.",chore,DevOps & Production Hardening,tier-6,to do
+Build CI/CD pipeline,"Automated test, build, deploy on merge.",chore,DevOps & Production Hardening,tier-6,to do
+Environment-specific configs,Dev/staging/prod config separation with secrets management.,chore,DevOps & Production Hardening,tier-6,to do
+SSL/domain setup,"Production domain, certs, HTTPS enforcement.",chore,DevOps & Production Hardening,tier-6,to do
+Database backup strategy,"Automated backups, restore drill, retention policy.",chore,DevOps & Production Hardening,tier-6,to do
+Monitoring and alerting,"Logs, metrics, uptime, error tracking, on-call alerts.",chore,DevOps & Production Hardening,tier-6,to do
+Evaluate cannabis-friendly payment processors,"Stripe is OFF the table per ToS. Evaluate Aeropay, Hypur, KindTap, CanPay, etc.",chore,Cannabis-Friendly Payment Processor,"critical-path,blocker",to do
+Integrate selected payment processor,Replace Stripe scaffolding with chosen processor's SDK.,feature,Cannabis-Friendly Payment Processor,critical-path,to do
+Production webhook registration,Register processor webhooks for production environment.,chore,Cannabis-Friendly Payment Processor,critical-path,to do
+Webhook signature verification,Validate inbound webhooks cryptographically.,feature,Cannabis-Friendly Payment Processor,security,to do
+Failed payment retry logic,Idempotent retry with backoff for failed payment events.,feature,Cannabis-Friendly Payment Processor,reliability,to do
+Refund flow,Admin-initiated refunds with audit trail.,feature,Cannabis-Friendly Payment Processor,operations,to do
+Real-time stock decrement on order placement,Already partially handled with FOR UPDATE row locks - finish the broader workflow.,feature,Real-time Inventory Management,critical-path,to do
+Low-stock alerts,"Configurable thresholds, email/in-app alerts to staff/admin.",feature,Real-time Inventory Management,critical-path,to do
+Stock reconciliation against Metrc,"Periodic reconciliation job, surface discrepancies.",feature,Real-time Inventory Management,compliance,to do
+Manual stock adjustments with audit trail,"Staff/admin can adjust stock with reason code, fully audited.",feature,Real-time Inventory Management,compliance,to do
+Bulk inventory import,CSV/spreadsheet import for initial onboarding and large updates.,feature,Real-time Inventory Management,onboarding,to do
+Purchase limits per customer per day,Enforce NY/NJ/CT-specific possession limits at checkout.,feature,Compliance & Regulatory,"compliance,blocker",to do
+Tax reporting exports for state filings,Per-jurisdiction tax export formats.,feature,Compliance & Regulatory,compliance,to do
+Audit logs for regulated actions,"Immutable audit trail for inventory, sales, refunds, void actions.",feature,Compliance & Regulatory,compliance,to do
+COA document attachment per product/batch,"Upload Certificate of Analysis PDFs, surface to customers.",feature,Compliance & Regulatory,compliance,to do
+Seed-to-sale traceability reporting,Reports tying inventory back to Metrc lot/batch.,feature,Compliance & Regulatory,compliance,to do
+Tenant onboarding/provisioning workflow,Self-serve or admin-driven new tenant creation.,feature,Multi-tenancy & Tenant Administration,platform,to do
+Tenant-level configuration,"Business hours, tax rates, delivery zones, license numbers per dispensary.",feature,Multi-tenancy & Tenant Administration,platform,to do
+Tenant suspension/offboarding,Pause/cancel tenants with data retention rules.,feature,Multi-tenancy & Tenant Administration,platform,to do
+Super-admin tooling,Internal Anthropic-only admin for managing all tenants.,feature,Multi-tenancy & Tenant Administration,"platform,operations",to do
+Tenant-level usage metering,"Track usage for billing tier enforcement (orders, products, users).",feature,Multi-tenancy & Tenant Administration,"platform,revenue",to do
+Define plan tiers (Starter/Growth/Enterprise),Feature flags and limits per tier ($299/$599/custom).,feature,Billing & Subscription Management,revenue,to do
+Subscription lifecycle management,"Trial, active, past-due, canceled state machine.",feature,Billing & Subscription Management,revenue,to do
+Invoice generation,Automated invoicing per billing cycle.,feature,Billing & Subscription Management,revenue,to do
+Dunning for failed payments,"Retry, email reminders, grace period, suspension flow.",feature,Billing & Subscription Management,revenue,to do
+Plan upgrade/downgrade flows,Self-serve plan changes with proration.,feature,Billing & Subscription Management,revenue,to do
+Branded transactional email templates per tenant,Each dispensary's emails use their branding.,feature,Notifications & Communications,platform,to do
+SMS notifications,"Order ready, delivery dispatched, etc. via Twilio or similar.",feature,Notifications & Communications,platform,to do
+Push notifications for PWA,"Web push for order updates, promotions.",feature,Notifications & Communications,platform,to do
+In-app notifications for staff/admin,Bell/notification center in admin and staff portals.,feature,Notifications & Communications,platform,to do
+Marketing email opt-in management,CAN-SPAM/CASL-compliant opt-in tracking.,feature,Notifications & Communications,compliance,to do
+RBAC refinement,"Tighten role definitions, permission audit, least-privilege review.",chore,Security & Access Control,security,to do
+2FA/MFA for admin and staff,TOTP/SMS second factor on privileged accounts.,feature,Security & Access Control,security,to do
+Session management,"Session expiry, device list, force logout.",feature,Security & Access Control,security,to do
+Password reset flows,Email-based reset with token expiration.,feature,Security & Access Control,security,to do
+API rate limiting,Per-user/per-IP throttling on GraphQL and REST endpoints.,feature,Security & Access Control,security,to do
+Audit logging for sensitive actions,"Auth changes, permission changes, admin actions.",feature,Security & Access Control,security,to do
+Secret rotation procedures,"Documented and automated rotation for API keys, DB creds.",chore,Security & Access Control,security,to do
+New dispensary signup flow,Self-serve signup with license verification.,feature,Onboarding & Self-Service Setup,growth,to do
+Guided setup wizard,"Step-by-step: license, Metrc, payment processor, theme, products.",feature,Onboarding & Self-Service Setup,growth,to do
+Sample data seeding,Optional sample products/orders for new tenants to explore.,feature,Onboarding & Self-Service Setup,growth,to do
+Onboarding email drip,Sequence of helpful emails over first 14 days.,feature,Onboarding & Self-Service Setup,growth,to do
+Internal support portal,"View tenant state, recent orders, errors for support.",feature,Customer Support Tooling,operations,to do
+Tenant impersonation capability with audit,"Support can assume tenant context to debug, fully audited.",feature,Customer Support Tooling,"operations,security",to do
+Support ticket integration,"Intercom, Zendesk, or similar.",chore,Customer Support Tooling,operations,to do
+Customer-facing help center,Searchable docs for end customers.,feature,Customer Support Tooling,operations,to do
+In-app chat or contact form,Customer-to-dispensary contact channel.,feature,Customer Support Tooling,operations,to do
+API documentation,"GraphQL schema docs, examples, auth guide.",chore,Documentation,docs,to do
+Admin user guides,How-to docs for dispensary admins.,chore,Documentation,docs,to do
+Staff training materials,"Onboarding for dispensary staff using POS, kiosk, etc.",chore,Documentation,docs,to do
+Video walkthroughs,Screencasts of common workflows.,chore,Documentation,docs,to do
+Changelog and release notes,Public-facing changelog for tenants.,chore,Documentation,docs,to do
+Ops runbooks,"Internal runbooks for incidents, deploys, restores.",chore,Documentation,"docs,operations",to do
+E2E test suite (Playwright),"Cover register/login, browse/checkout, admin product create.",chore,Testing & QA Infrastructure,quality,to do
+Integration test coverage for critical paths,"Checkout, Metrc sync, payment webhooks.",chore,Testing & QA Infrastructure,quality,to do
+Load and performance testing,Baseline + regression load tests.,chore,Testing & QA Infrastructure,"quality,performance",to do
+Smoke test suite for deploys,5-minute smoke tests run on every deploy.,chore,Testing & QA Infrastructure,quality,to do
+Test data management,"Reproducible seed data, factory pattern.",chore,Testing & QA Infrastructure,quality,to do
+Database query optimization pass,"Index review, slow query log analysis.",chore,Performance & Scalability,performance,to do
+Add Redis caching layer,"Cache hot reads (product catalog, theme configs, etc.).",feature,Performance & Scalability,performance,to do
+CDN for static assets,CloudFront or Cloudflare in front of static/uploads.,chore,Performance & Scalability,performance,to do
+Image optimization pipeline,"Resize, WebP conversion, responsive srcsets.",feature,Performance & Scalability,performance,to do
+GraphQL query complexity limits,Prevent expensive queries from DOSing the API.,feature,Performance & Scalability,"performance,security",to do
+N+1 query auditing,Identify and fix N+1 patterns in resolvers.,chore,Performance & Scalability,performance,to do
+Storefront WCAG 2.1 AA audit,Full accessibility audit of customer storefront.,chore,Accessibility (WCAG),compliance,to do
+Keyboard navigation support,All interactive elements reachable and operable via keyboard.,feature,Accessibility (WCAG),compliance,to do
+Screen reader support,"ARIA labels, semantic HTML, tested with VoiceOver/NVDA.",feature,Accessibility (WCAG),compliance,to do
+Color contrast verification across all themes,Verify 10+ themes meet AA contrast ratios.,chore,Accessibility (WCAG),compliance,to do
+Accessibility statement page,Public-facing accessibility commitment.,chore,Accessibility (WCAG),compliance,to do
+i18n framework integration,"Add i18n library, externalize strings.",chore,Internationalization,future,to do
+CAD currency handling,Multi-currency support for Canada expansion.,feature,Internationalization,"future,canada",to do
+French (Quebec) language support,French translations for Quebec market.,feature,Internationalization,"future,canada",to do
+CTLS vs Metrc abstraction layer,Compliance system abstraction to support both Metrc (US) and CTLS (Canada).,feature,Internationalization,"future,canada",to do

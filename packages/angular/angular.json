@@ -1,0 +1,104 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "cli": {
+    "packageManager": "pnpm"
+  },
+  "newProjectRoot": "projects",
+  "projects": {
+    "kiosk": {
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "configurations": {
+            "development": {
+              "extractLicenses": false,
+              "optimization": false,
+              "sourceMap": true
+            },
+            "production": {
+              "budgets": [
+                {
+                  "maximumError": "1MB",
+                  "maximumWarning": "500kB",
+                  "type": "initial"
+                },
+                {
+                  "maximumError": "8kB",
+                  "maximumWarning": "4kB",
+                  "type": "anyComponentStyle"
+                }
+              ],
+              "outputHashing": "all"
+            }
+          },
+          "defaultConfiguration": "production",
+          "options": {
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "projects/kiosk/public"
+              }
+            ],
+            "browser": "projects/kiosk/src/main.ts",
+            "stylePreprocessorOptions": {
+              "includePaths": ["dist/ui"]
+            },
+            "styles": ["projects/kiosk/src/styles.css"],
+            "tsConfig": "projects/kiosk/tsconfig.app.json"
+          }
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "configurations": {
+            "development": {
+              "buildTarget": "kiosk:build:development"
+            },
+            "production": {
+              "buildTarget": "kiosk:build:production"
+            }
+          },
+          "defaultConfiguration": "development",
+          "options": {
+            "host": "localhost",
+            "port": 5276
+          }
+        },
+        "test": {
+          "builder": "@angular/build:unit-test"
+        }
+      },
+      "prefix": "cs",
+      "projectType": "application",
+      "root": "projects/kiosk",
+      "schematics": {},
+      "sourceRoot": "projects/kiosk/src"
+    },
+    "ui": {
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "configurations": {
+            "development": {
+              "tsConfig": "projects/ui/tsconfig.lib.json"
+            },
+            "production": {
+              "tsConfig": "projects/ui/tsconfig.lib.prod.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "tsConfig": "projects/ui/tsconfig.spec.json"
+          }
+        }
+      },
+      "prefix": "cs",
+      "projectType": "library",
+      "root": "projects/ui",
+      "sourceRoot": "projects/ui/src"
+    }
+  },
+  "version": 1
+}

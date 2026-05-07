@@ -1,0 +1,31 @@
+query Products(
+  $dispensaryId: ID!
+  $categoryId: Int
+  $productTypeId: Int
+  $search: String
+  $limit: Int = 50
+  $offset: Int
+) {
+  products(
+    dispensaryId: $dispensaryId
+    categoryId: $categoryId
+    productTypeId: $productTypeId
+    search: $search
+    limit: $limit
+    offset: $offset
+  ) {
+    id
+    name
+    sku
+    shortDescription
+    strainName
+    strainType
+    thcPercent
+    cbdPercent
+    primaryCategoryId
+    productTypeId
+    brandId
+    isActive
+    isApproved
+  }
+}

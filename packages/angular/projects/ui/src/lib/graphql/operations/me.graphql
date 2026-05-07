@@ -1,0 +1,13 @@
+query Me {
+  me {
+    id
+    email
+    role
+    firstName
+    lastName
+    isActive
+    emailVerified
+    dispensaryId
+    organizationId
+  }
+}

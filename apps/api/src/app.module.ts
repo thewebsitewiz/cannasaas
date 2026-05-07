@@ -58,6 +58,7 @@ import { IdVerificationModule } from './modules/verification/id-verification.mod
 import { CacheModule } from './common/services/cache.module';
 import { SentryModule } from './common/services/sentry.module';
 import { MetricsModule } from './common/services/metrics.module';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -76,8 +77,8 @@ import { MetricsModule } from './common/services/metrics.module';
     EventEmitterModule.forRoot(),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
-      autoSchemaFile: true,
-      sortSchema: true,
+      autoSchemaFile: join(process.cwd(), 'schema.gql'),
+      sortSchema: true, // optional, makes diffs cleaner
       playground: process.env['NODE_ENV'] !== 'production',
       context: ({ req, res }: { req: unknown; res: unknown }) => ({ req, res }),
       plugins: [depthLimitPlugin, complexityLimitPlugin],

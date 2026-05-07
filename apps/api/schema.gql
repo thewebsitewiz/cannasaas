@@ -1,0 +1,2610 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type ActiveClock {
+  clockIn: DateTime!
+  email: String!
+  entryId: ID!
+  firstName: String!
+  hoursSoFar: Float!
+  lastName: String!
+  positionName: String
+  profileId: ID!
+}
+
+input AddAddressInput {
+  addressLine1: String!
+  addressLine2: String
+  city: String!
+  deliveryInstructions: String
+  isDefault: Boolean
+  label: String
+  latitude: Float
+  longitude: Float
+  state: String!
+  zip: String!
+}
+
+input AddCertificationInput {
+  certTypeId: Int!
+  certificateNumber: String
+  documentUrl: String
+  expirationDate: String
+  issuedDate: String
+  notes: String
+  profileId: ID!
+}
+
+type AdjustResult {
+  inventory: InventoryResult!
+  transaction: InventoryTransactionResult!
+}
+
+type AgeVerification {
+  calculatedAge: Int
+  created_at: DateTime!
+  dateOfBirth: String
+  dispensaryId: ID
+  failureReason: String
+  idType: String
+  method: String!
+  result: String!
+  userId: ID!
+  verificationId: ID!
+}
+
+type AgeVerifyResult {
+  age: Int!
+  reason: String
+  verified: Boolean!
+}
+
+type AuditLog {
+  action: String!
+  auditId: ID!
+  changes: JSON
+  created_at: DateTime!
+  dispensaryId: ID
+  entityId: String
+  entityType: String!
+  ipAddress: String
+  newValues: JSON
+  oldValues: JSON
+  userEmail: String
+  userId: ID
+}
+
+type AuthToken {
+  accessToken: String!
+  expiresIn: Int!
+}
+
+type AutocompleteResult {
+  id: String!
+  name: String!
+  productType: String
+  similarity: Float
+  strainType: String
+}
+
+type AvailableSlotResult {
+  endTime: String!
+  slotId: String!
+  spotsRemaining: Int!
+  startTime: String!
+}
+
+type BillingInvoice {
+  amount: Float!
+  created_at: DateTime!
+  invoice_id: ID!
+  org_name: String
+  status: String!
+  total: Float!
+}
+
+type BiotrackCredential {
+  apiKey: String!
+  apiSecret: String
+  createdAt: DateTime!
+  credentialId: ID!
+  dispensaryId: String!
+  isActive: Boolean!
+  lastValidatedAt: DateTime
+  licenseNumber: String
+  state: String!
+  updatedAt: DateTime!
+  validationError: String
+}
+
+type BiotrackSyncResult {
+  itemCount: Int
+  message: String!
+  success: Boolean!
+}
+
+type BiotrackValidationResult {
+  message: String!
+  valid: Boolean!
+}
+
+type BirthdayCheck {
+  bonusPoints: Int
+  discountPercent: Float
+  eligible: Boolean!
+  reason: String
+}
+
+type BrandListItem {
+  brandId: ID!
+  createdAt: DateTime!
+  isActive: Boolean!
+  logoUrl: String
+  name: String!
+  organizationId: ID!
+  slug: String
+}
+
+type BrandResult {
+  brandId: ID!
+  createdAt: DateTime!
+  description: String
+  isActive: Boolean!
+  logoUrl: String
+  name: String!
+  organizationId: ID!
+  slug: String
+  updatedAt: DateTime!
+  websiteUrl: String
+}
+
+type BulkEnrichResultType {
+  enriched: Int!
+  failed: Int!
+  total: Int!
+}
+
+type BulkImportResultType {
+  imported: Int!
+  skipped: Int!
+  total: Int!
+}
+
+type BulkTagResult {
+  failed: Int!
+  results: [BulkTagResultItem!]!
+  succeeded: Int!
+  total: Int!
+}
+
+type BulkTagResultItem {
+  error: String
+  productId: ID!
+  productName: String!
+  success: Boolean!
+}
+
+input BulkTagUidInput {
+  dispensaryId: ID!
+  pairs: [ProductUidPair!]!
+}
+
+type CampaignStats {
+  campaignId: ID!
+  clickRate: Float!
+  openRate: Float!
+  sentCount: Int!
+}
+
+type CashDiscountConfig {
+  cashDeliveryEnabled: Boolean!
+  cashDiscountPercent: Float!
+  isCashEnabled: Boolean!
+}
+
+type CashDiscountPreview {
+  adjustedSubtotal: Float!
+  discountAmount: Float!
+  discountPercent: Float!
+}
+
+type CashlessPaymentResult {
+  paymentUrl: String
+  redirectUrl: String
+  referenceId: String!
+}
+
+type CategoryBreakdown {
+  category: String!
+  productCount: Int!
+  revenue: Float!
+  unitsSold: Int!
+}
+
+type ClockStatus {
+  currentEntry: TimeEntry
+  isClockedIn: Boolean!
+  isExempt: Boolean!
+  todayHours: Float!
+}
+
+type CompanyListItem {
+  city: String
+  companyId: ID!
+  contactEmail: String
+  createdAt: DateTime!
+  dbaName: String
+  legalName: String!
+  licenseNumber: String
+  licenseState: String
+  organizationId: ID!
+  state: String
+}
+
+type CompanyResult {
+  addressLine1: String
+  city: String
+  companyId: ID!
+  contactEmail: String
+  contactPhone: String
+  createdAt: DateTime!
+  dbaName: String
+  ein: String
+  legalName: String!
+  licenseExpiryDate: DateTime
+  licenseNumber: String
+  licenseState: String
+  licenseType: String
+  metrcFacilityLicense: String
+  organizationId: ID!
+  state: String
+  stateOfIncorporation: String
+  updatedAt: DateTime!
+  zip: String
+}
+
+input CompleteOrderInput {
+  dispensaryId: ID!
+  metrcReceiptId: String
+  notes: String
+  orderId: ID!
+}
+
+type ComplianceAlert {
+  alertType: String!
+  daysRemaining: Int
+  entityId: ID
+  entityName: String
+  entityType: String
+  expirationDate: String
+  licenseNumber: String
+  localQuantity: Float
+  message: String!
+  metrcQuantity: Float
+  severity: String!
+  variancePercent: Float
+}
+
+type ComplianceAlertsResult {
+  alerts: [ComplianceAlert!]!
+  criticalCount: Int!
+  infoCount: Int!
+  totalAlerts: Int!
+  warningCount: Int!
+}
+
+type ComplianceIssue {
+  issues: [String!]!
+  productId: ID!
+  productName: String!
+}
+
+type ComplianceOverview {
+  activeCerts: Int!
+  activeEmployees: Int!
+  expiredCerts: Int!
+  expiringSoon: Int!
+  pendingCerts: Int!
+  totalCerts: Int!
+  totalEmployees: Int!
+}
+
+type ComplianceReport {
+  compliancePercent: Int!
+  compliantProducts: Float!
+  dispensaryId: ID!
+  generatedAt: DateTime!
+  issues: [ComplianceIssue!]!
+  nonCompliantProducts: Float!
+  totalProducts: Float!
+}
+
+type ComplianceSummary {
+  compliancePercent: Float!
+  compliantProducts: Int!
+  missingCategory: Int!
+  missingPackageLabel: Int!
+  missingUid: Int!
+  totalProducts: Int!
+}
+
+input CreateBrandInput {
+  description: String
+  logoUrl: String
+  name: String!
+  organizationId: ID!
+  slug: String
+  websiteUrl: String
+}
+
+input CreateCompanyInput {
+  addressLine1: String
+  city: String
+  contactEmail: String
+  contactPhone: String
+  dbaName: String
+  ein: String
+  legalName: String!
+  licenseExpiryDate: String
+  licenseNumber: String
+  licenseState: String
+  licenseType: String
+  organizationId: ID!
+  state: String
+  stateOfIncorporation: String
+  zip: String
+}
+
+input CreateDispensaryInput {
+  addressLine1: String
+  city: String
+  companyId: ID!
+  email: String
+  licenseNumber: String
+  licenseType: String
+  name: String!
+  phone: String
+  slug: String!
+  state: String!
+  timezone: String
+  type: String
+  website: String
+  zip: String
+}
+
+input CreateManufacturerInput {
+  addressLine1: String
+  brandId: ID
+  city: String
+  contactEmail: String
+  contactPhone: String
+  dbaName: String
+  legalName: String!
+  licenseExpiryDate: String
+  licenseNumber: String
+  licenseState: String
+  licenseType: String
+  state: String
+  zip: String
+}
+
+input CreateOrderInput {
+  customerUserId: ID
+  dispensaryId: ID!
+  lineItems: [OrderLineItemInput!]!
+  notes: String
+  orderType: String
+}
+
+input CreateOrganizationInput {
+  billingAddress: String
+  billingEmail: String
+  name: String!
+  slug: String!
+  subscriptionTier: String
+}
+
+input CreateProductInput {
+  cbdPercent: Float
+  description: String
+  dispensaryId: ID!
+  isActive: Boolean
+  name: String!
+  retailPrice: Float
+  strainName: String
+  strainType: String
+  thcPercent: Float
+  variantName: String
+  variantQuantityG: Float
+}
+
+input CreatePromotionInput {
+  appliesTo: String
+  appliesToBrandId: ID
+  appliesToProductTypeId: Float
+  appliesToTaxCategoryId: Float
+  code: String
+  description: String
+  discountValue: Float!
+  endAt: String
+  isMedicalDiscount: Boolean
+  isStaffDiscount: Boolean
+  maxUses: Int
+  maxUsesPerCustomer: Int
+  minimumOrderTotal: Float
+  name: String!
+  stackableWithOthers: Boolean
+  startAt: String
+  type: String!
+}
+
+input CreateReviewInput {
+  areasForImprovement: String
+  complianceRating: Int
+  goals: String
+  managerComments: String
+  overallRating: Int
+  periodEnd: String!
+  periodStart: String!
+  profileId: ID!
+  reliabilityRating: Int
+  salesRating: Int
+  strengths: String
+  teamworkRating: Int
+}
+
+type CredentialValidationResult {
+  licenseNumber: String
+  licenseType: String
+  message: String
+  metrcFacilityName: String
+  valid: Boolean!
+}
+
+type CustomerAddress {
+  addressId: ID!
+  addressLine1: String!
+  addressLine2: String
+  city: String!
+  created_at: DateTime!
+  deliveryInstructions: String
+  isDefault: Boolean!
+  label: String!
+  latitude: Float
+  longitude: Float
+  state: String!
+  userId: ID!
+  zip: String!
+}
+
+type CustomerOrderSummary {
+  createdAt: DateTime!
+  dispensaryName: String
+  itemCount: Int
+  orderId: ID!
+  orderStatus: String!
+  orderType: String!
+  subtotal: Float!
+  total: Float!
+}
+
+type CustomerProfile {
+  ageVerificationMethod: String
+  ageVerified: Boolean!
+  ageVerifiedAt: DateTime
+  created_at: DateTime!
+  dateOfBirth: String
+  idDocumentType: String
+  isMedicalPatient: Boolean!
+  lastOrderAt: DateTime
+  loyaltyPoints: Int!
+  marketingOptIn: Boolean!
+  medicalCardNumber: String
+  phone: String
+  preferredDispensaryId: ID
+  profileId: ID!
+  smsOptIn: Boolean!
+  totalOrders: Int!
+  totalSpent: Float!
+  updated_at: DateTime!
+  userId: ID!
+}
+
+type DailySales {
+  date: String!
+  discounts: Float!
+  gross: Float!
+  net: Float!
+  orders: Int!
+  tax: Float!
+}
+
+type DashboardData {
+  categoryBreakdown: [CategoryBreakdown!]!
+  compliance: ComplianceSummary!
+  inventory: InventoryOverview!
+  lowStockItems: [LowStockItem!]!
+  metrcSync: MetrcSyncOverview!
+  sales: SalesOverview!
+  salesTrend: [SalesTrend!]!
+  topProducts: [TopProduct!]!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type DeliveryEligibilityResult {
+  distance: Float
+  eligible: Boolean!
+  reason: String
+  zone: DeliveryZoneMatch
+}
+
+type DeliveryTrip {
+  actualMinutes: Int
+  created_at: DateTime!
+  customerRating: Int
+  deliveredAt: DateTime
+  deliveryAddress: String
+  departedAt: DateTime
+  dispensaryId: ID!
+  distanceMiles: Float
+  driverId: ID!
+  estimatedMinutes: Int
+  orderId: ID
+  status: String!
+  tripId: ID!
+}
+
+type DeliveryZone {
+  createdAt: DateTime!
+  deliveryFee: Float!
+  dispensaryId: ID!
+  estimatedMinutesMax: Int
+  estimatedMinutesMin: Int
+  freeDeliveryThreshold: Float
+  isActive: Boolean!
+  minOrderAmount: Float
+  name: String!
+  radiusMiles: Float!
+  sortOrder: Int
+  updatedAt: DateTime!
+  zoneId: ID!
+}
+
+type DeliveryZoneMatch {
+  deliveryFee: Float!
+  estimatedMinutesMax: Int!
+  estimatedMinutesMin: Int!
+  name: String!
+  zoneId: String!
+}
+
+type DesignSystemConfig {
+  designSystem: String!
+  designSystemFile: String!
+}
+
+type DiscountResult {
+  discountAmount: Float!
+  newTotal: Float!
+  promoId: ID!
+  promoName: String!
+  type: String!
+}
+
+type DispStats {
+  active: Int!
+  states: Int!
+  total: Int!
+}
+
+type DispensaryListItem {
+  city: String
+  companyId: ID!
+  createdAt: DateTime!
+  entityId: ID!
+  isActive: Boolean!
+  isDeliveryEnabled: Boolean!
+  isPickupEnabled: Boolean!
+  licenseNumber: String
+  name: String!
+  slug: String!
+  state: String
+  type: String!
+  zip: String
+}
+
+type DispensaryProductType {
+  code: String!
+  isEnabled: Boolean!
+  name: String!
+  productTypeId: Int!
+  sortOrder: Int!
+}
+
+input DispensaryProductTypeInput {
+  isEnabled: Boolean!
+  productTypeId: Int!
+  sortOrder: Int!
+}
+
+type DispensaryResult {
+  addressLine1: String
+  cashDeliveryEnabled: Boolean
+  cashDiscountPercent: Float
+  city: String
+  companyId: ID!
+  county: String
+  createdAt: DateTime!
+  email: String
+  entityId: ID!
+  isActive: Boolean!
+  isCashEnabled: Boolean
+  isDeliveryEnabled: Boolean!
+  isPickupEnabled: Boolean!
+  latitude: Float
+  licenseNumber: String
+  licenseType: String
+  longitude: Float
+  metrcLicenseNumber: String
+  municipality: String
+  name: String!
+  phone: String
+  slug: String!
+  state: String!
+  timezone: String
+  type: String!
+  updatedAt: DateTime
+  website: String
+  zip: String
+}
+
+type DriverProfile {
+  created_at: DateTime!
+  currentLatitude: Float
+  currentLongitude: Float
+  dispensaryId: ID!
+  driverId: ID!
+  insuranceExpiry: String
+  insuranceProvider: String
+  lastLocationUpdate: DateTime
+  licensePlate: String
+  maxDeliveriesPerHour: Int!
+  profileId: ID!
+  status: String!
+  updated_at: DateTime!
+  vehicleColor: String
+  vehicleMake: String
+  vehicleModel: String
+  vehicleYear: Int
+}
+
+type DriverStats {
+  avgDeliveryMinutes: Float!
+  avgDistance: Float!
+  avgRating: Float!
+  completed: Int!
+  positiveRatings: Int!
+  totalMiles: Float!
+  totalTrips: Int!
+}
+
+type EligibilityResult {
+  eligible: Boolean!
+  promotion: PromotionResult
+  reason: String
+}
+
+type EmployeeCertification {
+  certTypeId: Int!
+  certificateNumber: String
+  certificationId: ID!
+  createdAt: DateTime!
+  documentUrl: String
+  expirationDate: String
+  issuedDate: String
+  notes: String
+  profileId: ID!
+  status: String!
+  updatedAt: DateTime!
+  verifiedAt: DateTime
+  verifiedByUserId: ID
+}
+
+type EmployeeListItem {
+  activeCerts: Int!
+  department: String
+  email: String!
+  employeeNumber: String
+  employmentStatus: String!
+  employmentType: String!
+  expiringCerts: Int!
+  firstName: String
+  hireDate: String!
+  hourlyRate: Float
+  lastName: String
+  payType: String!
+  phone: String
+  positionCode: String
+  positionName: String
+  profileId: ID!
+  role: String!
+  userId: ID!
+}
+
+type EmployeeProfile {
+  createdAt: DateTime!
+  department: String
+  dispensaryId: ID!
+  emergencyContactName: String
+  emergencyContactPhone: String
+  emergencyContactRelationship: String
+  employeeNumber: String
+  employmentStatus: String!
+  employmentType: String!
+  exemptReason: String
+  hireDate: String!
+  hourlyRate: Float
+  isExempt: Boolean!
+  notes: String
+  overtimeEligible: Boolean!
+  payType: String!
+  phone: String
+  positionId: Int
+  profileId: ID!
+  salary: Float
+  terminationDate: String
+  terminationReason: String
+  updatedAt: DateTime!
+  userId: ID!
+}
+
+type EncryptionResult {
+  credentialsEncrypted: Int!
+}
+
+type EnrichmentResultType {
+  fieldsUpdated: [String!]!
+  productId: String!
+  strainMatched: Boolean!
+  strainName: String
+}
+
+type FacetCount {
+  count: Int!
+  label: String!
+  value: String!
+}
+
+type FailedSyncDashboard {
+  dispensaryId: String!
+  items: [FailedSyncItem!]!
+  oldestFailedAt: String!
+  totalFailed: Float!
+}
+
+type FailedSyncItem {
+  attemptCount: Float!
+  createdAt: String!
+  lastSyncAttempt: String
+  lastSyncError: String
+  metrcReportedAt: String
+  metrcSyncStatus: String!
+  orderId: ID!
+  orderStatus: String!
+  subtotal: Float!
+  total: Float!
+}
+
+type HourlySales {
+  hour: Int!
+  orders: Int!
+  revenue: Float!
+}
+
+type IdVerificationResult {
+  age: Int
+  createdAt: DateTime!
+  customerId: String
+  dateOfBirth: String
+  dispensaryId: String!
+  expiryDate: String
+  fullName: String
+  idNumber: String
+  idState: String
+  is21Plus: Boolean
+  verificationId: ID!
+  verificationStatus: String!
+  verifiedAt: DateTime
+}
+
+type InventoryAdjustment {
+  adjustmentId: ID!
+  approvedAt: DateTime
+  approvedByUserId: ID
+  created_at: DateTime!
+  dispensaryId: ID!
+  notes: String
+  productName: String!
+  quantityAfter: Int!
+  quantityBefore: Int!
+  quantityChange: Int!
+  reasonId: Int!
+  status: String!
+  submittedByUserId: ID!
+  updated_at: DateTime!
+  variantId: ID!
+}
+
+type InventoryCount {
+  completedAt: DateTime
+  completedByUserId: ID
+  countId: ID!
+  countType: String!
+  created_at: DateTime!
+  dispensaryId: ID!
+  itemsCounted: Int!
+  notes: String
+  startedAt: DateTime!
+  startedByUserId: ID!
+  status: String!
+  totalItems: Int!
+  updated_at: DateTime!
+  varianceCount: Int!
+}
+
+type InventoryCountItem {
+  countId: ID!
+  countItemId: ID!
+  countedAt: DateTime
+  countedByUserId: ID
+  countedQuantity: Int
+  expectedQuantity: Int!
+  notes: String
+  productName: String!
+  variance: Int
+  variantId: ID!
+  variantName: String
+}
+
+type InventoryHealth {
+  deadStock: Int!
+  expired: Int!
+  expiring30d: Int!
+  lowStock: Int!
+  outOfStock: Int!
+  pendingAdjustments: Int!
+  pendingTransfers: Int!
+  totalSkus: Int!
+  totalUnits: Int!
+}
+
+type InventoryListItem {
+  createdAt: DateTime!
+  dispensaryId: ID!
+  inventoryId: ID!
+  locationInStore: String
+  quantityAvailable: Float!
+  quantityOnHand: Float!
+  quantityReserved: Float!
+  reorderThreshold: Float
+  updatedAt: DateTime!
+  variantId: ID!
+}
+
+type InventoryLowStockItem {
+  inventoryId: ID!
+  locationInStore: String
+  quantityAvailable: Float!
+  quantityOnHand: Float!
+  reorderQuantity: Float
+  reorderThreshold: Float
+  variantId: ID!
+}
+
+type InventoryOverview {
+  estimatedInventoryValue: Float!
+  lowStockCount: Int!
+  outOfStockCount: Int!
+  totalUnitsAvailable: Float!
+  totalUnitsOnHand: Float!
+  totalUnitsReserved: Float!
+  totalVariants: Int!
+}
+
+type InventoryResult {
+  createdAt: DateTime!
+  dispensaryId: ID!
+  inventoryId: ID!
+  lastCountAt: DateTime
+  lastCountByUserId: ID
+  lastMetrcSyncAt: DateTime
+  lastReconciledAt: DateTime
+  locationInStore: String
+  quantityAvailable: Float!
+  quantityOnHand: Float!
+  quantityReserved: Float!
+  reorderQuantity: Float
+  reorderThreshold: Float
+  updatedAt: DateTime!
+  variantId: ID!
+}
+
+type InventoryTransactionResult {
+  createdAt: DateTime!
+  dispensaryId: ID!
+  inventoryId: ID!
+  notes: String
+  performedByUserId: ID
+  quantityAfter: Float!
+  quantityBefore: Float!
+  quantityDelta: Float!
+  referenceOrderId: ID
+  transactionId: ID!
+  transactionType: String!
+}
+
+type InventoryTransfer {
+  approvedAt: DateTime
+  approvedByUserId: ID
+  created_at: DateTime!
+  fromDispensaryId: ID!
+  metrcManifestId: String
+  notes: String
+  organizationId: ID!
+  receivedAt: DateTime
+  rejectionReason: String
+  requestedByUserId: ID!
+  shippedAt: DateTime
+  status: String!
+  toDispensaryId: ID!
+  transferId: ID!
+  updated_at: DateTime!
+}
+
+type InventoryTransferItem {
+  itemId: ID!
+  metrcPackageTag: String
+  notes: String
+  productName: String!
+  quantityReceived: Int
+  quantityRequested: Int!
+  quantityShipped: Int
+  transferId: ID!
+  variantId: ID!
+  variantName: String
+}
+
+type InventoryValueResult {
+  totalAvailable: Float!
+  totalItems: Int!
+  totalOnHand: Float!
+  totalReserved: Float!
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON
+
+type KnowledgeProduct {
+  categoryName: String
+  cbdContent: Float
+  description: String
+  effects: [String!]
+  matchedCondition: String
+  matchedEffects: [String!]
+  productId: ID!
+  productName: String!
+  strainType: String
+  terpenes: [String!]
+  thcContent: Float
+}
+
+type LaborCostSummary {
+  employeeCount: Int!
+  laborCostPercent: Float!
+  totalHours: Float!
+  totalLaborCost: Float!
+  totalRevenue: Float!
+}
+
+type LkpAdjustmentReason {
+  code: String!
+  direction: String!
+  isActive: Boolean!
+  name: String!
+  reasonId: Int!
+  requiresApproval: Boolean!
+}
+
+type LkpCertificationType {
+  certTypeId: Int!
+  code: String!
+  description: String
+  isActive: Boolean!
+  isStateRequired: Boolean!
+  issuingAuthority: String
+  name: String!
+  validityMonths: Int
+}
+
+type LkpPosition {
+  code: String!
+  department: String!
+  isActive: Boolean!
+  isManagement: Boolean!
+  name: String!
+  positionId: Int!
+  sortOrder: Int!
+}
+
+type LkpProductCategory {
+  category_id: Int!
+  code: String!
+  depth: Int!
+  is_active: Boolean!
+  metrc_category_code: String
+  name: String!
+  parent_category_id: Int
+  sort_order: Int!
+}
+
+type LkpProductType {
+  code: String!
+  hemp_eligible: Boolean!
+  is_active: Boolean!
+  is_ingestible: Boolean!
+  is_inhalable: Boolean!
+  metrc_default_category_code: String
+  name: String!
+  product_type_id: Int!
+  requires_extraction_method: Boolean!
+  requires_ingredient_list: Boolean!
+  requires_lab_test: Boolean!
+  requires_serving_info: Boolean!
+  sort_order: Int!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+type LowStockItem {
+  productName: String!
+  quantityAvailable: Float!
+  quantityOnHand: Float!
+  reorderThreshold: Float
+  variantId: String!
+  variantName: String!
+}
+
+type LoyaltyReward {
+  description: String
+  name: String!
+  pointsCost: Int!
+  rewardId: ID!
+  rewardType: String!
+  rewardValue: Float!
+}
+
+type LoyaltyStats {
+  activeMembers: Int!
+  birthdayClaims: Int!
+  redemptionCount: Int!
+  tierBreakdown: [TierCount!]!
+  totalEarned: Int!
+  totalRedeemed: Int!
+}
+
+type LoyaltyTierInfo {
+  code: String!
+  color: String
+  minPoints: Int!
+  multiplier: Float!
+  name: String!
+  perks: String
+}
+
+type ManufacturerListItem {
+  brandId: ID
+  city: String
+  contactEmail: String
+  createdAt: DateTime!
+  dbaName: String
+  isActive: Boolean!
+  legalName: String!
+  licenseNumber: String
+  licenseState: String
+  manufacturerId: ID!
+  state: String
+}
+
+type ManufacturerResult {
+  addressLine1: String
+  brandId: ID
+  city: String
+  contactEmail: String
+  contactPhone: String
+  createdAt: DateTime!
+  dbaName: String
+  isActive: Boolean!
+  legalName: String!
+  licenseExpiryDate: DateTime
+  licenseNumber: String
+  licenseState: String
+  licenseType: String
+  manufacturerId: ID!
+  state: String
+  updatedAt: DateTime!
+  zip: String
+}
+
+type MarketingAutomation {
+  automationId: ID!
+  channel: String!
+  createdAt: DateTime!
+  delayMinutes: Int!
+  dispensaryId: String!
+  isActive: Boolean!
+  templateId: String
+  triggerEvent: String!
+}
+
+type MarketingCampaign {
+  audienceFilter: JSON
+  body: String
+  campaignId: ID!
+  campaignType: String!
+  channel: String!
+  createdAt: DateTime!
+  dispensaryId: String!
+  name: String!
+  scheduledAt: DateTime
+  sentAt: DateTime
+  sentCount: Int!
+  status: String!
+  subject: String
+  updatedAt: DateTime!
+}
+
+type MetrcCredential {
+  createdAt: DateTime!
+  credentialId: ID!
+  dispensaryId: String!
+  integratorApiKey: String
+  isActive: Boolean!
+  lastValidatedAt: DateTime
+  metrcUsername: String
+  state: String!
+  updatedAt: DateTime!
+  userApiKey: String!
+  validationError: String
+}
+
+type MetrcManifest {
+  created_at: DateTime!
+  dispensaryId: ID!
+  driverName: String
+  fromFacilityName: String
+  fromLicense: String!
+  manifestId: ID!
+  manifestNumber: String!
+  manifestType: String!
+  metrcTransferId: String
+  notes: String
+  status: String!
+  toFacilityName: String
+  toLicense: String!
+  totalPackages: Int!
+  totalQuantity: Float!
+  transferId: ID
+  updated_at: DateTime!
+  vehicleLicensePlate: String
+}
+
+type MetrcManifestItem {
+  itemId: ID!
+  manifestId: ID!
+  metrcPackageTag: String
+  notes: String
+  productName: String!
+  quantity: Float!
+  unitOfMeasure: String!
+  variantId: ID!
+}
+
+type MetrcSaleResult {
+  message: String
+  metrcReceiptId: String
+  success: Boolean!
+  syncLogId: String
+}
+
+type MetrcSyncOverview {
+  failedCount: Int!
+  lastSyncAt: String
+  ordersAwaitingSync: Int!
+  pendingCount: Int!
+  successCount: Int!
+  successRate: Float!
+  totalSyncs: Int!
+}
+
+type Mutation {
+  activatePromotion(promoId: ID!): PromotionResult!
+  addAddress(input: AddAddressInput!): CustomerAddress!
+  addCertification(input: AddCertificationInput!): EmployeeCertification!
+  addTaxRule(code: String!, name: String!, rate: Float!, state: String!, statutoryReference: String, taxBasis: String!): TaxRule!
+  adjustInventory(delta: Float!, inventoryId: ID!, notes: String, referenceOrderId: ID, transactionType: String!): AdjustResult!
+  applyPromoDiscount(orderTotal: Float!, promoId: ID!): DiscountResult!
+  approveAdjustment(adjustmentId: ID!): InventoryAdjustment!
+  approveProduct(dispensaryId: ID!, productId: ID!): Boolean!
+  approveShiftSwap(swapId: ID!): ShiftSwapRequest!
+  approveTimeEntry(entryId: ID!): TimeEntry!
+  approveTransfer(transferId: ID!): InventoryTransfer!
+  approveWaste(logId: ID!): WasteDestructionLog!
+  assignDelivery(deliveryAddress: String!, dispensaryId: ID!, distanceMiles: Float, driverId: ID!, estimatedMinutes: Int, orderId: ID): DeliveryTrip!
+  autoGenerateSchedule(dispensaryId: ID!, weekStart: String!): Int!
+  bulkTagProductUids(input: BulkTagUidInput!): BulkTagResult!
+  cancelOrder(dispensaryId: ID, orderId: ID!, reason: String!): Boolean!
+  claimBirthdayBonus(dispensaryId: ID!): PointTransaction!
+  claimShiftSwap(swapId: ID!): ShiftSwapRequest!
+  clockIn(dispensaryId: ID!, notes: String): TimeEntry!
+  clockOut(breakMinutes: Int = 0, dispensaryId: ID!, notes: String): TimeEntry!
+  completeDeliveryTrip(customerRating: Int, tripId: ID!): DeliveryTrip!
+  completeInventoryCount(autoAdjust: Boolean! = false, countId: ID!): InventoryCount!
+  completeOrder(input: CompleteOrderInput!): Boolean!
+  confirmOrder(dispensaryId: ID, orderId: ID!): Boolean!
+  confirmPayment(paymentIntentId: String!): PaymentStatus!
+  createAdjustment(dispensaryId: ID!, notes: String, quantityChange: Int!, reasonCode: String!, variantId: ID!): InventoryAdjustment!
+  createBrand(input: CreateBrandInput!): BrandResult!
+  createCompany(input: CreateCompanyInput!): CompanyResult!
+  createCustomerProfile(dateOfBirth: String, marketingOptIn: Boolean, phone: String, preferredDispensaryId: ID, smsOptIn: Boolean): CustomerProfile!
+  createDispensary(input: CreateDispensaryInput!): DispensaryResult!
+  createManufacturer(input: CreateManufacturerInput!): ManufacturerResult!
+  createMarketingAutomation(channel: String! = "email", delayMinutes: Int! = 0, dispensaryId: ID!, templateId: String, triggerEvent: String!): MarketingAutomation!
+  createMarketingCampaign(audienceFilter: String, body: String, campaignType: String! = "blast", channel: String! = "email", dispensaryId: ID!, name: String!, scheduledAt: String, subject: String): MarketingCampaign!
+  createOrder(input: CreateOrderInput!): OrderSummary!
+  createOrganization(input: CreateOrganizationInput!): OrganizationResult!
+  createPaymentIntent(amountCents: Int!, dispensaryId: ID!, orderId: ID!): PaymentIntentResult!
+  createPerformanceReview(input: CreateReviewInput!): PerformanceReview!
+  createProduct(input: CreateProductInput!): Product!
+  createPromotion(dispensaryId: ID!, input: CreatePromotionInput!): PromotionResult!
+  createPurchaseOrder(dispensaryId: ID!, items: [POLineItemInput!]!, notes: String, vendorId: ID!): JSON!
+  createReward(description: String, dispensaryId: ID!, name: String!, pointsCost: Int!, rewardType: String!, rewardValue: Float!): JSON!
+  createShift(dispensaryId: ID!, endTime: String!, notes: String, profileId: ID!, shiftDate: String!, startTime: String!): ScheduledShift!
+  createTenant(billingEmail: String!, name: String!, state: String! = "NY", subscriptionTier: String! = "starter"): PlatformTenant!
+  createTransfer(fromDispensaryId: ID!, items: [TransferItemInput!]!, notes: String, toDispensaryId: ID!): InventoryTransfer!
+  createVendor(city: String, contactName: String, contactTitle: String, email: String, licenseNumber: String, licenseState: String, name: String!, paymentTerms: String = "net_30", phone: String, state: String, vendorType: String! = "cultivator"): Vendor!
+  deactivateMetrcCredential(dispensaryId: ID!): Boolean!
+  deactivatePromotion(promoId: ID!): PromotionResult!
+  deactivateUser(userId: ID!): Boolean!
+  deleteAddress(addressId: ID!): Boolean!
+  deleteBrand(brandId: ID!): Boolean!
+  deleteCompany(companyId: ID!): Boolean!
+  deleteDispensary(entityId: ID!): Boolean!
+  deleteManufacturer(manufacturerId: ID!): Boolean!
+  deleteOrganization(organizationId: ID!): Boolean!
+  deleteProduct(dispensaryId: ID!, productId: ID!): Boolean!
+  deleteShift(shiftId: ID!): Boolean!
+  encryptAllCredentials: EncryptionResult!
+  enrichDispensaryProducts(dispensaryId: ID!): BulkEnrichResultType!
+  enrichProduct(dispensaryId: ID!, productId: ID!): EnrichmentResultType!
+  generateManifest(transferId: ID!): MetrcManifest!
+  givePoints(dispensaryId: ID!, points: Int!, reason: String!, userId: ID!): JSON!
+  importOtreebaStrains(count: Int, page: Int, type: String): BulkImportResultType!
+  indexProducts(dispensaryId: String!): Int!
+  initiateCashlessPayment(amount: Float!, dispensaryId: ID!, orderId: ID!, provider: String!): CashlessPaymentResult!
+  logWaste(destructionMethod: String, dispensaryId: ID!, notes: String, productName: String!, quantity: Float!, reason: String!, unitOfMeasure: String! = "grams", variantId: ID, wasteType: String!, witness1Name: String!, witness1Title: String, witness2Name: String): WasteDestructionLog!
+  login(input: LoginInput!): AuthToken!
+  markOrderReady(dispensaryId: ID, orderId: ID!): Boolean!
+  notifyCustomer(dispensaryId: ID!, templateCode: String!, userId: ID!): [NotificationLog!]!
+  processCardPayment(dispensaryId: ID!, orderId: ID!, stripePaymentIntentId: String!): Payment!
+  processCashPayment(applyDiscount: Boolean = true, cashTendered: Float!, dispensaryId: ID!, orderId: ID!): Payment!
+  publishWeekSchedule(dispensaryId: ID!, weekStart: String!): Int!
+  pushOrderToPos(dispensaryId: ID!, orderId: ID!): PosOrderPushResult!
+  receiveTransfer(items: [ReceiveItemInput!]!, transferId: ID!): InventoryTransfer!
+  recordCountItem(countItemId: ID!, countedQuantity: Int!, notes: String): InventoryCountItem!
+  redeemReward(dispensaryId: ID!, orderId: ID, rewardId: ID!): RedeemResult!
+  refundPayment(amountCents: Int, orderId: ID!, reason: String = "requested_by_customer"): RefundResult!
+  register(input: RegisterInput!): AuthToken!
+  rejectTransfer(reason: String!, transferId: ID!): InventoryTransfer!
+  releaseReserve(inventoryId: ID!, quantity: Float!, referenceOrderId: ID): AdjustResult!
+  reportSaleToBiotrack(dispensaryId: ID!, orderId: ID!): BiotrackSyncResult!
+  requestShiftSwap(reason: String, shiftId: ID!): ShiftSwapRequest!
+  requestTimeOff(endDate: String!, reason: String, requestType: String! = "pto", startDate: String!): TimeOffRequest!
+  reserveStock(inventoryId: ID!, quantity: Float!, referenceOrderId: ID): AdjustResult!
+  resetThemeConfig(dispensaryId: String!): ThemeConfigType!
+  retryFailedMetrcSyncs(dispensaryId: ID!): Int!
+  reviewTimeOff(approved: Boolean!, requestId: ID!): TimeOffRequest!
+  revokeCertification(certificationId: ID!, reason: String): EmployeeCertification!
+  runReconciliation(dispensaryId: ID!): ReconciliationReport!
+  saveDispensaryProductTypes(dispensaryId: ID!, types: [DispensaryProductTypeInput!]!): [DispensaryProductType!]!
+  saveThemeConfig(input: SaveThemeConfigInput!): ThemeConfigType!
+  sendMarketingCampaign(campaignId: ID!, dispensaryId: ID!): MarketingCampaign!
+  sendTestEmail(body: String!, subject: String!, to: String!): NotificationLog!
+  setCashDiscount(cashDeliveryEnabled: Boolean, dispensaryId: ID!, percent: Float!): CashDiscountConfig!
+  setDesignSystem(designSystem: String!, designSystemFile: String!, dispensaryId: ID!): DesignSystemConfig!
+  setProductMetrcCategory(input: SetMetrcCategoryInput!): Product!
+  setUserRole(role: String!, userId: ID!): User!
+  shipTransfer(transferId: ID!): InventoryTransfer!
+  startInventoryCount(countType: String! = "cycle", dispensaryId: ID!, notes: String): InventoryCount!
+  startPreparingOrder(dispensaryId: ID, orderId: ID!): Boolean!
+  suspendTenant(orgId: ID!, reason: String!): PlatformTenant!
+  syncBiotrackInventory(dispensaryId: ID!): BiotrackSyncResult!
+  syncOrderToMetrc(dispensaryId: ID!, orderId: ID!): MetrcSaleResult!
+  syncPosInventory(dispensaryId: ID!): PosSyncLog!
+  syncPosProducts(dispensaryId: ID!): PosSyncLog!
+  tagProductMetrcUid(input: TagProductUidInput!): Product!
+  tagVariantPackageLabel(input: TagPackageLabelInput!): ProductVariant!
+  testPosConnection(dispensaryId: ID!): PosConnectionResult!
+  togglePosSync(dispensaryId: ID!, enabled: Boolean!): PosIntegration!
+  updateAddress(addressId: ID!, input: AddAddressInput!): CustomerAddress!
+  updateBrand(brandId: ID!, input: UpdateBrandInput!): BrandResult!
+  updateCompany(companyId: ID!, input: UpdateCompanyInput!): CompanyResult!
+  updateCustomerProfile(firstName: String, lastName: String, marketingOptIn: Boolean, phone: String, preferredDispensaryId: ID, smsOptIn: Boolean): CustomerProfile!
+  updateDeliverySettings(cashDeliveryEnabled: Boolean, cashDiscountPercent: Float, entityId: ID!, isDeliveryEnabled: Boolean): DispensaryResult!
+  updateDispensary(entityId: ID!, input: UpdateDispensaryInput!): DispensaryResult!
+  updateDriverStatus(driverId: ID!, latitude: Float, longitude: Float, status: String!): DriverProfile!
+  updateEmployee(input: UpdateEmployeeInput!, profileId: ID!): EmployeeProfile!
+  updateFulfillmentStatus(dispensaryId: ID!, notes: String, orderId: ID!, status: String!): OrderTracking!
+  updateManifestStatus(manifestId: ID!, status: String!): MetrcManifest!
+  updateManufacturer(input: UpdateManufacturerInput!, manufacturerId: ID!): ManufacturerResult!
+  updateOperatingHours(entityId: ID!, hours: JSON!): DispensaryResult!
+  updateOrganization(input: UpdateOrganizationInput!, organizationId: ID!): OrganizationResult!
+  updatePOStatus(poId: ID!, status: String!): JSON!
+  updateProduct(input: UpdateProductInput!): Product!
+  updatePromotion(input: UpdatePromotionInput!, promoId: ID!): PromotionResult!
+  updateSubscription(input: UpdateSubscriptionInput!, organizationId: ID!): OrganizationResult!
+  updateTaxRule(isActive: Boolean, name: String, rate: Float, taxCategoryId: Int!): TaxRule!
+  updateTenant(billingEmail: String, billingStatus: String, notes: String, orgId: ID!, subscriptionTier: String): PlatformTenant!
+  updateVariantPrice(input: UpdateVariantPriceInput!): Boolean!
+  updateVendor(email: String, isActive: Boolean, name: String, notes: String, paymentTerms: String, phone: String, vendorId: ID!): JSON!
+  upsertBiotrackCredential(apiKey: String!, apiSecret: String, dispensaryId: ID!, licenseNumber: String, state: String!): BiotrackCredential!
+  upsertMetrcCredential(input: UpsertCredentialInput!): MetrcCredential!
+  upsertPosIntegration(credentials: JSON!, dispensaryExternalId: String, dispensaryId: ID!, provider: String!): PosIntegration!
+  validateBiotrackCredential(dispensaryId: ID!): BiotrackValidationResult!
+  validateMetrcCredential(dispensaryId: ID!): CredentialValidationResult!
+  verifyAge(dateOfBirth: String!, dispensaryId: ID, idExpiration: String, idNumberLast4: String, idState: String, idType: String!, method: String = "self_declared"): AgeVerifyResult!
+  verifyCertification(certificationId: ID!): EmployeeCertification!
+  verifyIdentification(customerId: ID, dispensaryId: ID!, image: String!): IdVerificationResult!
+}
+
+type MyLoyalty {
+  allTiers: [LoyaltyTierInfo!]!
+  lifetimePoints: Int!
+  multiplier: Float!
+  nextTier: NextTierInfo
+  pointValue: Float!
+  points: Int!
+  tier: String!
+  tierColor: String
+  tierName: String!
+  tierPerks: String
+}
+
+type NextTierInfo {
+  name: String!
+  pointsNeeded: Int!
+}
+
+type NotificationLog {
+  body: String
+  channel: String!
+  created_at: DateTime!
+  dispensaryId: ID
+  errorMessage: String
+  externalId: String
+  logId: ID!
+  recipient: String!
+  sentAt: DateTime
+  status: String!
+  subject: String
+  templateCode: String
+  userId: ID
+}
+
+type NotificationStats {
+  emails: Int!
+  failed: Int!
+  sent: Int!
+  skipped: Int!
+  sms: Int!
+  total: Int!
+}
+
+type NotificationTemplate {
+  bodyTemplate: String!
+  channel: String!
+  code: String!
+  isActive: Boolean!
+  name: String!
+  subject: String
+  templateId: Int!
+}
+
+type Order {
+  cancellationReason: String
+  cancelledAt: DateTime
+  cashDiscountApplied: Float!
+  createdAt: DateTime!
+  customerUserId: String
+  discountTotal: Float!
+  dispensaryId: String!
+  metrcReceiptId: String
+  metrcReportedAt: DateTime
+  metrcSyncStatus: String
+  notes: String
+  orderId: ID!
+  orderStatus: String!
+  orderType: String!
+  paymentMethod: String
+  scheduledPickupAt: DateTime
+  staffUserId: String
+  subtotal: Float!
+  taxTotal: Float!
+  total: Float!
+  updatedAt: DateTime!
+}
+
+type OrderHistoryResult {
+  orders: [CustomerOrderSummary!]!
+  total: Int!
+}
+
+input OrderLineItemInput {
+  productId: ID!
+  quantity: Float!
+  variantId: ID
+}
+
+type OrderStats {
+  gmv30d: Float!
+  gmvTotal: Float!
+  last30d: Int!
+  total: Int!
+}
+
+type OrderSummary {
+  createdAt: DateTime!
+  discountTotal: Float!
+  dispensaryId: ID!
+  lineItemCount: Int!
+  orderId: ID!
+  orderStatus: String!
+  orderType: String!
+  subtotal: Float!
+  taxBreakdown: [TaxLineItem!]!
+  taxTotal: Float!
+  total: Float!
+}
+
+type OrderTracking {
+  createdAt: DateTime!
+  latitude: Float
+  longitude: Float
+  notes: String
+  orderId: ID!
+  status: String!
+  trackingId: ID!
+  updatedByUserId: ID
+}
+
+type OrganizationListItem {
+  billingEmail: String
+  createdAt: DateTime!
+  name: String!
+  organizationId: ID!
+  slug: String!
+  subscriptionStatus: String!
+  subscriptionTier: String!
+}
+
+type OrganizationResult {
+  billingAddress: String
+  billingEmail: String
+  createdAt: DateTime!
+  name: String!
+  organizationId: ID!
+  slug: String!
+  stripeCustomerId: String
+  subscriptionStatus: String!
+  subscriptionTier: String!
+  updatedAt: DateTime!
+}
+
+input POLineItemInput {
+  productName: String!
+  quantityOrdered: Int!
+  sku: String
+  unitCost: Float!
+  variantId: String
+}
+
+type Payment {
+  amount: Float!
+  cashTendered: Float
+  changeGiven: Float
+  createdAt: DateTime!
+  dispensaryId: String!
+  method: String!
+  orderId: String!
+  paymentId: ID!
+  status: String!
+  stripeChargeId: String
+  stripePaymentIntentId: String
+  terminalId: String
+  updatedAt: DateTime!
+}
+
+type PaymentIntentResult {
+  clientSecret: String!
+  paymentIntentId: String!
+}
+
+type PaymentMethodInfo {
+  enabled: Boolean!
+  method: String!
+}
+
+type PaymentStatus {
+  amount: Float
+  method: String
+  paymentId: String
+  status: String!
+  stripePaymentIntentId: String
+}
+
+type PayrollRow {
+  email: String!
+  employeeNumber: String
+  firstName: String!
+  grossPayWithOt: Float
+  hourlyRate: Float
+  isExempt: Boolean!
+  lastName: String!
+  overtimeEligible: Boolean!
+  overtimeHours: Float!
+  payType: String!
+  positionName: String
+  regularPay: Float
+  salary: Float
+  shiftsWorked: Int!
+  totalBreakMinutes: Int!
+  totalHours: Float!
+}
+
+type PerformanceReview {
+  acknowledgedAt: DateTime
+  areasForImprovement: String
+  complianceRating: Int
+  createdAt: DateTime!
+  employeeComments: String
+  goals: String
+  managerComments: String
+  overallRating: Int
+  profileId: ID!
+  reliabilityRating: Int
+  reviewId: ID!
+  reviewPeriodEnd: String!
+  reviewPeriodStart: String!
+  reviewerUserId: ID!
+  salesRating: Int
+  status: String!
+  strengths: String
+  teamworkRating: Int
+  updatedAt: DateTime!
+}
+
+type PlatformActivity {
+  activity_id: ID!
+  activity_type: String!
+  created_at: DateTime!
+  description: String
+  org_name: String
+}
+
+type PlatformDashboard {
+  dispensaries: DispStats!
+  orders: OrderStats!
+  revenue: RevenueStats!
+  tenants: TenantStats!
+  tierBreakdown: [TierBreakdown!]!
+  totalLocations: Int!
+  users: UserStats!
+}
+
+type PlatformReport {
+  churnRate: Float!
+  churned: Int!
+  tenantHealth: JSON!
+  totalTenants: Int!
+}
+
+type PlatformTenant {
+  billingEmail: String
+  billingStatus: String
+  createdAt: DateTime!
+  dispensaryCount: Int
+  monthlyRevenue: Float
+  name: String!
+  notes: String
+  onboardedAt: DateTime
+  orders30d: Int
+  orgId: ID!
+  revenue30d: Float
+  subscriptionTier: String
+  totalLocations: Int
+  trialEndsAt: DateTime
+  userCount: Int
+}
+
+type PointTransaction {
+  balanceAfter: Int!
+  createdAt: DateTime!
+  description: String
+  points: Int!
+  transactionId: ID!
+  type: String!
+}
+
+type PosConnectionResult {
+  message: String!
+  success: Boolean!
+}
+
+type PosIntegration {
+  createdAt: DateTime!
+  dispensaryExternalId: String
+  dispensaryId: ID!
+  integrationId: ID!
+  isActive: Boolean!
+  isSyncEnabled: Boolean!
+  lastSyncAt: DateTime
+  lastSyncError: String
+  lastSyncStatus: String
+  provider: String!
+  updatedAt: DateTime!
+}
+
+type PosOrderPushResult {
+  error: String
+  externalOrderId: String
+  success: Boolean!
+}
+
+type PosProductMapping {
+  createdAt: DateTime!
+  dispensaryId: ID!
+  externalProductId: String!
+  externalVariantId: String
+  internalProductId: ID!
+  internalVariantId: ID
+  isConfirmed: Boolean!
+  lastSyncedAt: DateTime
+  mappingId: ID!
+  matchMethod: String
+  provider: String!
+  updatedAt: DateTime!
+}
+
+type PosSyncLog {
+  createdAt: DateTime!
+  dispensaryId: ID!
+  durationMs: Int
+  errorMessage: String
+  itemsCreated: Int!
+  itemsFailed: Int!
+  itemsProcessed: Int!
+  itemsUpdated: Int!
+  provider: String!
+  status: String!
+  syncLogId: ID!
+  syncType: String!
+}
+
+type Product {
+  approvedAt: DateTime
+  approvedByUserId: ID
+  brandId: ID
+  cbdPercent: Float
+  createdAt: DateTime!
+  deletedAt: DateTime
+  description: String
+  dispensaryId: ID!
+  effects: JSON
+  enrichedAt: DateTime
+  extractionMethodId: Int
+  flavors: JSON
+  hasNoMinorAppeals: Boolean!
+  id: ID!
+  isActive: Boolean!
+  isApproved: Boolean!
+  isChildResistantPackaged: Boolean!
+  isHempDerived: Boolean!
+  isResealable: Boolean!
+  isTamperEvident: Boolean!
+  lineage: JSON
+  manufacturerId: ID
+  metrcItemCategoryId: Int
+  metrcItemUid: String
+  name: String!
+  netVolumeMl: Float
+  netWeightG: Float
+  otreebaOcpc: String
+  packagingTypeId: Int
+  primaryCategoryId: Int
+  productTypeId: Int
+  shortDescription: String
+  sku: String
+  strainId: ID
+  strainName: String
+  strainType: String
+  taxCategoryId: Int
+  terpenes: JSON
+  thcPercent: Float
+  totalThcMgPerContainer: Float
+  uomId: Int
+  updatedAt: DateTime!
+  variants: [ProductVariant!]!
+}
+
+type ProductSales {
+  orders: Int!
+  productName: String!
+  revenue: Float!
+  strainType: String
+  unitsSold: Int!
+  variantName: String
+}
+
+type ProductSearchResult {
+  facets: SearchFacets!
+  limit: Int!
+  offset: Int!
+  products: [Product!]!
+  total: Int!
+}
+
+input ProductUidPair {
+  metrcItemUid: String!
+  productId: ID!
+}
+
+type ProductVariant {
+  barcode: String
+  createdAt: DateTime!
+  deletedAt: DateTime
+  dispensaryId: ID!
+  isActive: Boolean!
+  metrcPackageLabel: String
+  name: String!
+  productId: ID!
+  quantityPerUnit: Float
+  retailPrice: Float
+  sku: String
+  sortOrder: Int
+  stockQuantity: Float
+  stockStatus: String
+  uomId: Int
+  updatedAt: DateTime!
+  variantId: ID!
+}
+
+type PromotionCategoryResult {
+  categoryId: Int!
+  id: ID!
+  isEligible: Boolean!
+  promoId: ID!
+}
+
+type PromotionListItem {
+  code: String
+  createdAt: DateTime!
+  description: String
+  discountValue: Float!
+  dispensaryId: ID!
+  endAt: DateTime
+  isActive: Boolean!
+  maxUses: Int
+  minimumOrderTotal: Float
+  name: String!
+  promoId: ID!
+  startAt: DateTime
+  type: String!
+  usesCount: Int!
+}
+
+type PromotionProductResult {
+  id: ID!
+  isEligible: Boolean!
+  productId: ID
+  promoId: ID!
+  variantId: ID
+}
+
+type PromotionResult {
+  appliesTo: String
+  appliesToBrandId: ID
+  appliesToProductTypeId: Float
+  appliesToTaxCategoryId: Float
+  code: String
+  createdAt: DateTime!
+  description: String
+  discountValue: Float!
+  dispensaryId: ID!
+  endAt: DateTime
+  isActive: Boolean!
+  isMedicalDiscount: Boolean!
+  isStaffDiscount: Boolean!
+  maxUses: Int
+  maxUsesPerCustomer: Int
+  minimumOrderTotal: Float
+  name: String!
+  promoId: ID!
+  stackableWithOthers: Boolean!
+  startAt: DateTime
+  type: String!
+  updatedAt: DateTime!
+  usesCount: Int!
+}
+
+type PurchaseLimitResult {
+  allowed: Boolean!
+  limit: Float
+  reason: String
+  remaining: Float
+}
+
+type PurchaseOrder {
+  expected_delivery: String
+  items: JSON
+  line_items: Int
+  order_date: String
+  payment_status: String
+  po_id: ID!
+  po_number: String!
+  status: String!
+  subtotal: Float!
+  total: Float!
+  total_units: Int
+  vendor_name: String
+}
+
+type Query {
+  activeClocks(dispensaryId: ID!): [ActiveClock!]!
+  activePromotions(dispensaryId: ID!): [PromotionListItem!]!
+  adjustmentReasons: [LkpAdjustmentReason!]!
+  adminProducts(categoryId: Int, dispensaryId: ID, limit: Int = 50, offset: Int, productTypeId: Int, search: String): [Product!]!
+  allMetrcCredentials: [MetrcCredential!]!
+  audienceCount(dispensaryId: ID!, filter: String! = "all"): Int!
+  auditLog(action: String, dispensaryId: ID!, entityType: String, limit: Int = 100): [AuditLog!]!
+  autocompleteProducts(dispensaryId: ID!, limit: Int = 50, query: String!): [AutocompleteResult!]!
+  availablePaymentMethods(dispensaryId: ID!): [PaymentMethodInfo!]!
+  availableRewards(dispensaryId: ID!): [LoyaltyReward!]!
+  availableTimeSlots(date: String!, dispensaryId: ID!, slotType: String!): [AvailableSlotResult!]!
+  biotrackCredential(dispensaryId: ID!): BiotrackCredential
+  birthdayBonusCheck(dispensaryId: ID!): BirthdayCheck!
+  brand(brandId: ID!): BrandResult
+  brands(limit: Int = 50, offset: Int = 0): [BrandListItem!]!
+  brandsByOrganization(organizationId: ID!): [BrandListItem!]!
+  cachedStrains(type: String): [StrainData!]!
+  campaignStats(campaignId: ID!): CampaignStats!
+  cashDiscountConfig(dispensaryId: ID!): CashDiscountConfig!
+  certificationTypes: [LkpCertificationType!]!
+  checkDeliveryEligibility(dispensaryId: ID!, latitude: Float!, longitude: Float!, orderSubtotal: Float): DeliveryEligibilityResult!
+  checkPromoEligibility(customerId: ID, orderTotal: Float!, promoId: ID!): EligibilityResult!
+  checkPurchaseLimit(dispensaryId: ID!, productCategory: String!, quantityGrams: Float!): PurchaseLimitResult!
+  clockStatus(dispensaryId: ID!): ClockStatus!
+  companies(limit: Int = 50, offset: Int = 0): [CompanyListItem!]!
+  companiesByOrganization(organizationId: ID!): [CompanyListItem!]!
+  company(companyId: ID!): CompanyResult
+  compareProducts(productIds: [ID!]!): [KnowledgeProduct!]!
+  complianceAlerts(dispensaryId: ID!): ComplianceAlertsResult!
+  complianceSummary(dispensaryId: ID): ComplianceSummary!
+  complianceSystem(dispensaryId: ID!): String!
+  countItems(countId: ID!): [InventoryCountItem!]!
+  coverageGaps(dispensaryId: ID!, weekStart: String!): [ScheduledShift!]!
+  customers(dispensaryId: ID!, limit: Int = 50, offset: Int = 0): [CustomerProfile!]!
+  dashboard(days: Int, dispensaryId: ID): DashboardData!
+  deadStock(daysSinceMovement: Int = 30, dispensaryId: ID!): [InventoryAdjustment!]!
+  deliveryZones(dispensaryId: ID!): [DeliveryZone!]!
+  designSystemConfig(dispensaryId: ID!): DesignSystemConfig!
+  dispensaries(limit: Int = 50, offset: Int = 0): [DispensaryListItem!]!
+  dispensariesByCompany(companyId: ID!): [DispensaryListItem!]!
+  dispensary(entityId: ID!): DispensaryResult
+  dispensaryProductTypes(dispensaryId: ID!): [DispensaryProductType!]!
+  driverStats(days: Int = 30, dispensaryId: ID!): DriverStats!
+  driverTrips(days: Int = 7, driverId: ID!): [DeliveryTrip!]!
+  drivers(dispensaryId: ID!): [DriverProfile!]!
+  employee(profileId: ID!): EmployeeListItem!
+  employeeCertifications(profileId: ID!): [EmployeeCertification!]!
+  employees(dispensaryId: ID!, status: String): [EmployeeListItem!]!
+  entityAuditTrail(entityId: String!, entityType: String!): [AuditLog!]!
+  expiringCertifications(daysAhead: Int = 30, dispensaryId: ID!): [EmployeeCertification!]!
+  expiringInventory(daysAhead: Int = 30, dispensaryId: ID!): [InventoryAdjustment!]
+  failedMetrcSyncs(dispensaryId: ID!): FailedSyncDashboard!
+  inventoryAdjustments(dispensaryId: ID!, limit: Int = 50): [InventoryAdjustment!]!
+  inventoryByDispensary(dispensaryId: ID!, limit: Int = 100, offset: Int = 0): [InventoryListItem!]!
+  inventoryByVariant(dispensaryId: ID!, variantId: ID!): InventoryResult
+  inventoryHealth(dispensaryId: ID!): InventoryHealth!
+  inventoryItem(inventoryId: ID!): InventoryResult
+  inventoryOverview(dispensaryId: ID): InventoryOverview!
+  inventoryTransactions(inventoryId: ID!, limit: Int = 50): [InventoryTransactionResult!]!
+  inventoryTransfers(direction: String, dispensaryId: ID!): [InventoryTransfer!]!
+  inventoryValue(dispensaryId: ID!): InventoryValueResult!
+  laborCostReport(dispensaryId: ID!, endDate: String!, startDate: String!): LaborCostSummary!
+  lowStockItems(dispensaryId: ID): [LowStockItem!]!
+  loyaltyStats(dispensaryId: ID!): LoyaltyStats!
+  manifestItems(manifestId: ID!): [MetrcManifestItem!]!
+  manifests(dispensaryId: ID!, status: String): [MetrcManifest!]!
+  manufacturer(manufacturerId: ID!): ManufacturerResult
+  manufacturers(limit: Int = 50, offset: Int = 0): [ManufacturerListItem!]!
+  manufacturersByBrand(brandId: ID!): [ManufacturerListItem!]!
+  marketingAutomations(dispensaryId: ID!): [MarketingAutomation!]!
+  marketingCampaigns(dispensaryId: ID!): [MarketingCampaign!]!
+  me: User!
+  metrcComplianceReport(dispensaryId: ID): ComplianceReport!
+  metrcCredential(dispensaryId: ID): MetrcCredential
+  metrcSyncOverview(dispensaryId: ID): MetrcSyncOverview!
+  myAddresses: [CustomerAddress!]!
+  myLoyalty(dispensaryId: ID!): MyLoyalty
+  myNotifications(limit: Int = 20): [NotificationLog!]!
+  myOrders(limit: Int = 20, offset: Int = 0): OrderHistoryResult!
+  myOrganization: OrganizationResult
+  myPointHistory(limit: Int = 20): [PointTransaction!]!
+  myProfile: CustomerProfile
+  myShifts(endDate: String!, startDate: String!): [ScheduledShift!]!
+  myTimeEntries(dispensaryId: ID!, endDate: String!, startDate: String!): [TimeEntry!]!
+  notificationStats(days: Int = 30, dispensaryId: ID!): NotificationStats!
+  notificationTemplates: [NotificationTemplate!]!
+  order(dispensaryId: ID, orderId: ID!): Order
+  orderPayment(orderId: ID!): Payment
+  orderTracking(orderId: ID!): [OrderTracking!]!
+  orders(dispensaryId: ID, limit: Int = 50, offset: Int): [Order!]!
+  organization(organizationId: ID!): OrganizationResult
+  organizations(limit: Int = 50, offset: Int = 0): [OrganizationListItem!]!
+  paymentStatus(orderId: ID!): PaymentStatus!
+  payrollReport(dispensaryId: ID!, endDate: String!, startDate: String!): [PayrollRow!]!
+  performanceReviews(profileId: ID!): [PerformanceReview!]!
+  personalizedForMe(dispensaryId: ID, limit: Int): [RecommendedProduct!]!
+  platformActivity(limit: Int = 50): [PlatformActivity!]!
+  platformDashboard: PlatformDashboard!
+  platformInvoices(orgId: ID): [BillingInvoice!]!
+  platformReport: PlatformReport!
+  platformTaxRules: [TaxRule!]!
+  platformTenant(orgId: ID!): PlatformTenant!
+  platformTenants: [PlatformTenant!]!
+  popularInCategory(categoryId: ID!, dispensaryId: ID, limit: Int): [RecommendedProduct!]!
+  posIntegration(dispensaryId: ID!): PosIntegration
+  posProductMappings(dispensaryId: ID!): [PosProductMapping!]!
+  posSyncLogs(dispensaryId: ID!, limit: Int): [PosSyncLog!]!
+  positions: [LkpPosition!]!
+  previewCashDiscount(dispensaryId: ID!, subtotal: Float!): CashDiscountPreview!
+  product(dispensaryId: ID!, id: ID!): Product
+  productCategories: [LkpProductCategory!]!
+  productCount(dispensaryId: ID): Int!
+  productTypes: [LkpProductType!]!
+  products(categoryId: Int, dispensaryId: ID!, limit: Int = 50, offset: Int, productTypeId: Int, search: String): [Product!]!
+  productsByCondition(condition: String!, dispensaryId: ID): [KnowledgeProduct!]!
+  productsByEffect(dispensaryId: ID, effect: String!): [KnowledgeProduct!]!
+  promotion(promoId: ID!): PromotionResult
+  promotionCategories(promoId: ID!): [PromotionCategoryResult!]!
+  promotionProducts(promoId: ID!): [PromotionProductResult!]!
+  promotionsByDispensary(dispensaryId: ID!, limit: Int = 50, offset: Int = 0): [PromotionListItem!]!
+  purchaseLimitAlerts(customerId: ID!, dispensaryId: ID!): [ComplianceAlert!]!
+  purchaseOrder(poId: ID!): JSON!
+  purchaseOrders(dispensaryId: ID!, status: String): [PurchaseOrder!]!
+  recommendations(dispensaryId: ID, limit: Int, productId: ID!): [RecommendedProduct!]!
+  reconciliationItems(reportId: ID!, status: String): [ReconciliationItem!]!
+  reconciliationReports(dispensaryId: ID!, limit: Int = 10): [ReconciliationReport!]!
+  reorderAlerts(dispensaryId: ID!): [InventoryAdjustment!]!
+  reorderSuggestions(dispensaryId: ID!): [ReorderSuggestion!]!
+  salesByDay(dispensaryId: ID!, endDate: String!, startDate: String!): [DailySales!]!
+  salesByHour(dispensaryId: ID!, endDate: String!, startDate: String!): [HourlySales!]!
+  salesByProduct(dispensaryId: ID!, endDate: String!, startDate: String!): [ProductSales!]!
+  salesOverview(days: Int, dispensaryId: ID): SalesOverview!
+  salesReport(dispensaryId: ID!, endDate: String!, startDate: String!): SalesSummary!
+  salesTrend(days: Int, dispensaryId: ID): [SalesTrend!]!
+  searchProducts(dispensaryId: String!, filters: SearchFiltersInput, limit: Int = 20, query: String!): [SearchResultType!]!
+  searchStrains(name: String!): [StrainData!]!
+  shrinkageReport(dispensaryId: ID!, endDate: String!, startDate: String!): ShrinkageReport!
+  staffComplianceOverview(dispensaryId: ID!): ComplianceOverview!
+  stripeEnabled: StripeStatus!
+  subscriptionTiers: [JSON!]!
+  taxReport(dispensaryId: ID!, endDate: String!, startDate: String!): TaxReport!
+  themeConfig(dispensaryId: String!): ThemeConfigType!
+  timeEntries(endDate: String!, profileId: ID!, startDate: String!): [TimeEntry!]!
+  timeOffRequests(dispensaryId: ID!, status: String): [TimeOffRequest!]!
+  topProducts(days: Int, dispensaryId: ID, limit: Int): [TopProduct!]!
+  transferItems(transferId: ID!): [InventoryTransferItem!]!
+  trending(days: Int, dispensaryId: ID, limit: Int): [RecommendedProduct!]!
+  user(id: ID!): User
+  usersByDispensary(dispensaryId: ID!): [User!]!
+  varianceReport(countId: ID!): [InventoryCountItem!]!
+  vendor(vendorId: ID!): JSON!
+  vendorStats: VendorStats!
+  vendors: [Vendor!]!
+  verificationHistory(customerId: ID!): [IdVerificationResult!]!
+  vibeSearch(dispensaryId: String!, limit: Int = 10, vibe: String!): [SearchResultType!]!
+  wasteLogs(dispensaryId: ID!, limit: Int = 50): [WasteDestructionLog!]!
+  weekSchedule(dispensaryId: ID!, weekStart: String!): [ScheduledShift!]!
+}
+
+input ReceiveItemInput {
+  itemId: ID!
+  notes: String
+  quantityReceived: Int!
+}
+
+type RecommendedProduct {
+  coCount: Int
+  effects: [String!]
+  matchScore: Int
+  orderCount: Int
+  productId: ID!
+  productName: String!
+  strainType: String
+  unitsSold: Int
+}
+
+type ReconciliationItem {
+  itemId: ID!
+  localQuantity: Int
+  metrcPackageTag: String
+  metrcQuantity: Int
+  productName: String
+  reportId: ID!
+  status: String!
+  variance: Int
+}
+
+type ReconciliationReport {
+  created_at: DateTime!
+  discrepancyCount: Int!
+  dispensaryId: ID!
+  matchedItems: Int!
+  notes: String
+  reportDate: String!
+  reportId: ID!
+  status: String!
+  totalLocalItems: Int!
+  totalMetrcItems: Int!
+}
+
+type RedeemResult {
+  newBalance: Int!
+  rewardName: String!
+}
+
+type RefundResult {
+  amount: String!
+  refundId: String!
+  status: String!
+}
+
+input RegisterInput {
+  email: String!
+  password: String!
+}
+
+type ReorderSuggestion {
+  avgDailySales: Float!
+  daysOfStockRemaining: Float!
+  inventoryId: ID!
+  leadTimeDays: Float!
+  productName: String!
+  quantityAvailable: Float!
+  suggestedQuantity: Int!
+  suggestedReorderDate: String
+  variantId: ID!
+  variantName: String
+}
+
+type RevenueStats {
+  arr: Float!
+  mrr: Float!
+}
+
+type SalesOverview {
+  averageOrderValue: Float!
+  cancelledOrders: Int!
+  completedOrders: Int!
+  pendingOrders: Int!
+  totalDiscount: Float!
+  totalOrders: Int!
+  totalRevenue: Float!
+  totalTax: Float!
+}
+
+type SalesSummary {
+  avgOrderValue: Float!
+  cancelledOrders: Int!
+  cardOrders: Int!
+  cashOrders: Int!
+  completedOrders: Int!
+  deliveryOrders: Int!
+  grossSales: Float!
+  netRevenue: Float!
+  pickupOrders: Int!
+  totalCashDiscounts: Float!
+  totalDiscounts: Float!
+  totalOrders: Int!
+  totalTax: Float!
+}
+
+type SalesTrend {
+  averageOrderValue: Float!
+  orders: Int!
+  period: String!
+  revenue: Float!
+}
+
+input SaveThemeConfigInput {
+  accent: String
+  bgCard: String
+  bgPrimary: String
+  bgSecondary: String
+  dispensaryId: String!
+  error: String
+  info: String
+  isDark: Boolean
+  preset: String
+  primary: String
+  secondary: String
+  sidebarBg: String
+  sidebarText: String
+  success: String
+  textPrimary: String
+  textSecondary: String
+  warning: String
+}
+
+type ScheduledShift {
+  created_at: DateTime!
+  dispensaryId: ID!
+  endTime: String!
+  notes: String
+  profileId: ID!
+  published: Boolean!
+  shiftDate: String!
+  shiftId: ID!
+  startTime: String!
+  status: String!
+  templateId: ID
+  updated_at: DateTime!
+}
+
+type SearchFacets {
+  effects: [FacetCount!]!
+  flavors: [FacetCount!]!
+  maxPrice: Float!
+  maxThc: Float!
+  minPrice: Float!
+  minThc: Float!
+  productTypes: [FacetCount!]!
+  strainTypes: [FacetCount!]!
+}
+
+input SearchFiltersInput {
+  effects: [String!]
+  maxThc: Float
+  minThc: Float
+  strainType: String
+}
+
+type SearchResultType {
+  cbdPercent: Float
+  effects: [String!]
+  flavors: [String!]
+  name: String!
+  productId: String!
+  score: Float!
+  strainType: String
+  terpenes: [String!]
+  thcPercent: Float
+}
+
+input SetMetrcCategoryInput {
+  dispensaryId: ID!
+  metrcItemCategoryId: Int!
+  productId: ID!
+}
+
+type ShiftSwapRequest {
+  coveringProfileId: ID
+  created_at: DateTime!
+  originalShiftId: ID!
+  reason: String
+  requestingProfileId: ID!
+  status: String!
+  swapId: ID!
+}
+
+type ShrinkageByReason {
+  count: Int!
+  estimatedValue: Float!
+  reason: String!
+  reasonCode: String!
+  units: Int!
+}
+
+type ShrinkageReport {
+  byReason: [ShrinkageByReason!]!
+  estimatedValueLost: Float!
+  totalAdjustments: Int!
+  totalUnitsLost: Int!
+}
+
+type StrainData {
+  cbdAvg: Float
+  createdAt: DateTime!
+  description: String
+  effects: JSON
+  flavors: JSON
+  genetics: String
+  lastSyncedAt: DateTime
+  lineage: JSON
+  name: String!
+  ocpc: String
+  photoUrl: String
+  source: String
+  strainDataId: ID!
+  strainType: String
+  terpenes: JSON
+  thcAvg: Float
+  updatedAt: DateTime!
+}
+
+type StripeStatus {
+  enabled: Boolean!
+}
+
+input TagPackageLabelInput {
+  dispensaryId: ID!
+  metrcPackageLabel: String!
+  variantId: ID!
+}
+
+input TagProductUidInput {
+  dispensaryId: ID!
+  metrcItemUid: String!
+  productId: ID!
+}
+
+type TaxBreakdownItem {
+  estimatedTax: Float!
+  rate: Float!
+  statutoryReference: String
+  taxBasis: String!
+  taxCode: String!
+  taxName: String!
+}
+
+type TaxLineItem {
+  amount: Float!
+  label: String!
+  ratePercent: Float!
+}
+
+type TaxReport {
+  dispensaryName: String
+  licenseNumber: String
+  netTaxable: Float!
+  state: String
+  taxBreakdown: [TaxBreakdownItem!]!
+  taxableSales: Float!
+  totalDiscounts: Float!
+  totalTaxCollected: Float!
+  transactionCount: Int!
+}
+
+type TaxRule {
+  code: String!
+  is_active: Boolean!
+  name: String!
+  rate: Float!
+  state: String!
+  statutory_reference: String
+  tax_basis: String!
+  tax_category_id: Int!
+}
+
+type TenantStats {
+  active: Int!
+  suspended: Int!
+  total: Int!
+  trial: Int!
+}
+
+type ThemeConfigType {
+  accent: String!
+  bgCard: String!
+  bgPrimary: String!
+  bgSecondary: String!
+  createdAt: DateTime!
+  dispensaryId: String!
+  error: String!
+  id: ID!
+  info: String!
+  isDark: Boolean!
+  preset: String!
+  primary: String!
+  secondary: String!
+  sidebarBg: String!
+  sidebarText: String!
+  success: String!
+  textPrimary: String!
+  textSecondary: String!
+  updatedAt: DateTime!
+  warning: String!
+}
+
+type TierBreakdown {
+  count: Int!
+  revenue: Float!
+  tier: String!
+}
+
+type TierCount {
+  count: Int!
+  tier: String!
+}
+
+type TimeEntry {
+  approvedAt: DateTime
+  approvedByUserId: ID
+  breakMinutes: Int!
+  clockIn: DateTime!
+  clockOut: DateTime
+  createdAt: DateTime!
+  dispensaryId: ID!
+  entryId: ID!
+  notes: String
+  overtimeHours: Float
+  profileId: ID!
+  status: String!
+  totalHours: Float
+  updatedAt: DateTime!
+}
+
+type TimeOffRequest {
+  created_at: DateTime!
+  dispensaryId: ID!
+  endDate: String!
+  profileId: ID!
+  reason: String
+  requestId: ID!
+  requestType: String!
+  startDate: String!
+  status: String!
+}
+
+type TopProduct {
+  productId: String!
+  productName: String!
+  revenue: Float!
+  strainType: String
+  unitsSold: Int!
+}
+
+input TransferItemInput {
+  quantity: Int!
+  variantId: ID!
+}
+
+input UpdateBrandInput {
+  description: String
+  isActive: Boolean
+  logoUrl: String
+  name: String
+  slug: String
+  websiteUrl: String
+}
+
+input UpdateCompanyInput {
+  addressLine1: String
+  city: String
+  contactEmail: String
+  contactPhone: String
+  dbaName: String
+  ein: String
+  legalName: String
+  licenseExpiryDate: String
+  licenseNumber: String
+  licenseState: String
+  licenseType: String
+  metrcFacilityLicense: String
+  state: String
+  stateOfIncorporation: String
+  zip: String
+}
+
+input UpdateDispensaryInput {
+  addressLine1: String
+  city: String
+  county: String
+  email: String
+  isActive: Boolean
+  isDeliveryEnabled: Boolean
+  isPickupEnabled: Boolean
+  latitude: Float
+  licenseNumber: String
+  licenseType: String
+  longitude: Float
+  metrcLicenseNumber: String
+  municipality: String
+  name: String
+  phone: String
+  slug: String
+  state: String
+  timezone: String
+  type: String
+  website: String
+  zip: String
+}
+
+input UpdateEmployeeInput {
+  department: String
+  emergencyContactName: String
+  emergencyContactPhone: String
+  employmentStatus: String
+  employmentType: String
+  hourlyRate: Float
+  notes: String
+  overtimeEligible: Boolean
+  payType: String
+  phone: String
+  positionId: Int
+  salary: Float
+  terminationReason: String
+}
+
+input UpdateManufacturerInput {
+  addressLine1: String
+  brandId: ID
+  city: String
+  contactEmail: String
+  contactPhone: String
+  dbaName: String
+  isActive: Boolean
+  legalName: String
+  licenseExpiryDate: String
+  licenseNumber: String
+  licenseState: String
+  licenseType: String
+  state: String
+  zip: String
+}
+
+input UpdateOrganizationInput {
+  billingAddress: String
+  billingEmail: String
+  name: String
+  slug: String
+}
+
+input UpdateProductInput {
+  cbdPercent: Float
+  description: String
+  dispensaryId: ID!
+  isActive: Boolean
+  isApproved: Boolean
+  name: String
+  productId: ID!
+  strainName: String
+  strainType: String
+  thcPercent: Float
+}
+
+input UpdatePromotionInput {
+  appliesTo: String
+  code: String
+  description: String
+  discountValue: Float
+  endAt: String
+  maxUses: Int
+  maxUsesPerCustomer: Int
+  minimumOrderTotal: Float
+  name: String
+  stackableWithOthers: Boolean
+  startAt: String
+}
+
+input UpdateSubscriptionInput {
+  stripeCustomerId: String
+  subscriptionStatus: String
+  subscriptionTier: String
+}
+
+input UpdateVariantPriceInput {
+  dispensaryId: ID!
+  price: Float!
+  variantId: ID!
+}
+
+input UpsertCredentialInput {
+  dispensaryId: String!
+  integratorApiKey: String
+  metrcUsername: String
+  state: String!
+  userApiKey: String!
+}
+
+type User {
+  createdAt: DateTime!
+  dispensaryId: String
+  email: String!
+  emailVerified: Boolean!
+  firstName: String
+  id: ID!
+  isActive: Boolean!
+  lastLoginAt: DateTime
+  lastName: String
+  organizationId: String
+  passwordChangedAt: DateTime
+  role: String!
+  updatedAt: DateTime!
+}
+
+type UserStats {
+  active7d: Int!
+  active24h: Int!
+  customers: Int!
+  staff: Int!
+  total: Int!
+}
+
+type Vendor {
+  city: String
+  contacts: JSON
+  email: String
+  is_active: Boolean!
+  license_number: String
+  license_state: String
+  name: String!
+  payment_terms: String
+  phone: String
+  rating: Float
+  state: String
+  total_pos: Int
+  total_spend: Float
+  vendor_id: ID!
+  vendor_type: String!
+}
+
+type VendorStats {
+  activeVendors: Int!
+  openPOs: Int!
+  outstanding: Float!
+  totalPOs: Int!
+  totalSpend: Float!
+}
+
+type WasteDestructionLog {
+  created_at: DateTime!
+  destroyedAt: DateTime!
+  destructionMethod: String
+  dispensaryId: ID!
+  logId: ID!
+  metrcPackageTag: String
+  notes: String
+  productName: String!
+  quantity: Float!
+  reason: String!
+  status: String!
+  submittedByUserId: ID!
+  unitOfMeasure: String!
+  variantId: ID
+  wasteType: String!
+  witness1Name: String!
+  witness1Title: String
+  witness2Name: String
+  witness2Title: String
+}

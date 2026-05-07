@@ -1,0 +1,47 @@
+{
+  "dependencies": {
+    "@angular/common": "^21.2.0",
+    "@angular/compiler": "^21.2.0",
+    "@angular/core": "^21.2.0",
+    "@angular/forms": "^21.2.0",
+    "@angular/platform-browser": "^21.2.0",
+    "@angular/router": "^21.2.0",
+    "@apollo/client": "^4.1.9",
+    "apollo-angular": "^13.0.0",
+    "graphql": "^16.13.1",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@angular/build": "^21.2.8",
+    "@angular/cli": "^21.2.8",
+    "@angular/compiler-cli": "^21.2.0",
+    "@graphql-codegen/add": "^6.0.1",
+    "@graphql-codegen/cli": "^6.2.1",
+    "@graphql-codegen/typescript": "^5.0.10",
+    "@graphql-codegen/typescript-apollo-angular": "^5.0.1",
+    "@graphql-codegen/typescript-operations": "^5.1.0",
+    "jsdom": "^28.0.0",
+    "ng-packagr": "^21.2.0",
+    "prettier": "^3.8.1",
+    "typescript": "~5.9.2",
+    "vitest": "^4.0.8"
+  },
+  "name": "angular",
+  "packageManager": "pnpm@9.0.0",
+  "private": true,
+  "scripts": {
+    "build": "ng build",
+    "build:ui": "ng build ui",
+    "codegen": "graphql-codegen --config codegen.ts",
+    "codegen:watch": "graphql-codegen --config codegen.ts --watch",
+    "dev:kiosk": "pnpm build:ui && pnpm start:kiosk",
+    "ng": "ng",
+    "start": "ng serve",
+    "start:kiosk": "ng serve kiosk",
+    "test": "ng test",
+    "watch": "ng build --watch --configuration development",
+    "watch:ui": "ng build ui --watch"
+  },
+  "version": "0.0.0"
+}
