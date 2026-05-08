@@ -1,4 +1,14 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, Index, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
+  Index,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { ObjectType, Field, ID, Float } from '@nestjs/graphql';
 import { Company } from '../../companies/entities/company.entity';
 
@@ -104,7 +114,13 @@ export class Dispensary {
   timezone?: string;
 
   @Field(() => Float, { name: 'cashDiscountPercent', nullable: true })
-  @Column({ type: 'decimal', precision: 5, scale: 2, default: 0, name: 'cash_discount_percent' })
+  @Column({
+    type: 'decimal',
+    precision: 5,
+    scale: 2,
+    default: 0,
+    name: 'cash_discount_percent',
+  })
   cash_discount_percent?: number;
 
   @Field({ name: 'isCashEnabled' })

@@ -7,7 +7,11 @@ import { ObjectType, Field, ID } from '@nestjs/graphql';
 export class PromotionProduct {
   @Field(() => ID) @PrimaryGeneratedColumn('uuid') id!: string;
   @Field() @Column('uuid') promoId!: string;
-  @Field({ nullable: true }) @Column('uuid', { nullable: true }) productId?: string;
-  @Field({ nullable: true }) @Column('uuid', { nullable: true }) variantId?: string;
+  @Field({ nullable: true })
+  @Column('uuid', { nullable: true })
+  productId?: string;
+  @Field({ nullable: true })
+  @Column('uuid', { nullable: true })
+  variantId?: string;
   @Field() @Column({ default: true }) isEligible!: boolean;
 }

@@ -18,7 +18,9 @@ ReactDOM.createRoot(root).render(
   <React.StrictMode>
     <ThemeLoader
       dispensaryId={DISPENSARY_ID}
-      graphqlUrl={import.meta.env.VITE_API_URL || 'http://localhost:3000/graphql'}
+      graphqlUrl={
+        import.meta.env.VITE_API_URL || 'http://localhost:3000/graphql'
+      }
     />
     <App />
   </React.StrictMode>,

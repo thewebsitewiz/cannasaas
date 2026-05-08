@@ -10,6 +10,15 @@ interface User {
   ageVerified: boolean;
 }
 
+interface JwtPayload {
+  sub: string;
+  email: string;
+  role: string;
+  firstName?: string;
+  lastName?: string;
+  ageVerified?: boolean;
+}
+
 interface AuthState {
   token: string | null;
   refreshToken: string | null;
@@ -39,11 +48,18 @@ export const useAuthStore = create<AuthState>()(
           body: JSON.stringify({ email, password }),
         });
         if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
+          const err = (await res.json().catch(() => ({}))) as {
+            message?: string;
+          };
           throw new Error(err.message || 'Invalid email or password');
         }
-        const data = await res.json();
-        const payload = JSON.parse(atob(data.accessToken.split('.')[1]));
+        const data = (await res.json()) as {
+          accessToken: string;
+          refreshToken?: string;
+        };
+        const payload = JSON.parse(
+          atob(data.accessToken.split('.')[1] ?? ''),
+        ) as JwtPayload;
         set({
           token: data.accessToken,
           refreshToken: data.refreshToken ?? null,
@@ -63,16 +79,23 @@ export const useAuthStore = create<AuthState>()(
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            query: 'mutation($input: RegisterInput!) { register(input: $input) { accessToken } }',
+            query:
+              'mutation($input: RegisterInput!) { register(input: $input) { accessToken } }',
             variables: { input: { email, password } },
           }),
         });
-        const json = await res.json();
+        const json = (await res.json()) as {
+          data?: { register?: { accessToken: string } };
+          errors?: Array<{ message?: string }>;
+        };
         if (json.errors) {
           throw new Error(json.errors[0]?.message || 'Registration failed');
         }
-        const token = json.data.register.accessToken;
-        const payload = JSON.parse(atob(token.split('.')[1]));
+        const token = json.data?.register?.accessToken;
+        if (!token) throw new Error('Registration failed');
+        const payload = JSON.parse(
+          atob(token.split('.')[1] ?? ''),
+        ) as JwtPayload;
         set({
           token,
           refreshToken: null,

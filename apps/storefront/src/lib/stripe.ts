@@ -22,7 +22,7 @@ export function useStripe() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getStripe()
+    void getStripe()
       .then(setStripe)
       .finally(() => setLoading(false));
   }, []);

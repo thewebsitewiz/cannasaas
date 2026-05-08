@@ -54,7 +54,12 @@ export class InventoryTransaction {
   referenceOrderId!: string;
 
   @Field({ nullable: true })
-  @Column({ type: 'varchar', length: 100, nullable: true, name: 'reference_transfer_manifest_id' })
+  @Column({
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+    name: 'reference_transfer_manifest_id',
+  })
   referenceTransferManifestId!: string;
 
   @Field({ nullable: true })

@@ -46,7 +46,10 @@ export function CartSummary({
   const promoErrorId = useId();
 
   const formatCurrency = (n: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
+    new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(n);
 
   const handlePromoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,14 +74,19 @@ export function CartSummary({
       aria-label="Order summary"
       className="bg-white rounded-2xl border border-gray-100 p-6 lg:sticky lg:top-8"
     >
-      <h2 className="text-lg font-semibold text-gray-900 mb-6">Order Summary</h2>
+      <h2 className="text-lg font-semibold text-gray-900 mb-6">
+        Order Summary
+      </h2>
 
       <dl className="space-y-3">
         <div className="flex justify-between text-sm">
           <dt className="text-gray-600">
-            Subtotal ({cart.items.reduce((sum, i) => sum + i.quantity, 0)} items)
+            Subtotal ({cart.items.reduce((sum, i) => sum + i.quantity, 0)}{' '}
+            items)
           </dt>
-          <dd className="font-medium text-gray-900">{formatCurrency(cart.subtotal)}</dd>
+          <dd className="font-medium text-gray-900">
+            {formatCurrency(cart.subtotal)}
+          </dd>
         </div>
 
         {cart.promoDiscount > 0 && cart.appliedPromo && (
@@ -116,7 +124,9 @@ export function CartSummary({
           <dt className="text-gray-600">
             Tax ({(cart.taxRate * 100).toFixed(2)}%)
           </dt>
-          <dd className="font-medium text-gray-900">{formatCurrency(cart.tax)}</dd>
+          <dd className="font-medium text-gray-900">
+            {formatCurrency(cart.tax)}
+          </dd>
         </div>
 
         <div
@@ -139,7 +149,9 @@ export function CartSummary({
 
       {!cart.appliedPromo && (
         <form
-          onSubmit={handlePromoSubmit}
+          onSubmit={(e) => {
+            void handlePromoSubmit(e);
+          }}
           className="mt-6"
           noValidate
           aria-label="Apply a promo code"
@@ -211,8 +223,12 @@ export function CartSummary({
       <button
         type="button"
         onClick={onCheckout}
-        disabled={isLoading || cart.items.length === 0 || cart.exceedsPurchaseLimit}
-        aria-describedby={cart.exceedsPurchaseLimit ? 'purchase-limit-warning' : undefined}
+        disabled={
+          isLoading || cart.items.length === 0 || cart.exceedsPurchaseLimit
+        }
+        aria-describedby={
+          cart.exceedsPurchaseLimit ? 'purchase-limit-warning' : undefined
+        }
         className={[
           'mt-6 w-full py-3.5 px-6 rounded-xl',
           'font-semibold text-white text-base',
@@ -238,8 +254,8 @@ export function CartSummary({
       )}
 
       <p className="mt-4 text-xs text-gray-400 text-center">
-        Cannabis purchases are subject to applicable state and local taxes.
-        Must be 21+ to purchase.
+        Cannabis purchases are subject to applicable state and local taxes. Must
+        be 21+ to purchase.
       </p>
     </section>
   );

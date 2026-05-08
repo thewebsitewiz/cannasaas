@@ -12,12 +12,15 @@
 
 import { useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-type OrderStatus = string;
 
-export type OrderSortKey = 'createdAt_desc' | 'createdAt_asc' | 'total_desc' | 'total_asc';
+export type OrderSortKey =
+  | 'createdAt_desc'
+  | 'createdAt_asc'
+  | 'total_desc'
+  | 'total_asc';
 
 export interface OrderFilters {
-  status: OrderStatus | 'all';
+  status: string;
   sort: OrderSortKey;
   page: number;
   search: string;
@@ -48,7 +51,7 @@ export function useOrderFilters(): [OrderFilters, OrderFilterActions] {
   const [params, setParams] = useSearchParams();
 
   const filters: OrderFilters = {
-    status: (params.get('status') ?? DEFAULTS.status) as OrderFilters['status'],
+    status: params.get('status') ?? DEFAULTS.status,
     sort: (params.get('sort') ?? DEFAULTS.sort) as OrderSortKey,
     page: Number(params.get('page') ?? DEFAULTS.page),
     search: params.get('search') ?? DEFAULTS.search,

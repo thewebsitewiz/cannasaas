@@ -37,12 +37,16 @@ export function useProductSearch(filters: SearchFilters) {
       let products = data.products || [];
       // Client-side filtering
       if (filters.strainType) {
-        products = products.filter((p: any) => p.strainType === filters.strainType);
+        products = products.filter(
+          (p: any) => p.strainType === filters.strainType,
+        );
       }
       if (filters.search) {
         const q = filters.search.toLowerCase();
-        products = products.filter((p: any) =>
-          p.name?.toLowerCase().includes(q) || p.strainName?.toLowerCase().includes(q)
+        products = products.filter(
+          (p: any) =>
+            p.name?.toLowerCase().includes(q) ||
+            p.strainName?.toLowerCase().includes(q),
         );
       }
       return { products, total: products.length };
@@ -61,7 +65,7 @@ export function useAutocomplete(query: string) {
     select: (data) => {
       const q = query.toLowerCase();
       return (data.products || []).filter((p: any) =>
-        p.name?.toLowerCase().includes(q)
+        p.name?.toLowerCase().includes(q),
       );
     },
     enabled: query.length >= 2,

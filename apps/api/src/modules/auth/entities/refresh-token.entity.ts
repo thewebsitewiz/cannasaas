@@ -1,14 +1,22 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, Index } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  Index,
+} from 'typeorm';
 
 @Entity('refresh_tokens')
 export class RefreshToken {
   @PrimaryGeneratedColumn('uuid') id!: string;
 
   @Index()
-  @Column({ type: 'uuid' }) userId!: string;
+  @Column({ type: 'uuid' })
+  userId!: string;
 
   @Index()
-  @Column({ unique: true }) tokenHash!: string;
+  @Column({ unique: true })
+  tokenHash!: string;
 
   @Column({ type: 'uuid', nullable: true }) dispensaryId?: string;
   @Column({ type: 'uuid', nullable: true }) organizationId?: string;

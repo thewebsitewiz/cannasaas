@@ -35,15 +35,24 @@ export default function HomePage() {
           <div className="flex justify-center mb-4">
             <Leaf size={48} className="opacity-70" />
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold font-display mb-4">Welcome to GreenLeaf</h1>
+          <h1 className="text-4xl sm:text-5xl font-bold font-display mb-4">
+            Welcome to GreenLeaf
+          </h1>
           <p className="text-lg opacity-80 max-w-2xl mx-auto mb-8">
-            Licensed cannabis dispensary in Tappan, NY. Browse our curated menu and order for pickup or delivery.
+            Licensed cannabis dispensary in Tappan, NY. Browse our curated menu
+            and order for pickup or delivery.
           </p>
           <div className="flex justify-center gap-4">
-            <Link href="/products" className="bg-surface text-brand-600 font-semibold px-6 py-3 rounded-xl hover:bg-bg-alt transition-colors">
+            <Link
+              href="/products"
+              className="bg-surface text-brand-600 font-semibold px-6 py-3 rounded-xl hover:bg-bg-alt transition-colors"
+            >
               Shop Menu
             </Link>
-            <Link href="/products" className="border border-white/30 text-txt-inverse font-semibold px-6 py-3 rounded-xl hover:bg-white/10 transition-colors">
+            <Link
+              href="/products"
+              className="border border-white/30 text-txt-inverse font-semibold px-6 py-3 rounded-xl hover:bg-white/10 transition-colors"
+            >
               View Strains
             </Link>
           </div>
@@ -56,21 +65,27 @@ export default function HomePage() {
             <Truck size={24} className="text-brand-600 shrink-0 mt-0.5" />
             <div>
               <h3 className="font-semibold text-txt">Delivery & Pickup</h3>
-              <p className="text-sm text-txt-muted mt-1">Free local delivery within 3 miles. Same-day pickup available.</p>
+              <p className="text-sm text-txt-muted mt-1">
+                Free local delivery within 3 miles. Same-day pickup available.
+              </p>
             </div>
           </div>
           <div className="flex items-start gap-4 p-6 bg-surface rounded-xl border border-bdr">
             <ShieldCheck size={24} className="text-brand-600 shrink-0 mt-0.5" />
             <div>
               <h3 className="font-semibold text-txt">100% Compliant</h3>
-              <p className="text-sm text-txt-muted mt-1">All products tested and tracked via Metrc. Fully licensed in NY.</p>
+              <p className="text-sm text-txt-muted mt-1">
+                All products tested and tracked via Metrc. Fully licensed in NY.
+              </p>
             </div>
           </div>
           <div className="flex items-start gap-4 p-6 bg-surface rounded-xl border border-bdr">
             <Clock size={24} className="text-brand-600 shrink-0 mt-0.5" />
             <div>
               <h3 className="font-semibold text-txt">Order Ahead</h3>
-              <p className="text-sm text-txt-muted mt-1">Schedule your pickup time and skip the wait.</p>
+              <p className="text-sm text-txt-muted mt-1">
+                Schedule your pickup time and skip the wait.
+              </p>
             </div>
           </div>
         </div>
@@ -80,7 +95,10 @@ export default function HomePage() {
         <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-16">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-txt">Featured Products</h2>
-            <Link href="/products" className="text-sm text-brand-600 font-medium hover:text-brand-500">
+            <Link
+              href="/products"
+              className="text-sm text-brand-600 font-medium hover:text-brand-500"
+            >
               View all →
             </Link>
           </div>

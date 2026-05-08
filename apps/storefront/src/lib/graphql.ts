@@ -1,10 +1,14 @@
 import { GraphQLClient, ClientError } from 'graphql-request';
 
-const GRAPHQL_URL = process.env.NEXT_PUBLIC_GRAPHQL_URL || 'http://localhost:3000/graphql';
+const GRAPHQL_URL =
+  process.env.NEXT_PUBLIC_GRAPHQL_URL || 'http://localhost:3000/graphql';
 
 const publicClient = new GraphQLClient(GRAPHQL_URL);
 
-export async function gql<T>(query: string, variables?: Record<string, any>): Promise<T> {
+export async function gql<T>(
+  query: string,
+  variables?: Record<string, any>,
+): Promise<T> {
   return publicClient.request<T>(query, variables);
 }
 
@@ -29,7 +33,9 @@ function clearAuthAndRedirect() {
       stored.state.user = null;
       localStorage.setItem('cannasaas-auth', JSON.stringify(stored));
     }
-  } catch {}
+  } catch {
+    // ignore — auth state may already be cleared
+  }
 
   // Redirect to login with return path
   const returnPath = window.location.pathname + window.location.search;
@@ -39,16 +45,23 @@ function clearAuthAndRedirect() {
 function isUnauthorizedError(err: unknown): boolean {
   if (err instanceof ClientError) {
     const errors = err.response?.errors;
-    if (errors?.some((e: any) =>
-      e.extensions?.code === 'UNAUTHENTICATED' ||
-      e.extensions?.status === 401 ||
-      e.message === 'Unauthorized'
-    )) return true;
+    if (
+      errors?.some(
+        (e: any) =>
+          e.extensions?.code === 'UNAUTHENTICATED' ||
+          e.extensions?.status === 401 ||
+          e.message === 'Unauthorized',
+      )
+    )
+      return true;
   }
   return false;
 }
 
-export async function gqlAuth<T>(query: string, variables?: Record<string, any>): Promise<T> {
+export async function gqlAuth<T>(
+  query: string,
+  variables?: Record<string, any>,
+): Promise<T> {
   const token = getStoredToken();
 
   if (!token) {

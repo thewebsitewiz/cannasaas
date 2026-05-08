@@ -14,7 +14,11 @@ interface FilterSidebarProps {
   onFilterChange: (key: string, value: any) => void;
 }
 
-export function FilterSidebar({ facets, filters, onFilterChange }: FilterSidebarProps) {
+export function FilterSidebar({
+  facets,
+  filters,
+  onFilterChange,
+}: FilterSidebarProps) {
   if (!facets) return null;
 
   return (
@@ -27,7 +31,9 @@ export function FilterSidebar({ facets, filters, onFilterChange }: FilterSidebar
             <button
               onClick={() => onFilterChange('strainType', undefined)}
               className={`block w-full text-left text-sm px-3 py-1.5 rounded-lg transition-colors ${
-                !filters.strainType ? 'bg-brand-50 text-brand-700 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                !filters.strainType
+                  ? 'bg-brand-50 text-brand-700 font-medium'
+                  : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
               All types
@@ -35,9 +41,16 @@ export function FilterSidebar({ facets, filters, onFilterChange }: FilterSidebar
             {facets.strainTypes.map((st) => (
               <button
                 key={st.value}
-                onClick={() => onFilterChange('strainType', st.value === filters.strainType ? undefined : st.value)}
+                onClick={() =>
+                  onFilterChange(
+                    'strainType',
+                    st.value === filters.strainType ? undefined : st.value,
+                  )
+                }
                 className={`block w-full text-left text-sm px-3 py-1.5 rounded-lg transition-colors ${
-                  filters.strainType === st.value ? 'bg-brand-50 text-brand-700 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                  filters.strainType === st.value
+                    ? 'bg-brand-50 text-brand-700 font-medium'
+                    : 'text-gray-600 hover:bg-gray-50'
                 }`}
               >
                 {st.label} <span className="text-gray-400">({st.count})</span>
@@ -59,14 +72,22 @@ export function FilterSidebar({ facets, filters, onFilterChange }: FilterSidebar
                   key={effect.value}
                   onClick={() => {
                     const current = filters.effects ?? [];
-                    const next = isActive ? current.filter((e) => e !== effect.value) : [...current, effect.value];
-                    onFilterChange('effects', next.length > 0 ? next : undefined);
+                    const next = isActive
+                      ? current.filter((e) => e !== effect.value)
+                      : [...current, effect.value];
+                    onFilterChange(
+                      'effects',
+                      next.length > 0 ? next : undefined,
+                    );
                   }}
                   className={`block w-full text-left text-sm px-3 py-1.5 rounded-lg transition-colors ${
-                    isActive ? 'bg-brand-50 text-brand-700 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                    isActive
+                      ? 'bg-brand-50 text-brand-700 font-medium'
+                      : 'text-gray-600 hover:bg-gray-50'
                   }`}
                 >
-                  {effect.label} <span className="text-gray-400">({effect.count})</span>
+                  {effect.label}{' '}
+                  <span className="text-gray-400">({effect.count})</span>
                 </button>
               );
             })}

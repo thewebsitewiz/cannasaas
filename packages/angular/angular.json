@@ -12,6 +12,12 @@
           "configurations": {
             "development": {
               "extractLicenses": false,
+              "fileReplacements": [
+                {
+                  "replace": "projects/kiosk/src/environments/environment.ts",
+                  "with": "projects/kiosk/src/environments/environment.development.ts"
+                }
+              ],
               "optimization": false,
               "sourceMap": true
             },

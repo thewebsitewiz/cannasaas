@@ -1,86 +1,44 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import { ThemeService, THEME_NAMES, type ThemeName, MeGQL, type MeQuery } from '@cannasaas/ui-ng';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import { Router, RouterOutlet } from '@angular/router';
+import { ThemeService } from '@cannasaas/ui-ng';
+import { AttractMode } from './shared/attract-mode/attract-mode';
+import { AuthService } from './core/auth/auth.service';
+import { CartService } from './core/cart/cart.service';
+import { IdleService } from './core/idle/idle.service';
 
 @Component({
   selector: 'cs-root',
-  imports: [RouterOutlet],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [RouterOutlet, AttractMode],
   template: `
-    <main class="cs-kiosk">
-      <header>
-        <h1>CannaSaas Kiosk</h1>
-        <select (change)="onThemeChange($event)" [value]="theme.current()">
-          @for (name of themes; track name) {
-            <option [value]="name">{{ name }}</option>
-          }
-        </select>
-      </header>
-
-      <section style="margin-top: 2rem;">
-        <h2>API connection test</h2>
-        @if (loading()) {
-          <p>Loading…</p>
-        } @else if (error(); as err) {
-          <p style="color: crimson;">Error: {{ err }}</p>
-        } @else if (user(); as me) {
-          <p>
-            Connected. Authenticated as <strong>{{ me.email }}</strong> ({{ me.role }})
-          </p>
-        } @else {
-          <p>No user — likely 401. That's expected without a JWT.</p>
-        }
-      </section>
-
-      <section style="margin-top: 2rem; border: 2px solid red; padding: 1rem;">
-        <h2>Diagnostic</h2>
-        <p>Loading state: {{ loading() }}</p>
-        <p>Error state: {{ error() }}</p>
-        <p>User state: {{ user() ? 'has user' : 'no user' }}</p>
-        <p>MeGQL injected: {{ meGQL ? 'yes' : 'no' }}</p>
-      </section>
-
-      <router-outlet />
-    </main>
+    <router-outlet />
+    @if (idle.isIdle()) {
+      <cs-attract-mode (exit)="onAttractExit()" />
+    }
   `,
-  styles: [
-    `
-      .cs-kiosk {
-        padding: 2rem;
-      }
-      header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-    `,
-  ],
 })
 export class App implements OnInit {
-  protected readonly theme = inject(ThemeService);
-  protected readonly themes = THEME_NAMES;
-
-  protected readonly meGQL = inject(MeGQL);
-  protected readonly loading = signal(true);
-  protected readonly user = signal<MeQuery['me'] | null>(null);
-  protected readonly error = signal<string | null>(null);
+  private readonly theme = inject(ThemeService);
+  private readonly auth = inject(AuthService);
+  private readonly cart = inject(CartService);
+  private readonly router = inject(Router);
+  protected readonly idle = inject(IdleService);
 
   ngOnInit(): void {
     this.theme.setTheme('casual');
-
-    this.meGQL.fetch().subscribe({
-      next: (result) => {
-        this.user.set(result.data?.me ?? null);
-        this.loading.set(false);
-      },
-      error: (err: Error) => {
-        this.error.set(err.message);
-        this.loading.set(false);
-      },
+    this.idle.start();
+    this.auth.ensureLoggedIn().catch((err: unknown) => {
+      console.error('[App] Kiosk login failed', err);
+      const message = err instanceof Error ? err.message : '';
+      if (message === 'KIOSK_NOT_PROVISIONED' && !this.router.url.startsWith('/setup')) {
+        void this.router.navigateByUrl('/setup');
+      }
     });
   }
 
-  onThemeChange(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value as ThemeName;
-    this.theme.setTheme(value);
+  protected onAttractExit(): void {
+    this.cart.clearCart();
+    this.idle.reset();
+    void this.router.navigateByUrl('/');
   }
 }

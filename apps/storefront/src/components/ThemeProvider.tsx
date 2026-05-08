@@ -61,7 +61,9 @@ export function ThemeProvider() {
         });
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const { data } = await res.json();
+        const { data } = (await res.json()) as {
+          data?: { themeConfig?: { preset?: string } };
+        };
 
         if (data?.themeConfig?.preset) {
           setThemePreset(data.themeConfig.preset);
@@ -87,7 +89,9 @@ export function ThemeProvider() {
         });
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const { data } = await res.json();
+        const { data } = (await res.json()) as {
+          data?: { designSystemConfig?: { designSystemFile?: string } };
+        };
 
         const file = data?.designSystemConfig?.designSystemFile;
 
@@ -116,8 +120,8 @@ export function ThemeProvider() {
       }
     }
 
-    loadTheme();
-    loadDesignSystem();
+    void loadTheme();
+    void loadDesignSystem();
   }, []);
 
   return null;

@@ -1,0 +1,14 @@
+mutation CreateOrder($input: CreateOrderInput!) {
+  createOrder(input: $input) {
+    orderId
+    dispensaryId
+    orderStatus
+    orderType
+    subtotal
+    taxTotal
+    discountTotal
+    total
+    lineItemCount
+    createdAt
+  }
+}

@@ -11,8 +11,11 @@ export default function ProductFilters({ products }: { products: any[] }) {
   const [strainFilter, setStrainFilter] = useState('All');
 
   const filtered = products.filter((p) => {
-    const matchesSearch = !search || p.name?.toLowerCase().includes(search.toLowerCase());
-    const matchesStrain = strainFilter === 'All' || p.strainType?.toLowerCase() === strainFilter.toLowerCase();
+    const matchesSearch =
+      !search || p.name?.toLowerCase().includes(search.toLowerCase());
+    const matchesStrain =
+      strainFilter === 'All' ||
+      p.strainType?.toLowerCase() === strainFilter.toLowerCase();
     return matchesSearch && matchesStrain;
   });
 
@@ -21,7 +24,10 @@ export default function ProductFilters({ products }: { products: any[] }) {
       {/* Search + Filters */}
       <div className="flex flex-col sm:flex-row gap-4 mb-10">
         <div className="relative flex-1">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-txt-muted" />
+          <Search
+            size={18}
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-txt-muted"
+          />
           <input
             type="text"
             placeholder="Search products..."

@@ -26,7 +26,10 @@ export function AgeGate({ children }: { children: React.ReactNode }) {
     const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
       age--;
     }
 
@@ -68,8 +71,8 @@ export function AgeGate({ children }: { children: React.ReactNode }) {
           Are you 21 or older?
         </h1>
         <p className="text-gs-mist text-sm mb-8">
-          You must be of legal age to view this website.
-          By entering, you agree to our terms of service.
+          You must be of legal age to view this website. By entering, you agree
+          to our terms of service.
         </p>
 
         {/* DOB input */}
@@ -80,7 +83,10 @@ export function AgeGate({ children }: { children: React.ReactNode }) {
           <input
             type="date"
             value={dob}
-            onChange={(e) => { setDob(e.target.value); setError(''); }}
+            onChange={(e) => {
+              setDob(e.target.value);
+              setError('');
+            }}
             max={new Date().toISOString().split('T')[0]}
             className="w-full px-4 py-3 bg-gs-deep-pine border border-gs-pine rounded-xl text-gs-cream text-center text-lg focus:outline-none focus:ring-2 focus:ring-gs-sage focus:border-transparent"
           />
@@ -110,9 +116,9 @@ export function AgeGate({ children }: { children: React.ReactNode }) {
 
         {/* Legal */}
         <p className="text-gs-stone text-xs mt-8 leading-relaxed">
-          This website contains information about cannabis products.
-          Cannabis is only available for purchase in licensed dispensaries
-          by adults aged 21 and older. Must present valid government-issued ID.
+          This website contains information about cannabis products. Cannabis is
+          only available for purchase in licensed dispensaries by adults aged 21
+          and older. Must present valid government-issued ID.
         </p>
       </div>
     </div>

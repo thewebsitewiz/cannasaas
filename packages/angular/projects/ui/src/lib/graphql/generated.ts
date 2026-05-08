@@ -1,3 +1,4 @@
+/* eslint-disable */
 // AUTO-GENERATED — do not edit by hand
 
 import { gql } from 'apollo-angular';
@@ -4187,6 +4188,27 @@ export type WasteDestructionLog = {
   witness2Title?: Maybe<Scalars['String']['output']>;
 };
 
+export type CreateOrderMutationVariables = Exact<{
+  input: CreateOrderInput;
+}>;
+
+export type CreateOrderMutation = {
+  __typename?: 'Mutation';
+  createOrder: {
+    __typename?: 'OrderSummary';
+    orderId: string;
+    dispensaryId: string;
+    orderStatus: string;
+    orderType: string;
+    subtotal: number;
+    taxTotal: number;
+    discountTotal: number;
+    total: number;
+    lineItemCount: number;
+    createdAt: string;
+  };
+};
+
 export type DispensaryQueryVariables = Exact<{
   entityId: Scalars['ID']['input'];
 }>;
@@ -4215,6 +4237,15 @@ export type DispensaryQuery = {
   } | null;
 };
 
+export type LoginMutationVariables = Exact<{
+  input: LoginInput;
+}>;
+
+export type LoginMutation = {
+  __typename?: 'Mutation';
+  login: { __typename?: 'AuthToken'; accessToken: string; expiresIn: number };
+};
+
 export type MeQueryVariables = Exact<{ [key: string]: never }>;
 
 export type MeQuery = {
@@ -4233,6 +4264,45 @@ export type MeQuery = {
   };
 };
 
+export type ProductQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+  id: Scalars['ID']['input'];
+}>;
+
+export type ProductQuery = {
+  __typename?: 'Query';
+  product?: {
+    __typename?: 'Product';
+    id: string;
+    name: string;
+    sku?: string | null;
+    description?: string | null;
+    shortDescription?: string | null;
+    strainName?: string | null;
+    strainType?: string | null;
+    thcPercent?: number | null;
+    cbdPercent?: number | null;
+    effects?: Record<string, unknown> | null;
+    flavors?: Record<string, unknown> | null;
+    primaryCategoryId?: number | null;
+    productTypeId?: number | null;
+    brandId?: string | null;
+    isActive: boolean;
+    isApproved: boolean;
+    variants: Array<{
+      __typename?: 'ProductVariant';
+      variantId: string;
+      name: string;
+      sku?: string | null;
+      retailPrice?: number | null;
+      stockQuantity?: number | null;
+      stockStatus?: string | null;
+      sortOrder?: number | null;
+      isActive: boolean;
+    }>;
+  } | null;
+};
+
 export type ProductsQueryVariables = Exact<{
   dispensaryId: Scalars['ID']['input'];
   categoryId?: InputMaybe<Scalars['Int']['input']>;
@@ -4249,19 +4319,63 @@ export type ProductsQuery = {
     id: string;
     name: string;
     sku?: string | null;
+    description?: string | null;
     shortDescription?: string | null;
     strainName?: string | null;
     strainType?: string | null;
     thcPercent?: number | null;
     cbdPercent?: number | null;
+    effects?: Record<string, unknown> | null;
+    flavors?: Record<string, unknown> | null;
     primaryCategoryId?: number | null;
     productTypeId?: number | null;
     brandId?: string | null;
     isActive: boolean;
     isApproved: boolean;
+    variants: Array<{
+      __typename?: 'ProductVariant';
+      variantId: string;
+      name: string;
+      sku?: string | null;
+      retailPrice?: number | null;
+      stockQuantity?: number | null;
+      stockStatus?: string | null;
+      sortOrder?: number | null;
+      isActive: boolean;
+    }>;
   }>;
 };
 
+export const CreateOrderDocument = gql`
+  mutation CreateOrder($input: CreateOrderInput!) {
+    createOrder(input: $input) {
+      orderId
+      dispensaryId
+      orderStatus
+      orderType
+      subtotal
+      taxTotal
+      discountTotal
+      total
+      lineItemCount
+      createdAt
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class CreateOrderGQL extends Apollo.Mutation<
+  CreateOrderMutation,
+  CreateOrderMutationVariables
+> {
+  override document = CreateOrderDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
 export const DispensaryDocument = gql`
   query Dispensary($entityId: ID!) {
     dispensary(entityId: $entityId) {
@@ -4296,6 +4410,25 @@ export class DispensaryGQL extends Apollo.Query<DispensaryQuery, DispensaryQuery
     super(apollo);
   }
 }
+export const LoginDocument = gql`
+  mutation Login($input: LoginInput!) {
+    login(input: $input) {
+      accessToken
+      expiresIn
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class LoginGQL extends Apollo.Mutation<LoginMutation, LoginMutationVariables> {
+  override document = LoginDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
 export const MeDocument = gql`
   query Me {
     me {
@@ -4322,6 +4455,49 @@ export class MeGQL extends Apollo.Query<MeQuery, MeQueryVariables> {
     super(apollo);
   }
 }
+export const ProductDocument = gql`
+  query Product($dispensaryId: ID!, $id: ID!) {
+    product(dispensaryId: $dispensaryId, id: $id) {
+      id
+      name
+      sku
+      description
+      shortDescription
+      strainName
+      strainType
+      thcPercent
+      cbdPercent
+      effects
+      flavors
+      primaryCategoryId
+      productTypeId
+      brandId
+      isActive
+      isApproved
+      variants {
+        variantId
+        name
+        sku
+        retailPrice
+        stockQuantity
+        stockStatus
+        sortOrder
+        isActive
+      }
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class ProductGQL extends Apollo.Query<ProductQuery, ProductQueryVariables> {
+  override document = ProductDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
 export const ProductsDocument = gql`
   query Products(
     $dispensaryId: ID!
@@ -4342,16 +4518,29 @@ export const ProductsDocument = gql`
       id
       name
       sku
+      description
       shortDescription
       strainName
       strainType
       thcPercent
       cbdPercent
+      effects
+      flavors
       primaryCategoryId
       productTypeId
       brandId
       isActive
       isApproved
+      variants {
+        variantId
+        name
+        sku
+        retailPrice
+        stockQuantity
+        stockStatus
+        sortOrder
+        isActive
+      }
     }
   }
 `;

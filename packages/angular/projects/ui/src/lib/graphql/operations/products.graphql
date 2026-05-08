@@ -17,15 +17,28 @@ query Products(
     id
     name
     sku
+    description
     shortDescription
     strainName
     strainType
     thcPercent
     cbdPercent
+    effects
+    flavors
     primaryCategoryId
     productTypeId
     brandId
     isActive
     isApproved
+    variants {
+      variantId
+      name
+      sku
+      retailPrice
+      stockQuantity
+      stockStatus
+      sortOrder
+      isActive
+    }
   }
 }

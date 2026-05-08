@@ -12,7 +12,12 @@
  */
 
 import React, { memo } from 'react';
-type OrderStatus = string; type OrderStatusEvent = { status: OrderStatus; timestamp: string; note?: string };
+type OrderStatus = string;
+type OrderStatusEvent = {
+  status: OrderStatus;
+  timestamp: string;
+  note?: string;
+};
 
 interface OrderTimelineProps {
   statusHistory: OrderStatusEvent[];
@@ -21,15 +26,15 @@ interface OrderTimelineProps {
 
 /** Friendly verb for each status transition */
 const STATUS_VERB: Record<OrderStatus, string> = {
-  pending:           'Order placed',
-  confirmed:         'Order confirmed',
-  preparing:         'Being prepared',
-  ready_for_pickup:  'Ready for pickup',
-  out_for_delivery:  'Out for delivery',
-  delivered:         'Delivered',
-  completed:         'Order complete',
-  cancelled:         'Order cancelled',
-  refunded:          'Order refunded',
+  pending: 'Order placed',
+  confirmed: 'Order confirmed',
+  preparing: 'Being prepared',
+  ready_for_pickup: 'Ready for pickup',
+  out_for_delivery: 'Out for delivery',
+  delivered: 'Delivered',
+  completed: 'Order complete',
+  cancelled: 'Order cancelled',
+  refunded: 'Order refunded',
 };
 
 export const OrderTimeline = memo(function OrderTimeline({
@@ -38,7 +43,9 @@ export const OrderTimeline = memo(function OrderTimeline({
 }: OrderTimelineProps) {
   return (
     <section aria-label="Order status timeline">
-      <h3 className="text-sm font-semibold text-gray-700 mb-4">Order Timeline</h3>
+      <h3 className="text-sm font-semibold text-gray-700 mb-4">
+        Order Timeline
+      </h3>
 
       {/*
        * <ol> communicates sequence to screen readers.
@@ -71,15 +78,17 @@ export const OrderTimeline = memo(function OrderTimeline({
                   'absolute left-0 w-6 h-6 rounded-full',
                   'flex items-center justify-center',
                   'border-2 bg-white z-10',
-                  isLatest
-                    ? 'border-[hsl(var(--primary))]'
-                    : 'border-gray-300',
+                  isLatest ? 'border-[hsl(var(--primary))]' : 'border-gray-300',
                 ].join(' ')}
               >
                 {isLatest ? (
                   <span className="w-2.5 h-2.5 rounded-full bg-[hsl(var(--primary))]" />
                 ) : (
-                  <svg className="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 8 8">
+                  <svg
+                    className="w-3 h-3 text-gray-400"
+                    fill="currentColor"
+                    viewBox="0 0 8 8"
+                  >
                     <path d="M6.564.75l-3.59 3.612-1.538-1.55L0 4.26l2.974 2.99L8 2.193z" />
                   </svg>
                 )}
@@ -87,10 +96,12 @@ export const OrderTimeline = memo(function OrderTimeline({
 
               {/* Event content */}
               <div>
-                <p className={[
-                  'text-sm font-medium',
-                  isLatest ? 'text-gray-900' : 'text-gray-500',
-                ].join(' ')}>
+                <p
+                  className={[
+                    'text-sm font-medium',
+                    isLatest ? 'text-gray-900' : 'text-gray-500',
+                  ].join(' ')}
+                >
                   {STATUS_VERB[event.status]}
                 </p>
 

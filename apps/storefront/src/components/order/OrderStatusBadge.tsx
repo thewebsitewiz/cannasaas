@@ -20,26 +20,75 @@ interface OrderStatusBadgeProps {
 }
 
 /** Maps each order status to a Tailwind colour pair + display label */
-const STATUS_CONFIG: Partial<Record<
-  OrderStatus,
-  { label: string; bg: string; text: string; dot: string }
->> = {
-  pending:           { label: 'Pending',            bg: 'bg-yellow-50',  text: 'text-yellow-800', dot: 'bg-yellow-400' },
-  confirmed:         { label: 'Confirmed',           bg: 'bg-blue-50',    text: 'text-blue-800',   dot: 'bg-blue-400' },
-  preparing:         { label: 'Preparing',           bg: 'bg-indigo-50',  text: 'text-indigo-800', dot: 'bg-indigo-400' },
-  ready_for_pickup:  { label: 'Ready for Pickup',    bg: 'bg-teal-50',    text: 'text-teal-800',   dot: 'bg-teal-500' },
-  out_for_delivery:  { label: 'Out for Delivery',    bg: 'bg-purple-50',  text: 'text-purple-800', dot: 'bg-purple-400' },
-  delivered:         { label: 'Delivered',           bg: 'bg-green-50',   text: 'text-green-800',  dot: 'bg-green-500' },
-  completed:         { label: 'Completed',           bg: 'bg-green-50',   text: 'text-green-800',  dot: 'bg-green-500' },
-  cancelled:         { label: 'Cancelled',           bg: 'bg-red-50',     text: 'text-red-800',    dot: 'bg-red-400' },
-  refunded:          { label: 'Refunded',            bg: 'bg-orange-50',  text: 'text-orange-800', dot: 'bg-orange-400' },
+const STATUS_CONFIG: Partial<
+  Record<OrderStatus, { label: string; bg: string; text: string; dot: string }>
+> = {
+  pending: {
+    label: 'Pending',
+    bg: 'bg-yellow-50',
+    text: 'text-yellow-800',
+    dot: 'bg-yellow-400',
+  },
+  confirmed: {
+    label: 'Confirmed',
+    bg: 'bg-blue-50',
+    text: 'text-blue-800',
+    dot: 'bg-blue-400',
+  },
+  preparing: {
+    label: 'Preparing',
+    bg: 'bg-indigo-50',
+    text: 'text-indigo-800',
+    dot: 'bg-indigo-400',
+  },
+  ready_for_pickup: {
+    label: 'Ready for Pickup',
+    bg: 'bg-teal-50',
+    text: 'text-teal-800',
+    dot: 'bg-teal-500',
+  },
+  out_for_delivery: {
+    label: 'Out for Delivery',
+    bg: 'bg-purple-50',
+    text: 'text-purple-800',
+    dot: 'bg-purple-400',
+  },
+  delivered: {
+    label: 'Delivered',
+    bg: 'bg-green-50',
+    text: 'text-green-800',
+    dot: 'bg-green-500',
+  },
+  completed: {
+    label: 'Completed',
+    bg: 'bg-green-50',
+    text: 'text-green-800',
+    dot: 'bg-green-500',
+  },
+  cancelled: {
+    label: 'Cancelled',
+    bg: 'bg-red-50',
+    text: 'text-red-800',
+    dot: 'bg-red-400',
+  },
+  refunded: {
+    label: 'Refunded',
+    bg: 'bg-orange-50',
+    text: 'text-orange-800',
+    dot: 'bg-orange-400',
+  },
 };
 
 export const OrderStatusBadge = memo(function OrderStatusBadge({
   status,
   size = 'md',
 }: OrderStatusBadgeProps) {
-  const config = STATUS_CONFIG[status] ?? { label: status, bg: "bg-gray-50", text: "text-gray-700", dot: "bg-gray-400" };
+  const config = STATUS_CONFIG[status] ?? {
+    label: status,
+    bg: 'bg-gray-50',
+    text: 'text-gray-700',
+    dot: 'bg-gray-400',
+  };
 
   return (
     <span
@@ -47,7 +96,8 @@ export const OrderStatusBadge = memo(function OrderStatusBadge({
       aria-label={`Order status: ${config.label}`}
       className={[
         'inline-flex items-center gap-1.5 rounded-full font-medium',
-        config.bg, config.text,
+        config.bg,
+        config.text,
         size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-sm',
       ].join(' ')}
     >

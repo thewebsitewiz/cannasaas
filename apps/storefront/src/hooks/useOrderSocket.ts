@@ -1,6 +1,12 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
+import { io } from 'socket.io-client';
 import { useAuthStore } from '@/stores/auth.store';
+
+interface SocketLike {
+  on(event: string, cb: (...args: unknown[]) => void): void;
+  emit(event: string, payload: unknown): void;
+  disconnect(): void;
+}
 
 const WS_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
@@ -23,7 +29,7 @@ interface DeliveryUpdate {
 }
 
 export function useOrderSocket() {
-  const socketRef = useRef<Socket | null>(null);
+  const socketRef = useRef<SocketLike | null>(null);
   const token = useAuthStore((s) => s.token);
   const [connected, setConnected] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<OrderUpdate | null>(null);
@@ -72,5 +78,11 @@ export function useOrderSocket() {
     socketRef.current?.emit('unsubscribe:order', { orderId });
   }, []);
 
-  return { connected, lastUpdate, lastDelivery, subscribeToOrder, unsubscribeFromOrder };
+  return {
+    connected,
+    lastUpdate,
+    lastDelivery,
+    subscribeToOrder,
+    unsubscribeFromOrder,
+  };
 }

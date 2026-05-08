@@ -29,12 +29,19 @@ const SLOTS_QUERY = `
   }
 `;
 
-export function useDeliveryCheck(lat?: number, lng?: number, subtotal?: number) {
+export function useDeliveryCheck(
+  lat?: number,
+  lng?: number,
+  subtotal?: number,
+) {
   return useQuery({
     queryKey: ['deliveryCheck', lat, lng, subtotal],
     queryFn: () =>
       gql<{ checkDeliveryEligibility: any }>(DELIVERY_CHECK_QUERY, {
-        dispensaryId: DEFAULT_DISPENSARY_ID, lat, lng, subtotal,
+        dispensaryId: DEFAULT_DISPENSARY_ID,
+        lat,
+        lng,
+        subtotal,
       }),
     select: (d) => d.checkDeliveryEligibility,
     enabled: !!lat && !!lng,
@@ -45,7 +52,9 @@ export function useDeliveryZones() {
   return useQuery({
     queryKey: ['deliveryZones'],
     queryFn: () =>
-      gql<{ deliveryZones: any[] }>(ZONES_QUERY, { dispensaryId: DEFAULT_DISPENSARY_ID }),
+      gql<{ deliveryZones: any[] }>(ZONES_QUERY, {
+        dispensaryId: DEFAULT_DISPENSARY_ID,
+      }),
     select: (d) => d.deliveryZones,
   });
 }
@@ -55,7 +64,9 @@ export function useTimeSlots(type: 'delivery' | 'pickup', date: string) {
     queryKey: ['timeSlots', type, date],
     queryFn: () =>
       gql<{ availableTimeSlots: any[] }>(SLOTS_QUERY, {
-        dispensaryId: DEFAULT_DISPENSARY_ID, type, date,
+        dispensaryId: DEFAULT_DISPENSARY_ID,
+        type,
+        date,
       }),
     select: (d) => d.availableTimeSlots,
     enabled: !!date,

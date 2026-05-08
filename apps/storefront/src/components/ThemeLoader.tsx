@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 // ── Valid design system files (whitelist for security) ─────────────────
 const ALLOWED_FILES = new Set([
@@ -42,8 +42,6 @@ export function ThemeLoader({
   graphqlUrl = '/api/graphql',
   fallback = FALLBACK_FILE,
 }: ThemeLoaderProps) {
-  const [loaded, setLoaded] = useState(false);
-
   useEffect(() => {
     if (!dispensaryId) return;
 
@@ -72,7 +70,10 @@ export function ThemeLoader({
           const config: DesignSystemConfig | undefined =
             json?.data?.designSystemConfig;
 
-          if (config?.designSystemFile && ALLOWED_FILES.has(config.designSystemFile)) {
+          if (
+            config?.designSystemFile &&
+            ALLOWED_FILES.has(config.designSystemFile)
+          ) {
             file = config.designSystemFile;
           }
         }
@@ -93,10 +94,9 @@ export function ThemeLoader({
       }
 
       link.href = `/styles/${file}`;
-      setLoaded(true);
     }
 
-    loadDesignSystem();
+    void loadDesignSystem();
 
     return () => {
       cancelled = true;

@@ -991,6 +991,15 @@ The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://
 """
 scalar JSON
 
+type KioskProvisionResult {
+  deviceId: ID!
+  deviceToken: String!
+  dispensaryId: ID!
+  expiresAt: DateTime!
+  issuedAt: DateTime!
+  label: String!
+}
+
 type KnowledgeProduct {
   categoryName: String
   cbdContent: Float
@@ -1307,6 +1316,11 @@ type Mutation {
   notifyCustomer(dispensaryId: ID!, templateCode: String!, userId: ID!): [NotificationLog!]!
   processCardPayment(dispensaryId: ID!, orderId: ID!, stripePaymentIntentId: String!): Payment!
   processCashPayment(applyDiscount: Boolean = true, cashTendered: Float!, dispensaryId: ID!, orderId: ID!): Payment!
+
+  """
+  Issues a long-lived device token for a kiosk terminal. Admin-only; one device per (dispensary, label).
+  """
+  provisionKiosk(input: ProvisionKioskInput!): KioskProvisionResult!
   publishWeekSchedule(dispensaryId: ID!, weekStart: String!): Int!
   pushOrderToPos(dispensaryId: ID!, orderId: ID!): PosOrderPushResult!
   receiveTransfer(items: [ReceiveItemInput!]!, transferId: ID!): InventoryTransfer!
@@ -1853,6 +1867,11 @@ type PromotionResult {
   type: String!
   updatedAt: DateTime!
   usesCount: Int!
+}
+
+input ProvisionKioskInput {
+  dispensaryId: ID!
+  label: String!
 }
 
 type PurchaseLimitResult {
