@@ -367,61 +367,6 @@ importers:
         specifier: ^5.8.3
         version: 5.9.3
 
-  apps/kiosk:
-    dependencies:
-      '@cannasaas/ui':
-        specifier: workspace:^
-        version: link:../../packages/ui
-      '@tanstack/react-query':
-        specifier: ^5.95.2
-        version: 5.95.2(react@19.2.4)
-      graphql:
-        specifier: ^16.13.1
-        version: 16.13.1
-      graphql-request:
-        specifier: ^7.1.2
-        version: 7.4.0(graphql@16.13.1)
-      lucide-react:
-        specifier: ^0.577.0
-        version: 0.577.0(react@19.2.4)
-      react:
-        specifier: ^19.2.4
-        version: 19.2.4
-      react-dom:
-        specifier: ^19.2.4
-        version: 19.2.4(react@19.2.4)
-      react-router-dom:
-        specifier: ^7.13.2
-        version: 7.13.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      zustand:
-        specifier: ^5.0.12
-        version: 5.0.12(@types/react@19.2.14)(immer@10.2.0)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4))
-    devDependencies:
-      '@types/react':
-        specifier: ^19.2.14
-        version: 19.2.14
-      '@types/react-dom':
-        specifier: ^19.2.3
-        version: 19.2.3(@types/react@19.2.14)
-      '@vitejs/plugin-react':
-        specifier: ^6.0.1
-        version: 6.0.1(vite@8.0.2(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.6.1)(less@4.6.4)(sass@1.99.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
-      autoprefixer:
-        specifier: ^10.4.27
-        version: 10.4.27(postcss@8.5.8)
-      postcss:
-        specifier: ^8.5.8
-        version: 8.5.8
-      tailwindcss:
-        specifier: ^4.2.2
-        version: 4.2.2
-      typescript:
-        specifier: ^5.8.3
-        version: 5.9.3
-      vite:
-        specifier: ^8.0.2
-        version: 8.0.2(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.6.1)(less@4.6.4)(sass@1.99.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
-
   apps/platform:
     dependencies:
       '@tanstack/react-query':
