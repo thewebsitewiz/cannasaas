@@ -308,7 +308,7 @@ export class MenuPage {
 
   protected readonly loading = this.resource.isLoading;
   protected readonly filtered = computed<readonly ApiProduct[]>(
-    void () => this.resource.value() ?? [],
+    () => this.resource.value() ?? [],
   );
 
   protected goToProduct(id: string): void {
