@@ -25,7 +25,7 @@ export class User {
   passwordHash?: string;
 
   @Field(() => String)
-  @Column({ default: Role.CUSTOMER })
+  @Column({ type: 'varchar', default: Role.CUSTOMER })
   role!: Role;
 
   @Field({ nullable: true })
