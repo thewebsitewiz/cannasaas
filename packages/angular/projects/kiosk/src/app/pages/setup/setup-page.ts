@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  OnInit,
-  inject,
-  signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 
@@ -22,20 +16,18 @@ import { AuthService } from '../../core/auth/auth.service';
             Kiosk Setup
           </h1>
           <p class="mt-2 text-base text-gray-500">
-            This kiosk needs a device token from your dispensary admin. Tokens are
-            issued once via the
-            <code
-              class="rounded bg-gray-100 px-2 py-0.5 font-mono text-sm text-gray-700"
-            >provisionKiosk</code>
+            This kiosk needs a device token from your dispensary admin. Tokens are issued once via
+            the
+            <code class="rounded bg-gray-100 px-2 py-0.5 font-mono text-sm text-gray-700"
+              >provisionKiosk</code
+            >
             mutation and last about a year.
           </p>
         </div>
 
         <form (submit)="onSubmit($event)" class="space-y-4">
           <label class="block">
-            <span class="mb-2 block text-sm font-semibold text-gray-700">
-              Paste device token
-            </span>
+            <span class="mb-2 block text-sm font-semibold text-gray-700"> Paste device token </span>
             <textarea
               rows="6"
               [value]="pasted()"
@@ -104,7 +96,7 @@ export class SetupPage implements OnInit {
     const token = this.pasted().trim();
     if (!token) return;
     this.activate(token);
-  void }
+  }
 
   private activate(token: string): void {
     if (!looksLikeJwt(token)) {
@@ -112,7 +104,7 @@ export class SetupPage implements OnInit {
       return;
     }
     this.auth.setDeviceToken(token);
-    this.router.navigateByUrl('/');
+    void this.router.navigateByUrl('/');
   }
 }
 

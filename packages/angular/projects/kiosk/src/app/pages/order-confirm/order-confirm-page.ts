@@ -17,9 +17,7 @@ const RESET_SECONDS = 15;
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="flex h-[70vh] flex-col items-center justify-center px-8 text-center">
-      <div
-        class="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-green-100"
-      >
+      <div class="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-green-100">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="56"
@@ -41,9 +39,7 @@ const RESET_SECONDS = 15;
 
       <p class="mb-2 text-xl text-gray-600">
         Order
-        <span class="font-mono font-bold text-emerald-700">
-          #{{ shortOrderId() }}
-        </span>
+        <span class="font-mono font-bold text-emerald-700"> #{{ shortOrderId() }} </span>
       </p>
 
       <p class="mb-8 text-lg text-gray-500">
@@ -72,10 +68,9 @@ export class OrderConfirmPage {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
-  protected readonly orderId = toSignal(
-    this.route.paramMap.pipe(map((p) => p.get('orderId'))),
-    { initialValue: null },
-  );
+  protected readonly orderId = toSignal(this.route.paramMap.pipe(map((p) => p.get('orderId'))), {
+    initialValue: null,
+  });
 
   protected readonly shortOrderId = computed(() => {
     const id = this.orderId();
@@ -84,21 +79,21 @@ export class OrderConfirmPage {
 
   protected readonly countdown = signal(RESET_SECONDS);
 
-  void constructor() {
+  constructor() {
     const interval = setInterval(() => {
       this.countdown.update((n) => {
         if (n <= 1) {
           clearInterval(interval);
-          this.router.navigateByUrl('/');
+          void this.router.navigateByUrl('/');
           return 0;
         }
         return n - 1;
       });
-    void }, 1000);
+    }, 1000);
     this.destroyRef.onDestroy(() => clearInterval(interval));
   }
 
   protected goHome(): void {
-    this.router.navigateByUrl('/');
+    void this.router.navigateByUrl('/');
   }
 }

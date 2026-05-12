@@ -12,9 +12,7 @@ import { ErrorDisplay } from '../../shared/error-display/error-display';
   imports: [RouterOutlet, RouterLink, ErrorDisplay],
   template: `
     <div class="flex h-screen flex-col select-none bg-stone-50">
-      <header
-        class="flex h-20 shrink-0 items-center justify-between bg-[#0a1a0f] px-8"
-      >
+      <header class="flex h-20 shrink-0 items-center justify-between bg-[#0a1a0f] px-8">
         <div class="flex items-center gap-4">
           @if (!isHome()) {
             <button
@@ -112,9 +110,7 @@ import { ErrorDisplay } from '../../shared/error-display/error-display';
         <router-outlet />
       </main>
 
-      <footer
-        class="shrink-0 bg-[#0a1a0f] px-6 py-3 text-center text-xs text-white/30"
-      >
+      <footer class="shrink-0 bg-[#0a1a0f] px-6 py-3 text-center text-xs text-white/30">
         Must be 21+ with valid ID · Tap any product to learn more
       </footer>
 
@@ -140,10 +136,10 @@ export class KioskLayout {
 
   protected goBack(): void {
     this.location.back();
-  void }
+  }
 
   protected reset(): void {
     this.cart.clearCart();
-    this.router.navigateByUrl('/');
+    void this.router.navigateByUrl('/');
   }
 }

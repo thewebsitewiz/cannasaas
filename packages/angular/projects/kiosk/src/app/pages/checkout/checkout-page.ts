@@ -37,9 +37,7 @@ import { environment } from '../../../environments/environment';
               </span>
             </div>
           }
-          <div
-            class="mt-3 flex justify-between border-t border-gray-100 pt-3 text-lg font-bold"
-          >
+          <div class="mt-3 flex justify-between border-t border-gray-100 pt-3 text-lg font-bold">
             <span>Total</span>
             <span class="tabular-nums">{{ cart.subtotal() | currency }}</span>
           </div>
@@ -108,7 +106,7 @@ export class CheckoutPage {
   protected readonly error = signal<string | null>(null);
 
   protected goHome(): void {
-    this.router.navigateByUrl('/');
+    void this.router.navigateByUrl('/');
   }
 
   protected async placeOrder(): Promise<void> {
@@ -136,9 +134,9 @@ export class CheckoutPage {
         }),
       );
       const orderId = result.data?.createOrder?.orderId;
-      void if (orderId) {
+      if (orderId) {
         this.cart.clearCart();
-        this.router.navigateByUrl(`/confirm/${orderId}`);
+        void this.router.navigateByUrl(`/confirm/${orderId}`);
       } else {
         this.error.set('Order failed — please try again');
       }

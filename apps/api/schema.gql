@@ -991,6 +991,13 @@ The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://
 """
 scalar JSON
 
+type KioskCustomerLookup {
+  customerId: ID!
+  firstName: String
+  lastName: String
+  loyaltyPoints: Int!
+}
+
 type KioskProvisionResult {
   deviceId: ID!
   deviceToken: String!
@@ -1930,6 +1937,7 @@ type Query {
   complianceSystem(dispensaryId: ID!): String!
   countItems(countId: ID!): [InventoryCountItem!]!
   coverageGaps(dispensaryId: ID!, weekStart: String!): [ScheduledShift!]!
+  customerByPhone(dispensaryId: ID!, phone: String!): KioskCustomerLookup
   customers(dispensaryId: ID!, limit: Int = 50, offset: Int = 0): [CustomerProfile!]!
   dashboard(days: Int, dispensaryId: ID): DashboardData!
   deadStock(daysSinceMovement: Int = 30, dispensaryId: ID!): [InventoryAdjustment!]!
