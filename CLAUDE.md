@@ -14,21 +14,35 @@ GitHub: `thewebsitewiz/cannasaas`.
 
 ---
 
-## Stack (target state — Angular rewrite in progress)
+## Stack
 
 Monorepo: pnpm workspaces + Turborepo.
 
-- **`apps/api`** — NestJS, GraphQL (code-first), TypeORM, PostgreSQL, Redis + BullMQ. Port `:3000`. **Unchanged.**
-- **`apps/storefront`** — Angular 21, customer-facing dispensary site. Port `:5173`.
-- **`apps/admin`** — Angular 21, dispensary back-office. Port `:5174`.
-- **`apps/staff`** — Angular 21, in-store POS. Port `:5175`.
-- **`apps/kiosk`** — Angular 21, self-service touch terminal. Port `:5176`.
-- **`apps/platform`** — Angular 21, super-admin cross-tenant management. Port `:5177`.
-- **`packages/ui`** — design tokens + theme CSS at `packages/ui/src/themes/theme.*.css`.
+**Backend**
+
+- **`apps/api`** — NestJS, GraphQL (code-first), TypeORM, PostgreSQL, Redis + BullMQ. Port `:3000`.
+
+**Frontend — current React / Next / Vite apps**
+
+- **`apps/storefront`** — Next.js, customer-facing dispensary site. Port `:5173`.
+- **`apps/admin`** — Vite + React, dispensary back-office. Port `:5174`.
+- **`apps/staff`** — Vite + React, in-store POS. Port `:5175`.
+- **`apps/platform`** — React, super-admin cross-tenant management. Port `:5177`.
+
+**Frontend — Angular (multi-project workspace at `packages/angular/`)**
+
+- **`packages/angular/projects/kiosk`** — Angular 21, self-service touch terminal. Port `:5276`. Replaces the former React `apps/kiosk` (deleted).
+- **`packages/angular/projects/ui`** — shared Angular library: design tokens, GraphQL operations, components.
+
+Future Angular rewrites of storefront, admin, staff, and platform land as additional projects in `packages/angular/projects/<name>/`, **not** as standalone `apps/*` workspaces. The multi-project workspace shares one `node_modules`, one Angular version, and the `ui` library across all projects.
+
+**Shared packages**
+
+- **`packages/ui`** — design tokens + theme CSS at `packages/ui/src/themes/theme.*.css` (consumed by React apps).
 - **`packages/types`** — shared TypeScript types.
 - **`packages/stores`** — shared signal stores / utilities.
 
-**Migration status:** in progress. The React/Next.js apps remain authoritative until the corresponding Angular app reaches feature parity. **Do not delete React code without explicit instruction.** Every per-app CLAUDE.md inherits from this file plus its own.
+**Migration status:** kiosk migration to Angular is complete (functional parity pending end-to-end verification). Storefront, admin, staff, and platform remain on React/Vite/Next until their Angular replacements are built. Every per-app CLAUDE.md inherits from this file plus its own.
 
 ---
 
