@@ -86,7 +86,9 @@
     "test:watch": "turbo run test -- --watch",
     "type-check": "turbo run type-check",
     "type-check:native": "tsgo --noEmit",
-    "start:kiosk": "pnpm --filter angular start:kiosk"
+    "start:kiosk": "pnpm --filter angular start:kiosk",
+    "dev:storefront-ng": "pnpm --filter angular dev:storefront",
+    "start:storefront-ng": "pnpm --filter angular start:storefront"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.95.2",

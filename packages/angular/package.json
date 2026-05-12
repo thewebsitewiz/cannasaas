@@ -43,7 +43,9 @@
     "start:kiosk": "ng serve kiosk",
     "test": "ng test",
     "watch": "ng build --watch --configuration development",
-    "watch:ui": "ng build ui --watch"
+    "watch:ui": "ng build ui --watch",
+    "dev:storefront": "pnpm build:ui && pnpm start:storefront",
+    "start:storefront": "ng serve storefront"
   },
   "version": "0.0.0"
 }

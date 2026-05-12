@@ -104,6 +104,80 @@
       "projectType": "library",
       "root": "projects/ui",
       "sourceRoot": "projects/ui/src"
+    },
+    "storefront": {
+      "projectType": "application",
+      "schematics": {},
+      "root": "projects/storefront",
+      "sourceRoot": "projects/storefront/src",
+      "prefix": "cs",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "projects/storefront/src/main.ts",
+            "tsConfig": "projects/storefront/tsconfig.app.json",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "projects/storefront/public"
+              }
+            ],
+            "styles": ["projects/storefront/src/styles.css"],
+            "stylePreprocessorOptions": {
+              "includePaths": ["dist/ui"]
+            }
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "projects/storefront/src/environments/environment.ts",
+                  "with": "projects/storefront/src/environments/environment.development.ts"
+                }
+              ]
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "configurations": {
+            "production": {
+              "buildTarget": "storefront:build:production"
+            },
+            "development": {
+              "buildTarget": "storefront:build:development"
+            }
+          },
+          "defaultConfiguration": "development",
+          "options": {
+            "host": "localhost",
+            "port": 5273
+          }
+        },
+        "test": {
+          "builder": "@angular/build:unit-test"
+        }
+      }
     }
   },
   "version": 1

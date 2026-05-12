@@ -39,6 +39,12 @@
     },
     {
       "path": "./projects/kiosk/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/storefront/tsconfig.app.json"
+    },
+    {
+      "path": "./projects/storefront/tsconfig.spec.json"
     }
   ]
 }
