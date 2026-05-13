@@ -407,6 +407,6 @@ ng generate guard features/foo --functional
 
 1. Check the per-app `CLAUDE.md` first — it overrides nothing here but adds app-specific rules.
 2. Don't re-solve problems in the "Gotchas" section.
-3. Critical path > architectural cleanup. If payment processor or inventory aren't done, decline tech-debt work with a "post-launch" note.
+3. Tech debt is a first-class blocker. Do not move forward on new features while lint/type debt remains open in touched areas.
 4. Prefer complete replacement files over partial patches when generating more than a few lines.
 5. Verify time-sensitive facts (Angular API, package versions, docs) — don't guess.

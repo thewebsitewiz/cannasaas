@@ -1,5 +1,13 @@
 import { RateLimit } from '../../common/guards/rate-limit.guard';
-import { Controller, Post, Body, UseGuards, Req, Res, HttpCode } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Req,
+  Res,
+  HttpCode,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Response, Request } from 'express';
 import { AuthService } from './auth.service';
@@ -7,6 +15,8 @@ import { RegisterInput } from './dto/register.input';
 import { LoginInput } from './dto/login.input';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { JwtPayload } from './strategies/jwt.strategy';
+import { JwtRefreshPayload } from './strategies/jwt-refresh.strategy';
 
 @Controller('auth')
 export class AuthController {
@@ -15,7 +25,10 @@ export class AuthController {
   @Public()
   @Post('register')
   @RateLimit(5, 300)
-  async register(@Body() dto: RegisterInput, @Res({ passthrough: true }) res: Response) {
+  async register(
+    @Body() dto: RegisterInput,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const result = await this.auth.register(dto);
     this.setRefreshCookie(res, result.refreshToken);
     return { accessToken: result.accessToken, expiresIn: result.expiresIn };
@@ -25,7 +38,11 @@ export class AuthController {
   @Post('login')
   @HttpCode(200)
   @RateLimit(10, 60)
-  async login(@Body() dto: LoginInput, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
+  async login(
+    @Body() dto: LoginInput,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const result = await this.auth.login(dto, {
       userAgent: req.headers['user-agent'],
       ipAddress: req.ip,
@@ -38,7 +55,10 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt-refresh'))
   @Post('refresh')
   @HttpCode(200)
-  async refresh(@CurrentUser() user: any, @Res({ passthrough: true }) res: Response) {
+  async refresh(
+    @CurrentUser() user: JwtRefreshPayload,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const result = await this.auth.refresh(user.sub, user.rawToken);
     this.setRefreshCookie(res, result.refreshToken);
     return { accessToken: result.accessToken, expiresIn: result.expiresIn };
@@ -46,8 +66,13 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(200)
-  async logout(@CurrentUser() user: any, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    const rawToken = req.cookies?.refresh_token;
+  async logout(
+    @CurrentUser() user: JwtPayload,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const cookies = req.cookies as { refresh_token?: string } | undefined;
+    const rawToken = cookies?.refresh_token;
     if (rawToken) await this.auth.logout(user.sub, rawToken);
     res.clearCookie('refresh_token');
     return { message: 'Logged out' };
@@ -55,7 +80,10 @@ export class AuthController {
 
   @Post('logout-all')
   @HttpCode(200)
-  async logoutAll(@CurrentUser() user: any, @Res({ passthrough: true }) res: Response) {
+  async logoutAll(
+    @CurrentUser() user: JwtPayload,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     await this.auth.logoutAll(user.sub);
     res.clearCookie('refresh_token');
     return { message: 'All sessions revoked' };
