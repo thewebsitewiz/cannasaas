@@ -1,15 +1,9 @@
 import { Routes } from '@angular/router';
-import { ageVerifiedGuard } from './core/age-gate/age-verified-guard';
 import { dispensaryResolver } from './core/tenant/dispensary.resolver';
 
 export const routes: Routes = [
   {
-    path: 'age-gate',
-    loadComponent: () => import('./pages/age-gate/age-gate-page').then((m) => m.AgeGatePage),
-  },
-  {
     path: '',
-    canMatch: [ageVerifiedGuard],
     resolve: { dispensary: dispensaryResolver },
     children: [
       {
