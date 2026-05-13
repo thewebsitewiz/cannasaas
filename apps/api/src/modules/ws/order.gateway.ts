@@ -12,6 +12,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { ALLOWED_ORIGINS } from '../../common/cors-origins';
 
 interface ConnectedClient {
   userId: string;
@@ -68,39 +69,12 @@ const STAFF_ROLES: ReadonlySet<string> = new Set([
   'super_admin',
 ]);
 
-// Decorator metadata is evaluated at module load, so CORS origins must be
-// resolved here rather than via ConfigService (which only exists at DI time).
-// The dev fallback covers every local frontend port we currently use; if
-// CORS_ORIGINS is unset the gateway logs a warning so a missing prod env
-// surfaces loudly instead of silently dropping WS handshakes.
-const DEFAULT_DEV_ORIGINS = [
-  // React apps (51xx)
-  'http://localhost:5173', // storefront
-  'http://localhost:5174', // admin
-  'http://localhost:5175', // staff
-  'http://localhost:5176', // legacy kiosk
-  'http://localhost:5177', // platform
-  'http://localhost:5178',
-  // Angular replacements (52xx — same last digit)
-  'http://localhost:5273', // storefront
-  'http://localhost:5276', // kiosk
-].join(',');
-
-const corsOriginsEnv = process.env['CORS_ORIGINS'];
-if (!corsOriginsEnv) {
-  console.warn(
-    '[OrderGateway] CORS_ORIGINS not set — using dev defaults. ' +
-      'Set CORS_ORIGINS in your environment for production deployments.',
-  );
-}
-const ALLOWED_ORIGINS = (corsOriginsEnv || DEFAULT_DEV_ORIGINS)
-  .split(',')
-  .map((s) => s.trim())
-  .filter(Boolean);
-
 @WebSocketGateway({
   cors: {
-    origin: ALLOWED_ORIGINS,
+    // ALLOWED_ORIGINS resolves at module load from CORS_ORIGINS env (or a
+    // dev fallback if unset). Decorator metadata cannot reach ConfigService,
+    // so a top-level constant is the cleanest available path.
+    origin: [...ALLOWED_ORIGINS],
     credentials: true,
   },
   namespace: '/',
