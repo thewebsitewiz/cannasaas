@@ -19,5 +19,6 @@
     ["(?:'|\"|`)([^']*)(?:'|\"|`)", "cx\\(([^)]*)\\)"]
   ],
   "typescript.enablePromptUseWorkspaceTsdk": true,
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.native-preview.tsdk": "/Users/dennisluken/Documents/Projects/cannasaas/node_modules/@typescript/native-preview"
 }
