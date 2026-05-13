@@ -18,7 +18,10 @@ export class PosIntegration {
   @Column({ type: 'uuid', name: 'dispensary_id' })
   dispensary_id!: string;
   @Field({ name: 'provider' }) @Column({ length: 50 }) provider!: string; // 'dutchie' | 'treez'
-  @Column({ type: 'jsonb', default: '{}' }) credentials!: Record<string, any>; // encrypted at rest
+  @Column({ type: 'jsonb', default: '{}' }) credentials!: Record<
+    string,
+    unknown
+  >; // encrypted at rest
   @Field({ name: 'dispensaryExternalId', nullable: true })
   @Column({ length: 255, nullable: true, name: 'dispensary_external_id' })
   dispensary_external_id?: string;
