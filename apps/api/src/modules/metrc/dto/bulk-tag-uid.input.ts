@@ -1,5 +1,5 @@
 import { InputType, Field, ID, ObjectType } from '@nestjs/graphql';
-import { IsUUID, IsArray, ValidateNested, IsString, Matches, } from 'class-validator';
+import { IsArray, ValidateNested, IsString, Matches } from 'class-validator';
 import { Type } from 'class-transformer';
 
 @InputType()

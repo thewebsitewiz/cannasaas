@@ -11,7 +11,9 @@ export class OrderCompletedListener {
 
   @OnEvent('order.completed')
   async handleOrderCompleted(event: OrderCompletedEvent): Promise<void> {
-    this.logger.log(`Order completed: ${event.orderId} — enqueueing Metrc sync`);
+    this.logger.log(
+      `Order completed: ${event.orderId} — enqueueing Metrc sync`,
+    );
     await this.syncQueue.enqueueSaleSync(event.orderId, event.dispensaryId);
   }
 }

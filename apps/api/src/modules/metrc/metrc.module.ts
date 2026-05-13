@@ -16,7 +16,12 @@ import { MetrcInventorySyncCron } from './cron/metrc-inventory-sync.cron';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([MetrcCredential, MetrcSyncLog, ComplianceLog, RegulatoryLibrary]),
+    TypeOrmModule.forFeature([
+      MetrcCredential,
+      MetrcSyncLog,
+      ComplianceLog,
+      RegulatoryLibrary,
+    ]),
     BullModule.registerQueue({ name: METRC_SYNC_QUEUE }),
   ],
   providers: [

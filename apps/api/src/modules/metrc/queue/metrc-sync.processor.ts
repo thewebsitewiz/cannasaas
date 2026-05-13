@@ -3,7 +3,7 @@ import { Job } from 'bullmq';
 import { Logger } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
-import { MetrcService } from '../metrc.service';
+import { MetrcService, SyncSaleResult } from '../metrc.service';
 import { METRC_SYNC_QUEUE, MetrcJobName } from './metrc-sync.queue';
 
 export interface SyncSaleJobData {
@@ -23,16 +23,27 @@ export class MetrcSyncProcessor extends WorkerHost {
     super();
   }
 
-  async process(job: Job<SyncSaleJobData>): Promise<any> {
+  async process(job: Job<SyncSaleJobData>): Promise<SyncSaleResult | void> {
     const { orderId, dispensaryId, attemptNumber } = job.data;
 
-    this.logger.log(`Processing Metrc sync job: order=${orderId} attempt=${attemptNumber}`);
+    this.logger.log(
+      `Processing Metrc sync job: order=${orderId} attempt=${attemptNumber}`,
+    );
 
-    if (job.name === MetrcJobName.SYNC_SALE || job.name === MetrcJobName.RETRY_FAILED) {
-      const result = await this.metrc.syncSaleToMetrc(orderId, dispensaryId, this.dataSource);
+    if (
+      job.name === MetrcJobName.SYNC_SALE ||
+      job.name === MetrcJobName.RETRY_FAILED
+    ) {
+      const result = await this.metrc.syncSaleToMetrc(
+        orderId,
+        dispensaryId,
+        this.dataSource,
+      );
 
       if (!result.success) {
-        this.logger.warn(`Metrc sync failed for order ${orderId}: ${result.message}`);
+        this.logger.warn(
+          `Metrc sync failed for order ${orderId}: ${result.message}`,
+        );
         throw new Error(result.message ?? 'Metrc sync failed');
       }
 
