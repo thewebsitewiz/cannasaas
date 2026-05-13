@@ -1,12 +1,26 @@
-import { Resolver, Query, Mutation, Args, ID, Int, Float, InputType } from '@nestjs/graphql';
-import { ObjectType, Field } from '@nestjs/graphql';
-import { DispensariesService } from './dispensaries.service';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import {
+  Resolver,
+  Query,
+  Mutation,
+  Args,
+  ID,
+  Int,
+  Float,
+  InputType,
+  ObjectType,
+  Field,
+} from '@nestjs/graphql';
+import {
+  DispensariesService,
+  DispensaryListRow,
+  DispensaryPublicRow,
+  DispensaryRow,
+} from './dispensaries.service';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { JwtPayload } from '../auth/strategies/jwt.strategy';
 import GraphQLJSON from 'graphql-type-json';
 
-@ObjectType() class DispensaryResult {
+@ObjectType()
+class DispensaryResult {
   @Field(() => ID) entityId!: string;
   @Field(() => ID) companyId!: string;
   @Field() type!: string;
@@ -37,7 +51,8 @@ import GraphQLJSON from 'graphql-type-json';
   @Field(() => Date, { nullable: true }) updatedAt?: Date;
 }
 
-@ObjectType() class DispensaryListItem {
+@ObjectType()
+class DispensaryListItem {
   @Field(() => ID) entityId!: string;
   @Field(() => ID) companyId!: string;
   @Field() type!: string;
@@ -54,7 +69,8 @@ import GraphQLJSON from 'graphql-type-json';
 }
 
 /** Public dispensary surface for the anonymous storefront slug lookup. */
-@ObjectType() class DispensaryPublic {
+@ObjectType()
+class DispensaryPublic {
   @Field(() => ID) entityId!: string;
   @Field() name!: string;
   @Field() slug!: string;
@@ -65,7 +81,8 @@ import GraphQLJSON from 'graphql-type-json';
   @Field() isPickupEnabled!: boolean;
 }
 
-@InputType() class UpdateDispensaryInput {
+@InputType()
+class UpdateDispensaryInput {
   @Field({ nullable: true }) name?: string;
   @Field({ nullable: true }) slug?: string;
   @Field({ nullable: true }) type?: string;
@@ -89,7 +106,8 @@ import GraphQLJSON from 'graphql-type-json';
   @Field({ nullable: true }) timezone?: string;
 }
 
-@InputType() class CreateDispensaryInput {
+@InputType()
+class CreateDispensaryInput {
   @Field(() => ID) companyId!: string;
   @Field() name!: string;
   @Field() slug!: string;
@@ -116,7 +134,7 @@ export class DispensariesResolver {
   @Query(() => DispensaryResult, { name: 'dispensary', nullable: true })
   async dispensary(
     @Args('entityId', { type: () => ID }) entityId: string,
-  ): Promise<any> {
+  ): Promise<DispensaryRow> {
     return this.dispensaries.findById(entityId);
   }
 
@@ -130,16 +148,18 @@ export class DispensariesResolver {
   @Query(() => DispensaryPublic, { name: 'dispensaryBySlug', nullable: true })
   async dispensaryBySlug(
     @Args('slug') slug: string,
-  ): Promise<any | null> {
+  ): Promise<DispensaryPublicRow | null> {
     return this.dispensaries.findBySlug(slug);
   }
 
   @Roles('org_admin', 'super_admin')
   @Query(() => [DispensaryListItem], { name: 'dispensaries' })
   async listDispensaries(
-    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) limit: number,
-    @Args('offset', { type: () => Int, nullable: true, defaultValue: 0 }) offset: number,
-  ): Promise<any[]> {
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 })
+    limit: number,
+    @Args('offset', { type: () => Int, nullable: true, defaultValue: 0 })
+    offset: number,
+  ): Promise<DispensaryListRow[]> {
     return this.dispensaries.findAll(limit, offset);
   }
 
@@ -147,7 +167,7 @@ export class DispensariesResolver {
   @Query(() => [DispensaryListItem], { name: 'dispensariesByCompany' })
   async dispensariesByCompany(
     @Args('companyId', { type: () => ID }) companyId: string,
-  ): Promise<any[]> {
+  ): Promise<DispensaryListRow[]> {
     return this.dispensaries.findByCompany(companyId);
   }
 
@@ -157,7 +177,7 @@ export class DispensariesResolver {
   @Mutation(() => DispensaryResult, { name: 'createDispensary' })
   async createDispensary(
     @Args('input') input: CreateDispensaryInput,
-  ): Promise<any> {
+  ): Promise<DispensaryRow> {
     return this.dispensaries.create(input);
   }
 
@@ -166,7 +186,7 @@ export class DispensariesResolver {
   async updateDispensary(
     @Args('entityId', { type: () => ID }) entityId: string,
     @Args('input') input: UpdateDispensaryInput,
-  ): Promise<any> {
+  ): Promise<DispensaryRow> {
     return this.dispensaries.update(entityId, input);
   }
 
@@ -174,8 +194,8 @@ export class DispensariesResolver {
   @Mutation(() => DispensaryResult, { name: 'updateOperatingHours' })
   async updateOperatingHours(
     @Args('entityId', { type: () => ID }) entityId: string,
-    @Args('hours', { type: () => GraphQLJSON }) hours: any,
-  ): Promise<any> {
+    @Args('hours', { type: () => GraphQLJSON }) hours: Record<string, unknown>,
+  ): Promise<DispensaryRow> {
     return this.dispensaries.updateOperatingHours(entityId, hours);
   }
 
@@ -184,10 +204,16 @@ export class DispensariesResolver {
   async updateDeliverySettings(
     @Args('entityId', { type: () => ID }) entityId: string,
     @Args('isDeliveryEnabled', { nullable: true }) isDeliveryEnabled: boolean,
-    @Args('cashDeliveryEnabled', { nullable: true }) cashDeliveryEnabled: boolean,
-    @Args('cashDiscountPercent', { type: () => Float, nullable: true }) cashDiscountPercent: number,
-  ): Promise<any> {
-    return this.dispensaries.updateDeliverySettings(entityId, { isDeliveryEnabled, cashDeliveryEnabled, cashDiscountPercent });
+    @Args('cashDeliveryEnabled', { nullable: true })
+    cashDeliveryEnabled: boolean,
+    @Args('cashDiscountPercent', { type: () => Float, nullable: true })
+    cashDiscountPercent: number,
+  ): Promise<DispensaryRow> {
+    return this.dispensaries.updateDeliverySettings(entityId, {
+      isDeliveryEnabled,
+      cashDeliveryEnabled,
+      cashDiscountPercent,
+    });
   }
 
   @Roles('org_admin', 'super_admin')

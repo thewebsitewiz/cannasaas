@@ -2,6 +2,122 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 
+export interface DispensaryRow {
+  entityId: string;
+  companyId: string;
+  type: string;
+  name: string;
+  slug: string;
+  licenseNumber: string | null;
+  licenseType: string | null;
+  addressLine1: string | null;
+  city: string | null;
+  state: string;
+  zip: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  county: string | null;
+  municipality: string | null;
+  phone: string | null;
+  email: string | null;
+  website: string | null;
+  isActive: boolean;
+  isDeliveryEnabled: boolean;
+  isPickupEnabled: boolean;
+  metrcLicenseNumber: string | null;
+  timezone: string | null;
+  cashDiscountPercent: number | null;
+  isCashEnabled: boolean | null;
+  cashDeliveryEnabled: boolean | null;
+  createdAt: Date;
+  updatedAt: Date | null;
+}
+
+export interface DispensaryPublicRow {
+  entityId: string;
+  name: string;
+  slug: string;
+  city: string | null;
+  state: string;
+  isActive: boolean;
+  isDeliveryEnabled: boolean;
+  isPickupEnabled: boolean;
+}
+
+export interface DispensaryListRow {
+  entityId: string;
+  companyId: string;
+  type: string;
+  name: string;
+  slug: string;
+  licenseNumber: string | null;
+  city: string | null;
+  state: string | null;
+  zip: string | null;
+  isActive: boolean;
+  isDeliveryEnabled: boolean;
+  isPickupEnabled: boolean;
+  createdAt: Date;
+}
+
+export interface DispensaryOrgRow {
+  entityId: string;
+  companyId: string;
+  type: string;
+  name: string;
+  slug: string;
+  city: string | null;
+  state: string | null;
+  isActive: boolean;
+}
+
+interface CreateDispensaryInput {
+  companyId: string;
+  name: string;
+  slug: string;
+  type?: string;
+  state: string;
+  licenseNumber?: string;
+  licenseType?: string;
+  addressLine1?: string;
+  city?: string;
+  zip?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  timezone?: string;
+}
+
+interface UpdateDispensaryInput {
+  name?: string;
+  slug?: string;
+  type?: string;
+  licenseNumber?: string;
+  licenseType?: string;
+  addressLine1?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  latitude?: number;
+  longitude?: number;
+  county?: string;
+  municipality?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  isActive?: boolean;
+  isDeliveryEnabled?: boolean;
+  isPickupEnabled?: boolean;
+  metrcLicenseNumber?: string;
+  timezone?: string;
+}
+
+interface UpdateDeliverySettingsInput {
+  isDeliveryEnabled?: boolean;
+  cashDeliveryEnabled?: boolean;
+  cashDiscountPercent?: number;
+}
+
 @Injectable()
 export class DispensariesService {
   private readonly logger = new Logger(DispensariesService.name);
@@ -10,8 +126,8 @@ export class DispensariesService {
 
   // ═══ READ ═══
 
-  async findById(entityId: string): Promise<any> {
-    const [row] = await this.ds.query(
+  async findById(entityId: string): Promise<DispensaryRow> {
+    const rows: DispensaryRow[] = await this.ds.query(
       `SELECT entity_id as "entityId", company_id as "companyId", type, name, slug,
         license_number as "licenseNumber", license_type as "licenseType",
         address_line1 as "addressLine1", city, state, zip,
@@ -26,6 +142,7 @@ export class DispensariesService {
       FROM dispensaries WHERE entity_id = $1 AND deleted_at IS NULL`,
       [entityId],
     );
+    const row = rows[0];
     if (!row) throw new NotFoundException('Dispensary not found');
     return row;
   }
@@ -36,8 +153,8 @@ export class DispensariesService {
    * narrower than findById — no license details, no operating-hours metadata —
    * so the resolver can be exposed without @Roles.
    */
-  async findBySlug(slug: string): Promise<any | null> {
-    const [row] = await this.ds.query(
+  async findBySlug(slug: string): Promise<DispensaryPublicRow | null> {
+    const rows: DispensaryPublicRow[] = await this.ds.query(
       `SELECT entity_id as "entityId", name, slug, city, state,
         is_active as "isActive",
         is_delivery_enabled as "isDeliveryEnabled",
@@ -47,10 +164,10 @@ export class DispensariesService {
       LIMIT 1`,
       [slug],
     );
-    return row ?? null;
+    return rows[0] ?? null;
   }
 
-  async findAll(limit = 50, offset = 0): Promise<any[]> {
+  async findAll(limit = 50, offset = 0): Promise<DispensaryListRow[]> {
     return this.ds.query(
       `SELECT entity_id as "entityId", company_id as "companyId", type, name, slug,
         license_number as "licenseNumber", city, state, zip,
@@ -61,7 +178,7 @@ export class DispensariesService {
     );
   }
 
-  async findByCompany(companyId: string): Promise<any[]> {
+  async findByCompany(companyId: string): Promise<DispensaryListRow[]> {
     return this.ds.query(
       `SELECT entity_id as "entityId", company_id as "companyId", type, name, slug,
         license_number as "licenseNumber", city, state, zip,
@@ -72,7 +189,9 @@ export class DispensariesService {
     );
   }
 
-  async findByOrganization(organizationId: string): Promise<any[]> {
+  async findByOrganization(
+    organizationId: string,
+  ): Promise<DispensaryOrgRow[]> {
     return this.ds.query(
       `SELECT d.entity_id as "entityId", d.company_id as "companyId", d.type, d.name, d.slug,
         d.city, d.state, d.is_active as "isActive"
@@ -85,55 +204,78 @@ export class DispensariesService {
 
   // ═══ CREATE ═══
 
-  async create(input: {
-    companyId: string; name: string; slug: string; type?: string; state: string;
-    licenseNumber?: string; licenseType?: string;
-    addressLine1?: string; city?: string; zip?: string;
-    phone?: string; email?: string; website?: string; timezone?: string;
-  }): Promise<any> {
-    const [row] = await this.ds.query(
-      `INSERT INTO dispensaries (company_id, name, slug, type, state,
+  async create(input: CreateDispensaryInput): Promise<DispensaryRow> {
+    const rows: Array<{ entity_id: string; name: string }> =
+      await this.ds.query(
+        `INSERT INTO dispensaries (company_id, name, slug, type, state,
         license_number, license_type, address_line1, city, zip,
         phone, email, website, timezone)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *`,
-      [input.companyId, input.name, input.slug, input.type || 'dispensary', input.state,
-        input.licenseNumber || null, input.licenseType || null,
-        input.addressLine1 || null, input.city || null, input.zip || null,
-        input.phone || null, input.email || null, input.website || null, input.timezone || null],
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING entity_id, name`,
+        [
+          input.companyId,
+          input.name,
+          input.slug,
+          input.type || 'dispensary',
+          input.state,
+          input.licenseNumber || null,
+          input.licenseType || null,
+          input.addressLine1 || null,
+          input.city || null,
+          input.zip || null,
+          input.phone || null,
+          input.email || null,
+          input.website || null,
+          input.timezone || null,
+        ],
+      );
+    const inserted = rows[0];
+    this.logger.log(
+      'Dispensary created: ' + inserted.name + ' (' + inserted.entity_id + ')',
     );
-    this.logger.log('Dispensary created: ' + row.name + ' (' + row.entity_id + ')');
-    return this.findById(row.entity_id);
+    return this.findById(inserted.entity_id);
   }
 
   // ═══ UPDATE ═══
 
-  async update(entityId: string, input: {
-    name?: string; slug?: string; type?: string;
-    licenseNumber?: string; licenseType?: string;
-    addressLine1?: string; city?: string; state?: string; zip?: string;
-    latitude?: number; longitude?: number; county?: string; municipality?: string;
-    phone?: string; email?: string; website?: string;
-    isActive?: boolean; isDeliveryEnabled?: boolean; isPickupEnabled?: boolean;
-    metrcLicenseNumber?: string; timezone?: string;
-  }): Promise<any> {
+  async update(
+    entityId: string,
+    input: UpdateDispensaryInput,
+  ): Promise<DispensaryRow> {
     const fields: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let idx = 1;
 
-    const map: Record<string, string> = {
-      name: 'name', slug: 'slug', type: 'type',
-      licenseNumber: 'license_number', licenseType: 'license_type',
-      addressLine1: 'address_line1', city: 'city', state: 'state', zip: 'zip',
-      latitude: 'latitude', longitude: 'longitude', county: 'county', municipality: 'municipality',
-      phone: 'phone', email: 'email', website: 'website',
-      isActive: 'is_active', isDeliveryEnabled: 'is_delivery_enabled', isPickupEnabled: 'is_pickup_enabled',
-      metrcLicenseNumber: 'metrc_license_number', timezone: 'timezone',
+    const map: Record<keyof UpdateDispensaryInput, string> = {
+      name: 'name',
+      slug: 'slug',
+      type: 'type',
+      licenseNumber: 'license_number',
+      licenseType: 'license_type',
+      addressLine1: 'address_line1',
+      city: 'city',
+      state: 'state',
+      zip: 'zip',
+      latitude: 'latitude',
+      longitude: 'longitude',
+      county: 'county',
+      municipality: 'municipality',
+      phone: 'phone',
+      email: 'email',
+      website: 'website',
+      isActive: 'is_active',
+      isDeliveryEnabled: 'is_delivery_enabled',
+      isPickupEnabled: 'is_pickup_enabled',
+      metrcLicenseNumber: 'metrc_license_number',
+      timezone: 'timezone',
     };
 
-    for (const [key, col] of Object.entries(map)) {
-      if ((input as any)[key] !== undefined) {
+    for (const [key, col] of Object.entries(map) as Array<
+      [keyof UpdateDispensaryInput, string]
+    >) {
+      const value = input[key];
+      if (value !== undefined) {
         fields.push(col + ' = $' + idx);
-        values.push((input as any)[key]);
+        values.push(value);
         idx++;
       }
     }
@@ -142,7 +284,11 @@ export class DispensariesService {
 
     values.push(entityId);
     await this.ds.query(
-      'UPDATE dispensaries SET ' + fields.join(', ') + ', updated_at = NOW() WHERE entity_id = $' + idx + ' AND deleted_at IS NULL',
+      'UPDATE dispensaries SET ' +
+        fields.join(', ') +
+        ', updated_at = NOW() WHERE entity_id = $' +
+        idx +
+        ' AND deleted_at IS NULL',
       values,
     );
 
@@ -150,7 +296,16 @@ export class DispensariesService {
     return this.findById(entityId);
   }
 
-  async updateOperatingHours(entityId: string, hours: any): Promise<any> {
+  /**
+   * Touches the dispensary's updated_at. The actual `hours` payload is parked
+   * pending the operating-hours table design — preserved in the signature so
+   * callers can keep passing it when persistence lands.
+   */
+  async updateOperatingHours(
+    entityId: string,
+    hours: Record<string, unknown>,
+  ): Promise<DispensaryRow> {
+    void hours;
     await this.ds.query(
       'UPDATE dispensaries SET updated_at = NOW() WHERE entity_id = $1 AND deleted_at IS NULL',
       [entityId],
@@ -159,22 +314,39 @@ export class DispensariesService {
     return this.findById(entityId);
   }
 
-  async updateDeliverySettings(entityId: string, input: {
-    isDeliveryEnabled?: boolean; cashDeliveryEnabled?: boolean; cashDiscountPercent?: number;
-  }): Promise<any> {
+  async updateDeliverySettings(
+    entityId: string,
+    input: UpdateDeliverySettingsInput,
+  ): Promise<DispensaryRow> {
     const fields: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let idx = 1;
 
-    if (input.isDeliveryEnabled !== undefined) { fields.push('is_delivery_enabled = $' + idx); values.push(input.isDeliveryEnabled); idx++; }
-    if (input.cashDeliveryEnabled !== undefined) { fields.push('cash_delivery_enabled = $' + idx); values.push(input.cashDeliveryEnabled); idx++; }
-    if (input.cashDiscountPercent !== undefined) { fields.push('cash_discount_percent = $' + idx); values.push(input.cashDiscountPercent); idx++; }
+    if (input.isDeliveryEnabled !== undefined) {
+      fields.push('is_delivery_enabled = $' + idx);
+      values.push(input.isDeliveryEnabled);
+      idx++;
+    }
+    if (input.cashDeliveryEnabled !== undefined) {
+      fields.push('cash_delivery_enabled = $' + idx);
+      values.push(input.cashDeliveryEnabled);
+      idx++;
+    }
+    if (input.cashDiscountPercent !== undefined) {
+      fields.push('cash_discount_percent = $' + idx);
+      values.push(input.cashDiscountPercent);
+      idx++;
+    }
 
     if (fields.length === 0) return this.findById(entityId);
 
     values.push(entityId);
     await this.ds.query(
-      'UPDATE dispensaries SET ' + fields.join(', ') + ', updated_at = NOW() WHERE entity_id = $' + idx + ' AND deleted_at IS NULL',
+      'UPDATE dispensaries SET ' +
+        fields.join(', ') +
+        ', updated_at = NOW() WHERE entity_id = $' +
+        idx +
+        ' AND deleted_at IS NULL',
       values,
     );
     this.logger.log('Delivery settings updated for dispensary: ' + entityId);
@@ -184,7 +356,8 @@ export class DispensariesService {
   // ═══ DELETE ═══
 
   async softDelete(entityId: string): Promise<boolean> {
-    const result = await this.ds.query(
+    // node-postgres returns [rows, rowCount] for DML; rowCount is the second element.
+    const result: [unknown[], number] = await this.ds.query(
       'UPDATE dispensaries SET deleted_at = NOW() WHERE entity_id = $1 AND deleted_at IS NULL',
       [entityId],
     );
