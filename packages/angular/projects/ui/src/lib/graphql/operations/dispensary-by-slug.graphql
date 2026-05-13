@@ -1,0 +1,14 @@
+query DispensaryBySlug($slug: String!) {
+  dispensaryBySlug(slug: $slug) {
+    entityId
+    slug
+    name
+    isActive
+    isPickupEnabled
+    isDeliveryEnabled
+    isCashEnabled
+    cashDiscountPercent
+    addressLine1
+    city
+  }
+}

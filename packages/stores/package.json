@@ -1,10 +1,29 @@
 {
+  "name": "@cannasaas/stores",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./angular": {
+      "types": "./src/angular/cart.ts",
+      "default": "./src/angular/cart.ts"
+    }
+  },
   "dependencies": {
+    "tslib": "^2.3.0",
     "zustand": "^5.0.12"
   },
-  "main": "src/index.ts",
-  "name": "@cannasaas/stores",
-  "private": true,
-  "types": "src/index.ts",
-  "version": "0.1.0"
+  "peerDependencies": {
+    "@angular/core": "^21.2.0"
+  },
+  "peerDependenciesMeta": {
+    "@angular/core": {
+      "optional": true
+    }
+  }
 }

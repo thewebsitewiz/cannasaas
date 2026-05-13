@@ -32,9 +32,12 @@ Monorepo: pnpm workspaces + Turborepo.
 **Frontend — Angular (multi-project workspace at `packages/angular/`)**
 
 - **`packages/angular/projects/kiosk`** — Angular 21, self-service touch terminal. Port `:5276`. Replaces the former React `apps/kiosk` (deleted).
+- **`packages/angular/projects/storefront`** — Angular 21, customer-facing dispensary site. Port `:5273`. Shell-only as of May 2026; React `apps/storefront` (:5173) is still authoritative until feature parity. CSR only — no SSR.
 - **`packages/angular/projects/ui`** — shared Angular library: design tokens, GraphQL operations, components.
 
-Future Angular rewrites of storefront, admin, staff, and platform land as additional projects in `packages/angular/projects/<name>/`, **not** as standalone `apps/*` workspaces. The multi-project workspace shares one `node_modules`, one Angular version, and the `ui` library across all projects.
+Future Angular rewrites of admin, staff, and platform land as additional projects in `packages/angular/projects/<name>/`, **not** as standalone `apps/*` workspaces. The multi-project workspace shares one `node_modules`, one Angular version, and the `ui` library across all projects.
+
+**Port scheme during migration:** React apps keep their `51xx` ports; Angular replacements use the same last digit on `52xx` (kiosk React was :5176 → Angular :5276; storefront React :5173 → Angular :5273). Both run side-by-side until the React app is deleted.
 
 **Shared packages**
 
@@ -42,7 +45,7 @@ Future Angular rewrites of storefront, admin, staff, and platform land as additi
 - **`packages/types`** — shared TypeScript types.
 - **`packages/stores`** — shared signal stores / utilities.
 
-**Migration status:** kiosk migration to Angular is complete (functional parity pending end-to-end verification). Storefront, admin, staff, and platform remain on React/Vite/Next until their Angular replacements are built. Every per-app CLAUDE.md inherits from this file plus its own.
+**Migration status:** kiosk migration to Angular is complete (functional parity pending end-to-end verification). Storefront Angular shell scaffolded May 2026 (CSR only, no feature routes yet — React storefront still authoritative). Admin, staff, and platform remain on React/Vite/Next. Every per-app CLAUDE.md inherits from this file plus its own.
 
 ---
 
@@ -354,10 +357,10 @@ ng generate guard features/foo --functional
 
 **Stopping**
 
-- `haltall` — kill all app ports (3000, 5173–5177)
+- `haltall` — kill all app ports (3000, 5173–5177, 5273, 5276)
 - `stopapi`, `stopstr`, `stopadm`, `stopstf`, `stopksk` — per-port
 - `ports` — `lsof -i -P -n | grep LISTEN`
-- `checkall` — what's on 5173–5176
+- `checkall` — what's on 5173–5177 (and 5273, 5276 for Angular variants)
 
 **Docker**
 

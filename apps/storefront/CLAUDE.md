@@ -1,8 +1,11 @@
-# CLAUDE.md — apps/storefront
+# CLAUDE.md — storefront
 
 Customer-facing dispensary storefront. Inherits all rules from the root `CLAUDE.md`.
 
-**Port:** `:5173`
+This file governs the **Angular replacement** at `packages/angular/projects/storefront/`. The legacy React/Next app at `apps/storefront/` continues to run on :5173 during migration and will be deleted once parity is reached (kiosk pattern).
+
+**Port (Angular):** `:5273`
+**Port (legacy React, still running):** `:5173`
 **Audience:** anonymous customers + authenticated dispensary customers
 **Auth:** optional for browsing, required for checkout
 
@@ -13,7 +16,7 @@ Customer-facing dispensary storefront. Inherits all rules from the root `CLAUDE.
 Storefront serves **one dispensary per request**, resolved from the URL:
 
 - Production: subdomain (`{slug}.cannasaas.com`)
-- Local dev: path prefix (`localhost:5173/{slug}`)
+- Local dev: path prefix (`localhost:5273/{slug}`)
 
 A `DispensaryResolver` (functional `ResolveFn`) reads the slug, fetches the dispensary via GraphQL, and provides it via DI. **Every downstream service and component should accept the dispensary from DI**, not re-resolve it.
 
@@ -48,14 +51,13 @@ Hard requirement. Every dispensary has a 21+ access gate.
 
 ---
 
-## SSR
+## Rendering — CSR only (no SSR)
 
-Storefront uses **Angular Universal SSR** (`@angular/ssr`). SEO is a hard requirement — dispensaries care about search.
+The Angular storefront is **client-side rendered**. No `@angular/ssr`, no `provideClientHydration`, no Universal wiring. Decision made 2026-05-13.
 
-- Product detail pages SSR with the resolved dispensary's product data.
-- Cart and account routes are CSR-only (`renderMode: 'client'`).
-- `transferState` to hydrate Apollo cache from server to client. No double-fetching.
-- Image domains for `NgOptimizedImage` are configured in `app.config.server.ts` per environment.
+- Do not add `@angular/ssr` or any Universal/Express server entry.
+- SEO for product/category pages is handled by the meta service + structured data injected client-side; if dispensaries report ranking issues, revisit before adding SSR back.
+- Browser-only APIs (`window`, `localStorage`, `document`) can be referenced directly in components. The `typeof window === 'undefined'` guards in `core/age-gate/age-storage.ts`, `core/auth/auth.service.ts`, and `core/tenant/slug.ts` are defensive only — not load-bearing.
 
 ---
 
@@ -102,7 +104,7 @@ Storefront uses **Angular Universal SSR** (`@angular/ssr`). SEO is a hard requir
 - `localStorage` writes outside `cart`, `age-verified`, and theme preference. PII (addresses, payment details) goes to the API.
 - Hardcoded dispensary IDs or slugs anywhere in code (use the resolver).
 - Third theming mechanism beyond the existing two.
-- Server-side imports (`fs`, `path`) in components — keep them in SSR-only files.
+- `@angular/ssr`, `provideClientHydration`, server entry files, or any Universal wiring (CSR-only by decision).
 
 ---
 
@@ -110,4 +112,3 @@ Storefront uses **Angular Universal SSR** (`@angular/ssr`). SEO is a hard requir
 
 - Test the age gate guard with `provideExperimentalZonelessChangeDetection()` if the rest of the app is Zone-based — the gate is performance-sensitive.
 - Mock `AppThemeService` in component tests; don't trigger real `<link>` injection.
-- SSR snapshot tests for product detail pages — they're SEO-critical.

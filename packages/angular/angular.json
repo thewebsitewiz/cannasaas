@@ -121,6 +121,11 @@
               {
                 "glob": "**/*",
                 "input": "projects/storefront/public"
+              },
+              {
+                "glob": "theme.*.css",
+                "input": "dist/ui/themes",
+                "output": "/themes"
               }
             ],
             "styles": ["projects/storefront/src/styles.css"],
