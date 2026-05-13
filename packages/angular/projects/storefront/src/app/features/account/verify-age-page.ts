@@ -3,14 +3,7 @@
    mark them with `this: void`, so referencing them in a FormControl's
    validators array trips this rule. Disabling at file scope is cleaner
    than wrapping every reference in a no-op arrow. */
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  effect,
-  inject,
-  signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { VerifyAgeGQL } from '@cannasaas/ui-ng';
@@ -198,17 +191,6 @@ export class VerifyAgePage {
     if (!r || r.verified) return null;
     return r.reason ?? 'Verification failed';
   });
-
-  constructor() {
-    // Auth-required gate. Inline for parity with the React page.
-    effect(() => {
-      if (!this.auth.isAuthenticated()) {
-        void this.router.navigate(['/login'], {
-          queryParams: { redirect: '/account/verify' },
-        });
-      }
-    });
-  }
 
   async onSubmit(): Promise<void> {
     if (this.form.invalid || this.loading()) return;

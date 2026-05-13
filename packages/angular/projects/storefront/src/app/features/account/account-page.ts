@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 
@@ -201,18 +201,6 @@ export class AccountPage {
     if (u.firstName) return `${u.firstName} ${u.lastName ?? ''}`.trim();
     return u.email.split('@')[0];
   });
-
-  constructor() {
-    // Auth-required gate. Inline for now; promote to a CanMatch guard once
-    // a third route needs the same redirect behavior.
-    effect(() => {
-      if (!this.auth.isAuthenticated()) {
-        void this.router.navigate(['/login'], {
-          queryParams: { redirect: '/account' },
-        });
-      }
-    });
-  }
 
   async onLogout(): Promise<void> {
     await this.auth.logout();

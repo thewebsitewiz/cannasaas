@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { authRequiredGuard } from './core/auth/auth-required-guard';
 import { dispensaryResolver } from './core/tenant/dispensary.resolver';
 
 export const routes: Routes = [
@@ -46,11 +47,13 @@ export const routes: Routes = [
       },
       {
         path: 'account/verify',
+        canMatch: [authRequiredGuard],
         loadComponent: () =>
           import('./features/account/verify-age-page').then((m) => m.VerifyAgePage),
       },
       {
         path: 'account',
+        canMatch: [authRequiredGuard],
         loadComponent: () => import('./features/account/account-page').then((m) => m.AccountPage),
       },
     ],
