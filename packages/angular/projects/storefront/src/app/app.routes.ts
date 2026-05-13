@@ -35,10 +35,17 @@ export const routes: Routes = [
         path: 'orders',
         loadChildren: () => import('./features/orders/orders.routes').then((m) => m.ORDERS_ROUTES),
       },
+      {
+        path: 'login',
+        loadComponent: () => import('./features/auth/login-page').then((m) => m.LoginPage),
+      },
+      {
+        path: 'register',
+        loadComponent: () => import('./features/auth/register-page').then((m) => m.RegisterPage),
+      },
       // Feature routes land here as they migrate. Each lazy-loads its own
       // route table:
       // { path: 'account',  loadChildren: () => import('./features/account/account.routes').then(m => m.ACCOUNT_ROUTES) },
-      // { path: 'login',    loadChildren: () => import('./features/auth/auth.routes').then(m => m.AUTH_ROUTES) },
     ],
   },
   { path: '**', redirectTo: '' },
