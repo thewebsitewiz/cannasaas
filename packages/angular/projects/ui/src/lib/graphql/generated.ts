@@ -4429,6 +4429,15 @@ export type RegisterMutation = {
   register: { __typename?: 'AuthToken'; accessToken: string; expiresIn: number };
 };
 
+export type ThemeConfigQueryVariables = Exact<{
+  dispensaryId: Scalars['String']['input'];
+}>;
+
+export type ThemeConfigQuery = {
+  __typename?: 'Query';
+  themeConfig: { __typename?: 'ThemeConfigType'; preset: string; isDark: boolean };
+};
+
 export type VerifyAgeMutationVariables = Exact<{
   dateOfBirth: Scalars['String']['input'];
   idType: Scalars['String']['input'];
@@ -4723,6 +4732,25 @@ export const RegisterDocument = gql`
 })
 export class RegisterGQL extends Apollo.Mutation<RegisterMutation, RegisterMutationVariables> {
   override document = RegisterDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const ThemeConfigDocument = gql`
+  query ThemeConfig($dispensaryId: String!) {
+    themeConfig(dispensaryId: $dispensaryId) {
+      preset
+      isDark
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class ThemeConfigGQL extends Apollo.Query<ThemeConfigQuery, ThemeConfigQueryVariables> {
+  override document = ThemeConfigDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);

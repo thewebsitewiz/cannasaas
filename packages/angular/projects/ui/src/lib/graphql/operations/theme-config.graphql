@@ -1,0 +1,6 @@
+query ThemeConfig($dispensaryId: String!) {
+  themeConfig(dispensaryId: $dispensaryId) {
+    preset
+    isDark
+  }
+}
