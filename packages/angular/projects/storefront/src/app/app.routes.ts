@@ -26,6 +26,13 @@ export const routes: Routes = [
           import('./features/checkout/checkout.routes').then((m) => m.CHECKOUT_ROUTES),
       },
       {
+        path: 'express-checkout',
+        loadChildren: () =>
+          import('./features/express-checkout/express-checkout.routes').then(
+            (m) => m.EXPRESS_CHECKOUT_ROUTES,
+          ),
+      },
+      {
         path: 'orders',
         loadChildren: () => import('./features/orders/orders.routes').then((m) => m.ORDERS_ROUTES),
       },
