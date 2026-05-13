@@ -12,7 +12,13 @@ import {
   Field,
 } from '@nestjs/graphql';
 import { ForbiddenException } from '@nestjs/common';
-import { OrdersService } from './orders.service';
+import {
+  MyFavoritesRow,
+  MyLastOrderRow,
+  OrderDetailRow,
+  OrderListRow,
+  OrdersService,
+} from './orders.service';
 import { MetrcService } from '../metrc/metrc.service';
 import { MetrcSyncQueueService } from '../metrc/queue/metrc-sync.queue-service';
 import { Order } from './entities/order.entity';
@@ -102,7 +108,7 @@ export class OrdersResolver {
     @Args('offset', { type: () => Int, nullable: true, defaultValue: 0 })
     offset = 0,
     @Args('status', { nullable: true }) status?: string,
-  ): Promise<any[]> {
+  ): Promise<OrderListRow[]> {
     const limit = Math.min(rawLimit, 100);
     return this.orders.myOrders(user.sub, limit, offset, status);
   }
@@ -122,7 +128,7 @@ export class OrdersResolver {
     @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 })
     rawLimit = 50,
     @Args('offset', { type: () => Int, nullable: true }) offset?: number,
-  ): Promise<any[]> {
+  ): Promise<OrderListRow[]> {
     const limit = Math.min(rawLimit, 100);
     const targetId = dispensaryId ?? user.dispensaryId;
     if (!targetId) throw new ForbiddenException('dispensaryId required');
@@ -148,31 +154,43 @@ export class OrdersResolver {
     @CurrentUser() user: JwtPayload,
     @Args('dispensaryId', { type: () => ID, nullable: true })
     dispensaryId?: string,
-  ): Promise<any> {
+  ): Promise<OrderDetailRow> {
     const targetId = dispensaryId ?? user.dispensaryId;
     if (!targetId) throw new ForbiddenException('dispensaryId required');
     return this.orders.getOrder(orderId, targetId);
   }
 
   /** The signed-in customer's most recent order at the given dispensary. */
-  @Roles('customer', 'budtender', 'dispensary_admin', 'org_admin', 'super_admin')
+  @Roles(
+    'customer',
+    'budtender',
+    'dispensary_admin',
+    'org_admin',
+    'super_admin',
+  )
   @Query(() => CustomerOrder, { name: 'myLastOrder', nullable: true })
   async myLastOrder(
     @CurrentUser() user: JwtPayload,
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
-  ): Promise<any | null> {
+  ): Promise<MyLastOrderRow | null> {
     return this.orders.myLastOrder(user.sub, dispensaryId);
   }
 
   /** The signed-in customer's most-ordered variants at the given dispensary. */
-  @Roles('customer', 'budtender', 'dispensary_admin', 'org_admin', 'super_admin')
+  @Roles(
+    'customer',
+    'budtender',
+    'dispensary_admin',
+    'org_admin',
+    'super_admin',
+  )
   @Query(() => [CustomerFavorite], { name: 'myFavorites' })
   async myFavorites(
     @CurrentUser() user: JwtPayload,
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @Args('limit', { type: () => Int, nullable: true, defaultValue: 5 })
     rawLimit = 5,
-  ): Promise<any[]> {
+  ): Promise<MyFavoritesRow[]> {
     const limit = Math.min(Math.max(rawLimit, 1), 20);
     return this.orders.myFavorites(user.sub, dispensaryId, limit);
   }
@@ -293,7 +311,10 @@ export class OrdersResolver {
     // Enqueue Metrc sync with retry backoff
     this.syncQueue
       .enqueueSaleSync(input.orderId, targetId)
-      .catch((err: any) => console.warn('Metrc queue error:', err?.message));
+      .catch((err: unknown) => {
+        const message = err instanceof Error ? err.message : String(err);
+        console.warn('Metrc queue error:', message);
+      });
 
     return true;
   }
