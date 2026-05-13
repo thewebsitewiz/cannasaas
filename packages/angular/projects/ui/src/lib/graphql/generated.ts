@@ -539,6 +539,39 @@ export type CustomerAddress = {
   zip: Scalars['String']['output'];
 };
 
+export type CustomerFavorite = {
+  __typename?: 'CustomerFavorite';
+  orderCount: Scalars['Int']['output'];
+  price: Scalars['Float']['output'];
+  productId: Scalars['ID']['output'];
+  productName?: Maybe<Scalars['String']['output']>;
+  variantId?: Maybe<Scalars['ID']['output']>;
+  variantName?: Maybe<Scalars['String']['output']>;
+};
+
+export type CustomerOrder = {
+  __typename?: 'CustomerOrder';
+  createdAt: Scalars['DateTime']['output'];
+  lineItems: Array<CustomerOrderLineItem>;
+  orderId: Scalars['ID']['output'];
+  orderStatus: Scalars['String']['output'];
+  orderType: Scalars['String']['output'];
+  paymentMethod?: Maybe<Scalars['String']['output']>;
+  subtotal: Scalars['Float']['output'];
+  taxTotal: Scalars['Float']['output'];
+  total: Scalars['Float']['output'];
+};
+
+export type CustomerOrderLineItem = {
+  __typename?: 'CustomerOrderLineItem';
+  price: Scalars['Float']['output'];
+  productId: Scalars['ID']['output'];
+  productName?: Maybe<Scalars['String']['output']>;
+  quantity: Scalars['Float']['output'];
+  variantId?: Maybe<Scalars['ID']['output']>;
+  variantName?: Maybe<Scalars['String']['output']>;
+};
+
 export type CustomerOrderSummary = {
   __typename?: 'CustomerOrderSummary';
   createdAt: Scalars['DateTime']['output'];
@@ -2886,6 +2919,8 @@ export type Query = {
   metrcCredential?: Maybe<MetrcCredential>;
   metrcSyncOverview: MetrcSyncOverview;
   myAddresses: Array<CustomerAddress>;
+  myFavorites: Array<CustomerFavorite>;
+  myLastOrder?: Maybe<CustomerOrder>;
   myLoyalty?: Maybe<MyLoyalty>;
   myNotifications: Array<NotificationLog>;
   myOrders: OrderHistoryResult;
@@ -3304,6 +3339,15 @@ export type QueryMetrcCredentialArgs = {
 
 export type QueryMetrcSyncOverviewArgs = {
   dispensaryId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type QueryMyFavoritesArgs = {
+  dispensaryId: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type QueryMyLastOrderArgs = {
+  dispensaryId: Scalars['ID']['input'];
 };
 
 export type QueryMyLoyaltyArgs = {
@@ -4351,6 +4395,52 @@ export type MeQuery = {
   };
 };
 
+export type MyFavoritesQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+export type MyFavoritesQuery = {
+  __typename?: 'Query';
+  myFavorites: Array<{
+    __typename?: 'CustomerFavorite';
+    productId: string;
+    variantId?: string | null;
+    productName?: string | null;
+    variantName?: string | null;
+    price: number;
+    orderCount: number;
+  }>;
+};
+
+export type MyLastOrderQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+}>;
+
+export type MyLastOrderQuery = {
+  __typename?: 'Query';
+  myLastOrder?: {
+    __typename?: 'CustomerOrder';
+    orderId: string;
+    orderType: string;
+    orderStatus: string;
+    subtotal: number;
+    taxTotal: number;
+    total: number;
+    paymentMethod?: string | null;
+    createdAt: string;
+    lineItems: Array<{
+      __typename?: 'CustomerOrderLineItem';
+      productId: string;
+      variantId?: string | null;
+      productName?: string | null;
+      variantName?: string | null;
+      quantity: number;
+      price: number;
+    }>;
+  } | null;
+};
+
 export type OrderQueryVariables = Exact<{
   orderId: Scalars['ID']['input'];
   dispensaryId?: InputMaybe<Scalars['ID']['input']>;
@@ -4649,6 +4739,62 @@ export const MeDocument = gql`
 })
 export class MeGQL extends Apollo.Query<MeQuery, MeQueryVariables> {
   override document = MeDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const MyFavoritesDocument = gql`
+  query MyFavorites($dispensaryId: ID!, $limit: Int) {
+    myFavorites(dispensaryId: $dispensaryId, limit: $limit) {
+      productId
+      variantId
+      productName
+      variantName
+      price
+      orderCount
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class MyFavoritesGQL extends Apollo.Query<MyFavoritesQuery, MyFavoritesQueryVariables> {
+  override document = MyFavoritesDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const MyLastOrderDocument = gql`
+  query MyLastOrder($dispensaryId: ID!) {
+    myLastOrder(dispensaryId: $dispensaryId) {
+      orderId
+      orderType
+      orderStatus
+      subtotal
+      taxTotal
+      total
+      paymentMethod
+      createdAt
+      lineItems {
+        productId
+        variantId
+        productName
+        variantName
+        quantity
+        price
+      }
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class MyLastOrderGQL extends Apollo.Query<MyLastOrderQuery, MyLastOrderQueryVariables> {
+  override document = MyLastOrderDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);

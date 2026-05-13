@@ -673,4 +673,77 @@ export class OrdersService {
       params,
     );
   }
+
+  /**
+   * Most recent order for the authenticated customer at the given dispensary,
+   * with denormalized line items (product/variant names joined in). Used by
+   * the storefront's express checkout's "Reorder Last Order" card.
+   */
+  async myLastOrder(
+    customerUserId: string,
+    dispensaryId: string,
+  ): Promise<any | null> {
+    const [row] = await this.dataSource.query(
+      `SELECT
+         o."orderId", o."orderType", o."orderStatus",
+         o.subtotal, o."taxTotal", o.total,
+         o.payment_method AS "paymentMethod",
+         o."createdAt", o."updatedAt",
+         COALESCE(
+           json_agg(
+             json_build_object(
+               'productId', li."productId",
+               'variantId', li."variantId",
+               'productName', p.name,
+               'variantName', pv.name,
+               'quantity', li.quantity,
+               'price', li."unitPrice"
+             ) ORDER BY li."createdAt"
+           ) FILTER (WHERE li."lineItemId" IS NOT NULL),
+           '[]'::json
+         ) AS "lineItems"
+       FROM orders o
+       LEFT JOIN order_line_items li ON li."orderId" = o."orderId"
+       LEFT JOIN products p           ON p.id        = li."productId"
+       LEFT JOIN product_variants pv  ON pv.variant_id = li."variantId"
+       WHERE o."customerUserId" = $1 AND o."dispensaryId" = $2
+       GROUP BY o."orderId"
+       ORDER BY o."createdAt" DESC
+       LIMIT 1`,
+      [customerUserId, dispensaryId],
+    );
+    return row ?? null;
+  }
+
+  /**
+   * The authenticated customer's most-ordered product variants at this
+   * dispensary, with the most recent unit price they paid. Used by the
+   * storefront's express checkout's "Your Favorites" card.
+   */
+  async myFavorites(
+    customerUserId: string,
+    dispensaryId: string,
+    limit = 5,
+  ): Promise<any[]> {
+    return this.dataSource.query(
+      `SELECT
+         li."productId" AS "productId",
+         li."variantId" AS "variantId",
+         p.name           AS "productName",
+         pv.name          AS "variantName",
+         (array_agg(li."unitPrice" ORDER BY o."createdAt" DESC))[1] AS price,
+         COUNT(DISTINCT li."orderId")::int AS "orderCount"
+       FROM order_line_items li
+       JOIN orders o ON o."orderId" = li."orderId"
+       LEFT JOIN products p          ON p.id = li."productId"
+       LEFT JOIN product_variants pv ON pv.variant_id = li."variantId"
+       WHERE o."customerUserId" = $1
+         AND o."dispensaryId"   = $2
+         AND o."orderStatus"   != 'cancelled'
+       GROUP BY li."productId", li."variantId", p.name, pv.name
+       ORDER BY "orderCount" DESC, MAX(o."createdAt") DESC
+       LIMIT $3`,
+      [customerUserId, dispensaryId, limit],
+    );
+  }
 }

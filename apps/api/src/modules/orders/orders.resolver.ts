@@ -1,6 +1,16 @@
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
-import { Resolver, Query, Mutation, Args, ID, Int } from '@nestjs/graphql';
+import {
+  Resolver,
+  Query,
+  Mutation,
+  Args,
+  ID,
+  Int,
+  Float,
+  ObjectType,
+  Field,
+} from '@nestjs/graphql';
 import { ForbiddenException } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { MetrcService } from '../metrc/metrc.service';
@@ -12,6 +22,42 @@ import { OrderSummary } from './dto/order-summary.type';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtPayload } from '../auth/strategies/jwt.strategy';
+
+/** Customer-facing line item for `myLastOrder`. Includes denormalized names. */
+@ObjectType()
+class CustomerOrderLineItem {
+  @Field(() => ID) productId!: string;
+  @Field(() => ID, { nullable: true }) variantId?: string | null;
+  @Field({ nullable: true }) productName?: string | null;
+  @Field({ nullable: true }) variantName?: string | null;
+  @Field(() => Float) quantity!: number;
+  @Field(() => Float) price!: number;
+}
+
+/** Customer-facing summary of an order, including line items. */
+@ObjectType()
+class CustomerOrder {
+  @Field(() => ID) orderId!: string;
+  @Field() orderType!: string;
+  @Field() orderStatus!: string;
+  @Field(() => Float) subtotal!: number;
+  @Field(() => Float) taxTotal!: number;
+  @Field(() => Float) total!: number;
+  @Field({ nullable: true }) paymentMethod?: string | null;
+  @Field(() => Date) createdAt!: Date;
+  @Field(() => [CustomerOrderLineItem]) lineItems!: CustomerOrderLineItem[];
+}
+
+/** Aggregated entry for `myFavorites`. */
+@ObjectType()
+class CustomerFavorite {
+  @Field(() => ID) productId!: string;
+  @Field(() => ID, { nullable: true }) variantId?: string | null;
+  @Field({ nullable: true }) productName?: string | null;
+  @Field({ nullable: true }) variantName?: string | null;
+  @Field(() => Float) price!: number;
+  @Field(() => Int) orderCount!: number;
+}
 
 @Resolver(() => Order)
 export class OrdersResolver {
@@ -106,6 +152,29 @@ export class OrdersResolver {
     const targetId = dispensaryId ?? user.dispensaryId;
     if (!targetId) throw new ForbiddenException('dispensaryId required');
     return this.orders.getOrder(orderId, targetId);
+  }
+
+  /** The signed-in customer's most recent order at the given dispensary. */
+  @Roles('customer', 'budtender', 'dispensary_admin', 'org_admin', 'super_admin')
+  @Query(() => CustomerOrder, { name: 'myLastOrder', nullable: true })
+  async myLastOrder(
+    @CurrentUser() user: JwtPayload,
+    @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
+  ): Promise<any | null> {
+    return this.orders.myLastOrder(user.sub, dispensaryId);
+  }
+
+  /** The signed-in customer's most-ordered variants at the given dispensary. */
+  @Roles('customer', 'budtender', 'dispensary_admin', 'org_admin', 'super_admin')
+  @Query(() => [CustomerFavorite], { name: 'myFavorites' })
+  async myFavorites(
+    @CurrentUser() user: JwtPayload,
+    @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 5 })
+    rawLimit = 5,
+  ): Promise<any[]> {
+    const limit = Math.min(Math.max(rawLimit, 1), 20);
+    return this.orders.myFavorites(user.sub, dispensaryId, limit);
   }
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')

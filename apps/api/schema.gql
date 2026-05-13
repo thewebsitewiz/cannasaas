@@ -478,6 +478,36 @@ type CustomerAddress {
   zip: String!
 }
 
+type CustomerFavorite {
+  orderCount: Int!
+  price: Float!
+  productId: ID!
+  productName: String
+  variantId: ID
+  variantName: String
+}
+
+type CustomerOrder {
+  createdAt: DateTime!
+  lineItems: [CustomerOrderLineItem!]!
+  orderId: ID!
+  orderStatus: String!
+  orderType: String!
+  paymentMethod: String
+  subtotal: Float!
+  taxTotal: Float!
+  total: Float!
+}
+
+type CustomerOrderLineItem {
+  price: Float!
+  productId: ID!
+  productName: String
+  quantity: Float!
+  variantId: ID
+  variantName: String
+}
+
 type CustomerOrderSummary {
   createdAt: DateTime!
   dispensaryName: String
@@ -1995,6 +2025,8 @@ type Query {
   myAddresses: [CustomerAddress!]!
   myLoyalty(dispensaryId: ID!): MyLoyalty
   myNotifications(limit: Int = 20): [NotificationLog!]!
+  myFavorites(dispensaryId: ID!, limit: Int = 5): [CustomerFavorite!]!
+  myLastOrder(dispensaryId: ID!): CustomerOrder
   myOrders(limit: Int = 20, offset: Int = 0): OrderHistoryResult!
   myOrganization: OrganizationResult
   myPointHistory(limit: Int = 20): [PointTransaction!]!
