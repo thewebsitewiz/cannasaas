@@ -21,9 +21,40 @@ interface ConnectedClient {
   rooms: Set<string>;
 }
 
+// Decorator metadata is evaluated at module load, so CORS origins must be
+// resolved here rather than via ConfigService (which only exists at DI time).
+// The dev fallback covers every local frontend port we currently use; if
+// CORS_ORIGINS is unset the gateway logs a warning so a missing prod env
+// surfaces loudly instead of silently dropping WS handshakes.
+const DEFAULT_DEV_ORIGINS = [
+  // React apps (51xx)
+  'http://localhost:5173', // storefront
+  'http://localhost:5174', // admin
+  'http://localhost:5175', // staff
+  'http://localhost:5176', // legacy kiosk
+  'http://localhost:5177', // platform
+  'http://localhost:5178',
+  // Angular replacements (52xx — same last digit)
+  'http://localhost:5273', // storefront
+  'http://localhost:5276', // kiosk
+].join(',');
+
+const corsOriginsEnv = process.env['CORS_ORIGINS'];
+if (!corsOriginsEnv) {
+  // eslint-disable-next-line no-console
+  console.warn(
+    '[OrderGateway] CORS_ORIGINS not set — using dev defaults. ' +
+      'Set CORS_ORIGINS in your environment for production deployments.',
+  );
+}
+const ALLOWED_ORIGINS = (corsOriginsEnv || DEFAULT_DEV_ORIGINS)
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
 @WebSocketGateway({
   cors: {
-    origin: (process.env['CORS_ORIGINS'] || 'http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176,http://localhost:5177').split(','),
+    origin: ALLOWED_ORIGINS,
     credentials: true,
   },
   namespace: '/',
