@@ -17,9 +17,13 @@ export const routes: Routes = [
         pathMatch: 'full',
         loadComponent: () => import('./pages/home/home-page').then((m) => m.HomePage),
       },
+      {
+        path: 'products',
+        loadChildren: () =>
+          import('./features/products/products.routes').then((m) => m.PRODUCTS_ROUTES),
+      },
       // Feature routes land here as they migrate. Each lazy-loads its own
       // route table:
-      // { path: 'products', loadChildren: () => import('./features/products/products.routes').then(m => m.PRODUCTS_ROUTES) },
       // { path: 'cart',     loadChildren: () => import('./features/cart/cart.routes').then(m => m.CART_ROUTES) },
       // { path: 'checkout', loadChildren: () => import('./features/checkout/checkout.routes').then(m => m.CHECKOUT_ROUTES) },
       // { path: 'account',  loadChildren: () => import('./features/account/account.routes').then(m => m.ACCOUNT_ROUTES) },
