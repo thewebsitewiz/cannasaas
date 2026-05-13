@@ -4,6 +4,100 @@ import { DataSource } from 'typeorm';
 import { Cron } from '@nestjs/schedule';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
+type Severity = 'critical' | 'warning' | 'info';
+
+interface PurchaseTotalRow {
+  totalPurchased: string;
+  dailyLimit: string;
+  percentUsed: string;
+}
+
+interface DispensaryLicenseRow {
+  entityId: string;
+  name: string;
+  licenseNumber: string;
+  expirationDate: string;
+}
+
+interface EmployeeCertRow {
+  userId: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  expirationDate: string;
+}
+
+interface VendorLicenseRow {
+  vendorId: string;
+  companyName: string;
+  licenseNumber: string;
+  expirationDate: string;
+}
+
+interface InventoryDiscrepancyRow {
+  inventoryId: string;
+  variantId: string;
+  productName: string;
+  variantName: string;
+  localQuantity: string;
+  metrcQuantity: string;
+  lastSyncAt: string | null;
+  variancePercent: string;
+}
+
+interface DispensaryActiveRow {
+  entity_id: string;
+}
+
+export interface PurchaseLimitAlert {
+  alertType: 'purchase_limit_approaching';
+  severity: Severity;
+  customerId: string;
+  totalPurchased: number;
+  dailyLimit: number;
+  percentUsed: number;
+  message: string;
+}
+
+export interface LicenseExpiringAlert {
+  alertType: 'license_expiring';
+  severity: Severity;
+  entityType: 'dispensary' | 'employee' | 'vendor';
+  entityId: string;
+  entityName: string;
+  licenseNumber?: string;
+  expirationDate: string;
+  daysRemaining: number;
+  message: string;
+}
+
+export interface InventoryDiscrepancyAlert {
+  alertType: 'inventory_discrepancy';
+  severity: Severity;
+  inventoryId: string;
+  variantId: string;
+  productName: string;
+  variantName: string;
+  localQuantity: number;
+  metrcQuantity: number;
+  variancePercent: number;
+  lastSyncAt: string | null;
+  message: string;
+}
+
+type ComplianceAlert =
+  | PurchaseLimitAlert
+  | LicenseExpiringAlert
+  | InventoryDiscrepancyAlert;
+
+export interface ComplianceAlertsSummary {
+  totalAlerts: number;
+  criticalCount: number;
+  warningCount: number;
+  infoCount: number;
+  alerts: ComplianceAlert[];
+}
+
 @Injectable()
 export class ComplianceAlertsService {
   private readonly logger = new Logger(ComplianceAlertsService.name);
@@ -13,9 +107,12 @@ export class ComplianceAlertsService {
     private eventEmitter: EventEmitter2,
   ) {}
 
-  async checkPurchaseLimitApproaching(customerId: string, dispensaryId: string): Promise<any[]> {
+  async checkPurchaseLimitApproaching(
+    customerId: string,
+    dispensaryId: string,
+  ): Promise<PurchaseLimitAlert[]> {
     // Check if customer is at 80%+ of state purchase limit (default 28g/day rolling window)
-    const rows = await this.ds.query(
+    const rows: PurchaseTotalRow[] = await this.ds.query(
       `WITH purchase_totals AS (
         SELECT
           o."userId",
@@ -37,8 +134,8 @@ export class ComplianceAlertsService {
       [customerId, dispensaryId],
     );
 
-    return rows.map((r: any) => ({
-      alertType: 'purchase_limit_approaching',
+    return rows.map((r) => ({
+      alertType: 'purchase_limit_approaching' as const,
       severity: parseFloat(r.percentUsed) >= 100 ? 'critical' : 'warning',
       customerId,
       totalPurchased: parseFloat(r.totalPurchased),
@@ -48,11 +145,13 @@ export class ComplianceAlertsService {
     }));
   }
 
-  async checkLicenseExpirations(dispensaryId: string): Promise<any[]> {
-    const alerts: any[] = [];
+  async checkLicenseExpirations(
+    dispensaryId: string,
+  ): Promise<LicenseExpiringAlert[]> {
+    const alerts: LicenseExpiringAlert[] = [];
 
     // Check dispensary license
-    const dispLicenses = await this.ds.query(
+    const dispLicenses: DispensaryLicenseRow[] = await this.ds.query(
       `SELECT entity_id as "entityId", name, license_number as "licenseNumber",
         license_expiration_date as "expirationDate"
        FROM dispensaries
@@ -63,10 +162,13 @@ export class ComplianceAlertsService {
     );
 
     for (const lic of dispLicenses) {
-      const daysLeft = Math.ceil((new Date(lic.expirationDate).getTime() - Date.now()) / 86400000);
+      const daysLeft = Math.ceil(
+        (new Date(lic.expirationDate).getTime() - Date.now()) / 86400000,
+      );
       alerts.push({
         alertType: 'license_expiring',
-        severity: daysLeft <= 7 ? 'critical' : daysLeft <= 14 ? 'warning' : 'info',
+        severity:
+          daysLeft <= 7 ? 'critical' : daysLeft <= 14 ? 'warning' : 'info',
         entityType: 'dispensary',
         entityId: lic.entityId,
         entityName: lic.name,
@@ -78,7 +180,7 @@ export class ComplianceAlertsService {
     }
 
     // Check employee certifications
-    const empCerts = await this.ds.query(
+    const empCerts: EmployeeCertRow[] = await this.ds.query(
       `SELECT u.id as "userId", u.email, u.first_name as "firstName", u.last_name as "lastName",
         s.certification_expiry as "expirationDate"
        FROM staffing s
@@ -91,10 +193,13 @@ export class ComplianceAlertsService {
     );
 
     for (const cert of empCerts) {
-      const daysLeft = Math.ceil((new Date(cert.expirationDate).getTime() - Date.now()) / 86400000);
+      const daysLeft = Math.ceil(
+        (new Date(cert.expirationDate).getTime() - Date.now()) / 86400000,
+      );
       alerts.push({
         alertType: 'license_expiring',
-        severity: daysLeft <= 7 ? 'critical' : daysLeft <= 14 ? 'warning' : 'info',
+        severity:
+          daysLeft <= 7 ? 'critical' : daysLeft <= 14 ? 'warning' : 'info',
         entityType: 'employee',
         entityId: cert.userId,
         entityName: `${cert.firstName} ${cert.lastName}`,
@@ -105,7 +210,7 @@ export class ComplianceAlertsService {
     }
 
     // Check vendor licenses
-    const vendorLicenses = await this.ds.query(
+    const vendorLicenses: VendorLicenseRow[] = await this.ds.query(
       `SELECT v.vendor_id as "vendorId", v.company_name as "companyName",
         v.license_number as "licenseNumber", v.license_expiration as "expirationDate"
        FROM vendors v
@@ -117,10 +222,13 @@ export class ComplianceAlertsService {
     );
 
     for (const v of vendorLicenses) {
-      const daysLeft = Math.ceil((new Date(v.expirationDate).getTime() - Date.now()) / 86400000);
+      const daysLeft = Math.ceil(
+        (new Date(v.expirationDate).getTime() - Date.now()) / 86400000,
+      );
       alerts.push({
         alertType: 'license_expiring',
-        severity: daysLeft <= 7 ? 'critical' : daysLeft <= 14 ? 'warning' : 'info',
+        severity:
+          daysLeft <= 7 ? 'critical' : daysLeft <= 14 ? 'warning' : 'info',
         entityType: 'vendor',
         entityId: v.vendorId,
         entityName: v.companyName,
@@ -134,9 +242,11 @@ export class ComplianceAlertsService {
     return alerts;
   }
 
-  async checkInventoryDiscrepancies(dispensaryId: string): Promise<any[]> {
+  async checkInventoryDiscrepancies(
+    dispensaryId: string,
+  ): Promise<InventoryDiscrepancyAlert[]> {
     // Compare local inventory vs last Metrc sync, flag >5% variance
-    const rows = await this.ds.query(
+    const rows: InventoryDiscrepancyRow[] = await this.ds.query(
       `SELECT
         i.inventory_id as "inventoryId",
         i.variant_id as "variantId",
@@ -161,8 +271,8 @@ export class ComplianceAlertsService {
       [dispensaryId],
     );
 
-    return rows.map((r: any) => ({
-      alertType: 'inventory_discrepancy',
+    return rows.map((r) => ({
+      alertType: 'inventory_discrepancy' as const,
       severity: parseFloat(r.variancePercent) > 20 ? 'critical' : 'warning',
       inventoryId: r.inventoryId,
       variantId: r.variantId,
@@ -176,23 +286,31 @@ export class ComplianceAlertsService {
     }));
   }
 
-  async getComplianceAlerts(dispensaryId: string): Promise<any> {
+  async getComplianceAlerts(
+    dispensaryId: string,
+  ): Promise<ComplianceAlertsSummary> {
     const [licenseAlerts, inventoryAlerts] = await Promise.all([
       this.checkLicenseExpirations(dispensaryId),
       this.checkInventoryDiscrepancies(dispensaryId),
     ]);
 
-    const allAlerts = [...licenseAlerts, ...inventoryAlerts];
+    const allAlerts: ComplianceAlert[] = [...licenseAlerts, ...inventoryAlerts];
 
     // Sort by severity: critical first, then warning, then info
-    const severityOrder: Record<string, number> = { critical: 0, warning: 1, info: 2 };
-    allAlerts.sort((a, b) => (severityOrder[a.severity] ?? 3) - (severityOrder[b.severity] ?? 3));
+    const severityOrder: Record<Severity, number> = {
+      critical: 0,
+      warning: 1,
+      info: 2,
+    };
+    allAlerts.sort(
+      (a, b) => severityOrder[a.severity] - severityOrder[b.severity],
+    );
 
     return {
       totalAlerts: allAlerts.length,
-      criticalCount: allAlerts.filter(a => a.severity === 'critical').length,
-      warningCount: allAlerts.filter(a => a.severity === 'warning').length,
-      infoCount: allAlerts.filter(a => a.severity === 'info').length,
+      criticalCount: allAlerts.filter((a) => a.severity === 'critical').length,
+      warningCount: allAlerts.filter((a) => a.severity === 'warning').length,
+      infoCount: allAlerts.filter((a) => a.severity === 'info').length,
       alerts: allAlerts,
     };
   }
@@ -200,7 +318,9 @@ export class ComplianceAlertsService {
   @Cron('0 7 * * *')
   async dailyComplianceCheck(): Promise<void> {
     this.logger.log('Running daily compliance alerts check...');
-    const dispensaries = await this.ds.query('SELECT entity_id FROM dispensaries WHERE is_active = true');
+    const dispensaries: DispensaryActiveRow[] = await this.ds.query(
+      'SELECT entity_id FROM dispensaries WHERE is_active = true',
+    );
 
     for (const d of dispensaries) {
       try {
@@ -210,20 +330,25 @@ export class ComplianceAlertsService {
           this.eventEmitter.emit('compliance.critical', {
             dispensaryId: d.entity_id,
             alertCount: result.criticalCount,
-            alerts: result.alerts.filter((a: any) => a.severity === 'critical'),
+            alerts: result.alerts.filter((a) => a.severity === 'critical'),
           });
-          this.logger.warn(`${result.criticalCount} critical compliance alerts for dispensary ${d.entity_id}`);
+          this.logger.warn(
+            `${result.criticalCount} critical compliance alerts for dispensary ${d.entity_id}`,
+          );
         }
 
         if (result.warningCount > 0) {
           this.eventEmitter.emit('compliance.warning', {
             dispensaryId: d.entity_id,
             alertCount: result.warningCount,
-            alerts: result.alerts.filter((a: any) => a.severity === 'warning'),
+            alerts: result.alerts.filter((a) => a.severity === 'warning'),
           });
         }
-      } catch (err: any) {
-        this.logger.error('Compliance check failed for ' + d.entity_id + ': ' + err.message);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        this.logger.error(
+          'Compliance check failed for ' + d.entity_id + ': ' + message,
+        );
       }
     }
   }

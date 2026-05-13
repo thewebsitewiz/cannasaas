@@ -1,13 +1,33 @@
-import { Resolver, Query, Mutation, Args, ID, Int, Float } from '@nestjs/graphql';
+import {
+  Resolver,
+  Query,
+  Mutation,
+  Args,
+  ID,
+  Int,
+  Float,
+} from '@nestjs/graphql';
 import { ObjectType, Field } from '@nestjs/graphql';
 import { ComplianceService } from './compliance.service';
-import { ComplianceAlertsService } from './compliance-alerts.service';
-import { MetrcManifest, MetrcManifestItem, WasteDestructionLog, AuditLog, ReconciliationReport, ReconciliationItem } from './entities/compliance.entity';
+import {
+  ComplianceAlertsService,
+  ComplianceAlertsSummary,
+  PurchaseLimitAlert,
+} from './compliance-alerts.service';
+import {
+  MetrcManifest,
+  MetrcManifestItem,
+  WasteDestructionLog,
+  AuditLog,
+  ReconciliationReport,
+  ReconciliationItem,
+} from './entities/compliance.entity';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtPayload } from '../auth/strategies/jwt.strategy';
 
-@ObjectType() class ComplianceAlert {
+@ObjectType()
+class ComplianceAlert {
   @Field() alertType!: string;
   @Field() severity!: string;
   @Field({ nullable: true }) entityType?: string;
@@ -22,7 +42,8 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field() message!: string;
 }
 
-@ObjectType() class ComplianceAlertsResult {
+@ObjectType()
+class ComplianceAlertsResult {
   @Field(() => Int) totalAlerts!: number;
   @Field(() => Int) criticalCount!: number;
   @Field(() => Int) warningCount!: number;
@@ -30,7 +51,8 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field(() => [ComplianceAlert]) alerts!: ComplianceAlert[];
 }
 
-@ObjectType() class EncryptionResult {
+@ObjectType()
+class EncryptionResult {
   @Field(() => Int) credentialsEncrypted!: number;
 }
 
@@ -48,7 +70,7 @@ export class ComplianceResolver {
   async generateManifest(
     @Args('transferId', { type: () => ID }) transferId: string,
     @CurrentUser() user: JwtPayload,
-  ): Promise<any> {
+  ): Promise<MetrcManifest> {
     return this.compliance.generateManifest(transferId, user.sub);
   }
 
@@ -57,13 +79,15 @@ export class ComplianceResolver {
   async manifests(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @Args('status', { nullable: true }) status: string,
-  ): Promise<any[]> {
+  ): Promise<MetrcManifest[]> {
     return this.compliance.getManifests(dispensaryId, status);
   }
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
   @Query(() => [MetrcManifestItem], { name: 'manifestItems' })
-  async manifestItems(@Args('manifestId', { type: () => ID }) manifestId: string): Promise<any[]> {
+  async manifestItems(
+    @Args('manifestId', { type: () => ID }) manifestId: string,
+  ): Promise<MetrcManifestItem[]> {
     return this.compliance.getManifestItems(manifestId);
   }
 
@@ -73,7 +97,7 @@ export class ComplianceResolver {
     @Args('manifestId', { type: () => ID }) manifestId: string,
     @Args('status') status: string,
     @CurrentUser() user: JwtPayload,
-  ): Promise<any> {
+  ): Promise<MetrcManifest> {
     return this.compliance.updateManifestStatus(manifestId, status, user.sub);
   }
 
@@ -95,12 +119,21 @@ export class ComplianceResolver {
     @Args('variantId', { type: () => ID, nullable: true }) variantId: string,
     @Args('notes', { nullable: true }) notes: string,
     @CurrentUser() user: JwtPayload,
-  ): Promise<any> {
+  ): Promise<WasteDestructionLog> {
     return this.compliance.logWaste({
-      dispensaryId, productName, variantId, quantity, unitOfMeasure,
-      wasteType, destructionMethod, reason,
-      witness1Name, witness1Title, witness2Name,
-      submittedByUserId: user.sub, notes,
+      dispensaryId,
+      productName,
+      variantId,
+      quantity,
+      unitOfMeasure,
+      wasteType,
+      destructionMethod,
+      reason,
+      witness1Name,
+      witness1Title,
+      witness2Name,
+      submittedByUserId: user.sub,
+      notes,
     });
   }
 
@@ -109,7 +142,7 @@ export class ComplianceResolver {
   async approveWaste(
     @Args('logId', { type: () => ID }) logId: string,
     @CurrentUser() user: JwtPayload,
-  ): Promise<any> {
+  ): Promise<WasteDestructionLog> {
     return this.compliance.approveWaste(logId, user.sub);
   }
 
@@ -117,8 +150,9 @@ export class ComplianceResolver {
   @Query(() => [WasteDestructionLog], { name: 'wasteLogs' })
   async wasteLogs(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
-    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) limit: number,
-  ): Promise<any[]> {
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 })
+    limit: number,
+  ): Promise<WasteDestructionLog[]> {
     return this.compliance.getWasteLogs(dispensaryId, limit);
   }
 
@@ -128,10 +162,11 @@ export class ComplianceResolver {
   @Query(() => [AuditLog], { name: 'auditLog' })
   async auditLog(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
-    @Args('limit', { type: () => Int, nullable: true, defaultValue: 100 }) limit: number,
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 100 })
+    limit: number,
     @Args('entityType', { nullable: true }) entityType: string,
     @Args('action', { nullable: true }) action: string,
-  ): Promise<any[]> {
+  ): Promise<AuditLog[]> {
     return this.compliance.getAuditLog(dispensaryId, limit, entityType, action);
   }
 
@@ -140,7 +175,7 @@ export class ComplianceResolver {
   async entityAudit(
     @Args('entityType') entityType: string,
     @Args('entityId') entityId: string,
-  ): Promise<any[]> {
+  ): Promise<AuditLog[]> {
     return this.compliance.getEntityAuditTrail(entityType, entityId);
   }
 
@@ -151,7 +186,7 @@ export class ComplianceResolver {
   async runRecon(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @CurrentUser() user: JwtPayload,
-  ): Promise<any> {
+  ): Promise<ReconciliationReport> {
     return this.compliance.runReconciliation(dispensaryId, user.sub);
   }
 
@@ -159,8 +194,9 @@ export class ComplianceResolver {
   @Query(() => [ReconciliationReport], { name: 'reconciliationReports' })
   async reconReports(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
-    @Args('limit', { type: () => Int, nullable: true, defaultValue: 10 }) limit: number,
-  ): Promise<any[]> {
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 10 })
+    limit: number,
+  ): Promise<ReconciliationReport[]> {
     return this.compliance.getReconciliationReports(dispensaryId, limit);
   }
 
@@ -169,7 +205,7 @@ export class ComplianceResolver {
   async reconItems(
     @Args('reportId', { type: () => ID }) reportId: string,
     @Args('status', { nullable: true }) status: string,
-  ): Promise<any[]> {
+  ): Promise<ReconciliationItem[]> {
     return this.compliance.getReconciliationItems(reportId, status);
   }
 
@@ -179,7 +215,7 @@ export class ComplianceResolver {
   @Query(() => ComplianceAlertsResult, { name: 'complianceAlerts' })
   async complianceAlertsQuery(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
-  ): Promise<any> {
+  ): Promise<ComplianceAlertsSummary> {
     return this.complianceAlerts.getComplianceAlerts(dispensaryId);
   }
 
@@ -188,8 +224,11 @@ export class ComplianceResolver {
   async purchaseLimitAlerts(
     @Args('customerId', { type: () => ID }) customerId: string,
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
-  ): Promise<any[]> {
-    return this.complianceAlerts.checkPurchaseLimitApproaching(customerId, dispensaryId);
+  ): Promise<PurchaseLimitAlert[]> {
+    return this.complianceAlerts.checkPurchaseLimitApproaching(
+      customerId,
+      dispensaryId,
+    );
   }
 
   // ── Encryption ────────────────────────────────────────────────────────────

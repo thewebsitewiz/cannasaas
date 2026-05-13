@@ -187,13 +187,13 @@ export class AuditLog {
   entity_id?: string;
   @Field(() => GraphQLJSON, { nullable: true })
   @Column({ type: 'jsonb', nullable: true })
-  changes?: any;
+  changes?: Record<string, unknown> | string;
   @Field(() => GraphQLJSON, { name: 'oldValues', nullable: true })
   @Column({ type: 'jsonb', nullable: true, name: 'old_values' })
-  old_values?: any;
+  old_values?: Record<string, unknown>;
   @Field(() => GraphQLJSON, { name: 'newValues', nullable: true })
   @Column({ type: 'jsonb', nullable: true, name: 'new_values' })
-  new_values?: any;
+  new_values?: Record<string, unknown>;
   @Field({ name: 'ipAddress', nullable: true })
   @Column({ length: 45, nullable: true, name: 'ip_address' })
   ip_address?: string;
