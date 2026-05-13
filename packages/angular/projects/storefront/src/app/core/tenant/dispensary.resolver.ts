@@ -5,22 +5,20 @@ import { DispensaryContextService } from './dispensary-context.service';
 import { environment } from '../../../environments/environment';
 
 /**
- * Bootstraps the slug from the URL and fetches the active dispensary record
- * via `DispensaryGQL`. The fetched record is stored on
+ * Bootstraps the slug from the URL and fetches the public dispensary record
+ * via `DispensaryBySlugGQL`. The fetched record is stored on
  * `DispensaryContextService` and also returned to the route for completeness.
  *
- * Dev flow: uses `environment.defaultDispensaryEntityId` directly. Prod flow
- * requires the eventual `DispensaryBySlugGQL` operation (see
- * `dispensary-by-slug.graphql` and the TODO in `dispensary-context.service.ts`).
+ * Returns null when the slug doesn't match an active tenant. Downstream
+ * features check `dispensary.entityId()` and render a "no dispensary
+ * resolved" state when it's null.
  */
 export const dispensaryResolver: ResolveFn<Dispensary | null> = async () => {
   const ctx = inject(DispensaryContextService);
-  ctx.bootstrap();
-
   if (ctx.current()) return ctx.current();
 
-  const entityId = environment.defaultDispensaryEntityId;
-  if (!entityId) return null;
+  const slug = ctx.bootstrap() ?? environment.defaultDispensarySlug;
+  if (!slug) return null;
 
-  return ctx.loadById(entityId);
+  return ctx.loadBySlug(slug);
 };

@@ -53,6 +53,18 @@ import GraphQLJSON from 'graphql-type-json';
   @Field(() => Date) createdAt!: Date;
 }
 
+/** Public dispensary surface for the anonymous storefront slug lookup. */
+@ObjectType() class DispensaryPublic {
+  @Field(() => ID) entityId!: string;
+  @Field() name!: string;
+  @Field() slug!: string;
+  @Field({ nullable: true }) city?: string;
+  @Field({ nullable: true }) state?: string;
+  @Field() isActive!: boolean;
+  @Field() isDeliveryEnabled!: boolean;
+  @Field() isPickupEnabled!: boolean;
+}
+
 @InputType() class UpdateDispensaryInput {
   @Field({ nullable: true }) name?: string;
   @Field({ nullable: true }) slug?: string;
@@ -106,6 +118,20 @@ export class DispensariesResolver {
     @Args('entityId', { type: () => ID }) entityId: string,
   ): Promise<any> {
     return this.dispensaries.findById(entityId);
+  }
+
+  /**
+   * Public slug→dispensary lookup. No @Roles guard: the storefront resolves
+   * its tenant from the URL before the visitor has any auth context, and
+   * displays the result for anonymous browsing. The DispensaryPublic surface
+   * is intentionally narrower than DispensaryResult so we never leak operating
+   * detail, license info, or contact data through this path.
+   */
+  @Query(() => DispensaryPublic, { name: 'dispensaryBySlug', nullable: true })
+  async dispensaryBySlug(
+    @Args('slug') slug: string,
+  ): Promise<any | null> {
+    return this.dispensaries.findBySlug(slug);
   }
 
   @Roles('org_admin', 'super_admin')

@@ -1,5 +1,5 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { DispensaryGQL } from '@cannasaas/ui-ng';
+import { DispensaryBySlugGQL } from '@cannasaas/ui-ng';
 import { firstValueFrom } from 'rxjs';
 import { Dispensary } from './types';
 import { resolveSlugFromLocation } from './slug';
@@ -13,7 +13,7 @@ import { resolveSlugFromLocation } from './slug';
  */
 @Injectable({ providedIn: 'root' })
 export class DispensaryContextService {
-  private readonly dispensaryGQL = inject(DispensaryGQL);
+  private readonly dispensaryBySlugGQL = inject(DispensaryBySlugGQL);
   private readonly _slug = signal<string | null>(null);
   private readonly _current = signal<Dispensary | null>(null);
   private readonly _loading = signal(false);
@@ -31,16 +31,17 @@ export class DispensaryContextService {
   }
 
   /**
-   * Fetches the Dispensary record by entityId and seeds the context.
-   *
-   * TODO(post-scaffold): swap for `DispensaryBySlugGQL` so we can drop the
-   * `defaultDispensaryEntityId` dev override and resolve straight from slug.
+   * Fetches the public Dispensary record by URL slug and seeds the context.
+   * Returns null when the slug doesn't match an active tenant — callers
+   * should treat that as "redirect to a generic landing page".
    */
-  async loadById(entityId: string): Promise<Dispensary | null> {
+  async loadBySlug(slug: string): Promise<Dispensary | null> {
     this._loading.set(true);
     try {
-      const result = await firstValueFrom(this.dispensaryGQL.fetch({ variables: { entityId } }));
-      const dispensary = result.data?.dispensary;
+      const result = await firstValueFrom(
+        this.dispensaryBySlugGQL.fetch({ variables: { slug } }),
+      );
+      const dispensary = result.data?.dispensaryBySlug;
       if (!dispensary) return null;
       const mapped: Dispensary = {
         entityId: dispensary.entityId,
@@ -50,6 +51,7 @@ export class DispensaryContextService {
         isDeliveryEnabled: dispensary.isDeliveryEnabled,
       };
       this._current.set(mapped);
+      this._slug.set(dispensary.slug);
       return mapped;
     } finally {
       this._loading.set(false);

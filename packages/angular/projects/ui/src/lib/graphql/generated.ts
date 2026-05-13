@@ -1,3 +1,4 @@
+/* eslint-disable */
 // AUTO-GENERATED — do not edit by hand
 
 import { gql } from 'apollo-angular';
@@ -698,6 +699,18 @@ export type DispensaryProductTypeInput = {
   isEnabled: Scalars['Boolean']['input'];
   productTypeId: Scalars['Int']['input'];
   sortOrder: Scalars['Int']['input'];
+};
+
+export type DispensaryPublic = {
+  __typename?: 'DispensaryPublic';
+  city?: Maybe<Scalars['String']['output']>;
+  entityId: Scalars['ID']['output'];
+  isActive: Scalars['Boolean']['output'];
+  isDeliveryEnabled: Scalars['Boolean']['output'];
+  isPickupEnabled: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+  state?: Maybe<Scalars['String']['output']>;
 };
 
 export type DispensaryResult = {
@@ -2837,6 +2850,7 @@ export type Query = {
   dispensaries: Array<DispensaryListItem>;
   dispensariesByCompany: Array<DispensaryListItem>;
   dispensary?: Maybe<DispensaryResult>;
+  dispensaryBySlug?: Maybe<DispensaryPublic>;
   dispensaryProductTypes: Array<DispensaryProductType>;
   driverStats: DriverStats;
   driverTrips: Array<DeliveryTrip>;
@@ -3138,6 +3152,10 @@ export type QueryDispensariesByCompanyArgs = {
 
 export type QueryDispensaryArgs = {
   entityId: Scalars['ID']['input'];
+};
+
+export type QueryDispensaryBySlugArgs = {
+  slug: Scalars['String']['input'];
 };
 
 export type QueryDispensaryProductTypesArgs = {
@@ -4259,6 +4277,25 @@ export type CustomerByPhoneQuery = {
   } | null;
 };
 
+export type DispensaryBySlugQueryVariables = Exact<{
+  slug: Scalars['String']['input'];
+}>;
+
+export type DispensaryBySlugQuery = {
+  __typename?: 'Query';
+  dispensaryBySlug?: {
+    __typename?: 'DispensaryPublic';
+    entityId: string;
+    slug: string;
+    name: string;
+    city?: string | null;
+    state?: string | null;
+    isActive: boolean;
+    isPickupEnabled: boolean;
+    isDeliveryEnabled: boolean;
+  } | null;
+};
+
 export type DispensaryQueryVariables = Exact<{
   entityId: Scalars['ID']['input'];
 }>;
@@ -4505,6 +4542,34 @@ export class CustomerByPhoneGQL extends Apollo.Query<
   CustomerByPhoneQueryVariables
 > {
   override document = CustomerByPhoneDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const DispensaryBySlugDocument = gql`
+  query DispensaryBySlug($slug: String!) {
+    dispensaryBySlug(slug: $slug) {
+      entityId
+      slug
+      name
+      city
+      state
+      isActive
+      isPickupEnabled
+      isDeliveryEnabled
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class DispensaryBySlugGQL extends Apollo.Query<
+  DispensaryBySlugQuery,
+  DispensaryBySlugQueryVariables
+> {
+  override document = DispensaryBySlugDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);

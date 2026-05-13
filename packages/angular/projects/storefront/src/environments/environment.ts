@@ -8,11 +8,6 @@ interface Environment {
    * landing page instead.
    */
   readonly defaultDispensarySlug: string | null;
-  /**
-   * Dev override: dispensary entityId fetched directly by the resolver,
-   * skipping the slug→entityId lookup until DispensaryBySlugGQL is wired.
-   */
-  readonly defaultDispensaryEntityId: string | null;
   readonly themeBaseUrl: string;
 }
 
@@ -21,6 +16,5 @@ export const environment: Environment = {
   apiUrl: 'https://api.cannasaas.com',
   graphqlUrl: 'https://api.cannasaas.com/graphql',
   defaultDispensarySlug: null,
-  defaultDispensaryEntityId: null,
   themeBaseUrl: '/themes',
 };

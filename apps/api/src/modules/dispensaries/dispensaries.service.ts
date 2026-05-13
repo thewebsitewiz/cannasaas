@@ -30,6 +30,26 @@ export class DispensariesService {
     return row;
   }
 
+  /**
+   * Public lookup keyed by URL slug. Returns the minimal public surface the
+   * anonymous storefront needs to resolve a tenant from its URL. Intentionally
+   * narrower than findById — no license details, no operating-hours metadata —
+   * so the resolver can be exposed without @Roles.
+   */
+  async findBySlug(slug: string): Promise<any | null> {
+    const [row] = await this.ds.query(
+      `SELECT entity_id as "entityId", name, slug, city, state,
+        is_active as "isActive",
+        is_delivery_enabled as "isDeliveryEnabled",
+        is_pickup_enabled as "isPickupEnabled"
+      FROM dispensaries
+      WHERE slug = $1 AND deleted_at IS NULL AND is_active = true
+      LIMIT 1`,
+      [slug],
+    );
+    return row ?? null;
+  }
+
   async findAll(limit = 50, offset = 0): Promise<any[]> {
     return this.ds.query(
       `SELECT entity_id as "entityId", company_id as "companyId", type, name, slug,

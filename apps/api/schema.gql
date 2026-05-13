@@ -618,6 +618,17 @@ type DispensaryListItem {
   zip: String
 }
 
+type DispensaryPublic {
+  city: String
+  entityId: ID!
+  isActive: Boolean!
+  isDeliveryEnabled: Boolean!
+  isPickupEnabled: Boolean!
+  name: String!
+  slug: String!
+  state: String
+}
+
 type DispensaryProductType {
   code: String!
   isEnabled: Boolean!
@@ -1946,6 +1957,7 @@ type Query {
   dispensaries(limit: Int = 50, offset: Int = 0): [DispensaryListItem!]!
   dispensariesByCompany(companyId: ID!): [DispensaryListItem!]!
   dispensary(entityId: ID!): DispensaryResult
+  dispensaryBySlug(slug: String!): DispensaryPublic
   dispensaryProductTypes(dispensaryId: ID!): [DispensaryProductType!]!
   driverStats(days: Int = 30, dispensaryId: ID!): DriverStats!
   driverTrips(days: Int = 7, driverId: ID!): [DeliveryTrip!]!
