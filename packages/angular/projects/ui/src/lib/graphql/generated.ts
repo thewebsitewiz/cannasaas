@@ -4429,6 +4429,24 @@ export type RegisterMutation = {
   register: { __typename?: 'AuthToken'; accessToken: string; expiresIn: number };
 };
 
+export type VerifyAgeMutationVariables = Exact<{
+  dateOfBirth: Scalars['String']['input'];
+  idType: Scalars['String']['input'];
+  idState?: InputMaybe<Scalars['String']['input']>;
+  dispensaryId?: InputMaybe<Scalars['ID']['input']>;
+  method?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+export type VerifyAgeMutation = {
+  __typename?: 'Mutation';
+  verifyAge: {
+    __typename?: 'AgeVerifyResult';
+    verified: boolean;
+    age: number;
+    reason?: string | null;
+  };
+};
+
 export const CreateOrderDocument = gql`
   mutation CreateOrder($input: CreateOrderInput!) {
     createOrder(input: $input) {
@@ -4705,6 +4723,38 @@ export const RegisterDocument = gql`
 })
 export class RegisterGQL extends Apollo.Mutation<RegisterMutation, RegisterMutationVariables> {
   override document = RegisterDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const VerifyAgeDocument = gql`
+  mutation VerifyAge(
+    $dateOfBirth: String!
+    $idType: String!
+    $idState: String
+    $dispensaryId: ID
+    $method: String
+  ) {
+    verifyAge(
+      dateOfBirth: $dateOfBirth
+      idType: $idType
+      idState: $idState
+      dispensaryId: $dispensaryId
+      method: $method
+    ) {
+      verified
+      age
+      reason
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class VerifyAgeGQL extends Apollo.Mutation<VerifyAgeMutation, VerifyAgeMutationVariables> {
+  override document = VerifyAgeDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);

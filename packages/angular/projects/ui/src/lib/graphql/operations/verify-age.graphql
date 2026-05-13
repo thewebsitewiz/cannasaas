@@ -1,0 +1,19 @@
+mutation VerifyAge(
+  $dateOfBirth: String!
+  $idType: String!
+  $idState: String
+  $dispensaryId: ID
+  $method: String
+) {
+  verifyAge(
+    dateOfBirth: $dateOfBirth
+    idType: $idType
+    idState: $idState
+    dispensaryId: $dispensaryId
+    method: $method
+  ) {
+    verified
+    age
+    reason
+  }
+}

@@ -114,6 +114,19 @@ export class AuthService {
     writeUser(USER_KEY, null);
   }
 
+  /**
+   * Optimistic local update for the user's ageVerified flag, used by the
+   * verify-age flow to flip the gate UI immediately after the API confirms.
+   * The next JWT refresh re-derives this from the token claims.
+   */
+  setAgeVerified(verified: boolean): void {
+    const current = this._user();
+    if (!current) return;
+    const next: User = { ...current, ageVerified: verified };
+    this._user.set(next);
+    writeUser(USER_KEY, next);
+  }
+
   private applyToken(token: string): void {
     this._accessToken.set(token);
     write(ACCESS_TOKEN_KEY, token);

@@ -43,9 +43,15 @@ export const routes: Routes = [
         path: 'register',
         loadComponent: () => import('./features/auth/register-page').then((m) => m.RegisterPage),
       },
-      // Feature routes land here as they migrate. Each lazy-loads its own
-      // route table:
-      // { path: 'account',  loadChildren: () => import('./features/account/account.routes').then(m => m.ACCOUNT_ROUTES) },
+      {
+        path: 'account/verify',
+        loadComponent: () =>
+          import('./features/account/verify-age-page').then((m) => m.VerifyAgePage),
+      },
+      {
+        path: 'account',
+        loadComponent: () => import('./features/account/account-page').then((m) => m.AccountPage),
+      },
     ],
   },
   { path: '**', redirectTo: '' },
