@@ -4,26 +4,7 @@
   "private": true,
   "main": "src/index.ts",
   "types": "src/index.ts",
-  "exports": {
-    ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
-    },
-    "./angular": {
-      "types": "./src/angular/cart.ts",
-      "default": "./src/angular/cart.ts"
-    }
-  },
   "dependencies": {
-    "tslib": "^2.3.0",
     "zustand": "^5.0.12"
-  },
-  "peerDependencies": {
-    "@angular/core": "^21.2.0"
-  },
-  "peerDependenciesMeta": {
-    "@angular/core": {
-      "optional": true
-    }
   }
 }
