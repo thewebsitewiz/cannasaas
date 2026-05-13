@@ -27,9 +27,9 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
 @ObjectType()
 class CustomerOrderLineItem {
   @Field(() => ID) productId!: string;
-  @Field(() => ID, { nullable: true }) variantId?: string | null;
-  @Field({ nullable: true }) productName?: string | null;
-  @Field({ nullable: true }) variantName?: string | null;
+  @Field(() => ID, { nullable: true }) variantId?: string;
+  @Field({ nullable: true }) productName?: string;
+  @Field({ nullable: true }) variantName?: string;
   @Field(() => Float) quantity!: number;
   @Field(() => Float) price!: number;
 }
@@ -43,7 +43,7 @@ class CustomerOrder {
   @Field(() => Float) subtotal!: number;
   @Field(() => Float) taxTotal!: number;
   @Field(() => Float) total!: number;
-  @Field({ nullable: true }) paymentMethod?: string | null;
+  @Field({ nullable: true }) paymentMethod?: string;
   @Field(() => Date) createdAt!: Date;
   @Field(() => [CustomerOrderLineItem]) lineItems!: CustomerOrderLineItem[];
 }
@@ -52,9 +52,9 @@ class CustomerOrder {
 @ObjectType()
 class CustomerFavorite {
   @Field(() => ID) productId!: string;
-  @Field(() => ID, { nullable: true }) variantId?: string | null;
-  @Field({ nullable: true }) productName?: string | null;
-  @Field({ nullable: true }) variantName?: string | null;
+  @Field(() => ID, { nullable: true }) variantId?: string;
+  @Field({ nullable: true }) productName?: string;
+  @Field({ nullable: true }) variantName?: string;
   @Field(() => Float) price!: number;
   @Field(() => Int) orderCount!: number;
 }
