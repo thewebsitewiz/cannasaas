@@ -96,7 +96,7 @@ const STRAIN_BADGE: Record<string, string> = {
       } @else {
         <div class="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-12">
           <div
-            class="relative flex aspect-square items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100"
+            class="relative flex aspect-square items-center justify-center overflow-hidden rounded-2xl bg-linear-to-br from-emerald-50 to-emerald-100"
           >
             <svg
               class="h-24 w-24 text-emerald-300"

@@ -34,7 +34,7 @@ const STOCK_CLASS: Record<string, string> = {
       [class.opacity-70]="isOutOfStock()"
     >
       <div
-        class="relative flex aspect-square items-center justify-center bg-gradient-to-br from-emerald-50 to-emerald-100"
+        class="relative flex aspect-square items-center justify-center bg-linear-to-br from-emerald-50 to-emerald-100"
       >
         <svg
           class="h-12 w-12 text-emerald-300"
