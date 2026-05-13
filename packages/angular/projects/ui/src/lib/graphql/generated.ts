@@ -4344,6 +4344,7 @@ export type ProductQuery = {
       variantId: string;
       name: string;
       sku?: string | null;
+      quantityPerUnit?: number | null;
       retailPrice?: number | null;
       stockQuantity?: number | null;
       stockStatus?: string | null;
@@ -4561,6 +4562,7 @@ export const ProductDocument = gql`
         variantId
         name
         sku
+        quantityPerUnit
         retailPrice
         stockQuantity
         stockStatus

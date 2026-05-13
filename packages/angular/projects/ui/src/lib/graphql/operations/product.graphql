@@ -20,6 +20,7 @@ query Product($dispensaryId: ID!, $id: ID!) {
       variantId
       name
       sku
+      quantityPerUnit
       retailPrice
       stockQuantity
       stockStatus
