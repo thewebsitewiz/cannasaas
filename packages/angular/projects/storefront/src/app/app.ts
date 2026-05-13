@@ -3,13 +3,15 @@ import { RouterOutlet } from '@angular/router';
 import { AppThemeService } from './core/theme/app-theme.service';
 import { DispensaryContextService } from './core/tenant/dispensary-context.service';
 import { Footer } from './layout/footer';
+import { Header } from './layout/header';
 
 @Component({
   selector: 'cs-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, Footer],
+  imports: [RouterOutlet, Footer, Header],
   host: { class: 'flex min-h-screen flex-col' },
   template: `
+    <cs-header />
     <main class="flex-1">
       <router-outlet />
     </main>
