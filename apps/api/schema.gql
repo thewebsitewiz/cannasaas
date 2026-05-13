@@ -648,17 +648,6 @@ type DispensaryListItem {
   zip: String
 }
 
-type DispensaryPublic {
-  city: String
-  entityId: ID!
-  isActive: Boolean!
-  isDeliveryEnabled: Boolean!
-  isPickupEnabled: Boolean!
-  name: String!
-  slug: String!
-  state: String
-}
-
 type DispensaryProductType {
   code: String!
   isEnabled: Boolean!
@@ -671,6 +660,17 @@ input DispensaryProductTypeInput {
   isEnabled: Boolean!
   productTypeId: Int!
   sortOrder: Int!
+}
+
+type DispensaryPublic {
+  city: String
+  entityId: ID!
+  isActive: Boolean!
+  isDeliveryEnabled: Boolean!
+  isPickupEnabled: Boolean!
+  name: String!
+  slug: String!
+  state: String
 }
 
 type DispensaryResult {
@@ -2023,10 +2023,10 @@ type Query {
   metrcCredential(dispensaryId: ID): MetrcCredential
   metrcSyncOverview(dispensaryId: ID): MetrcSyncOverview!
   myAddresses: [CustomerAddress!]!
-  myLoyalty(dispensaryId: ID!): MyLoyalty
-  myNotifications(limit: Int = 20): [NotificationLog!]!
   myFavorites(dispensaryId: ID!, limit: Int = 5): [CustomerFavorite!]!
   myLastOrder(dispensaryId: ID!): CustomerOrder
+  myLoyalty(dispensaryId: ID!): MyLoyalty
+  myNotifications(limit: Int = 20): [NotificationLog!]!
   myOrders(limit: Int = 20, offset: Int = 0): OrderHistoryResult!
   myOrganization: OrganizationResult
   myPointHistory(limit: Int = 20): [PointTransaction!]!
