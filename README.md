@@ -1,4 +1,4 @@
-# CannaSaas / GreenStack
+# CannaSaas
 
 > Multi-tenant cannabis dispensary SaaS platform for NY, NJ, and CT markets.
 > An affordable alternative to Dutchie, Jane Technologies, and Flowhub — built for independent dispensary operators with 1–5 locations.
