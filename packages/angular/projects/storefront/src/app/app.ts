@@ -2,12 +2,19 @@ import { ChangeDetectionStrategy, Component, effect, inject } from '@angular/cor
 import { RouterOutlet } from '@angular/router';
 import { AppThemeService } from './core/theme/app-theme.service';
 import { DispensaryContextService } from './core/tenant/dispensary-context.service';
+import { Footer } from './layout/footer';
 
 @Component({
   selector: 'cs-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet],
-  template: `<router-outlet />`,
+  imports: [RouterOutlet, Footer],
+  host: { class: 'flex min-h-screen flex-col' },
+  template: `
+    <main class="flex-1">
+      <router-outlet />
+    </main>
+    <cs-footer />
+  `,
 })
 export class App {
   private readonly theme = inject(AppThemeService);
