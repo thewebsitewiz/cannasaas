@@ -60,16 +60,16 @@ export class Product {
   strain_type?: string;
   @Field(() => GraphQLJSON, { name: 'effects', nullable: true })
   @Column({ type: 'jsonb', default: '[]' })
-  effects!: any;
+  effects!: unknown;
   @Field(() => GraphQLJSON, { name: 'flavors', nullable: true })
   @Column({ type: 'jsonb', default: '[]' })
-  flavors!: any;
+  flavors!: unknown;
   @Field(() => GraphQLJSON, { name: 'terpenes', nullable: true })
   @Column({ type: 'jsonb', default: '[]' })
-  terpenes!: any;
+  terpenes!: unknown;
   @Field(() => GraphQLJSON, { name: 'lineage', nullable: true })
   @Column({ type: 'jsonb', default: '{}' })
-  lineage!: any;
+  lineage!: unknown;
   @Field({ name: 'otreebaOcpc', nullable: true })
   @Column({ length: 50, nullable: true })
   otreeba_ocpc?: string;

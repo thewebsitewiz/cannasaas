@@ -6,27 +6,58 @@ import { ProductPricing } from './entities/product-pricing.entity';
 import { ProductBatch } from './entities/product-batch.entity';
 import { LabTest, LabTestResult } from './entities/lab-test.entity';
 import {
-  LkpProductType, LkpProductCategory, LkpUnitOfMeasure,
-  LkpPackagingType, LkpExtractionMethod, LkpMetrcItemCategory,
-  LkpTaxCategory, LkpEffect, LkpFlavor, LkpTerpene,
-  LkpCannabinoid, LkpAllergen, LkpWarningStatement,
-  LkpLabTestCategory, LkpMetrcAdjustmentReason,
+  LkpProductType,
+  LkpProductCategory,
+  LkpUnitOfMeasure,
+  LkpPackagingType,
+  LkpExtractionMethod,
+  LkpMetrcItemCategory,
+  LkpTaxCategory,
+  LkpEffect,
+  LkpFlavor,
+  LkpTerpene,
+  LkpCannabinoid,
+  LkpAllergen,
+  LkpWarningStatement,
+  LkpLabTestCategory,
+  LkpMetrcAdjustmentReason,
 } from './entities/lookups/lookups.entity';
 import { ProductsResolver, ProductVariantResolver } from './products.resolver';
 import { ProductsService } from './products.service';
 import { ProductSearchService } from './product-search.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([
-    Product, ProductVariant, ProductPricing, ProductBatch,
-    LabTest, LabTestResult,
-    LkpProductType, LkpProductCategory, LkpUnitOfMeasure,
-    LkpPackagingType, LkpExtractionMethod, LkpMetrcItemCategory,
-    LkpTaxCategory, LkpEffect, LkpFlavor, LkpTerpene,
-    LkpCannabinoid, LkpAllergen, LkpWarningStatement,
-    LkpLabTestCategory, LkpMetrcAdjustmentReason,
-  ])],
-  providers: [ProductsResolver, ProductVariantResolver, ProductsService, ProductSearchService],
+  imports: [
+    TypeOrmModule.forFeature([
+      Product,
+      ProductVariant,
+      ProductPricing,
+      ProductBatch,
+      LabTest,
+      LabTestResult,
+      LkpProductType,
+      LkpProductCategory,
+      LkpUnitOfMeasure,
+      LkpPackagingType,
+      LkpExtractionMethod,
+      LkpMetrcItemCategory,
+      LkpTaxCategory,
+      LkpEffect,
+      LkpFlavor,
+      LkpTerpene,
+      LkpCannabinoid,
+      LkpAllergen,
+      LkpWarningStatement,
+      LkpLabTestCategory,
+      LkpMetrcAdjustmentReason,
+    ]),
+  ],
+  providers: [
+    ProductsResolver,
+    ProductVariantResolver,
+    ProductsService,
+    ProductSearchService,
+  ],
   exports: [ProductsService],
 })
 export class ProductsModule {}

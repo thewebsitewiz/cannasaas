@@ -2,6 +2,61 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { ProductSearchInput } from './dto/product-search.input';
+import {
+  ProductSearchResult,
+  AutocompleteResult,
+  SearchFacets,
+} from './dto/product-search-result.type';
+import { Product } from './entities/product.entity';
+
+interface CountRow {
+  total: string | number;
+}
+
+interface AutocompleteRow {
+  id: string;
+  name: string;
+  strain_type: string | null;
+  sim: string | number;
+  rank: string | number;
+}
+
+interface FacetValueCountRow {
+  value: string;
+  count: string | number;
+}
+
+interface FacetLabelValueCountRow {
+  value: string;
+  label: string;
+  count: string | number;
+}
+
+interface MinMaxRow {
+  min: string | number | null;
+  max: string | number | null;
+}
+
+async function rawQuery<T>(
+  ds: DataSource,
+  sql: string,
+  params?: unknown[],
+): Promise<T[]> {
+  const rows = (await ds.query(sql, params)) as unknown;
+  return rows as T[];
+}
+
+function toNumber(val: string | number | null | undefined): number {
+  if (val == null) return 0;
+  const n = typeof val === 'number' ? val : parseFloat(val);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function toInt(val: string | number | null | undefined): number {
+  if (val == null) return 0;
+  const n = typeof val === 'number' ? Math.trunc(val) : parseInt(val, 10);
+  return Number.isFinite(n) ? n : 0;
+}
 
 @Injectable()
 export class ProductSearchService {
@@ -9,17 +64,19 @@ export class ProductSearchService {
 
   constructor(@InjectDataSource() private dataSource: DataSource) {}
 
-  async search(input: ProductSearchInput): Promise<any> {
+  async search(input: ProductSearchInput): Promise<ProductSearchResult> {
     const limit = input.limit ?? 20;
     const offset = input.offset ?? 0;
-    const params: any[] = [input.dispensaryId];
+    const params: unknown[] = [input.dispensaryId];
     let paramIndex = 2;
 
     // ── Build WHERE clauses ──────────────────────────────────────────────
     const conditions: string[] = ['p.dispensary_id = $1', 'p.is_active = true'];
 
     if (input.search) {
-      conditions.push(`p.search_vector @@ plainto_tsquery('english', $${paramIndex})`);
+      conditions.push(
+        `p.search_vector @@ plainto_tsquery('english', $${paramIndex})`,
+      );
       params.push(input.search);
       paramIndex++;
     }
@@ -124,13 +181,18 @@ export class ProductSearchService {
       ${priceJoin}
       WHERE ${whereClause} ${priceConditions}`;
 
-    const [{ total }] = await this.dataSource.query(countQuery, params);
+    const countRows = await rawQuery<CountRow>(
+      this.dataSource,
+      countQuery,
+      params,
+    );
+    const total = toInt(countRows[0]?.total);
 
     // ── Main query ───────────────────────────────────────────────────────
-    const needsPriceSort = input.sortBy === 'price_asc' || input.sortBy === 'price_desc';
-    const priceSelect = needsPriceSort || priceJoin
-      ? `, MIN(pp_main.price) as min_price`
-      : '';
+    const needsPriceSort =
+      input.sortBy === 'price_asc' || input.sortBy === 'price_desc';
+    const priceSelect =
+      needsPriceSort || priceJoin ? `, MIN(pp_main.price) as min_price` : '';
     const priceMainJoin = needsPriceSort
       ? `LEFT JOIN product_variants pv_main ON pv_main.product_id = p.id AND pv_main.is_active = true
          LEFT JOIN product_pricing pp_main ON pp_main.variant_id = pv_main.variant_id
@@ -150,14 +212,22 @@ export class ProductSearchService {
       ORDER BY ${orderBy}
       LIMIT $${paramIndex++} OFFSET $${paramIndex}`;
 
-    const products = await this.dataSource.query(mainQuery, params);
+    const products = await rawQuery<Product>(
+      this.dataSource,
+      mainQuery,
+      params,
+    );
 
     // ── Facets ───────────────────────────────────────────────────────────
     const facets = await this.buildFacets(input.dispensaryId);
 
+    this.logger.debug?.(
+      `search dispensary=${input.dispensaryId} total=${total} returned=${products.length}`,
+    );
+
     return {
       products,
-      total: parseInt(total, 10),
+      total,
       limit,
       offset,
       facets,
@@ -166,8 +236,13 @@ export class ProductSearchService {
 
   // ── Autocomplete ─────────────────────────────────────────────────────────
 
-  async autocomplete(dispensaryId: string, query: string, limit = 8): Promise<any[]> {
-    const results = await this.dataSource.query(
+  async autocomplete(
+    dispensaryId: string,
+    query: string,
+    limit = 8,
+  ): Promise<AutocompleteResult[]> {
+    const results = await rawQuery<AutocompleteRow>(
+      this.dataSource,
       `SELECT id, name, strain_type,
         similarity(name, $2) as sim,
         ts_rank(search_vector, plainto_tsquery('english', $2)) as rank
@@ -183,25 +258,34 @@ export class ProductSearchService {
       [dispensaryId, query, `%${query}%`, limit],
     );
 
-    return results.map((r: any) => ({
+    return results.map((r) => ({
       id: r.id,
       name: r.name,
-      strainType: r.strain_type,
-      similarity: parseFloat(r.sim),
+      strainType: r.strain_type ?? undefined,
+      similarity: toNumber(r.sim),
     }));
   }
 
   // ── Facet Builder ──────────────────────────────────────────────────────
 
-  private async buildFacets(dispensaryId: string): Promise<any> {
-    const [strainTypes, productTypes, effectsList, flavorsList, priceRange, thcRange] = await Promise.all([
-      this.dataSource.query(
+  private async buildFacets(dispensaryId: string): Promise<SearchFacets> {
+    const [
+      strainTypes,
+      productTypes,
+      effectsList,
+      flavorsList,
+      priceRange,
+      thcRange,
+    ] = await Promise.all([
+      rawQuery<FacetValueCountRow>(
+        this.dataSource,
         `SELECT strain_type as value, COUNT(*) as count FROM products
          WHERE dispensary_id = $1 AND is_active = true AND strain_type IS NOT NULL
          GROUP BY strain_type ORDER BY count DESC`,
         [dispensaryId],
       ),
-      this.dataSource.query(
+      rawQuery<FacetLabelValueCountRow>(
+        this.dataSource,
         `SELECT lpt.code as value, lpt.name as label, COUNT(p.id) as count
          FROM products p
          JOIN lkp_product_types lpt ON lpt.product_type_id = p.product_type_id
@@ -209,21 +293,24 @@ export class ProductSearchService {
          GROUP BY lpt.code, lpt.name ORDER BY count DESC`,
         [dispensaryId],
       ),
-      this.dataSource.query(
+      rawQuery<FacetValueCountRow>(
+        this.dataSource,
         `SELECT e as value, COUNT(*) as count
          FROM products, jsonb_array_elements_text(effects) as e
          WHERE dispensary_id = $1 AND is_active = true
          GROUP BY e ORDER BY count DESC LIMIT 20`,
         [dispensaryId],
       ),
-      this.dataSource.query(
+      rawQuery<FacetValueCountRow>(
+        this.dataSource,
         `SELECT f as value, COUNT(*) as count
          FROM products, jsonb_array_elements_text(flavors) as f
          WHERE dispensary_id = $1 AND is_active = true
          GROUP BY f ORDER BY count DESC LIMIT 20`,
         [dispensaryId],
       ),
-      this.dataSource.query(
+      rawQuery<MinMaxRow>(
+        this.dataSource,
         `SELECT COALESCE(MIN(pp.price), 0) as min, COALESCE(MAX(pp.price), 0) as max
          FROM product_pricing pp
          JOIN product_variants pv ON pv.variant_id = pp.variant_id
@@ -232,7 +319,8 @@ export class ProductSearchService {
            AND pp.effective_from <= NOW() AND (pp.effective_until IS NULL OR pp.effective_until > NOW())`,
         [dispensaryId],
       ),
-      this.dataSource.query(
+      rawQuery<MinMaxRow>(
+        this.dataSource,
         `SELECT COALESCE(MIN(thc_percent), 0) as min, COALESCE(MAX(thc_percent), 0) as max
          FROM products WHERE dispensary_id = $1 AND is_active = true AND thc_percent IS NOT NULL`,
         [dispensaryId],
@@ -240,14 +328,30 @@ export class ProductSearchService {
     ]);
 
     return {
-      strainTypes: strainTypes.map((r: any) => ({ label: r.value, value: r.value, count: parseInt(r.count, 10) })),
-      productTypes: productTypes.map((r: any) => ({ label: r.label, value: r.value, count: parseInt(r.count, 10) })),
-      effects: effectsList.map((r: any) => ({ label: r.value, value: r.value, count: parseInt(r.count, 10) })),
-      flavors: flavorsList.map((r: any) => ({ label: r.value, value: r.value, count: parseInt(r.count, 10) })),
-      minPrice: parseFloat(priceRange[0]?.min ?? 0),
-      maxPrice: parseFloat(priceRange[0]?.max ?? 0),
-      minThc: parseFloat(thcRange[0]?.min ?? 0),
-      maxThc: parseFloat(thcRange[0]?.max ?? 0),
+      strainTypes: strainTypes.map((r) => ({
+        label: r.value,
+        value: r.value,
+        count: toInt(r.count),
+      })),
+      productTypes: productTypes.map((r) => ({
+        label: r.label,
+        value: r.value,
+        count: toInt(r.count),
+      })),
+      effects: effectsList.map((r) => ({
+        label: r.value,
+        value: r.value,
+        count: toInt(r.count),
+      })),
+      flavors: flavorsList.map((r) => ({
+        label: r.value,
+        value: r.value,
+        count: toInt(r.count),
+      })),
+      minPrice: toNumber(priceRange[0]?.min),
+      maxPrice: toNumber(priceRange[0]?.max),
+      minThc: toNumber(thcRange[0]?.min),
+      maxThc: toNumber(thcRange[0]?.max),
     };
   }
 }
