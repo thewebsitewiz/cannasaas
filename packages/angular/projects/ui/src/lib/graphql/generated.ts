@@ -1,4 +1,3 @@
-/* eslint-disable */
 // AUTO-GENERATED — do not edit by hand
 
 import { gql } from 'apollo-angular';
@@ -1081,6 +1080,24 @@ export type InventoryValueResult = {
   totalReserved: Scalars['Float']['output'];
 };
 
+export type KioskCustomerLookup = {
+  __typename?: 'KioskCustomerLookup';
+  customerId: Scalars['ID']['output'];
+  firstName?: Maybe<Scalars['String']['output']>;
+  lastName?: Maybe<Scalars['String']['output']>;
+  loyaltyPoints: Scalars['Int']['output'];
+};
+
+export type KioskProvisionResult = {
+  __typename?: 'KioskProvisionResult';
+  deviceId: Scalars['ID']['output'];
+  deviceToken: Scalars['String']['output'];
+  dispensaryId: Scalars['ID']['output'];
+  expiresAt: Scalars['DateTime']['output'];
+  issuedAt: Scalars['DateTime']['output'];
+  label: Scalars['String']['output'];
+};
+
 export type KnowledgeProduct = {
   __typename?: 'KnowledgeProduct';
   categoryName?: Maybe<Scalars['String']['output']>;
@@ -1418,6 +1435,8 @@ export type Mutation = {
   notifyCustomer: Array<NotificationLog>;
   processCardPayment: Payment;
   processCashPayment: Payment;
+  /** Issues a long-lived device token for a kiosk terminal. Admin-only; one device per (dispensary, label). */
+  provisionKiosk: KioskProvisionResult;
   publishWeekSchedule: Scalars['Int']['output'];
   pushOrderToPos: PosOrderPushResult;
   receiveTransfer: InventoryTransfer;
@@ -1866,6 +1885,10 @@ export type MutationProcessCashPaymentArgs = {
   cashTendered: Scalars['Float']['input'];
   dispensaryId: Scalars['ID']['input'];
   orderId: Scalars['ID']['input'];
+};
+
+export type MutationProvisionKioskArgs = {
+  input: ProvisionKioskInput;
 };
 
 export type MutationPublishWeekScheduleArgs = {
@@ -2741,6 +2764,11 @@ export type PromotionResult = {
   usesCount: Scalars['Int']['output'];
 };
 
+export type ProvisionKioskInput = {
+  dispensaryId: Scalars['ID']['input'];
+  label: Scalars['String']['input'];
+};
+
 export type PurchaseLimitResult = {
   __typename?: 'PurchaseLimitResult';
   allowed: Scalars['Boolean']['output'];
@@ -2800,6 +2828,7 @@ export type Query = {
   complianceSystem: Scalars['String']['output'];
   countItems: Array<InventoryCountItem>;
   coverageGaps: Array<ScheduledShift>;
+  customerByPhone?: Maybe<KioskCustomerLookup>;
   customers: Array<CustomerProfile>;
   dashboard: DashboardData;
   deadStock: Array<InventoryAdjustment>;
@@ -3067,6 +3096,11 @@ export type QueryCountItemsArgs = {
 export type QueryCoverageGapsArgs = {
   dispensaryId: Scalars['ID']['input'];
   weekStart: Scalars['String']['input'];
+};
+
+export type QueryCustomerByPhoneArgs = {
+  dispensaryId: Scalars['ID']['input'];
+  phone: Scalars['String']['input'];
 };
 
 export type QueryCustomersArgs = {
@@ -4209,6 +4243,22 @@ export type CreateOrderMutation = {
   };
 };
 
+export type CustomerByPhoneQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+  phone: Scalars['String']['input'];
+}>;
+
+export type CustomerByPhoneQuery = {
+  __typename?: 'Query';
+  customerByPhone?: {
+    __typename?: 'KioskCustomerLookup';
+    customerId: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    loyaltyPoints: number;
+  } | null;
+};
+
 export type DispensaryQueryVariables = Exact<{
   entityId: Scalars['ID']['input'];
 }>;
@@ -4346,6 +4396,15 @@ export type ProductsQuery = {
   }>;
 };
 
+export type RegisterMutationVariables = Exact<{
+  input: RegisterInput;
+}>;
+
+export type RegisterMutation = {
+  __typename?: 'Mutation';
+  register: { __typename?: 'AuthToken'; accessToken: string; expiresIn: number };
+};
+
 export const CreateOrderDocument = gql`
   mutation CreateOrder($input: CreateOrderInput!) {
     createOrder(input: $input) {
@@ -4371,6 +4430,30 @@ export class CreateOrderGQL extends Apollo.Mutation<
   CreateOrderMutationVariables
 > {
   override document = CreateOrderDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const CustomerByPhoneDocument = gql`
+  query CustomerByPhone($dispensaryId: ID!, $phone: String!) {
+    customerByPhone(dispensaryId: $dispensaryId, phone: $phone) {
+      customerId
+      firstName
+      lastName
+      loyaltyPoints
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class CustomerByPhoneGQL extends Apollo.Query<
+  CustomerByPhoneQuery,
+  CustomerByPhoneQueryVariables
+> {
+  override document = CustomerByPhoneDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);
@@ -4550,6 +4633,25 @@ export const ProductsDocument = gql`
 })
 export class ProductsGQL extends Apollo.Query<ProductsQuery, ProductsQueryVariables> {
   override document = ProductsDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const RegisterDocument = gql`
+  mutation Register($input: RegisterInput!) {
+    register(input: $input) {
+      accessToken
+      expiresIn
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class RegisterGQL extends Apollo.Mutation<RegisterMutation, RegisterMutationVariables> {
+  override document = RegisterDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);
