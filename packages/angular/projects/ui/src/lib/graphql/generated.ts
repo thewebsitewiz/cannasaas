@@ -4314,6 +4314,29 @@ export type MeQuery = {
   };
 };
 
+export type OrderQueryVariables = Exact<{
+  orderId: Scalars['ID']['input'];
+  dispensaryId?: InputMaybe<Scalars['ID']['input']>;
+}>;
+
+export type OrderQuery = {
+  __typename?: 'Query';
+  order?: {
+    __typename?: 'Order';
+    orderId: string;
+    orderStatus: string;
+    orderType: string;
+    subtotal: number;
+    taxTotal: number;
+    discountTotal: number;
+    total: number;
+    createdAt: string;
+    updatedAt: string;
+    cancellationReason?: string | null;
+    cancelledAt?: string | null;
+  } | null;
+};
+
 export type ProductQueryVariables = Exact<{
   dispensaryId: Scalars['ID']['input'];
   id: Scalars['ID']['input'];
@@ -4534,6 +4557,34 @@ export const MeDocument = gql`
 })
 export class MeGQL extends Apollo.Query<MeQuery, MeQueryVariables> {
   override document = MeDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const OrderDocument = gql`
+  query Order($orderId: ID!, $dispensaryId: ID) {
+    order(orderId: $orderId, dispensaryId: $dispensaryId) {
+      orderId
+      orderStatus
+      orderType
+      subtotal
+      taxTotal
+      discountTotal
+      total
+      createdAt
+      updatedAt
+      cancellationReason
+      cancelledAt
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class OrderGQL extends Apollo.Query<OrderQuery, OrderQueryVariables> {
+  override document = OrderDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);
