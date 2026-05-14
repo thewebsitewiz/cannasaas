@@ -2,7 +2,10 @@ import { Resolver, Query, Mutation, Args, ID } from '@nestjs/graphql';
 import { ObjectType, Field, Int } from '@nestjs/graphql';
 import { StrainData } from './entities/strain-data.entity';
 import { OtreebaService } from './otreeba.service';
-import { ProductEnrichmentService, EnrichmentResult } from './product-enrichment.service';
+import {
+  ProductEnrichmentService,
+  EnrichmentResult,
+} from './product-enrichment.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtPayload } from '../auth/strategies/jwt.strategy';
@@ -45,7 +48,9 @@ export class ProductDataResolver {
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
   @Query(() => [StrainData], { name: 'cachedStrains' })
-  async cachedStrains(@Args('type', { nullable: true }) type?: string): Promise<StrainData[]> {
+  async cachedStrains(
+    @Args('type', { nullable: true }) type?: string,
+  ): Promise<StrainData[]> {
     return this.otreeba.listCachedStrains(type);
   }
 
@@ -56,7 +61,8 @@ export class ProductDataResolver {
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @CurrentUser() user: JwtPayload,
   ): Promise<EnrichmentResult> {
-    if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId) throw new ForbiddenException('Access denied');
+    if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId)
+      throw new ForbiddenException('Access denied');
     return this.enrichment.enrichProduct(productId, dispensaryId);
   }
 
@@ -66,7 +72,8 @@ export class ProductDataResolver {
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @CurrentUser() user: JwtPayload,
   ): Promise<{ total: number; enriched: number; failed: number }> {
-    if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId) throw new ForbiddenException('Access denied');
+    if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId)
+      throw new ForbiddenException('Access denied');
     return this.enrichment.enrichDispensary(dispensaryId);
   }
 

@@ -8,7 +8,12 @@ import { OtreebaSyncCron } from './otreeba-sync.cron';
 
 @Module({
   imports: [TypeOrmModule.forFeature([StrainData])],
-  providers: [OtreebaService, ProductEnrichmentService, ProductDataResolver, OtreebaSyncCron],
+  providers: [
+    OtreebaService,
+    ProductEnrichmentService,
+    ProductDataResolver,
+    OtreebaSyncCron,
+  ],
   exports: [OtreebaService, ProductEnrichmentService],
 })
 export class ProductDataModule {}
