@@ -3,25 +3,16 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import {
-  Elements,
-  PaymentElement,
-  useStripe as useStripeElements,
-  useElements,
-} from '@stripe/react-stripe-js';
 import { useCartStore } from '@/stores/cart.store';
 import { useAuthStore } from '@/stores/auth.store';
 import { gqlAuth, DEFAULT_DISPENSARY_ID } from '@/lib/graphql';
-import { getStripe } from '@/lib/stripe';
 import {
   Store,
   Truck,
   DollarSign,
-  CreditCard,
   Loader2,
   CheckCircle,
   AlertCircle,
-  Lock,
 } from 'lucide-react';
 
 const CREATE_ORDER = `mutation($input: CreateOrderInput!) {
@@ -31,77 +22,6 @@ const CREATE_ORDER = `mutation($input: CreateOrderInput!) {
     lineItemCount createdAt
   }
 }`;
-
-const CREATE_PAYMENT_INTENT = `mutation($orderId: ID!, $dispensaryId: ID!, $amountCents: Int!) {
-  createPaymentIntent(orderId: $orderId, dispensaryId: $dispensaryId, amountCents: $amountCents) {
-    clientSecret paymentIntentId
-  }
-}`;
-
-// ── Card Payment Form (inside Stripe Elements) ─────────────────────────────
-
-function CardPaymentForm({
-  orderId,
-  onSuccess,
-  onError,
-}: {
-  orderId: string;
-  onSuccess: () => void;
-  onError: (msg: string) => void;
-}) {
-  const stripe = useStripeElements();
-  const elements = useElements();
-  const [processing, setProcessing] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!stripe || !elements) return;
-
-    setProcessing(true);
-    onError('');
-
-    const { error } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: `${window.location.origin}/orders/${orderId}`,
-      },
-      redirect: 'if_required',
-    });
-
-    if (error) {
-      onError(error.message || 'Payment failed');
-      setProcessing(false);
-    } else {
-      onSuccess();
-    }
-  };
-
-  return (
-    <form
-      onSubmit={(e) => {
-        void handleSubmit(e);
-      }}
-      className="space-y-4"
-    >
-      <PaymentElement options={{ layout: 'tabs' }} />
-      <button
-        type="submit"
-        disabled={!stripe || processing}
-        className="w-full flex items-center justify-center gap-2 bg-brand-600 text-txt-inverse py-3 rounded-xl font-semibold hover:bg-brand-500 transition-colors disabled:opacity-50"
-      >
-        {processing ? (
-          <>
-            <Loader2 size={18} className="animate-spin" /> Processing Payment...
-          </>
-        ) : (
-          <>
-            <Lock size={18} /> Pay Now
-          </>
-        )}
-      </button>
-    </form>
-  );
-}
 
 // ── Main Checkout Page ──────────────────────────────────────────────────────
 
@@ -113,20 +33,14 @@ export default function CheckoutPage() {
   const token = useAuthStore((s) => s.token);
 
   const [orderType, setOrderType] = useState<'pickup' | 'delivery'>('pickup');
-  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card'>('cash');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  // Card payment state
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [orderId, setOrderId] = useState<string | null>(null);
-  const [orderTotal, setOrderTotal] = useState<number | null>(null);
 
   const taxEstimate = subtotal * 0.22;
   const totalEstimate =
     subtotal + taxEstimate + (orderType === 'delivery' ? 5 : 0);
 
-  if (items.length === 0 && !orderId) {
+  if (items.length === 0) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-20 text-center">
         <h1 className="text-2xl font-bold text-txt mb-2">
@@ -164,28 +78,6 @@ export default function CheckoutPage() {
       const order = data.createOrder;
       if (!order) throw new Error('Failed to create order');
 
-      if (paymentMethod === 'card') {
-        // Create payment intent and show card form
-        const amountCents = Math.round(parseFloat(order.total) * 100);
-        const pi = await gqlAuth<{
-          createPaymentIntent: { clientSecret: string } | null;
-        }>(CREATE_PAYMENT_INTENT, {
-          orderId: order.orderId,
-          dispensaryId: DEFAULT_DISPENSARY_ID,
-          amountCents,
-        });
-
-        if (pi.createPaymentIntent?.clientSecret) {
-          setOrderId(order.orderId);
-          setOrderTotal(parseFloat(order.total));
-          setClientSecret(pi.createPaymentIntent.clientSecret);
-          clearCart();
-          setLoading(false);
-          return; // Show card form instead of redirecting
-        }
-      }
-
-      // Cash payment — redirect immediately
       clearCart();
       router.push(`/orders/${order.orderId}`);
     } catch (err) {
@@ -193,64 +85,6 @@ export default function CheckoutPage() {
       setLoading(false);
     }
   };
-
-  const handlePaymentSuccess = () => {
-    router.push(`/orders/${orderId}`);
-  };
-
-  // ── Card Payment Step ─────────────────────────────────────────────────
-
-  if (clientSecret && orderId) {
-    const stripePromise = getStripe();
-
-    return (
-      <div className="max-w-lg mx-auto px-4 sm:px-6 py-8">
-        <h1 className="text-2xl font-bold text-txt mb-2">Complete Payment</h1>
-        <p className="text-txt-muted mb-6">
-          Order #{orderId.slice(0, 8).toUpperCase()} — ${orderTotal?.toFixed(2)}
-        </p>
-
-        {error && (
-          <div className="mb-4 bg-danger-bg border border-danger/20 text-danger text-sm p-3 rounded-xl">
-            {error}
-          </div>
-        )}
-
-        <div className="bg-surface rounded-xl border border-bdr p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Lock size={16} className="text-txt-muted" />
-            <span className="text-sm text-txt-muted">
-              Secure payment via Stripe
-            </span>
-          </div>
-
-          <Elements
-            stripe={stripePromise}
-            options={{
-              clientSecret,
-              appearance: {
-                theme: 'stripe',
-                variables: {
-                  colorPrimary: '#2a6640',
-                  borderRadius: '12px',
-                },
-              },
-            }}
-          >
-            <CardPaymentForm
-              orderId={orderId}
-              onSuccess={handlePaymentSuccess}
-              onError={setError}
-            />
-          </Elements>
-        </div>
-
-        <p className="text-xs text-txt-muted mt-4 text-center">
-          Test card: 4242 4242 4242 4242 · Any future date · Any CVC
-        </p>
-      </div>
-    );
-  }
 
   // ── Order Details Step ────────────────────────────────────────────────
 
@@ -325,56 +159,17 @@ export default function CheckoutPage() {
             </div>
           </section>
 
-          {/* Payment Method */}
+          {/* Payment Method — cash only until cannabis-friendly processor lands */}
           <section className="bg-surface rounded-xl border border-bdr p-6">
             <h2 className="text-lg font-semibold text-txt mb-4">
               Payment Method
             </h2>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => setPaymentMethod('cash')}
-                className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-colors ${
-                  paymentMethod === 'cash'
-                    ? 'border-brand-600 bg-brand-50'
-                    : 'border-bdr'
-                }`}
-              >
-                <DollarSign
-                  size={20}
-                  className={
-                    paymentMethod === 'cash'
-                      ? 'text-brand-600'
-                      : 'text-txt-muted'
-                  }
-                />
-                <div className="text-left">
-                  <p className="font-medium text-txt">Cash</p>
-                  <p className="text-xs text-txt-muted">
-                    Pay at pickup/delivery
-                  </p>
-                </div>
-              </button>
-              <button
-                onClick={() => setPaymentMethod('card')}
-                className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-colors ${
-                  paymentMethod === 'card'
-                    ? 'border-brand-600 bg-brand-50'
-                    : 'border-bdr'
-                }`}
-              >
-                <CreditCard
-                  size={20}
-                  className={
-                    paymentMethod === 'card'
-                      ? 'text-brand-600'
-                      : 'text-txt-muted'
-                  }
-                />
-                <div className="text-left">
-                  <p className="font-medium text-txt">Card</p>
-                  <p className="text-xs text-txt-muted">Pay now via Stripe</p>
-                </div>
-              </button>
+            <div className="flex items-center gap-3 p-4 rounded-xl border-2 border-brand-600 bg-brand-50">
+              <DollarSign size={20} className="text-brand-600" />
+              <div className="text-left">
+                <p className="font-medium text-txt">Cash</p>
+                <p className="text-xs text-txt-muted">Pay at pickup/delivery</p>
+              </div>
             </div>
           </section>
 
@@ -454,22 +249,12 @@ export default function CheckoutPage() {
                 <>
                   <Loader2 size={18} className="animate-spin" /> Processing...
                 </>
-              ) : paymentMethod === 'card' ? (
-                <>
-                  <CreditCard size={18} /> Continue to Payment
-                </>
               ) : (
                 <>
                   <CheckCircle size={18} /> Place Order
                 </>
               )}
             </button>
-
-            {paymentMethod === 'card' && (
-              <p className="text-xs text-txt-muted mt-2 text-center flex items-center justify-center gap-1">
-                <Lock size={12} /> Secure payment via Stripe
-              </p>
-            )}
           </div>
         </aside>
       </div>

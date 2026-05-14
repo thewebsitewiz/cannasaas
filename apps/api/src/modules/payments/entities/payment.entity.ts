@@ -18,12 +18,6 @@ export class Payment {
   @Field() @Column('uuid') dispensaryId!: string;
   @Field() @Column({ default: 'cash' }) method!: string;
   @Field() @Column('numeric', { precision: 10, scale: 2 }) amount!: number;
-  @Field({ nullable: true })
-  @Column({ nullable: true, length: 100 })
-  stripePaymentIntentId?: string;
-  @Field({ nullable: true })
-  @Column({ nullable: true, length: 100 })
-  stripeChargeId?: string;
   @Field() @Column({ default: 'pending' }) status!: string;
   @Field({ nullable: true })
   @Column({ nullable: true, length: 100 })

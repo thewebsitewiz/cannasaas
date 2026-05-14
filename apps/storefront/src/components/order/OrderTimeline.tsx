@@ -17,6 +17,7 @@ type OrderStatusEvent = {
   status: OrderStatus;
   timestamp: string;
   note?: string;
+  changedBy?: { fullName: string } | null;
 };
 
 interface OrderTimelineProps {

@@ -37,10 +37,6 @@ export const configuration = () => ({
     password:    process.env['OPENSEARCH_PASSWORD'] ?? 'admin',
     indexPrefix: process.env['OPENSEARCH_INDEX_PREFIX'] ?? 'cannasaas_dev_',
   },
-  stripe: {
-    secretKey:     process.env['STRIPE_SECRET_KEY'],
-    webhookSecret: process.env['STRIPE_WEBHOOK_SECRET'],
-  },
   features: {
     aiIdVerification: process.env['ENABLE_AI_ID_VERIFICATION'] === 'true',
     budtenderVideo:   process.env['ENABLE_BUDTENDER_VIDEO'] === 'true',

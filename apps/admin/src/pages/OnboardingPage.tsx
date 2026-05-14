@@ -42,7 +42,6 @@ interface OnboardingData {
   biotrackKey: string;
   // Step 4
   cashEnabled: boolean;
-  stripeKey: string;
   canPayEnabled: boolean;
   // Step 5
   themePreset: string;
@@ -59,7 +58,6 @@ const DEFAULT_DATA: OnboardingData = {
   metrcKey: '',
   biotrackKey: '',
   cashEnabled: true,
-  stripeKey: '',
   canPayEnabled: false,
   themePreset: 'casual',
 };
@@ -77,10 +75,56 @@ function save(step: number, data: OnboardingData) {
 }
 
 const US_STATES = [
-  'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA',
-  'KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ',
-  'NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT',
-  'VA','WA','WV','WI','WY',
+  'AL',
+  'AK',
+  'AZ',
+  'AR',
+  'CA',
+  'CO',
+  'CT',
+  'DE',
+  'FL',
+  'GA',
+  'HI',
+  'ID',
+  'IL',
+  'IN',
+  'IA',
+  'KS',
+  'KY',
+  'LA',
+  'ME',
+  'MD',
+  'MA',
+  'MI',
+  'MN',
+  'MS',
+  'MO',
+  'MT',
+  'NE',
+  'NV',
+  'NH',
+  'NJ',
+  'NM',
+  'NY',
+  'NC',
+  'ND',
+  'OH',
+  'OK',
+  'OR',
+  'PA',
+  'RI',
+  'SC',
+  'SD',
+  'TN',
+  'TX',
+  'UT',
+  'VT',
+  'VA',
+  'WA',
+  'WV',
+  'WI',
+  'WY',
 ];
 
 // ─── GraphQL mutations ───
@@ -114,7 +158,11 @@ export function OnboardingPage() {
   const [step, setStep] = useState(saved.step);
   const [data, setData] = useState<OnboardingData>(saved.data);
   const [launching, setLaunching] = useState(false);
-  const [newProduct, setNewProduct] = useState({ name: '', category: 'Flower', price: '' });
+  const [newProduct, setNewProduct] = useState({
+    name: '',
+    category: 'Flower',
+    price: '',
+  });
 
   useEffect(() => {
     save(step, data);
@@ -140,19 +188,37 @@ export function OnboardingPage() {
     setLaunching(true);
     try {
       // Create dispensary
-      const res = await gqlRequest<{ createDispensary: { id: string } }>(CREATE_DISPENSARY, {
-        input: { name: data.name, address: data.address, phone: data.phone, operatingHours: data.hours },
-      });
+      const res = await gqlRequest<{ createDispensary: { id: string } }>(
+        CREATE_DISPENSARY,
+        {
+          input: {
+            name: data.name,
+            address: data.address,
+            phone: data.phone,
+            operatingHours: data.hours,
+          },
+        },
+      );
       const dispensaryId = res.createDispensary.id;
 
       // Save compliance
       await gqlRequest(SAVE_COMPLIANCE, {
-        input: { dispensaryId, state: data.state, licenseNumber: data.licenseNumber, metrcApiKey: data.metrcKey, biotrackApiKey: data.biotrackKey },
+        input: {
+          dispensaryId,
+          state: data.state,
+          licenseNumber: data.licenseNumber,
+          metrcApiKey: data.metrcKey,
+          biotrackApiKey: data.biotrackKey,
+        },
       });
 
       // Save payment config
       await gqlRequest(SAVE_PAYMENT_CONFIG, {
-        input: { dispensaryId, cashEnabled: data.cashEnabled, stripeSecretKey: data.stripeKey, canPayEnabled: data.canPayEnabled },
+        input: {
+          dispensaryId,
+          cashEnabled: data.cashEnabled,
+          canPayEnabled: data.canPayEnabled,
+        },
       });
 
       // Save theme
@@ -178,8 +244,12 @@ export function OnboardingPage() {
         {/* Progress */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-lg font-bold text-txt">Setup Your Dispensary</h2>
-            <span className="text-sm text-txt-secondary">Step {step + 1} of 6</span>
+            <h2 className="text-lg font-bold text-txt">
+              Setup Your Dispensary
+            </h2>
+            <span className="text-sm text-txt-secondary">
+              Step {step + 1} of 6
+            </span>
           </div>
           <div className="w-full bg-bg-alt rounded-full h-2">
             <div
@@ -191,7 +261,10 @@ export function OnboardingPage() {
             {STEPS.map((s, i) => {
               const Icon = s.icon;
               return (
-                <div key={i} className={`flex items-center gap-1 text-[10px] font-medium ${i <= step ? 'text-brand-500' : 'text-txt-muted'}`}>
+                <div
+                  key={i}
+                  className={`flex items-center gap-1 text-[10px] font-medium ${i <= step ? 'text-brand-500' : 'text-txt-muted'}`}
+                >
                   <Icon size={12} />
                   <span className="hidden sm:inline">{s.label}</span>
                 </div>
@@ -205,26 +278,56 @@ export function OnboardingPage() {
           {step === 0 && (
             <div className="space-y-4">
               <h3 className="text-xl font-bold text-txt">Dispensary Info</h3>
-              <p className="text-sm text-txt-secondary">Tell us about your dispensary.</p>
+              <p className="text-sm text-txt-secondary">
+                Tell us about your dispensary.
+              </p>
               <div>
-                <label className="block text-sm font-medium text-txt mb-1">Dispensary Name</label>
-                <input type="text" value={data.name} onChange={(e) => update('name', e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-bdr bg-bg text-txt text-sm" placeholder="Green Leaf Dispensary" />
+                <label className="block text-sm font-medium text-txt mb-1">
+                  Dispensary Name
+                </label>
+                <input
+                  type="text"
+                  value={data.name}
+                  onChange={(e) => update('name', e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-bdr bg-bg text-txt text-sm"
+                  placeholder="Green Leaf Dispensary"
+                />
               </div>
               <div>
-                <label className="block text-sm font-medium text-txt mb-1">Address</label>
-                <input type="text" value={data.address} onChange={(e) => update('address', e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-bdr bg-bg text-txt text-sm" placeholder="123 Main St, Denver, CO 80202" />
+                <label className="block text-sm font-medium text-txt mb-1">
+                  Address
+                </label>
+                <input
+                  type="text"
+                  value={data.address}
+                  onChange={(e) => update('address', e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-bdr bg-bg text-txt text-sm"
+                  placeholder="123 Main St, Denver, CO 80202"
+                />
               </div>
               <div>
-                <label className="block text-sm font-medium text-txt mb-1">Phone</label>
-                <input type="tel" value={data.phone} onChange={(e) => update('phone', e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-bdr bg-bg text-txt text-sm" placeholder="(555) 123-4567" />
+                <label className="block text-sm font-medium text-txt mb-1">
+                  Phone
+                </label>
+                <input
+                  type="tel"
+                  value={data.phone}
+                  onChange={(e) => update('phone', e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-bdr bg-bg text-txt text-sm"
+                  placeholder="(555) 123-4567"
+                />
               </div>
               <div>
-                <label className="block text-sm font-medium text-txt mb-1">Operating Hours</label>
-                <input type="text" value={data.hours} onChange={(e) => update('hours', e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-bdr bg-bg text-txt text-sm" placeholder="Mon-Sat 9am-9pm, Sun 10am-6pm" />
+                <label className="block text-sm font-medium text-txt mb-1">
+                  Operating Hours
+                </label>
+                <input
+                  type="text"
+                  value={data.hours}
+                  onChange={(e) => update('hours', e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-bdr bg-bg text-txt text-sm"
+                  placeholder="Mon-Sat 9am-9pm, Sun 10am-6pm"
+                />
               </div>
             </div>
           )}
@@ -232,31 +335,53 @@ export function OnboardingPage() {
           {step === 1 && (
             <div className="space-y-4">
               <h3 className="text-xl font-bold text-txt">Products</h3>
-              <p className="text-sm text-txt-secondary">Add your initial product catalog.</p>
+              <p className="text-sm text-txt-secondary">
+                Add your initial product catalog.
+              </p>
 
               {/* CSV Upload */}
               <div className="border-2 border-dashed border-bdr rounded-lg p-6 text-center">
                 <Upload size={24} className="mx-auto text-txt-muted mb-2" />
-                <p className="text-sm text-txt-secondary mb-1">Import products via CSV</p>
+                <p className="text-sm text-txt-secondary mb-1">
+                  Import products via CSV
+                </p>
                 <label className="inline-block px-4 py-2 bg-brand-500 text-txt-inverse text-sm font-medium rounded-lg cursor-pointer hover:bg-brand-600 transition-colors">
                   Choose File
-                  <input type="file" accept=".csv" className="hidden" onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) console.log('[Onboarding] CSV selected:', file.name);
-                  }} />
+                  <input
+                    type="file"
+                    accept=".csv"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file)
+                        console.log('[Onboarding] CSV selected:', file.name);
+                    }}
+                  />
                 </label>
               </div>
 
-              <div className="text-center text-xs text-txt-muted">or add manually</div>
+              <div className="text-center text-xs text-txt-muted">
+                or add manually
+              </div>
 
               {/* Manual add */}
               <div className="flex gap-2">
-                <input type="text" placeholder="Product name" value={newProduct.name}
-                  onChange={(e) => setNewProduct((p) => ({ ...p, name: e.target.value }))}
-                  className="flex-1 px-3 py-2 rounded-lg border border-bdr bg-bg text-txt text-sm" />
-                <select value={newProduct.category}
-                  onChange={(e) => setNewProduct((p) => ({ ...p, category: e.target.value }))}
-                  className="px-3 py-2 rounded-lg border border-bdr bg-bg text-txt text-sm">
+                <input
+                  type="text"
+                  placeholder="Product name"
+                  value={newProduct.name}
+                  onChange={(e) =>
+                    setNewProduct((p) => ({ ...p, name: e.target.value }))
+                  }
+                  className="flex-1 px-3 py-2 rounded-lg border border-bdr bg-bg text-txt text-sm"
+                />
+                <select
+                  value={newProduct.category}
+                  onChange={(e) =>
+                    setNewProduct((p) => ({ ...p, category: e.target.value }))
+                  }
+                  className="px-3 py-2 rounded-lg border border-bdr bg-bg text-txt text-sm"
+                >
                   <option>Flower</option>
                   <option>Edible</option>
                   <option>Concentrate</option>
@@ -264,11 +389,19 @@ export function OnboardingPage() {
                   <option>Topical</option>
                   <option>Accessory</option>
                 </select>
-                <input type="text" placeholder="Price" value={newProduct.price}
-                  onChange={(e) => setNewProduct((p) => ({ ...p, price: e.target.value }))}
-                  className="w-24 px-3 py-2 rounded-lg border border-bdr bg-bg text-txt text-sm" />
-                <button onClick={handleAddProduct}
-                  className="px-3 py-2 bg-brand-500 text-txt-inverse rounded-lg hover:bg-brand-600 transition-colors">
+                <input
+                  type="text"
+                  placeholder="Price"
+                  value={newProduct.price}
+                  onChange={(e) =>
+                    setNewProduct((p) => ({ ...p, price: e.target.value }))
+                  }
+                  className="w-24 px-3 py-2 rounded-lg border border-bdr bg-bg text-txt text-sm"
+                />
+                <button
+                  onClick={handleAddProduct}
+                  className="px-3 py-2 bg-brand-500 text-txt-inverse rounded-lg hover:bg-brand-600 transition-colors"
+                >
                   <Plus size={16} />
                 </button>
               </div>
@@ -276,9 +409,14 @@ export function OnboardingPage() {
               {data.products.length > 0 && (
                 <div className="space-y-1">
                   {data.products.map((p, i) => (
-                    <div key={i} className="flex items-center justify-between px-3 py-2 bg-bg-alt rounded-lg text-sm">
+                    <div
+                      key={i}
+                      className="flex items-center justify-between px-3 py-2 bg-bg-alt rounded-lg text-sm"
+                    >
                       <span className="text-txt font-medium">{p.name}</span>
-                      <span className="text-txt-secondary">{p.category} &mdash; ${p.price}</span>
+                      <span className="text-txt-secondary">
+                        {p.category} &mdash; ${p.price}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -289,29 +427,61 @@ export function OnboardingPage() {
           {step === 2 && (
             <div className="space-y-4">
               <h3 className="text-xl font-bold text-txt">Compliance</h3>
-              <p className="text-sm text-txt-secondary">Configure state compliance and tracking integrations.</p>
+              <p className="text-sm text-txt-secondary">
+                Configure state compliance and tracking integrations.
+              </p>
               <div>
-                <label className="block text-sm font-medium text-txt mb-1">State</label>
-                <select value={data.state} onChange={(e) => update('state', e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-bdr bg-bg text-txt text-sm">
+                <label className="block text-sm font-medium text-txt mb-1">
+                  State
+                </label>
+                <select
+                  value={data.state}
+                  onChange={(e) => update('state', e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-bdr bg-bg text-txt text-sm"
+                >
                   <option value="">Select state...</option>
-                  {US_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+                  {US_STATES.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-txt mb-1">License Number</label>
-                <input type="text" value={data.licenseNumber} onChange={(e) => update('licenseNumber', e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-bdr bg-bg text-txt text-sm" placeholder="403R-00123" />
+                <label className="block text-sm font-medium text-txt mb-1">
+                  License Number
+                </label>
+                <input
+                  type="text"
+                  value={data.licenseNumber}
+                  onChange={(e) => update('licenseNumber', e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-bdr bg-bg text-txt text-sm"
+                  placeholder="403R-00123"
+                />
               </div>
               <div>
-                <label className="block text-sm font-medium text-txt mb-1">Metrc API Key (optional)</label>
-                <input type="text" value={data.metrcKey} onChange={(e) => update('metrcKey', e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-bdr bg-bg text-txt text-sm" placeholder="Enter Metrc API key" />
+                <label className="block text-sm font-medium text-txt mb-1">
+                  Metrc API Key (optional)
+                </label>
+                <input
+                  type="text"
+                  value={data.metrcKey}
+                  onChange={(e) => update('metrcKey', e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-bdr bg-bg text-txt text-sm"
+                  placeholder="Enter Metrc API key"
+                />
               </div>
               <div>
-                <label className="block text-sm font-medium text-txt mb-1">BioTrack API Key (optional)</label>
-                <input type="text" value={data.biotrackKey} onChange={(e) => update('biotrackKey', e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-bdr bg-bg text-txt text-sm" placeholder="Enter BioTrack API key" />
+                <label className="block text-sm font-medium text-txt mb-1">
+                  BioTrack API Key (optional)
+                </label>
+                <input
+                  type="text"
+                  value={data.biotrackKey}
+                  onChange={(e) => update('biotrackKey', e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-bdr bg-bg text-txt text-sm"
+                  placeholder="Enter BioTrack API key"
+                />
               </div>
             </div>
           )}
@@ -319,33 +489,43 @@ export function OnboardingPage() {
           {step === 3 && (
             <div className="space-y-4">
               <h3 className="text-xl font-bold text-txt">Payments</h3>
-              <p className="text-sm text-txt-secondary">Enable payment methods for your store.</p>
+              <p className="text-sm text-txt-secondary">
+                Enable payment methods for your store.
+              </p>
 
               <div className="flex items-center justify-between p-4 bg-bg-alt rounded-lg">
                 <div>
-                  <div className="text-sm font-medium text-txt">Cash Payments</div>
-                  <div className="text-xs text-txt-secondary">Accept cash at pickup</div>
+                  <div className="text-sm font-medium text-txt">
+                    Cash Payments
+                  </div>
+                  <div className="text-xs text-txt-secondary">
+                    Accept cash at pickup
+                  </div>
                 </div>
-                <button onClick={() => update('cashEnabled', !data.cashEnabled)}
-                  className={`w-12 h-6 rounded-full transition-colors ${data.cashEnabled ? 'bg-brand-500' : 'bg-bg'} border border-bdr relative`}>
-                  <div className={`w-5 h-5 rounded-full bg-white shadow absolute top-0.5 transition-transform ${data.cashEnabled ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                <button
+                  onClick={() => update('cashEnabled', !data.cashEnabled)}
+                  className={`w-12 h-6 rounded-full transition-colors ${data.cashEnabled ? 'bg-brand-500' : 'bg-bg'} border border-bdr relative`}
+                >
+                  <div
+                    className={`w-5 h-5 rounded-full bg-white shadow absolute top-0.5 transition-transform ${data.cashEnabled ? 'translate-x-6' : 'translate-x-0.5'}`}
+                  />
                 </button>
-              </div>
-
-              <div className="p-4 bg-bg-alt rounded-lg space-y-3">
-                <div className="text-sm font-medium text-txt">Stripe Integration</div>
-                <input type="text" value={data.stripeKey} onChange={(e) => update('stripeKey', e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-bdr bg-bg text-txt text-sm" placeholder="sk_live_..." />
               </div>
 
               <div className="flex items-center justify-between p-4 bg-bg-alt rounded-lg">
                 <div>
                   <div className="text-sm font-medium text-txt">CanPay</div>
-                  <div className="text-xs text-txt-secondary">Cannabis-specific debit payments</div>
+                  <div className="text-xs text-txt-secondary">
+                    Cannabis-specific debit payments
+                  </div>
                 </div>
-                <button onClick={() => update('canPayEnabled', !data.canPayEnabled)}
-                  className={`w-12 h-6 rounded-full transition-colors ${data.canPayEnabled ? 'bg-brand-500' : 'bg-bg'} border border-bdr relative`}>
-                  <div className={`w-5 h-5 rounded-full bg-white shadow absolute top-0.5 transition-transform ${data.canPayEnabled ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                <button
+                  onClick={() => update('canPayEnabled', !data.canPayEnabled)}
+                  className={`w-12 h-6 rounded-full transition-colors ${data.canPayEnabled ? 'bg-brand-500' : 'bg-bg'} border border-bdr relative`}
+                >
+                  <div
+                    className={`w-5 h-5 rounded-full bg-white shadow absolute top-0.5 transition-transform ${data.canPayEnabled ? 'translate-x-6' : 'translate-x-0.5'}`}
+                  />
                 </button>
               </div>
             </div>
@@ -354,7 +534,9 @@ export function OnboardingPage() {
           {step === 4 && (
             <div className="space-y-4">
               <h3 className="text-xl font-bold text-txt">Choose a Theme</h3>
-              <p className="text-sm text-txt-secondary">Select a visual style for your storefront.</p>
+              <p className="text-sm text-txt-secondary">
+                Select a visual style for your storefront.
+              </p>
               <div className="grid grid-cols-2 gap-3">
                 {Object.values(THEME_PRESETS).map((p) => {
                   const isSelected = data.themePreset === p.id;
@@ -363,20 +545,33 @@ export function OnboardingPage() {
                       key={p.id}
                       onClick={() => update('themePreset', p.id)}
                       className={`flex items-center gap-3 p-3 rounded-lg border text-left transition-all ${
-                        isSelected ? 'border-brand-500 ring-2 ring-brand-500/30 bg-surface-alt' : 'border-bdr hover:bg-bg-alt'
+                        isSelected
+                          ? 'border-brand-500 ring-2 ring-brand-500/30 bg-surface-alt'
+                          : 'border-bdr hover:bg-bg-alt'
                       }`}
                     >
                       <div className="flex gap-0.5 shrink-0">
                         {p.swatches.map((c: string, i: number) => (
-                          <div key={i} className="w-5 h-5 rounded" style={{ background: c, border: '1px solid rgba(0,0,0,0.08)' }} />
+                          <div
+                            key={i}
+                            className="w-5 h-5 rounded"
+                            style={{
+                              background: c,
+                              border: '1px solid rgba(0,0,0,0.08)',
+                            }}
+                          />
                         ))}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-bold text-txt flex items-center gap-1">
                           {p.label}
-                          {isSelected && <Check size={14} className="text-brand-500" />}
+                          {isSelected && (
+                            <Check size={14} className="text-brand-500" />
+                          )}
                         </div>
-                        <div className="text-[11px] text-txt-secondary truncate">{p.description}</div>
+                        <div className="text-[11px] text-txt-secondary truncate">
+                          {p.description}
+                        </div>
                       </div>
                     </button>
                   );
@@ -394,16 +589,59 @@ export function OnboardingPage() {
               </p>
 
               <div className="text-left bg-bg-alt rounded-lg p-4 space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-txt-secondary">Dispensary</span><span className="text-txt font-medium">{data.name || '(not set)'}</span></div>
-                <div className="flex justify-between"><span className="text-txt-secondary">Address</span><span className="text-txt font-medium">{data.address || '(not set)'}</span></div>
-                <div className="flex justify-between"><span className="text-txt-secondary">Phone</span><span className="text-txt font-medium">{data.phone || '(not set)'}</span></div>
-                <div className="flex justify-between"><span className="text-txt-secondary">Products</span><span className="text-txt font-medium">{data.products.length} added</span></div>
-                <div className="flex justify-between"><span className="text-txt-secondary">State</span><span className="text-txt font-medium">{data.state || '(not set)'}</span></div>
-                <div className="flex justify-between"><span className="text-txt-secondary">License</span><span className="text-txt font-medium">{data.licenseNumber || '(not set)'}</span></div>
-                <div className="flex justify-between"><span className="text-txt-secondary">Payments</span><span className="text-txt font-medium">
-                  {[data.cashEnabled && 'Cash', data.stripeKey && 'Stripe', data.canPayEnabled && 'CanPay'].filter(Boolean).join(', ') || 'None'}
-                </span></div>
-                <div className="flex justify-between"><span className="text-txt-secondary">Theme</span><span className="text-txt font-medium capitalize">{data.themePreset}</span></div>
+                <div className="flex justify-between">
+                  <span className="text-txt-secondary">Dispensary</span>
+                  <span className="text-txt font-medium">
+                    {data.name || '(not set)'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-txt-secondary">Address</span>
+                  <span className="text-txt font-medium">
+                    {data.address || '(not set)'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-txt-secondary">Phone</span>
+                  <span className="text-txt font-medium">
+                    {data.phone || '(not set)'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-txt-secondary">Products</span>
+                  <span className="text-txt font-medium">
+                    {data.products.length} added
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-txt-secondary">State</span>
+                  <span className="text-txt font-medium">
+                    {data.state || '(not set)'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-txt-secondary">License</span>
+                  <span className="text-txt font-medium">
+                    {data.licenseNumber || '(not set)'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-txt-secondary">Payments</span>
+                  <span className="text-txt font-medium">
+                    {[
+                      data.cashEnabled && 'Cash',
+                      data.canPayEnabled && 'CanPay',
+                    ]
+                      .filter(Boolean)
+                      .join(', ') || 'None'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-txt-secondary">Theme</span>
+                  <span className="text-txt font-medium capitalize">
+                    {data.themePreset}
+                  </span>
+                </div>
               </div>
 
               <button

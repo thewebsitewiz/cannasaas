@@ -1,4 +1,13 @@
-import { Resolver, Query, Mutation, Args, ID, Float, ObjectType, Field } from '@nestjs/graphql';
+import {
+  Resolver,
+  Query,
+  Mutation,
+  Args,
+  ID,
+  Float,
+  ObjectType,
+  Field,
+} from '@nestjs/graphql';
 import { ForbiddenException } from '@nestjs/common';
 import { CashlessPaymentsService } from './cashless-payments.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -49,10 +58,19 @@ export class CashlessPaymentsResolver {
     this.guard(user, dispensaryId);
 
     if (provider === 'canpay') {
-      const result = await this.cashless.initializeCanPayPayment(orderId, amount);
-      return { redirectUrl: result.redirectUrl, referenceId: result.transactionId };
+      const result = await this.cashless.initializeCanPayPayment(
+        orderId,
+        amount,
+      );
+      return {
+        redirectUrl: result.redirectUrl,
+        referenceId: result.transactionId,
+      };
     } else if (provider === 'aeropay') {
-      const result = await this.cashless.initializeAeroPayPayment(orderId, amount);
+      const result = await this.cashless.initializeAeroPayPayment(
+        orderId,
+        amount,
+      );
       return { paymentUrl: result.paymentUrl, referenceId: result.referenceId };
     }
 

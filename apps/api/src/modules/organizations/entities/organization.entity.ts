@@ -41,10 +41,6 @@ export class Organization {
   @Column({ default: 'active', length: 50 })
   subscription_status!: string;
 
-  @Field({ nullable: true })
-  @Column({ nullable: true, length: 255 })
-  stripe_customer_id?: string;
-
   @Field(() => Date)
   @CreateDateColumn({ type: 'timestamptz' })
   created_at!: Date;

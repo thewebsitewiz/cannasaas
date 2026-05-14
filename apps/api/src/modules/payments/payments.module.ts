@@ -8,7 +8,12 @@ import { CashlessPaymentsResolver } from './cashless-payments.resolver';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Payment])],
-  providers: [PaymentService, PaymentResolver, CashlessPaymentsService, CashlessPaymentsResolver],
+  providers: [
+    PaymentService,
+    PaymentResolver,
+    CashlessPaymentsService,
+    CashlessPaymentsResolver,
+  ],
   exports: [PaymentService, CashlessPaymentsService],
 })
 export class PaymentsModule {}

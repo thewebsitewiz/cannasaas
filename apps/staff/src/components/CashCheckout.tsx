@@ -191,7 +191,7 @@ export function CashCheckout({ orderId, subtotal, taxTotal, total, onComplete }:
       {paymentMethod === 'card' && (
         <div className="text-center py-8 text-gray-400">
           <CreditCard size={32} className="mx-auto mb-2" />
-          <p>Card payment processed via Stripe terminal</p>
+          <p>Card payment processed via terminal</p>
           <p className="text-sm mt-1">Present card to terminal to complete transaction</p>
         </div>
       )}

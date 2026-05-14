@@ -34,7 +34,7 @@ async function bootstrap(): Promise<void> {
   app.use(compression());
   app.use(cookieParser());
 
-  // Request body size limits (webhook endpoint gets a larger limit for Stripe payloads)
+  // Request body size limits (webhook endpoint gets a larger limit for payment-processor payloads)
   app.use('/v1/webhooks', json({ limit: '5mb' }));
   app.use(json({ limit: '1mb' }));
   app.use(urlencoded({ extended: true, limit: '1mb' }));

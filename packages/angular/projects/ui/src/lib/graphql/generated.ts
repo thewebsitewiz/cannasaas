@@ -1435,7 +1435,6 @@ export type Mutation = {
   completeInventoryCount: InventoryCount;
   completeOrder: Scalars['Boolean']['output'];
   confirmOrder: Scalars['Boolean']['output'];
-  confirmPayment: PaymentStatus;
   createAdjustment: InventoryAdjustment;
   createBrand: BrandResult;
   createCompany: CompanyResult;
@@ -1446,7 +1445,6 @@ export type Mutation = {
   createMarketingCampaign: MarketingCampaign;
   createOrder: OrderSummary;
   createOrganization: OrganizationResult;
-  createPaymentIntent: PaymentIntentResult;
   createPerformanceReview: PerformanceReview;
   createProduct: Product;
   createPromotion: PromotionResult;
@@ -1479,7 +1477,6 @@ export type Mutation = {
   login: AuthToken;
   markOrderReady: Scalars['Boolean']['output'];
   notifyCustomer: Array<NotificationLog>;
-  processCardPayment: Payment;
   processCashPayment: Payment;
   /** Issues a long-lived device token for a kiosk terminal. Admin-only; one device per (dispensary, label). */
   provisionKiosk: KioskProvisionResult;
@@ -1488,7 +1485,6 @@ export type Mutation = {
   receiveTransfer: InventoryTransfer;
   recordCountItem: InventoryCountItem;
   redeemReward: RedeemResult;
-  refundPayment: RefundResult;
   register: AuthToken;
   rejectTransfer: InventoryTransfer;
   releaseReserve: AdjustResult;
@@ -1673,10 +1669,6 @@ export type MutationConfirmOrderArgs = {
   orderId: Scalars['ID']['input'];
 };
 
-export type MutationConfirmPaymentArgs = {
-  paymentIntentId: Scalars['String']['input'];
-};
-
 export type MutationCreateAdjustmentArgs = {
   dispensaryId: Scalars['ID']['input'];
   notes?: InputMaybe<Scalars['String']['input']>;
@@ -1734,12 +1726,6 @@ export type MutationCreateOrderArgs = {
 
 export type MutationCreateOrganizationArgs = {
   input: CreateOrganizationInput;
-};
-
-export type MutationCreatePaymentIntentArgs = {
-  amountCents: Scalars['Int']['input'];
-  dispensaryId: Scalars['ID']['input'];
-  orderId: Scalars['ID']['input'];
 };
 
 export type MutationCreatePerformanceReviewArgs = {
@@ -1920,12 +1906,6 @@ export type MutationNotifyCustomerArgs = {
   userId: Scalars['ID']['input'];
 };
 
-export type MutationProcessCardPaymentArgs = {
-  dispensaryId: Scalars['ID']['input'];
-  orderId: Scalars['ID']['input'];
-  stripePaymentIntentId: Scalars['String']['input'];
-};
-
 export type MutationProcessCashPaymentArgs = {
   applyDiscount?: InputMaybe<Scalars['Boolean']['input']>;
   cashTendered: Scalars['Float']['input'];
@@ -1962,12 +1942,6 @@ export type MutationRedeemRewardArgs = {
   dispensaryId: Scalars['ID']['input'];
   orderId?: InputMaybe<Scalars['ID']['input']>;
   rewardId: Scalars['ID']['input'];
-};
-
-export type MutationRefundPaymentArgs = {
-  amountCents?: InputMaybe<Scalars['Int']['input']>;
-  orderId: Scalars['ID']['input'];
-  reason?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type MutationRegisterArgs = {
@@ -2444,7 +2418,6 @@ export type OrganizationResult = {
   name: Scalars['String']['output'];
   organizationId: Scalars['ID']['output'];
   slug: Scalars['String']['output'];
-  stripeCustomerId?: Maybe<Scalars['String']['output']>;
   subscriptionStatus: Scalars['String']['output'];
   subscriptionTier: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
@@ -2469,31 +2442,14 @@ export type Payment = {
   orderId: Scalars['String']['output'];
   paymentId: Scalars['ID']['output'];
   status: Scalars['String']['output'];
-  stripeChargeId?: Maybe<Scalars['String']['output']>;
-  stripePaymentIntentId?: Maybe<Scalars['String']['output']>;
   terminalId?: Maybe<Scalars['String']['output']>;
   updatedAt: Scalars['DateTime']['output'];
-};
-
-export type PaymentIntentResult = {
-  __typename?: 'PaymentIntentResult';
-  clientSecret: Scalars['String']['output'];
-  paymentIntentId: Scalars['String']['output'];
 };
 
 export type PaymentMethodInfo = {
   __typename?: 'PaymentMethodInfo';
   enabled: Scalars['Boolean']['output'];
   method: Scalars['String']['output'];
-};
-
-export type PaymentStatus = {
-  __typename?: 'PaymentStatus';
-  amount?: Maybe<Scalars['Float']['output']>;
-  method?: Maybe<Scalars['String']['output']>;
-  paymentId?: Maybe<Scalars['String']['output']>;
-  status: Scalars['String']['output'];
-  stripePaymentIntentId?: Maybe<Scalars['String']['output']>;
 };
 
 export type PayrollRow = {
@@ -2937,7 +2893,6 @@ export type Query = {
   orders: Array<Order>;
   organization?: Maybe<OrganizationResult>;
   organizations: Array<OrganizationListItem>;
-  paymentStatus: PaymentStatus;
   payrollReport: Array<PayrollRow>;
   performanceReviews: Array<PerformanceReview>;
   personalizedForMe: Array<RecommendedProduct>;
@@ -2983,7 +2938,6 @@ export type Query = {
   searchStrains: Array<StrainData>;
   shrinkageReport: ShrinkageReport;
   staffComplianceOverview: ComplianceOverview;
-  stripeEnabled: StripeStatus;
   subscriptionTiers: Array<Scalars['JSON']['output']>;
   taxReport: TaxReport;
   themeConfig: ThemeConfigType;
@@ -3411,10 +3365,6 @@ export type QueryOrganizationsArgs = {
   offset?: InputMaybe<Scalars['Int']['input']>;
 };
 
-export type QueryPaymentStatusArgs = {
-  orderId: Scalars['ID']['input'];
-};
-
 export type QueryPayrollReportArgs = {
   dispensaryId: Scalars['ID']['input'];
   endDate: Scalars['String']['input'];
@@ -3728,13 +3678,6 @@ export type RedeemResult = {
   rewardName: Scalars['String']['output'];
 };
 
-export type RefundResult = {
-  __typename?: 'RefundResult';
-  amount: Scalars['String']['output'];
-  refundId: Scalars['String']['output'];
-  status: Scalars['String']['output'];
-};
-
 export type RegisterInput = {
   email: Scalars['String']['input'];
   password: Scalars['String']['input'];
@@ -3918,11 +3861,6 @@ export type StrainData = {
   terpenes?: Maybe<Scalars['JSON']['output']>;
   thcAvg?: Maybe<Scalars['Float']['output']>;
   updatedAt: Scalars['DateTime']['output'];
-};
-
-export type StripeStatus = {
-  __typename?: 'StripeStatus';
-  enabled: Scalars['Boolean']['output'];
 };
 
 export type TagPackageLabelInput = {
@@ -4188,7 +4126,6 @@ export type UpdatePromotionInput = {
 };
 
 export type UpdateSubscriptionInput = {
-  stripeCustomerId?: InputMaybe<Scalars['String']['input']>;
   subscriptionStatus?: InputMaybe<Scalars['String']['input']>;
   subscriptionTier?: InputMaybe<Scalars['String']['input']>;
 };

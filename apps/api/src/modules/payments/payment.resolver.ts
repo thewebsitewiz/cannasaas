@@ -26,7 +26,8 @@ export class PaymentResolver {
   constructor(private readonly payments: PaymentService) {}
 
   private guard(user: JwtPayload, dispensaryId: string) {
-    if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId) throw new ForbiddenException('Access denied');
+    if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId)
+      throw new ForbiddenException('Access denied');
   }
 
   // ── Admin: Get/Set Cash Discount ──────────────────────────────────────────
@@ -46,11 +47,16 @@ export class PaymentResolver {
   async setDiscount(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @Args('percent', { type: () => Float }) percent: number,
-    @Args('cashDeliveryEnabled', { nullable: true }) cashDeliveryEnabled: boolean,
+    @Args('cashDeliveryEnabled', { nullable: true })
+    cashDeliveryEnabled: boolean,
     @CurrentUser() user: JwtPayload,
   ): Promise<CashDiscountConfig> {
     this.guard(user, dispensaryId);
-    return this.payments.setCashDiscount(dispensaryId, percent, cashDeliveryEnabled);
+    return this.payments.setCashDiscount(
+      dispensaryId,
+      percent,
+      cashDeliveryEnabled,
+    );
   }
 
   // ── Preview Cash Discount ─────────────────────────────────────────────────
@@ -72,27 +78,19 @@ export class PaymentResolver {
     @Args('orderId', { type: () => ID }) orderId: string,
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @Args('cashTendered', { type: () => Float }) cashTendered: number,
-    @Args('applyDiscount', { nullable: true, defaultValue: true }) applyDiscount: boolean,
+    @Args('applyDiscount', { nullable: true, defaultValue: true })
+    applyDiscount: boolean,
     @CurrentUser() user: JwtPayload,
   ): Promise<Payment> {
-    if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId) throw new ForbiddenException('Access denied');
+    if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId)
+      throw new ForbiddenException('Access denied');
     return this.payments.processCashPayment({
-      orderId, dispensaryId, cashTendered, staffUserId: user.sub, applyDiscount,
+      orderId,
+      dispensaryId,
+      cashTendered,
+      staffUserId: user.sub,
+      applyDiscount,
     });
-  }
-
-  // ── Process Card Payment ──────────────────────────────────────────────────
-
-  @Roles('budtender', 'dispensary_admin', 'org_admin', 'super_admin')
-  @Mutation(() => Payment, { name: 'processCardPayment' })
-  async cardPayment(
-    @Args('orderId', { type: () => ID }) orderId: string,
-    @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
-    @Args('stripePaymentIntentId') stripePaymentIntentId: string,
-    @CurrentUser() user: JwtPayload,
-  ): Promise<Payment> {
-    if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId) throw new ForbiddenException('Access denied');
-    return this.payments.processCardPayment({ orderId, dispensaryId, stripePaymentIntentId });
   }
 
   // ── Get Payment ───────────────────────────────────────────────────────────
