@@ -1,7 +1,11 @@
 import { Resolver, Query, Mutation, Args, ID, Float } from '@nestjs/graphql';
 import { ObjectType, Field, Int } from '@nestjs/graphql';
 import { ForbiddenException } from '@nestjs/common';
-import { FulfillmentService, DeliveryEligibility as DE, AvailableSlot as AS } from './fulfillment.service';
+import {
+  FulfillmentService,
+  DeliveryEligibility as DE,
+  AvailableSlot as AS,
+} from './fulfillment.service';
 import { DeliveryZone } from './entities/delivery-zone.entity';
 import { OrderTracking } from './entities/order-tracking.entity';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -46,9 +50,15 @@ export class FulfillmentResolver {
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @Args('latitude', { type: () => Float }) latitude: number,
     @Args('longitude', { type: () => Float }) longitude: number,
-    @Args('orderSubtotal', { type: () => Float, nullable: true }) orderSubtotal?: number,
+    @Args('orderSubtotal', { type: () => Float, nullable: true })
+    orderSubtotal?: number,
   ): Promise<DE> {
-    return this.fulfillment.checkDeliveryEligibility(dispensaryId, latitude, longitude, orderSubtotal);
+    return this.fulfillment.checkDeliveryEligibility(
+      dispensaryId,
+      latitude,
+      longitude,
+      orderSubtotal,
+    );
   }
 
   // ── Public: Get delivery zones ─────────────────────────────────────────
@@ -70,7 +80,9 @@ export class FulfillmentResolver {
     @Args('slotType') slotType: string,
     @Args('date') date: string,
   ): Promise<AS[]> {
-    return this.fulfillment.getAvailableSlots(dispensaryId, slotType as any, date);
+    const validated: 'delivery' | 'pickup' =
+      slotType === 'delivery' ? 'delivery' : 'pickup';
+    return this.fulfillment.getAvailableSlots(dispensaryId, validated, date);
   }
 
   // ── Staff/Admin: Update fulfillment status ─────────────────────────────
@@ -84,10 +96,19 @@ export class FulfillmentResolver {
     @Args('notes', { nullable: true }) notes: string,
     @CurrentUser() user: JwtPayload,
   ): Promise<OrderTracking> {
-    if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId) {
+    if (
+      user.role === 'dispensary_admin' &&
+      dispensaryId !== user.dispensaryId
+    ) {
       throw new ForbiddenException('Access denied');
     }
-    return this.fulfillment.updateFulfillmentStatus(orderId, dispensaryId, status, user.sub, { notes });
+    return this.fulfillment.updateFulfillmentStatus(
+      orderId,
+      dispensaryId,
+      status,
+      user.sub,
+      { notes },
+    );
   }
 
   // ── Auth: Get order tracking history ───────────────────────────────────

@@ -1,4 +1,9 @@
-import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
@@ -9,7 +14,13 @@ import { OrderTracking } from './entities/order-tracking.entity';
 
 export interface DeliveryEligibility {
   eligible: boolean;
-  zone?: { zoneId: string; name: string; deliveryFee: number; estimatedMinutesMin: number; estimatedMinutesMax: number };
+  zone?: {
+    zoneId: string;
+    name: string;
+    deliveryFee: number;
+    estimatedMinutesMin: number;
+    estimatedMinutesMax: number;
+  };
   distance?: number;
   reason?: string;
 }
@@ -21,10 +32,73 @@ export interface AvailableSlot {
   spotsRemaining: number;
 }
 
+interface DispensaryLocationRow {
+  latitude: string | number | null;
+  longitude: string | number | null;
+  is_delivery_enabled: boolean;
+}
+
+interface HaversineRow {
+  distance: string | number;
+}
+
+interface ZoneRow {
+  zone_id: string;
+  name: string;
+  radius_miles: string | number;
+  delivery_fee: string | number;
+  min_order_amount: string | number | null;
+  free_delivery_threshold: string | number | null;
+  estimated_minutes_min: number;
+  estimated_minutes_max: number;
+}
+
+interface SlotRow {
+  slot_id: string;
+  start_time: string;
+  end_time: string;
+  max_orders: number | null;
+  booked_count: string | number;
+}
+
+interface OrderLookupRow {
+  orderId: string;
+  fulfillment_status: string;
+}
+
 const FULFILLMENT_STATUSES = [
-  'pending', 'confirmed', 'preparing', 'ready_for_pickup',
-  'out_for_delivery', 'delivered', 'picked_up', 'cancelled',
+  'pending',
+  'confirmed',
+  'preparing',
+  'ready_for_pickup',
+  'out_for_delivery',
+  'delivered',
+  'picked_up',
+  'cancelled',
 ] as const;
+
+type FulfillmentStatus = (typeof FULFILLMENT_STATUSES)[number];
+
+async function rawQuery<T>(
+  ds: DataSource,
+  sql: string,
+  params?: unknown[],
+): Promise<T[]> {
+  const rows = (await ds.query(sql, params)) as unknown;
+  return rows as T[];
+}
+
+function toNumber(val: string | number | null | undefined): number {
+  if (val == null) return 0;
+  const n = typeof val === 'number' ? val : parseFloat(val);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function toInt(val: string | number | null | undefined): number {
+  if (val == null) return 0;
+  const n = typeof val === 'number' ? Math.trunc(val) : parseInt(val, 10);
+  return Number.isFinite(n) ? n : 0;
+}
 
 @Injectable()
 export class FulfillmentService {
@@ -32,8 +106,10 @@ export class FulfillmentService {
 
   constructor(
     @InjectRepository(DeliveryZone) private zoneRepo: Repository<DeliveryZone>,
-    @InjectRepository(DeliveryTimeSlot) private slotRepo: Repository<DeliveryTimeSlot>,
-    @InjectRepository(OrderTracking) private trackingRepo: Repository<OrderTracking>,
+    @InjectRepository(DeliveryTimeSlot)
+    private slotRepo: Repository<DeliveryTimeSlot>,
+    @InjectRepository(OrderTracking)
+    private trackingRepo: Repository<OrderTracking>,
     @InjectDataSource() private dataSource: DataSource,
   ) {}
 
@@ -54,26 +130,31 @@ export class FulfillmentService {
     customerLng: number,
     orderSubtotal?: number,
   ): Promise<DeliveryEligibility> {
-    // Get dispensary location
-    const [dispensary] = await this.dataSource.query(
+    const dispensaries = await rawQuery<DispensaryLocationRow>(
+      this.dataSource,
       `SELECT latitude, longitude, is_delivery_enabled FROM dispensaries WHERE entity_id = $1`,
       [dispensaryId],
     );
+    const dispensary = dispensaries[0];
 
     if (!dispensary) return { eligible: false, reason: 'Dispensary not found' };
-    if (!dispensary.is_delivery_enabled) return { eligible: false, reason: 'Delivery not available at this location' };
-    if (!dispensary.latitude || !dispensary.longitude) return { eligible: false, reason: 'Dispensary location not configured' };
+    if (!dispensary.is_delivery_enabled)
+      return {
+        eligible: false,
+        reason: 'Delivery not available at this location',
+      };
+    if (!dispensary.latitude || !dispensary.longitude)
+      return { eligible: false, reason: 'Dispensary location not configured' };
 
-    // Calculate distance
-    const [{ distance }] = await this.dataSource.query(
+    const distRows = await rawQuery<HaversineRow>(
+      this.dataSource,
       `SELECT haversine_miles($1, $2, $3, $4) as distance`,
       [dispensary.latitude, dispensary.longitude, customerLat, customerLng],
     );
+    const distanceMiles = toNumber(distRows[0]?.distance);
 
-    const distanceMiles = parseFloat(distance);
-
-    // Find matching zone (smallest radius that covers the distance)
-    const zones = await this.dataSource.query(
+    const zones = await rawQuery<ZoneRow>(
+      this.dataSource,
       `SELECT zone_id, name, radius_miles, delivery_fee, min_order_amount,
               free_delivery_threshold, estimated_minutes_min, estimated_minutes_max
        FROM delivery_zones
@@ -83,23 +164,33 @@ export class FulfillmentService {
     );
 
     if (zones.length === 0) {
-      return { eligible: false, distance: distanceMiles, reason: `Address is ${distanceMiles.toFixed(1)} miles away, beyond delivery range` };
+      return {
+        eligible: false,
+        distance: distanceMiles,
+        reason: `Address is ${distanceMiles.toFixed(1)} miles away, beyond delivery range`,
+      };
     }
 
     const zone = zones[0];
 
-    // Check minimum order
-    if (orderSubtotal !== undefined && zone.min_order_amount && orderSubtotal < parseFloat(zone.min_order_amount)) {
+    if (
+      orderSubtotal !== undefined &&
+      zone.min_order_amount !== null &&
+      orderSubtotal < toNumber(zone.min_order_amount)
+    ) {
       return {
         eligible: false,
         distance: distanceMiles,
-        reason: `Minimum order of $${parseFloat(zone.min_order_amount).toFixed(2)} required for delivery to this area`,
+        reason: `Minimum order of $${toNumber(zone.min_order_amount).toFixed(2)} required for delivery to this area`,
       };
     }
 
-    // Calculate fee (waive if above threshold)
-    let fee = parseFloat(zone.delivery_fee);
-    if (zone.free_delivery_threshold && orderSubtotal && orderSubtotal >= parseFloat(zone.free_delivery_threshold)) {
+    let fee = toNumber(zone.delivery_fee);
+    if (
+      zone.free_delivery_threshold !== null &&
+      orderSubtotal !== undefined &&
+      orderSubtotal >= toNumber(zone.free_delivery_threshold)
+    ) {
       fee = 0;
     }
 
@@ -121,13 +212,13 @@ export class FulfillmentService {
   async getAvailableSlots(
     dispensaryId: string,
     slotType: 'delivery' | 'pickup',
-    date: string, // YYYY-MM-DD
+    date: string,
   ): Promise<AvailableSlot[]> {
     const targetDate = new Date(date);
     const dayOfWeek = targetDate.getDay();
 
-    // Get slots for this day
-    const slots = await this.dataSource.query(
+    const slots = await rawQuery<SlotRow>(
+      this.dataSource,
       `SELECT s.slot_id, s.start_time, s.end_time, s.max_orders,
         COALESCE(booked.count, 0) as booked_count
        FROM delivery_time_slots s
@@ -146,12 +237,12 @@ export class FulfillmentService {
     );
 
     return slots
-      .filter((s: any) => parseInt(s.booked_count, 10) < (s.max_orders ?? 10))
-      .map((s: any) => ({
+      .filter((s) => toInt(s.booked_count) < (s.max_orders ?? 10))
+      .map((s) => ({
         slotId: s.slot_id,
         startTime: s.start_time,
         endTime: s.end_time,
-        spotsRemaining: (s.max_orders ?? 10) - parseInt(s.booked_count, 10),
+        spotsRemaining: (s.max_orders ?? 10) - toInt(s.booked_count),
       }));
   }
 
@@ -164,34 +255,34 @@ export class FulfillmentService {
     userId: string,
     opts?: { notes?: string; latitude?: number; longitude?: number },
   ): Promise<OrderTracking> {
-    // Validate status
-    if (!FULFILLMENT_STATUSES.includes(status as any)) {
-      throw new BadRequestException(`Invalid status: ${status}. Valid: ${FULFILLMENT_STATUSES.join(', ')}`);
+    if (!FULFILLMENT_STATUSES.includes(status as FulfillmentStatus)) {
+      throw new BadRequestException(
+        `Invalid status: ${status}. Valid: ${FULFILLMENT_STATUSES.join(', ')}`,
+      );
     }
 
-    // Verify order exists
-    const [order] = await this.dataSource.query(
+    const orders = await rawQuery<OrderLookupRow>(
+      this.dataSource,
       `SELECT "orderId", fulfillment_status FROM orders WHERE "orderId" = $1 AND "dispensaryId" = $2`,
       [orderId, dispensaryId],
     );
+    const order = orders[0];
     if (!order) throw new NotFoundException('Order not found');
 
-    // Update order
     const timestampField = this.getTimestampField(status);
     let updateSql = `UPDATE orders SET fulfillment_status = $1, "updatedAt" = NOW()`;
-    const params: any[] = [status];
-    let paramIdx = 2;
+    const params: unknown[] = [status];
+    const paramIdx = 2;
 
     if (timestampField) {
       updateSql += `, ${timestampField} = NOW()`;
     }
 
-    updateSql += ` WHERE "orderId" = $${paramIdx}`;
+    updateSql += ` WHERE "orderId" = $${String(paramIdx)}`;
     params.push(orderId);
 
     await this.dataSource.query(updateSql, params);
 
-    // Create tracking entry
     const tracking = this.trackingRepo.create({
       order_id: orderId,
       status,
