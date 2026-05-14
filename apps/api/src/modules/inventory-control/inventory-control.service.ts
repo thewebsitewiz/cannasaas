@@ -1,24 +1,240 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { Cron } from '@nestjs/schedule';
-import { InventoryTransfer, InventoryTransferItem } from './entities/inventory-control.entity';
-import { InventoryCount, InventoryCountItem } from './entities/inventory-control.entity';
-import { InventoryAdjustment, LkpAdjustmentReason } from './entities/inventory-control.entity';
+import {
+  InventoryTransfer,
+  InventoryTransferItem,
+} from './entities/inventory-control.entity';
+import {
+  InventoryCount,
+  InventoryCountItem,
+} from './entities/inventory-control.entity';
+import {
+  InventoryAdjustment,
+  LkpAdjustmentReason,
+} from './entities/inventory-control.entity';
+
+// ── DB row types ──────────────────────────────────────────────────────────
+
+interface DispensaryOrgRow {
+  entity_id: string;
+  organization_id: string;
+}
+
+interface InventoryItemRow {
+  quantity_available: number;
+  product_name: string;
+  variant_name: string;
+}
+
+interface CountItemSourceRow {
+  variant_id: string;
+  quantity_on_hand: number;
+  product_name: string;
+  variant_name: string;
+}
+
+interface AdjustmentReasonRow {
+  reason_id: number;
+  code: string;
+  name: string;
+  direction: string;
+  requires_approval: boolean;
+  is_active: boolean;
+}
+
+interface InventoryAdjSourceRow {
+  quantity_on_hand: number | string;
+  product_name: string;
+}
+
+interface CountItemVarianceRow {
+  count_item_id: string;
+  count_id: string;
+  variant_id: string;
+  expected_quantity: number;
+  counted_quantity: number;
+  product_name: string;
+  variant_name: string;
+}
+
+interface InventoryRowExisting {
+  inventory_id: string;
+}
+
+interface CountRow {
+  c: string | number;
+}
+
+interface HealthStatsRow {
+  total_skus: string | number;
+  total_units: string | number;
+  low_stock: string | number;
+  out_of_stock: string | number;
+  expired: string | number;
+  expiring_30d: string | number;
+  dead_stock: string | number;
+}
+
+interface DispensaryNameRow {
+  entity_id: string;
+  name: string;
+}
+
+interface TransferListRow {
+  transfer_id: string;
+  organization_id: string;
+  from_dispensary_id: string;
+  to_dispensary_id: string;
+  from_name: string;
+  to_name: string;
+  status: string;
+  notes: string | null;
+  requested_by: string;
+  item_count: string | number;
+  total_units: string | number;
+  created_at: Date | string;
+  [key: string]: unknown;
+}
+
+interface VarianceReportRow {
+  count_item_id: string;
+  variant_id: string;
+  product_name: string;
+  variant_name: string;
+  expected_quantity: number;
+  counted_quantity: number;
+  variance: number;
+  abs_variance: number;
+  variance_pct: string | number;
+  notes: string | null;
+}
+
+interface AdjustmentListRow {
+  adjustment_id: string;
+  variant_id: string;
+  product_name: string;
+  reason_name: string;
+  reason_code: string;
+  quantity_change: number;
+  quantity_before: number;
+  quantity_after: number;
+  status: string;
+  submitted_by: string;
+  notes: string | null;
+  created_at: Date | string;
+  [key: string]: unknown;
+}
+
+interface AdjustmentReasonDto {
+  reasonId: number;
+  code: string;
+  name: string;
+  direction: string;
+  requiresApproval: boolean;
+  isActive: boolean;
+}
+
+interface ExpiringInventoryRow {
+  inventory_id: string;
+  variant_id: string;
+  quantity_on_hand: number;
+  expiration_date: Date | string;
+  lot_number: string | null;
+  product_name: string;
+  variant_name: string;
+  days_until_expiry: number;
+  alert_type: 'expired' | 'expiring';
+}
+
+interface ReorderAlertRow {
+  inventory_id: string;
+  variant_id: string;
+  quantity_on_hand: number;
+  quantity_available: number;
+  reorder_threshold: number | null;
+  reorder_quantity: number | null;
+  auto_reorder_enabled: boolean;
+  product_name: string;
+  variant_name: string;
+}
+
+interface DeadStockRow {
+  inventory_id: string;
+  variant_id: string;
+  quantity_on_hand: number;
+  last_movement_at: Date | string;
+  days_stale: number;
+  product_name: string;
+  variant_name: string;
+}
+
+// ── Public DTOs ───────────────────────────────────────────────────────────
+
+export interface InventoryHealthDto {
+  totalSkus: number;
+  totalUnits: number;
+  lowStock: number;
+  outOfStock: number;
+  expired: number;
+  expiring30d: number;
+  deadStock: number;
+  pendingTransfers: number;
+  pendingAdjustments: number;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+
+async function rawQuery<T>(
+  ds: DataSource,
+  sql: string,
+  params?: unknown[],
+): Promise<T[]> {
+  const rows = (await ds.query(sql, params)) as unknown;
+  return rows as T[];
+}
+
+import type { QueryRunner } from 'typeorm';
+async function runnerQuery<T>(
+  qr: QueryRunner,
+  sql: string,
+  params?: unknown[],
+): Promise<T[]> {
+  const rows = (await qr.query(sql, params)) as unknown;
+  return rows as T[];
+}
+
+function toInt(val: string | number | null | undefined): number {
+  if (val == null) return 0;
+  const n = typeof val === 'number' ? Math.trunc(val) : parseInt(val, 10);
+  return Number.isFinite(n) ? n : 0;
+}
 
 @Injectable()
 export class InventoryControlService {
   private readonly logger = new Logger(InventoryControlService.name);
 
   constructor(
-    @InjectRepository(InventoryTransfer) private transferRepo: Repository<InventoryTransfer>,
-    @InjectRepository(InventoryTransferItem) private transferItemRepo: Repository<InventoryTransferItem>,
-    @InjectRepository(InventoryCount) private countRepo: Repository<InventoryCount>,
-    @InjectRepository(InventoryCountItem) private countItemRepo: Repository<InventoryCountItem>,
-    @InjectRepository(InventoryAdjustment) private adjustRepo: Repository<InventoryAdjustment>,
-    @InjectRepository(LkpAdjustmentReason) private reasonRepo: Repository<LkpAdjustmentReason>,
+    @InjectRepository(InventoryTransfer)
+    private transferRepo: Repository<InventoryTransfer>,
+    @InjectRepository(InventoryTransferItem)
+    private transferItemRepo: Repository<InventoryTransferItem>,
+    @InjectRepository(InventoryCount)
+    private countRepo: Repository<InventoryCount>,
+    @InjectRepository(InventoryCountItem)
+    private countItemRepo: Repository<InventoryCountItem>,
+    @InjectRepository(InventoryAdjustment)
+    private adjustRepo: Repository<InventoryAdjustment>,
+    @InjectRepository(LkpAdjustmentReason)
+    private reasonRepo: Repository<LkpAdjustmentReason>,
     @InjectDataSource() private ds: DataSource,
   ) {}
 
@@ -26,61 +242,94 @@ export class InventoryControlService {
   // TRANSFERS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  async createTransfer(input: { organizationId: string; fromDispensaryId: string; toDispensaryId: string; requestedByUserId: string; notes?: string; items: Array<{ variantId: string; quantity: number }> }): Promise<InventoryTransfer> {
-    if (input.fromDispensaryId === input.toDispensaryId) throw new BadRequestException('Cannot transfer to the same dispensary');
+  async createTransfer(input: {
+    organizationId: string;
+    fromDispensaryId: string;
+    toDispensaryId: string;
+    requestedByUserId: string;
+    notes?: string;
+    items: Array<{ variantId: string; quantity: number }>;
+  }): Promise<InventoryTransfer> {
+    if (input.fromDispensaryId === input.toDispensaryId)
+      throw new BadRequestException('Cannot transfer to the same dispensary');
 
-    // Verify same org
-    const dispensaries = await this.ds.query(
+    const dispensaries = await rawQuery<DispensaryOrgRow>(
+      this.ds,
       `SELECT d.entity_id, c.organization_id FROM dispensaries d JOIN companies c ON c.company_id = d.company_id WHERE d.entity_id IN ($1, $2)`,
       [input.fromDispensaryId, input.toDispensaryId],
     );
-    const orgIds = [...new Set(dispensaries.map((d: any) => d.organization_id))];
-    if (orgIds.length !== 1) throw new BadRequestException('Dispensaries must belong to the same organization');
+    const orgIds = [...new Set(dispensaries.map((d) => d.organization_id))];
+    if (orgIds.length !== 1)
+      throw new BadRequestException(
+        'Dispensaries must belong to the same organization',
+      );
 
     const qr = this.ds.createQueryRunner();
     await qr.connect();
     await qr.startTransaction();
     try {
       const transfer = this.transferRepo.create({
-        organization_id: orgIds[0] as string,
+        organization_id: orgIds[0],
         from_dispensary_id: input.fromDispensaryId,
         to_dispensary_id: input.toDispensaryId,
         requested_by_user_id: input.requestedByUserId,
         notes: input.notes,
         status: 'requested',
       });
-      const saved = await qr.manager.save(InventoryTransfer, transfer) as InventoryTransfer;
+      const saved = await qr.manager.save(InventoryTransfer, transfer);
 
       for (const item of input.items) {
-        const [inv] = await qr.query(
+        const invRows = await runnerQuery<InventoryItemRow>(
+          qr,
           `SELECT i.quantity_available, p.name as product_name, pv.name as variant_name
            FROM inventory i JOIN product_variants pv ON pv.variant_id = i.variant_id
            JOIN products p ON p.id = pv.product_id WHERE i.variant_id = $1 AND i.dispensary_id = $2`,
           [item.variantId, input.fromDispensaryId],
         );
-        if (!inv) throw new BadRequestException(`Variant ${item.variantId} not found in source dispensary`);
-        if (inv.quantity_available < item.quantity) throw new BadRequestException(`Insufficient stock for ${inv.product_name}: ${inv.quantity_available} available, ${item.quantity} requested`);
+        const inv = invRows[0];
+        if (!inv)
+          throw new BadRequestException(
+            `Variant ${item.variantId} not found in source dispensary`,
+          );
+        if (inv.quantity_available < item.quantity)
+          throw new BadRequestException(
+            `Insufficient stock for ${inv.product_name}: ${String(inv.quantity_available)} available, ${String(item.quantity)} requested`,
+          );
 
-        await qr.manager.save(this.transferItemRepo.create({
-          transfer_id: saved.transferId,
-          variant_id: item.variantId,
-          product_name: inv.product_name,
-          variant_name: inv.variant_name,
-          quantity_requested: item.quantity,
-        }));
+        await qr.manager.save(
+          this.transferItemRepo.create({
+            transfer_id: saved.transferId,
+            variant_id: item.variantId,
+            product_name: inv.product_name,
+            variant_name: inv.variant_name,
+            quantity_requested: item.quantity,
+          }),
+        );
       }
 
       await qr.commitTransaction();
-      this.logger.log(`Transfer created: ${saved.transferId} (${input.items.length} items)`);
+      this.logger.log(
+        `Transfer created: ${saved.transferId} (${String(input.items.length)} items)`,
+      );
       return saved;
-    } catch (err) { await qr.rollbackTransaction(); throw err; }
-    finally { await qr.release(); }
+    } catch (err) {
+      await qr.rollbackTransaction();
+      throw err;
+    } finally {
+      await qr.release();
+    }
   }
 
-  async approveTransfer(transferId: string, userId: string): Promise<InventoryTransfer> {
+  async approveTransfer(
+    transferId: string,
+    userId: string,
+  ): Promise<InventoryTransfer> {
     const transfer = await this.transferRepo.findOne({ where: { transferId } });
     if (!transfer) throw new NotFoundException('Transfer not found');
-    if (transfer.status !== 'requested') throw new BadRequestException(`Cannot approve transfer in ${transfer.status} status`);
+    if (transfer.status !== 'requested')
+      throw new BadRequestException(
+        `Cannot approve transfer in ${transfer.status} status`,
+      );
     transfer.status = 'approved';
     transfer.approved_by_user_id = userId;
     transfer.approved_at = new Date();
@@ -92,16 +341,25 @@ export class InventoryControlService {
     await qr.connect();
     await qr.startTransaction();
     try {
-      const transfer = await qr.manager.findOne(InventoryTransfer, { where: { transferId } });
+      const transfer = await qr.manager.findOne(InventoryTransfer, {
+        where: { transferId },
+      });
       if (!transfer) throw new NotFoundException('Transfer not found');
-      if (transfer.status !== 'approved') throw new BadRequestException('Transfer must be approved first');
+      if (transfer.status !== 'approved')
+        throw new BadRequestException('Transfer must be approved first');
 
-      const items = await qr.manager.find(InventoryTransferItem, { where: { transfer_id: transferId } });
+      const items = await qr.manager.find(InventoryTransferItem, {
+        where: { transfer_id: transferId },
+      });
       for (const item of items) {
         await qr.query(
           `UPDATE inventory SET quantity_on_hand = quantity_on_hand - $1, quantity_available = quantity_available - $1, last_movement_at = NOW(), updated_at = NOW()
            WHERE variant_id = $2 AND dispensary_id = $3 AND quantity_available >= $1`,
-          [item.quantity_requested, item.variant_id, transfer.from_dispensary_id],
+          [
+            item.quantity_requested,
+            item.variant_id,
+            transfer.from_dispensary_id,
+          ],
         );
         item.quantity_shipped = item.quantity_requested;
         await qr.manager.save(item);
@@ -109,39 +367,57 @@ export class InventoryControlService {
 
       transfer.status = 'in_transit';
       transfer.shipped_at = new Date();
-      const saved = await qr.manager.save(InventoryTransfer, transfer) as InventoryTransfer;
+      const saved = await qr.manager.save(InventoryTransfer, transfer);
       await qr.commitTransaction();
       this.logger.log(`Transfer shipped: ${transferId}`);
       return saved;
-    } catch (err) { await qr.rollbackTransaction(); throw err; }
-    finally { await qr.release(); }
+    } catch (err) {
+      await qr.rollbackTransaction();
+      throw err;
+    } finally {
+      await qr.release();
+    }
   }
 
-  async receiveTransfer(transferId: string, receivedItems: Array<{ itemId: string; quantityReceived: number; notes?: string }>): Promise<InventoryTransfer> {
+  async receiveTransfer(
+    transferId: string,
+    receivedItems: Array<{
+      itemId: string;
+      quantityReceived: number;
+      notes?: string;
+    }>,
+  ): Promise<InventoryTransfer> {
     const qr = this.ds.createQueryRunner();
     await qr.connect();
     await qr.startTransaction();
     try {
-      const transfer = await qr.manager.findOne(InventoryTransfer, { where: { transferId } });
+      const transfer = await qr.manager.findOne(InventoryTransfer, {
+        where: { transferId },
+      });
       if (!transfer) throw new NotFoundException('Transfer not found');
-      if (transfer.status !== 'in_transit') throw new BadRequestException('Transfer must be in transit');
+      if (transfer.status !== 'in_transit')
+        throw new BadRequestException('Transfer must be in transit');
 
       for (const ri of receivedItems) {
-        const item = await qr.manager.findOne(InventoryTransferItem, { where: { itemId: ri.itemId } });
+        const item = await qr.manager.findOne(InventoryTransferItem, {
+          where: { itemId: ri.itemId },
+        });
         if (!item) continue;
         item.quantity_received = ri.quantityReceived;
         if (ri.notes) item.notes = ri.notes;
         await qr.manager.save(item);
 
-        // Add to destination inventory
-        const [existing] = await qr.query(
+        const existingRows = await runnerQuery<InventoryRowExisting>(
+          qr,
           `SELECT inventory_id FROM inventory WHERE variant_id = $1 AND dispensary_id = $2`,
           [item.variant_id, transfer.to_dispensary_id],
         );
+        const existing = existingRows[0];
         if (existing) {
           await qr.query(
             `UPDATE inventory SET quantity_on_hand = quantity_on_hand + $1, quantity_available = quantity_available + $1, last_movement_at = NOW(), updated_at = NOW()
-             WHERE inventory_id = $2`, [ri.quantityReceived, existing.inventory_id],
+             WHERE inventory_id = $2`,
+            [ri.quantityReceived, existing.inventory_id],
           );
         } else {
           await qr.query(
@@ -154,15 +430,23 @@ export class InventoryControlService {
 
       transfer.status = 'completed';
       transfer.received_at = new Date();
-      const saved = await qr.manager.save(InventoryTransfer, transfer) as InventoryTransfer;
+      const saved = await qr.manager.save(InventoryTransfer, transfer);
       await qr.commitTransaction();
       this.logger.log(`Transfer received: ${transferId}`);
       return saved;
-    } catch (err) { await qr.rollbackTransaction(); throw err; }
-    finally { await qr.release(); }
+    } catch (err) {
+      await qr.rollbackTransaction();
+      throw err;
+    } finally {
+      await qr.release();
+    }
   }
 
-  async rejectTransfer(transferId: string, userId: string, reason: string): Promise<InventoryTransfer> {
+  async rejectTransfer(
+    transferId: string,
+    userId: string,
+    reason: string,
+  ): Promise<InventoryTransfer> {
     const transfer = await this.transferRepo.findOne({ where: { transferId } });
     if (!transfer) throw new NotFoundException('Transfer not found');
     transfer.status = 'rejected';
@@ -171,11 +455,18 @@ export class InventoryControlService {
     return this.transferRepo.save(transfer);
   }
 
-  async getTransfers(dispensaryId: string, direction?: string): Promise<any[]> {
-    const where = direction === 'outgoing' ? 'it.from_dispensary_id = $1'
-      : direction === 'incoming' ? 'it.to_dispensary_id = $1'
-      : '(it.from_dispensary_id = $1 OR it.to_dispensary_id = $1)';
-    return this.ds.query(
+  async getTransfers(
+    dispensaryId: string,
+    direction?: string,
+  ): Promise<TransferListRow[]> {
+    const where =
+      direction === 'outgoing'
+        ? 'it.from_dispensary_id = $1'
+        : direction === 'incoming'
+          ? 'it.to_dispensary_id = $1'
+          : '(it.from_dispensary_id = $1 OR it.to_dispensary_id = $1)';
+    return rawQuery<TransferListRow>(
+      this.ds,
       `SELECT it.*, df.name as from_name, dt.name as to_name,
         u."firstName" || ' ' || u."lastName" as requested_by,
         (SELECT COUNT(*) FROM inventory_transfer_items iti WHERE iti.transfer_id = it.transfer_id) as item_count,
@@ -184,7 +475,8 @@ export class InventoryControlService {
        JOIN dispensaries df ON df.entity_id = it.from_dispensary_id
        JOIN dispensaries dt ON dt.entity_id = it.to_dispensary_id
        JOIN users u ON u.id = it.requested_by_user_id
-       WHERE ${where} ORDER BY it.created_at DESC`, [dispensaryId],
+       WHERE ${where} ORDER BY it.created_at DESC`,
+      [dispensaryId],
     );
   }
 
@@ -196,34 +488,55 @@ export class InventoryControlService {
   // PHYSICAL COUNTS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  async startCount(dispensaryId: string, userId: string, countType: string, notes?: string): Promise<InventoryCount> {
-    const items = await this.ds.query(
+  async startCount(
+    dispensaryId: string,
+    userId: string,
+    countType: string,
+    notes?: string,
+  ): Promise<InventoryCount> {
+    const items = await rawQuery<CountItemSourceRow>(
+      this.ds,
       `SELECT i.variant_id, i.quantity_on_hand, p.name as product_name, pv.name as variant_name
        FROM inventory i JOIN product_variants pv ON pv.variant_id = i.variant_id
        JOIN products p ON p.id = pv.product_id
-       WHERE i.dispensary_id = $1 ORDER BY p.name`, [dispensaryId],
+       WHERE i.dispensary_id = $1 ORDER BY p.name`,
+      [dispensaryId],
     );
 
     const count = this.countRepo.create({
-      dispensary_id: dispensaryId, count_type: countType,
-      started_by_user_id: userId, started_at: new Date(),
-      total_items: items.length, notes,
+      dispensary_id: dispensaryId,
+      count_type: countType,
+      started_by_user_id: userId,
+      started_at: new Date(),
+      total_items: items.length,
+      notes,
     });
     const saved = await this.countRepo.save(count);
 
     for (const item of items) {
-      await this.countItemRepo.save(this.countItemRepo.create({
-        count_id: saved.countId, variant_id: item.variant_id,
-        product_name: item.product_name, variant_name: item.variant_name,
-        expected_quantity: item.quantity_on_hand,
-      }));
+      await this.countItemRepo.save(
+        this.countItemRepo.create({
+          count_id: saved.countId,
+          variant_id: item.variant_id,
+          product_name: item.product_name,
+          variant_name: item.variant_name,
+          expected_quantity: item.quantity_on_hand,
+        }),
+      );
     }
 
-    this.logger.log(`Count started: ${saved.countId} (${items.length} items)`);
+    this.logger.log(
+      `Count started: ${saved.countId} (${String(items.length)} items)`,
+    );
     return saved;
   }
 
-  async recordCount(countItemId: string, countedQuantity: number, userId: string, notes?: string): Promise<InventoryCountItem> {
+  async recordCount(
+    countItemId: string,
+    countedQuantity: number,
+    userId: string,
+    notes?: string,
+  ): Promise<InventoryCountItem> {
     const item = await this.countItemRepo.findOne({ where: { countItemId } });
     if (!item) throw new NotFoundException('Count item not found');
     item.counted_quantity = countedQuantity;
@@ -233,37 +546,52 @@ export class InventoryControlService {
 
     const saved = await this.countItemRepo.save(item);
 
-    // Update count progress
     await this.ds.query(
       `UPDATE inventory_counts SET
         items_counted = (SELECT COUNT(*) FROM inventory_count_items WHERE count_id = $1 AND counted_quantity IS NOT NULL),
         variance_count = (SELECT COUNT(*) FROM inventory_count_items WHERE count_id = $1 AND counted_quantity IS NOT NULL AND counted_quantity != expected_quantity),
         updated_at = NOW()
-       WHERE count_id = $1`, [item.count_id],
+       WHERE count_id = $1`,
+      [item.count_id],
     );
 
     return saved;
   }
 
-  async completeCount(countId: string, userId: string, autoAdjust: boolean): Promise<InventoryCount> {
+  async completeCount(
+    countId: string,
+    userId: string,
+    autoAdjust: boolean,
+  ): Promise<InventoryCount> {
     const count = await this.countRepo.findOne({ where: { countId } });
     if (!count) throw new NotFoundException('Count not found');
 
-    const uncounted = await this.ds.query(
-      `SELECT COUNT(*) as c FROM inventory_count_items WHERE count_id = $1 AND counted_quantity IS NULL`, [countId],
+    const uncounted = await rawQuery<CountRow>(
+      this.ds,
+      `SELECT COUNT(*) as c FROM inventory_count_items WHERE count_id = $1 AND counted_quantity IS NULL`,
+      [countId],
     );
-    if (parseInt(uncounted[0].c) > 0) throw new BadRequestException(`${uncounted[0].c} items still uncounted`);
+    const remaining = toInt(uncounted[0]?.c);
+    if (remaining > 0)
+      throw new BadRequestException(
+        `${String(remaining)} items still uncounted`,
+      );
 
     if (autoAdjust) {
-      const variances = await this.ds.query(
-        `SELECT * FROM inventory_count_items WHERE count_id = $1 AND counted_quantity != expected_quantity`, [countId],
+      const variances = await rawQuery<CountItemVarianceRow>(
+        this.ds,
+        `SELECT * FROM inventory_count_items WHERE count_id = $1 AND counted_quantity != expected_quantity`,
+        [countId],
       );
       for (const v of variances) {
         const change = v.counted_quantity - v.expected_quantity;
         await this.createAdjustment({
-          dispensaryId: count.dispensary_id, variantId: v.variant_id,
-          reasonCode: 'miscount', quantityChange: change,
-          submittedByUserId: userId, notes: `Auto-adjusted from count ${countId}`,
+          dispensaryId: count.dispensary_id,
+          variantId: v.variant_id,
+          reasonCode: 'miscount',
+          quantityChange: change,
+          submittedByUserId: userId,
+          notes: `Auto-adjusted from count ${countId}`,
           countId,
         });
       }
@@ -276,15 +604,20 @@ export class InventoryControlService {
   }
 
   async getCountItems(countId: string): Promise<InventoryCountItem[]> {
-    return this.countItemRepo.find({ where: { count_id: countId }, order: { product_name: 'ASC' } });
+    return this.countItemRepo.find({
+      where: { count_id: countId },
+      order: { product_name: 'ASC' },
+    });
   }
 
-  async getVarianceReport(countId: string): Promise<any[]> {
-    return this.ds.query(
+  async getVarianceReport(countId: string): Promise<VarianceReportRow[]> {
+    return rawQuery<VarianceReportRow>(
+      this.ds,
       `SELECT ci.*, ABS(ci.variance) as abs_variance,
         CASE WHEN ci.expected_quantity > 0 THEN ROUND(ci.variance::DECIMAL / ci.expected_quantity * 100, 1) ELSE 0 END as variance_pct
        FROM inventory_count_items ci WHERE ci.count_id = $1 AND ci.variance != 0
-       ORDER BY ABS(ci.variance) DESC`, [countId],
+       ORDER BY ABS(ci.variance) DESC`,
+      [countId],
     );
   }
 
@@ -292,29 +625,53 @@ export class InventoryControlService {
   // ADJUSTMENTS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  async createAdjustment(input: { dispensaryId: string; variantId: string; reasonCode: string; quantityChange: number; submittedByUserId: string; notes?: string; countId?: string }): Promise<InventoryAdjustment> {
-    const [reason] = await this.ds.query(`SELECT * FROM lkp_adjustment_reasons WHERE code = $1`, [input.reasonCode]);
-    if (!reason) throw new BadRequestException(`Invalid reason code: ${input.reasonCode}`);
+  async createAdjustment(input: {
+    dispensaryId: string;
+    variantId: string;
+    reasonCode: string;
+    quantityChange: number;
+    submittedByUserId: string;
+    notes?: string;
+    countId?: string;
+  }): Promise<InventoryAdjustment> {
+    const reasonRows = await rawQuery<AdjustmentReasonRow>(
+      this.ds,
+      `SELECT * FROM lkp_adjustment_reasons WHERE code = $1`,
+      [input.reasonCode],
+    );
+    const reason = reasonRows[0];
+    if (!reason)
+      throw new BadRequestException(`Invalid reason code: ${input.reasonCode}`);
 
-    const [inv] = await this.ds.query(
+    const invRows = await rawQuery<InventoryAdjSourceRow>(
+      this.ds,
       `SELECT i.quantity_on_hand, p.name as product_name FROM inventory i
        JOIN product_variants pv ON pv.variant_id = i.variant_id JOIN products p ON p.id = pv.product_id
        WHERE i.variant_id = $1 AND i.dispensary_id = $2`,
       [input.variantId, input.dispensaryId],
     );
+    const inv = invRows[0];
     if (!inv) throw new NotFoundException('Inventory not found');
 
-    const qtyBefore = parseInt(inv.quantity_on_hand);
+    const qtyBefore = toInt(inv.quantity_on_hand);
     const qtyAfter = qtyBefore + input.quantityChange;
-    if (qtyAfter < 0) throw new BadRequestException(`Adjustment would result in negative inventory (${qtyBefore} + ${input.quantityChange} = ${qtyAfter})`);
+    if (qtyAfter < 0)
+      throw new BadRequestException(
+        `Adjustment would result in negative inventory (${String(qtyBefore)} + ${String(input.quantityChange)} = ${String(qtyAfter)})`,
+      );
 
     const autoApprove = !reason.requires_approval;
 
     const adj = this.adjustRepo.create({
-      dispensary_id: input.dispensaryId, variant_id: input.variantId,
-      product_name: inv.product_name, reason_id: reason.reason_id,
-      quantity_change: input.quantityChange, quantity_before: qtyBefore, quantity_after: qtyAfter,
-      submitted_by_user_id: input.submittedByUserId, notes: input.notes,
+      dispensary_id: input.dispensaryId,
+      variant_id: input.variantId,
+      product_name: inv.product_name,
+      reason_id: reason.reason_id,
+      quantity_change: input.quantityChange,
+      quantity_before: qtyBefore,
+      quantity_after: qtyAfter,
+      submitted_by_user_id: input.submittedByUserId,
+      notes: input.notes,
       status: autoApprove ? 'approved' : 'pending',
     });
     const saved = await this.adjustRepo.save(adj);
@@ -327,14 +684,20 @@ export class InventoryControlService {
       );
     }
 
-    this.logger.log(`Adjustment ${saved.adjustmentId}: ${inv.product_name} ${input.quantityChange > 0 ? '+' : ''}${input.quantityChange} (${input.reasonCode}) — ${autoApprove ? 'auto-approved' : 'pending approval'}`);
+    this.logger.log(
+      `Adjustment ${saved.adjustmentId}: ${inv.product_name} ${input.quantityChange > 0 ? '+' : ''}${String(input.quantityChange)} (${input.reasonCode}) — ${autoApprove ? 'auto-approved' : 'pending approval'}`,
+    );
     return saved;
   }
 
-  async approveAdjustment(adjustmentId: string, userId: string): Promise<InventoryAdjustment> {
+  async approveAdjustment(
+    adjustmentId: string,
+    userId: string,
+  ): Promise<InventoryAdjustment> {
     const adj = await this.adjustRepo.findOne({ where: { adjustmentId } });
     if (!adj) throw new NotFoundException('Adjustment not found');
-    if (adj.status !== 'pending') throw new BadRequestException('Already processed');
+    if (adj.status !== 'pending')
+      throw new BadRequestException('Already processed');
 
     await this.ds.query(
       `UPDATE inventory SET quantity_on_hand = quantity_on_hand + $1, quantity_available = quantity_available + $1, last_movement_at = NOW(), updated_at = NOW()
@@ -348,8 +711,12 @@ export class InventoryControlService {
     return this.adjustRepo.save(adj);
   }
 
-  async getAdjustments(dispensaryId: string, limit = 50): Promise<any[]> {
-    return this.ds.query(
+  async getAdjustments(
+    dispensaryId: string,
+    limit = 50,
+  ): Promise<AdjustmentListRow[]> {
+    return rawQuery<AdjustmentListRow>(
+      this.ds,
       `SELECT ia.*, lr.name as reason_name, lr.code as reason_code,
         u."firstName" || ' ' || u."lastName" as submitted_by
        FROM inventory_adjustments ia
@@ -360,16 +727,23 @@ export class InventoryControlService {
     );
   }
 
-  async getAdjustmentReasons(): Promise<LkpAdjustmentReason[]> {
-    return this.ds.query(`SELECT reason_id as "reasonId", code, name, direction, requires_approval as "requiresApproval", is_active as "isActive" FROM lkp_adjustment_reasons WHERE is_active = true ORDER BY reason_id`);
+  async getAdjustmentReasons(): Promise<AdjustmentReasonDto[]> {
+    return rawQuery<AdjustmentReasonDto>(
+      this.ds,
+      `SELECT reason_id as "reasonId", code, name, direction, requires_approval as "requiresApproval", is_active as "isActive" FROM lkp_adjustment_reasons WHERE is_active = true ORDER BY reason_id`,
+    );
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
   // ALERTS: EXPIRATION, REORDER, DEAD STOCK
   // ═══════════════════════════════════════════════════════════════════════════
 
-  async getExpiringInventory(dispensaryId: string, daysAhead = 30): Promise<any[]> {
-    return this.ds.query(
+  async getExpiringInventory(
+    dispensaryId: string,
+    daysAhead = 30,
+  ): Promise<ExpiringInventoryRow[]> {
+    return rawQuery<ExpiringInventoryRow>(
+      this.ds,
       `SELECT i.inventory_id, i.variant_id, i.quantity_on_hand, i.expiration_date, i.lot_number,
         p.name as product_name, pv.name as variant_name,
         i.expiration_date - CURRENT_DATE as days_until_expiry,
@@ -382,8 +756,9 @@ export class InventoryControlService {
     );
   }
 
-  async getReorderAlerts(dispensaryId: string): Promise<any[]> {
-    return this.ds.query(
+  async getReorderAlerts(dispensaryId: string): Promise<ReorderAlertRow[]> {
+    return rawQuery<ReorderAlertRow>(
+      this.ds,
       `SELECT i.inventory_id, i.variant_id, i.quantity_on_hand, i.quantity_available,
         i.reorder_threshold, i.reorder_quantity, i.auto_reorder_enabled,
         p.name as product_name, pv.name as variant_name
@@ -396,8 +771,12 @@ export class InventoryControlService {
     );
   }
 
-  async getDeadStock(dispensaryId: string, daysSinceMovement = 30): Promise<any[]> {
-    return this.ds.query(
+  async getDeadStock(
+    dispensaryId: string,
+    daysSinceMovement = 30,
+  ): Promise<DeadStockRow[]> {
+    return rawQuery<DeadStockRow>(
+      this.ds,
       `SELECT i.inventory_id, i.variant_id, i.quantity_on_hand, i.last_movement_at,
         CURRENT_DATE - i.last_movement_at::DATE as days_stale,
         p.name as product_name, pv.name as variant_name
@@ -410,8 +789,11 @@ export class InventoryControlService {
     );
   }
 
-  async getInventoryHealthDashboard(dispensaryId: string): Promise<any> {
-    const [stats] = await this.ds.query(
+  async getInventoryHealthDashboard(
+    dispensaryId: string,
+  ): Promise<InventoryHealthDto> {
+    const statsRows = await rawQuery<HealthStatsRow>(
+      this.ds,
       `SELECT
         COUNT(*) as total_skus,
         SUM(quantity_on_hand) as total_units,
@@ -420,24 +802,33 @@ export class InventoryControlService {
         COUNT(*) FILTER (WHERE expiration_date IS NOT NULL AND expiration_date <= CURRENT_DATE) as expired,
         COUNT(*) FILTER (WHERE expiration_date IS NOT NULL AND expiration_date > CURRENT_DATE AND expiration_date <= CURRENT_DATE + INTERVAL '30 days') as expiring_30d,
         COUNT(*) FILTER (WHERE last_movement_at < NOW() - INTERVAL '30 days' AND quantity_on_hand > 0) as dead_stock
-       FROM inventory WHERE dispensary_id = $1`, [dispensaryId],
+       FROM inventory WHERE dispensary_id = $1`,
+      [dispensaryId],
+    );
+    const stats = statsRows[0];
+
+    const pendingTransferRows = await rawQuery<CountRow>(
+      this.ds,
+      `SELECT COUNT(*) as c FROM inventory_transfers WHERE (from_dispensary_id = $1 OR to_dispensary_id = $1) AND status IN ('requested','approved','in_transit')`,
+      [dispensaryId],
     );
 
-    const [pendingTransfers] = await this.ds.query(
-      `SELECT COUNT(*) as c FROM inventory_transfers WHERE (from_dispensary_id = $1 OR to_dispensary_id = $1) AND status IN ('requested','approved','in_transit')`, [dispensaryId],
-    );
-
-    const [pendingAdjustments] = await this.ds.query(
-      `SELECT COUNT(*) as c FROM inventory_adjustments WHERE dispensary_id = $1 AND status = 'pending'`, [dispensaryId],
+    const pendingAdjustmentRows = await rawQuery<CountRow>(
+      this.ds,
+      `SELECT COUNT(*) as c FROM inventory_adjustments WHERE dispensary_id = $1 AND status = 'pending'`,
+      [dispensaryId],
     );
 
     return {
-      totalSkus: parseInt(stats.total_skus), totalUnits: parseInt(stats.total_units),
-      lowStock: parseInt(stats.low_stock), outOfStock: parseInt(stats.out_of_stock),
-      expired: parseInt(stats.expired), expiring30d: parseInt(stats.expiring_30d),
-      deadStock: parseInt(stats.dead_stock),
-      pendingTransfers: parseInt(pendingTransfers.c),
-      pendingAdjustments: parseInt(pendingAdjustments.c),
+      totalSkus: toInt(stats.total_skus),
+      totalUnits: toInt(stats.total_units),
+      lowStock: toInt(stats.low_stock),
+      outOfStock: toInt(stats.out_of_stock),
+      expired: toInt(stats.expired),
+      expiring30d: toInt(stats.expiring_30d),
+      deadStock: toInt(stats.dead_stock),
+      pendingTransfers: toInt(pendingTransferRows[0]?.c),
+      pendingAdjustments: toInt(pendingAdjustmentRows[0]?.c),
     };
   }
 
@@ -446,12 +837,21 @@ export class InventoryControlService {
   @Cron('0 7 * * *')
   async dailyInventoryAlerts(): Promise<void> {
     this.logger.log('Running daily inventory alerts...');
-    const dispensaries = await this.ds.query(`SELECT entity_id, name FROM dispensaries WHERE is_active = true`);
+    const dispensaries = await rawQuery<DispensaryNameRow>(
+      this.ds,
+      `SELECT entity_id, name FROM dispensaries WHERE is_active = true`,
+    );
     for (const d of dispensaries) {
       const expiring = await this.getExpiringInventory(d.entity_id, 14);
       const reorder = await this.getReorderAlerts(d.entity_id);
-      if (expiring.length > 0) this.logger.warn(`${d.name}: ${expiring.length} items expiring within 14 days`);
-      if (reorder.length > 0) this.logger.warn(`${d.name}: ${reorder.length} items below reorder threshold`);
+      if (expiring.length > 0)
+        this.logger.warn(
+          `${d.name}: ${String(expiring.length)} items expiring within 14 days`,
+        );
+      if (reorder.length > 0)
+        this.logger.warn(
+          `${d.name}: ${String(reorder.length)} items below reorder threshold`,
+        );
     }
   }
 }
