@@ -4275,6 +4275,66 @@ export type CustomerByPhoneQuery = {
   } | null;
 };
 
+export type CheckDeliveryEligibilityQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+  latitude: Scalars['Float']['input'];
+  longitude: Scalars['Float']['input'];
+  orderSubtotal?: InputMaybe<Scalars['Float']['input']>;
+}>;
+
+export type CheckDeliveryEligibilityQuery = {
+  __typename?: 'Query';
+  checkDeliveryEligibility: {
+    __typename?: 'DeliveryEligibilityResult';
+    eligible: boolean;
+    distance?: number | null;
+    reason?: string | null;
+    zone?: {
+      __typename?: 'DeliveryZoneMatch';
+      name: string;
+      deliveryFee: number;
+      estimatedMinutesMin: number;
+      estimatedMinutesMax: number;
+    } | null;
+  };
+};
+
+export type DeliveryZonesQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+}>;
+
+export type DeliveryZonesQuery = {
+  __typename?: 'Query';
+  deliveryZones: Array<{
+    __typename?: 'DeliveryZone';
+    zoneId: string;
+    name: string;
+    radiusMiles: number;
+    deliveryFee: number;
+    minOrderAmount?: number | null;
+    freeDeliveryThreshold?: number | null;
+    estimatedMinutesMin?: number | null;
+    estimatedMinutesMax?: number | null;
+  }>;
+};
+
+export type AvailableTimeSlotsQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+  slotType: Scalars['String']['input'];
+  date: Scalars['String']['input'];
+}>;
+
+export type AvailableTimeSlotsQuery = {
+  __typename?: 'Query';
+  availableTimeSlots: Array<{
+    __typename?: 'AvailableSlotResult';
+    slotId: string;
+    startTime: string;
+    endTime: string;
+    spotsRemaining: number;
+  }>;
+};
+
 export type DispensaryBySlugQueryVariables = Exact<{
   slug: Scalars['String']['input'];
 }>;
@@ -4662,6 +4722,97 @@ export class CustomerByPhoneGQL extends Apollo.Query<
   CustomerByPhoneQueryVariables
 > {
   override document = CustomerByPhoneDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const CheckDeliveryEligibilityDocument = gql`
+  query CheckDeliveryEligibility(
+    $dispensaryId: ID!
+    $latitude: Float!
+    $longitude: Float!
+    $orderSubtotal: Float
+  ) {
+    checkDeliveryEligibility(
+      dispensaryId: $dispensaryId
+      latitude: $latitude
+      longitude: $longitude
+      orderSubtotal: $orderSubtotal
+    ) {
+      eligible
+      distance
+      reason
+      zone {
+        name
+        deliveryFee
+        estimatedMinutesMin
+        estimatedMinutesMax
+      }
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class CheckDeliveryEligibilityGQL extends Apollo.Query<
+  CheckDeliveryEligibilityQuery,
+  CheckDeliveryEligibilityQueryVariables
+> {
+  override document = CheckDeliveryEligibilityDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const DeliveryZonesDocument = gql`
+  query DeliveryZones($dispensaryId: ID!) {
+    deliveryZones(dispensaryId: $dispensaryId) {
+      zoneId
+      name
+      radiusMiles
+      deliveryFee
+      minOrderAmount
+      freeDeliveryThreshold
+      estimatedMinutesMin
+      estimatedMinutesMax
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class DeliveryZonesGQL extends Apollo.Query<
+  DeliveryZonesQuery,
+  DeliveryZonesQueryVariables
+> {
+  override document = DeliveryZonesDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const AvailableTimeSlotsDocument = gql`
+  query AvailableTimeSlots($dispensaryId: ID!, $slotType: String!, $date: String!) {
+    availableTimeSlots(dispensaryId: $dispensaryId, slotType: $slotType, date: $date) {
+      slotId
+      startTime
+      endTime
+      spotsRemaining
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class AvailableTimeSlotsGQL extends Apollo.Query<
+  AvailableTimeSlotsQuery,
+  AvailableTimeSlotsQueryVariables
+> {
+  override document = AvailableTimeSlotsDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);
