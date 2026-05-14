@@ -1,0 +1,21 @@
+query MyLoyalty($dispensaryId: ID!) {
+  myLoyalty(dispensaryId: $dispensaryId) {
+    points
+    lifetimePoints
+    tier
+    tierName
+    tierColor
+    multiplier
+    pointValue
+    nextTier {
+      name
+      pointsNeeded
+    }
+    allTiers {
+      code
+      name
+      minPoints
+      color
+    }
+  }
+}

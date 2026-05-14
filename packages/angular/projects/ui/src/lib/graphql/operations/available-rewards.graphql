@@ -1,0 +1,10 @@
+query AvailableRewards($dispensaryId: ID!) {
+  availableRewards(dispensaryId: $dispensaryId) {
+    rewardId
+    name
+    description
+    pointsCost
+    rewardType
+    rewardValue
+  }
+}

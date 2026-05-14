@@ -4221,6 +4221,23 @@ export type WasteDestructionLog = {
   witness2Title?: Maybe<Scalars['String']['output']>;
 };
 
+export type AvailableRewardsQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+}>;
+
+export type AvailableRewardsQuery = {
+  __typename?: 'Query';
+  availableRewards: Array<{
+    __typename?: 'LoyaltyReward';
+    rewardId: string;
+    name: string;
+    description?: string | null;
+    pointsCost: number;
+    rewardType: string;
+    rewardValue: number;
+  }>;
+};
+
 export type CreateOrderMutationVariables = Exact<{
   input: CreateOrderInput;
 }>;
@@ -4378,6 +4395,32 @@ export type MyLastOrderQuery = {
   } | null;
 };
 
+export type MyLoyaltyQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+}>;
+
+export type MyLoyaltyQuery = {
+  __typename?: 'Query';
+  myLoyalty?: {
+    __typename?: 'MyLoyalty';
+    points: number;
+    lifetimePoints: number;
+    tier: string;
+    tierName: string;
+    tierColor?: string | null;
+    multiplier: number;
+    pointValue: number;
+    nextTier?: { __typename?: 'NextTierInfo'; name: string; pointsNeeded: number } | null;
+    allTiers: Array<{
+      __typename?: 'LoyaltyTierInfo';
+      code: string;
+      name: string;
+      minPoints: number;
+      color?: string | null;
+    }>;
+  } | null;
+};
+
 export type OrderQueryVariables = Exact<{
   orderId: Scalars['ID']['input'];
   dispensaryId?: InputMaybe<Scalars['ID']['input']>;
@@ -4520,6 +4563,32 @@ export type VerifyAgeMutation = {
   };
 };
 
+export const AvailableRewardsDocument = gql`
+  query AvailableRewards($dispensaryId: ID!) {
+    availableRewards(dispensaryId: $dispensaryId) {
+      rewardId
+      name
+      description
+      pointsCost
+      rewardType
+      rewardValue
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class AvailableRewardsGQL extends Apollo.Query<
+  AvailableRewardsQuery,
+  AvailableRewardsQueryVariables
+> {
+  override document = AvailableRewardsDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
 export const CreateOrderDocument = gql`
   mutation CreateOrder($input: CreateOrderInput!) {
     createOrder(input: $input) {
@@ -4732,6 +4801,40 @@ export const MyLastOrderDocument = gql`
 })
 export class MyLastOrderGQL extends Apollo.Query<MyLastOrderQuery, MyLastOrderQueryVariables> {
   override document = MyLastOrderDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const MyLoyaltyDocument = gql`
+  query MyLoyalty($dispensaryId: ID!) {
+    myLoyalty(dispensaryId: $dispensaryId) {
+      points
+      lifetimePoints
+      tier
+      tierName
+      tierColor
+      multiplier
+      pointValue
+      nextTier {
+        name
+        pointsNeeded
+      }
+      allTiers {
+        code
+        name
+        minPoints
+        color
+      }
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class MyLoyaltyGQL extends Apollo.Query<MyLoyaltyQuery, MyLoyaltyQueryVariables> {
+  override document = MyLoyaltyDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);

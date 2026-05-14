@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
+import { LoyaltyCard } from './loyalty-card';
 
 @Component({
   selector: 'cs-account-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, LoyaltyCard],
   template: `
     @if (user(); as u) {
       <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6">
@@ -102,6 +103,10 @@ import { AuthService } from '../../core/auth/auth.service';
               </div>
             </div>
           </div>
+        </div>
+
+        <div class="mb-6">
+          <cs-loyalty-card />
         </div>
 
         <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
