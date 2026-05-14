@@ -1,4 +1,9 @@
-import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleInit,
+  OnModuleDestroy,
+} from '@nestjs/common';
 import Redis from 'ioredis';
 
 @Injectable()
@@ -6,7 +11,7 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(CacheService.name);
   private redis!: Redis;
 
-  async onModuleInit() {
+  onModuleInit(): void {
     this.redis = new Redis({
       host: process.env['REDIS_HOST'] || 'localhost',
       port: parseInt(process.env['REDIS_PORT'] || '6379', 10),
@@ -21,7 +26,7 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
 
   async get<T>(key: string): Promise<T | null> {
     const val = await this.redis.get(key);
-    return val ? JSON.parse(val) : null;
+    return val ? (JSON.parse(val) as T) : null;
   }
 
   async set(key: string, value: unknown, ttlSeconds = 300): Promise<void> {
@@ -38,7 +43,11 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
   }
 
   /** Rate limiting using Redis (replaces in-memory Map) */
-  async checkRateLimit(key: string, maxRequests: number, windowSeconds: number): Promise<boolean> {
+  async checkRateLimit(
+    key: string,
+    maxRequests: number,
+    windowSeconds: number,
+  ): Promise<boolean> {
     const current = await this.redis.incr(`rl:${key}`);
     if (current === 1) await this.redis.expire(`rl:${key}`, windowSeconds);
     return current <= maxRequests;
@@ -50,13 +59,22 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
   }
 
   /** Session storage */
-  async setSession(sessionId: string, data: unknown, ttlSeconds = 86400): Promise<void> {
-    await this.redis.set(`session:${sessionId}`, JSON.stringify(data), 'EX', ttlSeconds);
+  async setSession(
+    sessionId: string,
+    data: unknown,
+    ttlSeconds = 86400,
+  ): Promise<void> {
+    await this.redis.set(
+      `session:${sessionId}`,
+      JSON.stringify(data),
+      'EX',
+      ttlSeconds,
+    );
   }
 
   async getSession<T>(sessionId: string): Promise<T | null> {
     const val = await this.redis.get(`session:${sessionId}`);
-    return val ? JSON.parse(val) : null;
+    return val ? (JSON.parse(val) as T) : null;
   }
 
   /** Real-time inventory counts */

@@ -1,12 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
-
-interface Metric {
-  name: string;
-  help: string;
-  type: 'counter' | 'gauge' | 'histogram';
-  value: number;
-  labels?: Record<string, string>;
-}
+import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class MetricsService {
@@ -49,8 +41,12 @@ export class MetricsService {
       const sorted = [...vals].sort((a, b) => a - b);
       const count = sorted.length;
       const sum = sorted.reduce((a, b) => a + b, 0);
-      lines.push(`${name}_count${key.includes('{') ? key.slice(key.indexOf('{')) : ''} ${count}`);
-      lines.push(`${name}_sum${key.includes('{') ? key.slice(key.indexOf('{')) : ''} ${sum}`);
+      lines.push(
+        `${name}_count${key.includes('{') ? key.slice(key.indexOf('{')) : ''} ${count}`,
+      );
+      lines.push(
+        `${name}_sum${key.includes('{') ? key.slice(key.indexOf('{')) : ''} ${sum}`,
+      );
     }
 
     return lines.join('\n');
@@ -58,7 +54,9 @@ export class MetricsService {
 
   private key(name: string, labels?: Record<string, string>): string {
     if (!labels || Object.keys(labels).length === 0) return name;
-    const labelStr = Object.entries(labels).map(([k, v]) => `${k}="${v}"`).join(',');
+    const labelStr = Object.entries(labels)
+      .map(([k, v]) => `${k}="${v}"`)
+      .join(',');
     return `${name}{${labelStr}}`;
   }
 }

@@ -29,7 +29,12 @@ async function bootstrap(): Promise<void> {
   if (isProd) {
     app.use(helmet());
   } else {
-    app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
+    app.use(
+      helmet({
+        contentSecurityPolicy: false,
+        crossOriginEmbedderPolicy: false,
+      }),
+    );
   }
   app.use(compression());
   app.use(cookieParser());
@@ -40,24 +45,26 @@ async function bootstrap(): Promise<void> {
   app.use(urlencoded({ extended: true, limit: '1mb' }));
 
   // Serve uploaded images
-  const uploadDir = process.env['UPLOAD_DIR'] || path.join(process.cwd(), 'uploads');
+  const uploadDir =
+    process.env['UPLOAD_DIR'] || path.join(process.cwd(), 'uploads');
   app.useStaticAssets(uploadDir, { prefix: '/uploads/' });
 
   app.enableCors({
     origin: (() => {
-      const o = config.get('corsOrigins');
-      return Array.isArray(o)
-        ? o
-        : typeof o === 'string'
-        ? o.split(',')
-        : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'];
+      const o = config.get<string[] | string | undefined>('corsOrigins');
+      if (Array.isArray(o)) return o;
+      if (typeof o === 'string') return o.split(',');
+      return [
+        'http://localhost:5173',
+        'http://localhost:5174',
+        'http://localhost:5175',
+      ];
     })(),
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
   });
 
   app.useGlobalPipes(
-
     new ValidationPipe({
       transform: true,
       whitelist: true,
@@ -79,16 +86,28 @@ async function bootstrap(): Promise<void> {
       .setDescription('Multi-tenant cannabis platform API')
       .setVersion('1.0')
       .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' })
-      .addApiKey({ type: 'apiKey', in: 'header', name: 'X-Organization-Id' }, 'OrganizationId')
-      .addApiKey({ type: 'apiKey', in: 'header', name: 'X-Dispensary-Id' }, 'DispensaryId')
+      .addApiKey(
+        { type: 'apiKey', in: 'header', name: 'X-Organization-Id' },
+        'OrganizationId',
+      )
+      .addApiKey(
+        { type: 'apiKey', in: 'header', name: 'X-Dispensary-Id' },
+        'DispensaryId',
+      )
       .build();
-    SwaggerModule.setup('docs', app, SwaggerModule.createDocument(app, swaggerConfig));
+    SwaggerModule.setup(
+      'docs',
+      app,
+      SwaggerModule.createDocument(app, swaggerConfig),
+    );
   }
 
   const port = config.get<number>('port') ?? 3000;
   await app.listen(port);
   const logger = new Logger('Bootstrap');
-  logger.log(`CannaSaas API listening on port ${port} [${config.get<string>('nodeEnv')}]`);
+  logger.log(
+    `CannaSaas API listening on port ${port} [${config.get<string>('nodeEnv')}]`,
+  );
 }
 
-bootstrap();
+void bootstrap();
