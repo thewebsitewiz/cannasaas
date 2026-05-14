@@ -152,10 +152,13 @@ import { LoyaltyCard } from './loyalty-card';
           }
         </div>
 
-        <div class="rounded-2xl border border-stone-200 bg-white p-6">
-          <h2 class="mb-4 flex items-center gap-2 font-semibold text-stone-900">
+        <a
+          class="flex items-center justify-between rounded-2xl border border-stone-200 bg-white p-6 transition-colors hover:bg-stone-50"
+          [routerLink]="['/orders']"
+        >
+          <div class="flex items-center gap-3">
             <svg
-              class="h-4 w-4"
+              class="h-5 w-5 text-emerald-700"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -167,29 +170,23 @@ import { LoyaltyCard } from './loyalty-card';
                 d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"
               />
             </svg>
-            Order History
-          </h2>
-          <div class="py-8 text-center">
-            <svg
-              class="mx-auto mb-2 h-8 w-8 text-stone-300"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              aria-hidden="true"
-            >
-              <path
-                d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"
-              />
-            </svg>
-            <p class="text-sm text-stone-500">Your order history will appear here</p>
-            <a
-              class="mt-2 inline-block text-sm font-medium text-emerald-700 hover:text-emerald-600"
-              [routerLink]="['/products']"
-              >Browse Menu</a
-            >
+            <div>
+              <p class="font-semibold text-stone-900">Order History</p>
+              <p class="text-xs text-stone-500">View past and active orders</p>
+            </div>
           </div>
-        </div>
+          <svg
+            class="h-4 w-4 text-stone-400"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <path d="M9 18l6-6-6-6" />
+          </svg>
+        </a>
       </div>
     }
   `,

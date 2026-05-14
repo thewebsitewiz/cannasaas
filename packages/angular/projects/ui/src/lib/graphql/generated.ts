@@ -4421,6 +4421,30 @@ export type MyLoyaltyQuery = {
   } | null;
 };
 
+export type MyOrdersQueryVariables = Exact<{
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+export type MyOrdersQuery = {
+  __typename?: 'Query';
+  myOrders: {
+    __typename?: 'OrderHistoryResult';
+    total: number;
+    orders: Array<{
+      __typename?: 'CustomerOrderSummary';
+      orderId: string;
+      orderStatus: string;
+      orderType: string;
+      subtotal: number;
+      total: number;
+      itemCount?: number | null;
+      dispensaryName?: string | null;
+      createdAt: string;
+    }>;
+  };
+};
+
 export type OrderQueryVariables = Exact<{
   orderId: Scalars['ID']['input'];
   dispensaryId?: InputMaybe<Scalars['ID']['input']>;
@@ -4835,6 +4859,34 @@ export const MyLoyaltyDocument = gql`
 })
 export class MyLoyaltyGQL extends Apollo.Query<MyLoyaltyQuery, MyLoyaltyQueryVariables> {
   override document = MyLoyaltyDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const MyOrdersDocument = gql`
+  query MyOrders($limit: Int, $offset: Int) {
+    myOrders(limit: $limit, offset: $offset) {
+      total
+      orders {
+        orderId
+        orderStatus
+        orderType
+        subtotal
+        total
+        itemCount
+        dispensaryName
+        createdAt
+      }
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class MyOrdersGQL extends Apollo.Query<MyOrdersQuery, MyOrdersQueryVariables> {
+  override document = MyOrdersDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);
