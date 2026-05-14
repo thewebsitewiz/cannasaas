@@ -4221,6 +4221,23 @@ export type WasteDestructionLog = {
   witness2Title?: Maybe<Scalars['String']['output']>;
 };
 
+export type AutocompleteProductsQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+  query: Scalars['String']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+export type AutocompleteProductsQuery = {
+  __typename?: 'Query';
+  autocompleteProducts: Array<{
+    __typename?: 'AutocompleteResult';
+    id: string;
+    name: string;
+    productType?: string | null;
+    strainType?: string | null;
+  }>;
+};
+
 export type AvailableRewardsQueryVariables = Exact<{
   dispensaryId: Scalars['ID']['input'];
 }>;
@@ -4647,6 +4664,30 @@ export type VerifyAgeMutation = {
   };
 };
 
+export const AutocompleteProductsDocument = gql`
+  query AutocompleteProducts($dispensaryId: ID!, $query: String!, $limit: Int) {
+    autocompleteProducts(dispensaryId: $dispensaryId, query: $query, limit: $limit) {
+      id
+      name
+      productType
+      strainType
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class AutocompleteProductsGQL extends Apollo.Query<
+  AutocompleteProductsQuery,
+  AutocompleteProductsQueryVariables
+> {
+  override document = AutocompleteProductsDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
 export const AvailableRewardsDocument = gql`
   query AvailableRewards($dispensaryId: ID!) {
     availableRewards(dispensaryId: $dispensaryId) {

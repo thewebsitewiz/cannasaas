@@ -1,0 +1,8 @@
+query AutocompleteProducts($dispensaryId: ID!, $query: String!, $limit: Int) {
+  autocompleteProducts(dispensaryId: $dispensaryId, query: $query, limit: $limit) {
+    id
+    name
+    productType
+    strainType
+  }
+}

@@ -6,8 +6,14 @@ import {
   resource,
   signal,
 } from '@angular/core';
-import { ProductsGQL } from '@cannasaas/ui-ng';
-import { firstValueFrom } from 'rxjs';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
+import {
+  AutocompleteProductsGQL,
+  AutocompleteProductsQuery,
+  ProductsGQL,
+} from '@cannasaas/ui-ng';
+import { debounceTime, distinctUntilChanged, firstValueFrom, map } from 'rxjs';
 import { DispensaryContextService } from '../../core/tenant/dispensary-context.service';
 import { ProductCard, ProductListItem } from './product-card';
 
@@ -18,10 +24,16 @@ const STRAIN_FILTERS: readonly { label: string; value: string | null }[] = [
   { label: 'Hybrid', value: 'hybrid' },
 ];
 
+const AUTOCOMPLETE_DEBOUNCE_MS = 200;
+const AUTOCOMPLETE_MIN_CHARS = 2;
+const AUTOCOMPLETE_LIMIT = 6;
+
+type Suggestion = AutocompleteProductsQuery['autocompleteProducts'][number];
+
 @Component({
   selector: 'cs-products-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ProductCard],
+  imports: [ProductCard, RouterLink],
   template: `
     <div class="mx-auto max-w-7xl px-6 py-12">
       <div class="mb-8">
@@ -53,7 +65,40 @@ const STRAIN_FILTERS: readonly { label: string; value: string | null }[] = [
             class="w-full rounded-full border border-stone-200 bg-white py-3 pl-11 pr-4 text-sm text-stone-900 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-emerald-700"
             [value]="search()"
             (input)="onSearch($event)"
+            (focus)="suggestionsOpen.set(true)"
+            (blur)="onSearchBlur()"
           />
+          @if (showSuggestions()) {
+            <div
+              class="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-lg"
+              role="listbox"
+            >
+              @if (suggestionsResource.isLoading()) {
+                <p class="px-4 py-3 text-sm text-stone-500">Searching…</p>
+              } @else if (suggestions().length === 0) {
+                <p class="px-4 py-3 text-sm text-stone-500">No matches.</p>
+              } @else {
+                @for (s of suggestions(); track s.id) {
+                  <a
+                    class="flex items-center justify-between gap-3 border-b border-stone-50 px-4 py-3 text-sm transition-colors last:border-0 hover:bg-stone-50"
+                    role="option"
+                    [routerLink]="['/products', s.id]"
+                    (mousedown)="$event.preventDefault()"
+                    (click)="onSuggestionClick()"
+                  >
+                    <span class="truncate font-medium text-stone-900">{{ s.name }}</span>
+                    <span class="shrink-0 text-xs text-stone-400">
+                      @if (s.strainType) {
+                        {{ s.strainType }}
+                      } @else if (s.productType) {
+                        {{ s.productType }}
+                      }
+                    </span>
+                  </a>
+                }
+              }
+            </div>
+          }
         </div>
         <div class="flex items-center gap-2">
           @for (filter of strainFilters; track filter.label) {
@@ -108,10 +153,12 @@ const STRAIN_FILTERS: readonly { label: string; value: string | null }[] = [
 export class ProductsPage {
   protected readonly dispensary = inject(DispensaryContextService);
   private readonly productsGQL = inject(ProductsGQL);
+  private readonly autocompleteGQL = inject(AutocompleteProductsGQL);
 
   protected readonly strainFilters = STRAIN_FILTERS;
   protected readonly search = signal('');
   protected readonly strainFilter = signal<string | null>(null);
+  protected readonly suggestionsOpen = signal(false);
 
   protected readonly productsResource = resource<
     ProductListItem[],
@@ -127,6 +174,47 @@ export class ProductsPage {
       );
       return result.data?.products ?? [];
     },
+  });
+
+  private readonly debouncedSearch = toSignal(
+    toObservable(this.search).pipe(
+      debounceTime(AUTOCOMPLETE_DEBOUNCE_MS),
+      map((s) => s.trim()),
+      distinctUntilChanged(),
+    ),
+    { initialValue: '' },
+  );
+
+  protected readonly suggestionsResource = resource<
+    readonly Suggestion[],
+    { dispensaryId: string | null; query: string }
+  >({
+    params: () => ({
+      dispensaryId: this.dispensary.entityId(),
+      query: this.debouncedSearch(),
+    }),
+    loader: async ({ params }) => {
+      if (!params.dispensaryId || params.query.length < AUTOCOMPLETE_MIN_CHARS) return [];
+      const result = await firstValueFrom(
+        this.autocompleteGQL.fetch({
+          variables: {
+            dispensaryId: params.dispensaryId,
+            query: params.query,
+            limit: AUTOCOMPLETE_LIMIT,
+          },
+        }),
+      );
+      return result.data?.autocompleteProducts ?? [];
+    },
+  });
+
+  protected readonly suggestions = computed(
+    () => this.suggestionsResource.value() ?? [],
+  );
+
+  protected readonly showSuggestions = computed(() => {
+    if (!this.suggestionsOpen()) return false;
+    return this.search().trim().length >= AUTOCOMPLETE_MIN_CHARS;
   });
 
   protected readonly filtered = computed(() => {
@@ -149,5 +237,14 @@ export class ProductsPage {
   onSearch(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.search.set(input.value);
+    this.suggestionsOpen.set(true);
+  }
+
+  onSearchBlur(): void {
+    setTimeout(() => this.suggestionsOpen.set(false), 100);
+  }
+
+  onSuggestionClick(): void {
+    this.suggestionsOpen.set(false);
   }
 }
