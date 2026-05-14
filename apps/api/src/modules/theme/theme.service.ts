@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ThemeConfig } from './theme-config.entity';
@@ -58,12 +58,13 @@ export class ThemeService {
 
     let result: ThemeConfig;
     if (existing) {
-      // Merge only provided fields
-      Object.entries(input).forEach(([key, value]) => {
+      const merged = existing as unknown as Record<string, unknown>;
+      const inputRecord = input as unknown as Record<string, unknown>;
+      for (const [key, value] of Object.entries(inputRecord)) {
         if (value !== undefined && value !== null) {
-          (existing as any)[key] = value;
+          merged[key] = value;
         }
-      });
+      }
       result = await this.repo.save(existing);
     } else {
       const config = this.repo.create(input);
