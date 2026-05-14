@@ -1,11 +1,12 @@
 import { Resolver, Query, Args, ID } from '@nestjs/graphql';
 import { ObjectType, Field, Float } from '@nestjs/graphql';
 import { ForbiddenException } from '@nestjs/common';
-import { KnowledgeService } from './knowledge.service';
+import { KnowledgeService, KnowledgeProductDto } from './knowledge.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtPayload } from '../auth/strategies/jwt.strategy';
 
-@ObjectType() class KnowledgeProduct {
+@ObjectType()
+class KnowledgeProduct {
   @Field(() => ID) productId!: string;
   @Field() productName!: string;
   @Field({ nullable: true }) strainType?: string;
@@ -26,7 +27,8 @@ export class KnowledgeResolver {
   private resolveDispensary(user: JwtPayload, dispensaryId?: string): string {
     const targetId = dispensaryId ?? user.dispensaryId;
     if (!targetId) throw new ForbiddenException('dispensaryId required');
-    if (user.role === 'dispensary_admin' && targetId !== user.dispensaryId) throw new ForbiddenException('Access denied');
+    if (user.role === 'dispensary_admin' && targetId !== user.dispensaryId)
+      throw new ForbiddenException('Access denied');
     return targetId;
   }
 
@@ -34,24 +36,32 @@ export class KnowledgeResolver {
   async productsByEffect(
     @CurrentUser() user: JwtPayload,
     @Args('effect') effect: string,
-    @Args('dispensaryId', { type: () => ID, nullable: true }) dispensaryId?: string,
-  ): Promise<KnowledgeProduct[]> {
-    return this.knowledge.searchByEffect(effect, this.resolveDispensary(user, dispensaryId));
+    @Args('dispensaryId', { type: () => ID, nullable: true })
+    dispensaryId?: string,
+  ): Promise<KnowledgeProductDto[]> {
+    return this.knowledge.searchByEffect(
+      effect,
+      this.resolveDispensary(user, dispensaryId),
+    );
   }
 
   @Query(() => [KnowledgeProduct], { name: 'productsByCondition' })
   async productsByCondition(
     @CurrentUser() user: JwtPayload,
     @Args('condition') condition: string,
-    @Args('dispensaryId', { type: () => ID, nullable: true }) dispensaryId?: string,
-  ): Promise<KnowledgeProduct[]> {
-    return this.knowledge.searchByCondition(condition, this.resolveDispensary(user, dispensaryId));
+    @Args('dispensaryId', { type: () => ID, nullable: true })
+    dispensaryId?: string,
+  ): Promise<KnowledgeProductDto[]> {
+    return this.knowledge.searchByCondition(
+      condition,
+      this.resolveDispensary(user, dispensaryId),
+    );
   }
 
   @Query(() => [KnowledgeProduct], { name: 'compareProducts' })
   async compareProducts(
     @Args('productIds', { type: () => [ID] }) productIds: string[],
-  ): Promise<KnowledgeProduct[]> {
+  ): Promise<KnowledgeProductDto[]> {
     return this.knowledge.getProductComparison(productIds);
   }
 }
