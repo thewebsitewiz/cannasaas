@@ -2,14 +2,79 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 
+interface CoBoughtRow {
+  productId: string;
+  productName: string;
+  coCount: string | number;
+}
+
+interface PopularRow {
+  productId: string;
+  productName: string;
+  strainType: string | null;
+  unitsSold: string | number;
+}
+
+interface PersonalizedRow {
+  productId: string;
+  productName: string;
+  strainType: string | null;
+  effects: unknown;
+  matchScore: string | number;
+}
+
+interface TrendingRow {
+  productId: string;
+  productName: string;
+  strainType: string | null;
+  unitsSold: string | number;
+  orderCount: string | number;
+}
+
+export interface RecommendedProductDto {
+  productId: string;
+  productName: string;
+  strainType?: string;
+  coCount?: number;
+  unitsSold?: number;
+  matchScore?: number;
+  orderCount?: number;
+  effects?: string[];
+}
+
+async function rawQuery<T>(
+  ds: DataSource,
+  sql: string,
+  params?: unknown[],
+): Promise<T[]> {
+  const rows = (await ds.query(sql, params)) as unknown;
+  return rows as T[];
+}
+
+function toInt(val: string | number | null | undefined): number {
+  if (val == null) return 0;
+  const n = typeof val === 'number' ? Math.trunc(val) : parseInt(val, 10);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function toStringArray(val: unknown): string[] | undefined {
+  if (!Array.isArray(val)) return undefined;
+  return val.map((v) => String(v));
+}
+
 @Injectable()
 export class RecommendationService {
   private readonly logger = new Logger(RecommendationService.name);
 
   constructor(@InjectDataSource() private ds: DataSource) {}
 
-  async getFrequentlyBoughtTogether(productId: string, dispensaryId: string, limit = 5): Promise<any[]> {
-    const rows = await this.ds.query(
+  async getFrequentlyBoughtTogether(
+    productId: string,
+    dispensaryId: string,
+    limit = 5,
+  ): Promise<RecommendedProductDto[]> {
+    const rows = await rawQuery<CoBoughtRow>(
+      this.ds,
       `SELECT li2."productId" as "productId", p.name as "productName", COUNT(*) as "coCount"
        FROM order_line_items li1
        JOIN order_line_items li2 ON li1."orderId" = li2."orderId" AND li1."productId" != li2."productId"
@@ -22,15 +87,20 @@ export class RecommendationService {
       [productId, dispensaryId, limit],
     );
 
-    return rows.map((r: any) => ({
+    return rows.map((r) => ({
       productId: r.productId,
       productName: r.productName,
-      coCount: parseInt(r.coCount, 10),
+      coCount: toInt(r.coCount),
     }));
   }
 
-  async getPopularInCategory(categoryId: string, dispensaryId: string, limit = 10): Promise<any[]> {
-    const rows = await this.ds.query(
+  async getPopularInCategory(
+    categoryId: string,
+    dispensaryId: string,
+    limit = 10,
+  ): Promise<RecommendedProductDto[]> {
+    const rows = await rawQuery<PopularRow>(
+      this.ds,
       `SELECT p.id as "productId", p.name as "productName", p.strain_type as "strainType",
         SUM(li.quantity) as "unitsSold"
        FROM order_line_items li
@@ -43,18 +113,21 @@ export class RecommendationService {
       [categoryId, dispensaryId, limit],
     );
 
-    return rows.map((r: any) => ({
+    return rows.map((r) => ({
       productId: r.productId,
       productName: r.productName,
-      strainType: r.strainType,
-      unitsSold: parseInt(r.unitsSold, 10),
+      strainType: r.strainType ?? undefined,
+      unitsSold: toInt(r.unitsSold),
     }));
   }
 
-  async getPersonalizedForCustomer(userId: string, dispensaryId: string, limit = 10): Promise<any[]> {
-    // Find the user's preferred strain types and effects from past purchases,
-    // then recommend products with similar attributes they haven't bought yet
-    const rows = await this.ds.query(
+  async getPersonalizedForCustomer(
+    userId: string,
+    dispensaryId: string,
+    limit = 10,
+  ): Promise<RecommendedProductDto[]> {
+    const rows = await rawQuery<PersonalizedRow>(
+      this.ds,
       `WITH user_prefs AS (
         SELECT DISTINCT p.strain_type, jsonb_array_elements_text(p.effects) as effect
         FROM order_line_items li
@@ -83,17 +156,22 @@ export class RecommendationService {
       [userId, dispensaryId, limit],
     );
 
-    return rows.map((r: any) => ({
+    return rows.map((r) => ({
       productId: r.productId,
       productName: r.productName,
-      strainType: r.strainType,
-      effects: r.effects,
-      matchScore: parseInt(r.matchScore, 10),
+      strainType: r.strainType ?? undefined,
+      effects: toStringArray(r.effects),
+      matchScore: toInt(r.matchScore),
     }));
   }
 
-  async getTrendingProducts(dispensaryId: string, days = 7, limit = 10): Promise<any[]> {
-    const rows = await this.ds.query(
+  async getTrendingProducts(
+    dispensaryId: string,
+    days = 7,
+    limit = 10,
+  ): Promise<RecommendedProductDto[]> {
+    const rows = await rawQuery<TrendingRow>(
+      this.ds,
       `SELECT p.id as "productId", p.name as "productName", p.strain_type as "strainType",
         SUM(li.quantity) as "unitsSold", COUNT(DISTINCT o."orderId") as "orderCount"
        FROM order_line_items li
@@ -107,12 +185,12 @@ export class RecommendationService {
       [dispensaryId, days, limit],
     );
 
-    return rows.map((r: any) => ({
+    return rows.map((r) => ({
       productId: r.productId,
       productName: r.productName,
-      strainType: r.strainType,
-      unitsSold: parseInt(r.unitsSold, 10),
-      orderCount: parseInt(r.orderCount, 10),
+      strainType: r.strainType ?? undefined,
+      unitsSold: toInt(r.unitsSold),
+      orderCount: toInt(r.orderCount),
     }));
   }
 }
