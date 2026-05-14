@@ -1,11 +1,19 @@
 import { Resolver, Query, Args, ID, Int, Float } from '@nestjs/graphql';
 import { ObjectType, Field } from '@nestjs/graphql';
-import { ReportingService } from './reporting.service';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import {
+  ReportingService,
+  SalesSummary as SalesSummaryDto,
+  DailySales as DailySalesDto,
+  ProductSales as ProductSalesDto,
+  HourlySales as HourlySalesDto,
+  TaxReport as TaxReportDto,
+  LaborCostSummary as LaborCostSummaryDto,
+  ShrinkageReport as ShrinkageReportDto,
+} from './reporting.service';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { JwtPayload } from '../auth/strategies/jwt.strategy';
 
-@ObjectType() class SalesSummary {
+@ObjectType()
+class SalesSummary {
   @Field(() => Int) totalOrders!: number;
   @Field(() => Int) completedOrders!: number;
   @Field(() => Int) cancelledOrders!: number;
@@ -21,7 +29,8 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field(() => Float) totalCashDiscounts!: number;
 }
 
-@ObjectType() class DailySales {
+@ObjectType()
+class DailySales {
   @Field() date!: string;
   @Field(() => Int) orders!: number;
   @Field(() => Float) gross!: number;
@@ -30,7 +39,8 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field(() => Float) net!: number;
 }
 
-@ObjectType() class ProductSales {
+@ObjectType()
+class ProductSales {
   @Field() productName!: string;
   @Field({ nullable: true }) strainType?: string;
   @Field({ nullable: true }) variantName?: string;
@@ -39,13 +49,15 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field(() => Float) revenue!: number;
 }
 
-@ObjectType() class HourlySales {
+@ObjectType()
+class HourlySales {
   @Field(() => Int) hour!: number;
   @Field(() => Int) orders!: number;
   @Field(() => Float) revenue!: number;
 }
 
-@ObjectType() class TaxBreakdownItem {
+@ObjectType()
+class TaxBreakdownItem {
   @Field() taxName!: string;
   @Field() taxCode!: string;
   @Field(() => Float) rate!: number;
@@ -54,7 +66,8 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field(() => Float) estimatedTax!: number;
 }
 
-@ObjectType() class TaxReport {
+@ObjectType()
+class TaxReport {
   @Field({ nullable: true }) dispensaryName?: string;
   @Field({ nullable: true }) state?: string;
   @Field({ nullable: true }) licenseNumber?: string;
@@ -66,7 +79,8 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field(() => [TaxBreakdownItem]) taxBreakdown!: TaxBreakdownItem[];
 }
 
-@ObjectType() class LaborCostSummary {
+@ObjectType()
+class LaborCostSummary {
   @Field(() => Int) employeeCount!: number;
   @Field(() => Float) totalHours!: number;
   @Field(() => Float) totalLaborCost!: number;
@@ -74,7 +88,8 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field(() => Float) laborCostPercent!: number;
 }
 
-@ObjectType() class ShrinkageByReason {
+@ObjectType()
+class ShrinkageByReason {
   @Field() reason!: string;
   @Field() reasonCode!: string;
   @Field(() => Int) count!: number;
@@ -82,7 +97,8 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field(() => Float) estimatedValue!: number;
 }
 
-@ObjectType() class ShrinkageReport {
+@ObjectType()
+class ShrinkageReport {
   @Field(() => Int) totalAdjustments!: number;
   @Field(() => Int) totalUnitsLost!: number;
   @Field(() => Float) estimatedValueLost!: number;
@@ -99,7 +115,7 @@ export class ReportingResolver {
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @Args('startDate') startDate: string,
     @Args('endDate') endDate: string,
-  ): Promise<any> {
+  ): Promise<SalesSummaryDto> {
     return this.reporting.salesSummary(dispensaryId, startDate, endDate);
   }
 
@@ -109,7 +125,7 @@ export class ReportingResolver {
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @Args('startDate') startDate: string,
     @Args('endDate') endDate: string,
-  ): Promise<any[]> {
+  ): Promise<DailySalesDto[]> {
     return this.reporting.salesByDay(dispensaryId, startDate, endDate);
   }
 
@@ -119,7 +135,7 @@ export class ReportingResolver {
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @Args('startDate') startDate: string,
     @Args('endDate') endDate: string,
-  ): Promise<any[]> {
+  ): Promise<ProductSalesDto[]> {
     return this.reporting.salesByProduct(dispensaryId, startDate, endDate);
   }
 
@@ -129,7 +145,7 @@ export class ReportingResolver {
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @Args('startDate') startDate: string,
     @Args('endDate') endDate: string,
-  ): Promise<any[]> {
+  ): Promise<HourlySalesDto[]> {
     return this.reporting.salesByHour(dispensaryId, startDate, endDate);
   }
 
@@ -139,7 +155,7 @@ export class ReportingResolver {
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @Args('startDate') startDate: string,
     @Args('endDate') endDate: string,
-  ): Promise<any> {
+  ): Promise<TaxReportDto> {
     return this.reporting.taxReport(dispensaryId, startDate, endDate);
   }
 
@@ -149,7 +165,7 @@ export class ReportingResolver {
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @Args('startDate') startDate: string,
     @Args('endDate') endDate: string,
-  ): Promise<any> {
+  ): Promise<LaborCostSummaryDto> {
     return this.reporting.laborCostSummary(dispensaryId, startDate, endDate);
   }
 
@@ -159,7 +175,7 @@ export class ReportingResolver {
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @Args('startDate') startDate: string,
     @Args('endDate') endDate: string,
-  ): Promise<any> {
+  ): Promise<ShrinkageReportDto> {
     return this.reporting.shrinkageReport(dispensaryId, startDate, endDate);
   }
 }
