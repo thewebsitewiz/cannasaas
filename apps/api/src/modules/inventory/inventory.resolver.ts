@@ -1,12 +1,29 @@
-import { Resolver, Query, Mutation, Args, ID, Int, Float } from '@nestjs/graphql';
+import {
+  Resolver,
+  Query,
+  Mutation,
+  Args,
+  ID,
+  Int,
+  Float,
+} from '@nestjs/graphql';
 import { ObjectType, Field } from '@nestjs/graphql';
-import { InventoryService } from './inventory.service';
-import { ReorderSuggestionService } from './reorder-suggestion.service';
+import {
+  InventoryService,
+  InventoryRow,
+  InventoryAdjustResult,
+  InventoryValueDto,
+} from './inventory.service';
+import {
+  ReorderSuggestionService,
+  ReorderSuggestionDto,
+} from './reorder-suggestion.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtPayload } from '../auth/strategies/jwt.strategy';
 
-@ObjectType() class InventoryResult {
+@ObjectType()
+class InventoryResult {
   @Field(() => ID) inventoryId!: string;
   @Field(() => ID) variantId!: string;
   @Field(() => ID) dispensaryId!: string;
@@ -24,7 +41,8 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field(() => Date) updatedAt!: Date;
 }
 
-@ObjectType() class InventoryListItem {
+@ObjectType()
+class InventoryListItem {
   @Field(() => ID) inventoryId!: string;
   @Field(() => ID) variantId!: string;
   @Field(() => ID) dispensaryId!: string;
@@ -37,7 +55,8 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field(() => Date) updatedAt!: Date;
 }
 
-@ObjectType() class InventoryTransactionResult {
+@ObjectType()
+class InventoryTransactionResult {
   @Field(() => ID) transactionId!: string;
   @Field(() => ID) inventoryId!: string;
   @Field(() => ID) dispensaryId!: string;
@@ -51,12 +70,15 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field(() => Date) createdAt!: Date;
 }
 
-@ObjectType() class AdjustResult {
+@ObjectType()
+class AdjustResult {
   @Field(() => InventoryResult) inventory!: InventoryResult;
-  @Field(() => InventoryTransactionResult) transaction!: InventoryTransactionResult;
+  @Field(() => InventoryTransactionResult)
+  transaction!: InventoryTransactionResult;
 }
 
-@ObjectType('InventoryLowStockItem') class LowStockItem {
+@ObjectType('InventoryLowStockItem')
+class LowStockItem {
   @Field(() => ID) inventoryId!: string;
   @Field(() => ID) variantId!: string;
   @Field(() => Float) quantityOnHand!: number;
@@ -66,14 +88,16 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field({ nullable: true }) locationInStore?: string;
 }
 
-@ObjectType() class InventoryValueResult {
+@ObjectType()
+class InventoryValueResult {
   @Field(() => Int) totalItems!: number;
   @Field(() => Float) totalOnHand!: number;
   @Field(() => Float) totalReserved!: number;
   @Field(() => Float) totalAvailable!: number;
 }
 
-@ObjectType() class ReorderSuggestion {
+@ObjectType()
+class ReorderSuggestion {
   @Field(() => ID) inventoryId!: string;
   @Field(() => ID) variantId!: string;
   @Field() productName!: string;
@@ -99,7 +123,7 @@ export class InventoryResolver {
   @Query(() => InventoryResult, { name: 'inventoryItem', nullable: true })
   async inventoryItem(
     @Args('inventoryId', { type: () => ID }) inventoryId: string,
-  ): Promise<any> {
+  ): Promise<InventoryRow> {
     return this.inventory.findById(inventoryId);
   }
 
@@ -107,9 +131,11 @@ export class InventoryResolver {
   @Query(() => [InventoryListItem], { name: 'inventoryByDispensary' })
   async inventoryByDispensary(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
-    @Args('limit', { type: () => Int, nullable: true, defaultValue: 100 }) limit: number,
-    @Args('offset', { type: () => Int, nullable: true, defaultValue: 0 }) offset: number,
-  ): Promise<any[]> {
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 100 })
+    limit: number,
+    @Args('offset', { type: () => Int, nullable: true, defaultValue: 0 })
+    offset: number,
+  ): Promise<InventoryRow[]> {
     return this.inventory.getByDispensary(dispensaryId, limit, offset);
   }
 
@@ -118,7 +144,7 @@ export class InventoryResolver {
   async inventoryByVariant(
     @Args('variantId', { type: () => ID }) variantId: string,
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
-  ): Promise<any> {
+  ): Promise<InventoryRow | null> {
     return this.inventory.getByVariant(variantId, dispensaryId);
   }
 
@@ -126,7 +152,7 @@ export class InventoryResolver {
   @Query(() => [LowStockItem], { name: 'lowStockItems' })
   async lowStockItems(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
-  ): Promise<any[]> {
+  ): Promise<unknown[]> {
     return this.inventory.getLowStock(dispensaryId);
   }
 
@@ -134,7 +160,7 @@ export class InventoryResolver {
   @Query(() => InventoryValueResult, { name: 'inventoryValue' })
   async inventoryValue(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
-  ): Promise<any> {
+  ): Promise<InventoryValueDto> {
     return this.inventory.getInventoryValue(dispensaryId);
   }
 
@@ -142,8 +168,9 @@ export class InventoryResolver {
   @Query(() => [InventoryTransactionResult], { name: 'inventoryTransactions' })
   async inventoryTransactions(
     @Args('inventoryId', { type: () => ID }) inventoryId: string,
-    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) limit: number,
-  ): Promise<any[]> {
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 })
+    limit: number,
+  ): Promise<unknown[]> {
     return this.inventory.getTransactions(inventoryId, limit);
   }
 
@@ -151,7 +178,7 @@ export class InventoryResolver {
   @Query(() => [ReorderSuggestion], { name: 'reorderSuggestions' })
   async reorderSuggestionsQuery(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
-  ): Promise<any[]> {
+  ): Promise<ReorderSuggestionDto[]> {
     return this.reorderSuggestions.getReorderSuggestions(dispensaryId);
   }
 
@@ -164,10 +191,18 @@ export class InventoryResolver {
     @Args('delta', { type: () => Float }) delta: number,
     @Args('transactionType') transactionType: string,
     @Args('notes', { nullable: true }) notes: string,
-    @Args('referenceOrderId', { type: () => ID, nullable: true }) referenceOrderId: string,
+    @Args('referenceOrderId', { type: () => ID, nullable: true })
+    referenceOrderId: string,
     @CurrentUser() user: JwtPayload,
-  ): Promise<any> {
-    return this.inventory.adjustQuantity(inventoryId, delta, transactionType, user.sub, notes, referenceOrderId);
+  ): Promise<InventoryAdjustResult> {
+    return this.inventory.adjustQuantity(
+      inventoryId,
+      delta,
+      transactionType,
+      user.sub,
+      notes,
+      referenceOrderId,
+    );
   }
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin', 'budtender')
@@ -175,10 +210,16 @@ export class InventoryResolver {
   async reserveStock(
     @Args('inventoryId', { type: () => ID }) inventoryId: string,
     @Args('quantity', { type: () => Float }) quantity: number,
-    @Args('referenceOrderId', { type: () => ID, nullable: true }) referenceOrderId: string,
+    @Args('referenceOrderId', { type: () => ID, nullable: true })
+    referenceOrderId: string,
     @CurrentUser() user: JwtPayload,
-  ): Promise<any> {
-    return this.inventory.reserveStock(inventoryId, quantity, user.sub, referenceOrderId);
+  ): Promise<InventoryAdjustResult> {
+    return this.inventory.reserveStock(
+      inventoryId,
+      quantity,
+      user.sub,
+      referenceOrderId,
+    );
   }
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin', 'budtender')
@@ -186,9 +227,15 @@ export class InventoryResolver {
   async releaseReserve(
     @Args('inventoryId', { type: () => ID }) inventoryId: string,
     @Args('quantity', { type: () => Float }) quantity: number,
-    @Args('referenceOrderId', { type: () => ID, nullable: true }) referenceOrderId: string,
+    @Args('referenceOrderId', { type: () => ID, nullable: true })
+    referenceOrderId: string,
     @CurrentUser() user: JwtPayload,
-  ): Promise<any> {
-    return this.inventory.releaseReserve(inventoryId, quantity, user.sub, referenceOrderId);
+  ): Promise<InventoryAdjustResult> {
+    return this.inventory.releaseReserve(
+      inventoryId,
+      quantity,
+      user.sub,
+      referenceOrderId,
+    );
   }
 }
