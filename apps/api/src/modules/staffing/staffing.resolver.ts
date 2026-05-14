@@ -1,11 +1,27 @@
-import { Resolver, Query, Mutation, Args, ID, Float, Int } from '@nestjs/graphql';
+import {
+  Resolver,
+  Query,
+  Mutation,
+  Args,
+  ID,
+  Float,
+  Int,
+} from '@nestjs/graphql';
 import { ObjectType, Field, InputType } from '@nestjs/graphql';
 import { ForbiddenException } from '@nestjs/common';
-import { StaffingService } from './staffing.service';
+import {
+  StaffingService,
+  EmployeeListItem as EmployeeListItemDto,
+  EmployeeDetail,
+  ComplianceOverview as ComplianceOverviewDto,
+} from './staffing.service';
 import { EmployeeProfile } from './entities/employee-profile.entity';
 import { EmployeeCertification } from './entities/employee-certification.entity';
 import { PerformanceReview } from './entities/performance-review.entity';
-import { LkpPosition, LkpCertificationType } from './entities/staffing-lookups.entity';
+import {
+  LkpPosition,
+  LkpCertificationType,
+} from './entities/staffing-lookups.entity';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtPayload } from '../auth/strategies/jwt.strategy';
@@ -98,7 +114,11 @@ export class StaffingResolver {
   constructor(private readonly staffing: StaffingService) {}
 
   private guard(user: JwtPayload, dispensaryId?: string) {
-    if (user.role === 'dispensary_admin' && dispensaryId && dispensaryId !== user.dispensaryId) {
+    if (
+      user.role === 'dispensary_admin' &&
+      dispensaryId &&
+      dispensaryId !== user.dispensaryId
+    ) {
       throw new ForbiddenException('Access denied');
     }
   }
@@ -125,7 +145,7 @@ export class StaffingResolver {
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @Args('status', { nullable: true }) status: string,
     @CurrentUser() user: JwtPayload,
-  ): Promise<EmployeeListItem[]> {
+  ): Promise<EmployeeListItemDto[]> {
     this.guard(user, dispensaryId);
     return this.staffing.getEmployees(dispensaryId, status);
   }
@@ -134,8 +154,7 @@ export class StaffingResolver {
   @Query(() => EmployeeListItem, { name: 'employee' })
   async employee(
     @Args('profileId', { type: () => ID }) profileId: string,
-    @CurrentUser() user: JwtPayload,
-  ): Promise<any> {
+  ): Promise<EmployeeDetail> {
     return this.staffing.getEmployee(profileId);
   }
 
@@ -144,7 +163,6 @@ export class StaffingResolver {
   async updateEmployee(
     @Args('profileId', { type: () => ID }) profileId: string,
     @Args('input') input: UpdateEmployeeInput,
-    @CurrentUser() user: JwtPayload,
   ): Promise<EmployeeProfile> {
     return this.staffing.updateEmployee(profileId, input);
   }
@@ -155,15 +173,16 @@ export class StaffingResolver {
   @Query(() => [EmployeeCertification], { name: 'employeeCertifications' })
   async certs(
     @Args('profileId', { type: () => ID }) profileId: string,
-  ): Promise<any[]> {
-    return this.staffing.getEmployeeCertifications(profileId);
+  ): Promise<EmployeeCertification[]> {
+    return this.staffing.getEmployeeCertifications(
+      profileId,
+    ) as unknown as Promise<EmployeeCertification[]>;
   }
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
   @Mutation(() => EmployeeCertification, { name: 'addCertification' })
   async addCert(
     @Args('input') input: AddCertificationInput,
-    @CurrentUser() user: JwtPayload,
   ): Promise<EmployeeCertification> {
     return this.staffing.addCertification(input);
   }
@@ -192,11 +211,15 @@ export class StaffingResolver {
   @Query(() => [EmployeeCertification], { name: 'expiringCertifications' })
   async expiring(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
-    @Args('daysAhead', { type: () => Int, nullable: true, defaultValue: 30 }) daysAhead: number,
+    @Args('daysAhead', { type: () => Int, nullable: true, defaultValue: 30 })
+    daysAhead: number,
     @CurrentUser() user: JwtPayload,
-  ): Promise<any[]> {
+  ): Promise<EmployeeCertification[]> {
     this.guard(user, dispensaryId);
-    return this.staffing.getExpiringCertifications(dispensaryId, daysAhead);
+    return this.staffing.getExpiringCertifications(
+      dispensaryId,
+      daysAhead,
+    ) as unknown as Promise<EmployeeCertification[]>;
   }
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
@@ -204,7 +227,7 @@ export class StaffingResolver {
   async complianceOverview(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @CurrentUser() user: JwtPayload,
-  ): Promise<any> {
+  ): Promise<ComplianceOverviewDto> {
     this.guard(user, dispensaryId);
     return this.staffing.getComplianceOverview(dispensaryId);
   }
