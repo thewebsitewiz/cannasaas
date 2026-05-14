@@ -224,6 +224,61 @@ const SCROLL_THRESHOLD_PX = 20;
                 >{{ label }}</a
               >
             }
+
+            <div class="mt-3 border-t border-stone-100 pt-3">
+              @if (isLoggedIn()) {
+                <a
+                  class="flex items-center justify-between py-2.5 text-sm font-medium text-stone-700 hover:text-emerald-700"
+                  [routerLink]="['/orders']"
+                  (click)="closeMobile()"
+                >
+                  <span>My Orders</span>
+                  <svg
+                    class="h-3.5 w-3.5 text-stone-300"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                </a>
+                <a
+                  class="flex items-center justify-between py-2.5 text-sm font-medium text-stone-700 hover:text-emerald-700"
+                  [routerLink]="['/account']"
+                  (click)="closeMobile()"
+                >
+                  <span>Account</span>
+                  <svg
+                    class="h-3.5 w-3.5 text-stone-300"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                </a>
+                <button
+                  type="button"
+                  class="flex w-full items-center justify-between py-2.5 text-left text-sm font-medium text-rose-700 hover:text-rose-600"
+                  (click)="onMobileLogout()"
+                >
+                  Sign Out
+                </button>
+              } @else {
+                <a
+                  class="block rounded-lg bg-emerald-700 px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-emerald-600"
+                  [routerLink]="['/login']"
+                  (click)="closeMobile()"
+                  >Sign In</a
+                >
+              }
+            </div>
           </nav>
         </div>
       }
@@ -285,5 +340,11 @@ export class Header {
 
   protected closeMobile(): void {
     this.mobileOpen.set(false);
+  }
+
+  protected async onMobileLogout(): Promise<void> {
+    this.closeMobile();
+    await this.auth.logout();
+    void this.router.navigateByUrl('/');
   }
 }

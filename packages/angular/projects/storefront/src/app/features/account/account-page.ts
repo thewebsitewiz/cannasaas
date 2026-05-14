@@ -106,7 +106,11 @@ import { LoyaltyCard } from './loyalty-card';
         </div>
 
         <div class="mb-6">
-          <cs-loyalty-card />
+          @defer (on viewport) {
+            <cs-loyalty-card />
+          } @placeholder {
+            <div class="h-40 animate-pulse rounded-2xl border border-stone-200 bg-stone-50"></div>
+          }
         </div>
 
         <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
