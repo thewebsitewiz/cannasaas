@@ -10,6 +10,75 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { TimeEntry } from './entities/time-entry.entity';
 
+// ── DB row types ──────────────────────────────────────────────────────────
+
+interface ProfileLookupRow {
+  profile_id: string;
+  is_exempt: boolean;
+  employment_status?: string;
+  position_name?: string | null;
+}
+
+interface ExistingEntryRow {
+  entry_id: string;
+}
+
+interface TodayHoursRow {
+  today_hours: string | number;
+}
+
+export interface ActiveClockRow {
+  entry_id: string;
+  profile_id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  position_name: string | null;
+  clock_in: Date | string;
+  hours_so_far: string | number;
+}
+
+export interface PayrollRow {
+  employee_number: string | null;
+  firstName: string;
+  lastName: string;
+  email: string;
+  position_name: string | null;
+  pay_type: string;
+  hourly_rate: string | number | null;
+  salary: string | number | null;
+  is_exempt: boolean;
+  overtime_eligible: boolean;
+  total_hours: string | number;
+  total_break_minutes: string | number;
+  shifts_worked: string | number;
+  overtime_hours: string | number;
+  regular_pay: string | number | null;
+  gross_pay_with_ot: string | number | null;
+}
+
+interface DispensaryNameRow {
+  name: string;
+  state: string;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+
+async function rawQuery<T>(
+  ds: DataSource,
+  sql: string,
+  params?: unknown[],
+): Promise<T[]> {
+  const rows = (await ds.query(sql, params)) as unknown;
+  return rows as T[];
+}
+
+function toNumber(val: string | number | null | undefined): number {
+  if (val == null) return 0;
+  const n = typeof val === 'number' ? val : parseFloat(val);
+  return Number.isFinite(n) ? n : 0;
+}
+
 @Injectable()
 export class TimeClockService {
   private readonly logger = new Logger(TimeClockService.name);
@@ -26,28 +95,29 @@ export class TimeClockService {
     dispensaryId: string,
     notes?: string,
   ): Promise<TimeEntry> {
-    // Find employee profile
-    const [profile] = await this.dataSource.query(
+    const profiles = await rawQuery<ProfileLookupRow>(
+      this.dataSource,
       `SELECT ep.profile_id, ep.is_exempt, ep.employment_status, lp.name as position_name
        FROM employee_profiles ep
        LEFT JOIN lkp_positions lp ON lp.position_id = ep.position_id
        WHERE ep.user_id = $1 AND ep.dispensary_id = $2`,
       [userId, dispensaryId],
     );
+    const profile = profiles[0];
     if (!profile) throw new NotFoundException('Employee profile not found');
     if (profile.employment_status !== 'active')
       throw new BadRequestException('Employee is not active');
     if (profile.is_exempt)
       throw new BadRequestException(
-        `${profile.position_name} is exempt from time tracking`,
+        `${profile.position_name ?? 'This position'} is exempt from time tracking`,
       );
 
-    // Check not already clocked in
-    const [existing] = await this.dataSource.query(
+    const existing = await rawQuery<ExistingEntryRow>(
+      this.dataSource,
       `SELECT entry_id FROM time_entries WHERE profile_id = $1 AND status = 'clocked_in'`,
       [profile.profile_id],
     );
-    if (existing)
+    if (existing[0])
       throw new BadRequestException('Already clocked in. Clock out first.');
 
     const entry = this.entryRepo.create({
@@ -71,10 +141,12 @@ export class TimeClockService {
     breakMinutes = 0,
     notes?: string,
   ): Promise<TimeEntry> {
-    const [profile] = await this.dataSource.query(
-      `SELECT profile_id FROM employee_profiles WHERE user_id = $1 AND dispensary_id = $2`,
+    const profiles = await rawQuery<ProfileLookupRow>(
+      this.dataSource,
+      `SELECT profile_id, is_exempt FROM employee_profiles WHERE user_id = $1 AND dispensary_id = $2`,
       [userId, dispensaryId],
     );
+    const profile = profiles[0];
     if (!profile) throw new NotFoundException('Employee profile not found');
 
     const entry = await this.entryRepo.findOne({
@@ -99,7 +171,7 @@ export class TimeClockService {
 
     const saved = await this.entryRepo.save(entry);
     this.logger.log(
-      `Clock OUT: profile=${profile.profile_id} hours=${totalHours}`,
+      `Clock OUT: profile=${profile.profile_id} hours=${String(totalHours)}`,
     );
     return saved;
   }
@@ -115,10 +187,12 @@ export class TimeClockService {
     currentEntry?: TimeEntry;
     todayHours: number;
   }> {
-    const [profile] = await this.dataSource.query(
+    const profiles = await rawQuery<ProfileLookupRow>(
+      this.dataSource,
       `SELECT profile_id, is_exempt FROM employee_profiles WHERE user_id = $1 AND dispensary_id = $2`,
       [userId, dispensaryId],
     );
+    const profile = profiles[0];
     if (!profile) throw new NotFoundException('Employee profile not found');
 
     if (profile.is_exempt) {
@@ -130,7 +204,8 @@ export class TimeClockService {
       order: { clock_in: 'DESC' },
     });
 
-    const [todayResult] = await this.dataSource.query(
+    const todayRows = await rawQuery<TodayHoursRow>(
+      this.dataSource,
       `SELECT COALESCE(SUM(total_hours), 0) as today_hours
        FROM time_entries
        WHERE profile_id = $1 AND clock_in >= CURRENT_DATE AND status = 'completed'`,
@@ -141,14 +216,15 @@ export class TimeClockService {
       isClockedIn: !!currentEntry,
       isExempt: false,
       currentEntry: currentEntry ?? undefined,
-      todayHours: parseFloat(todayResult.today_hours),
+      todayHours: toNumber(todayRows[0]?.today_hours),
     };
   }
 
   // ── Who's Clocked In ─────────────────────────────────────────────────────
 
-  async getActiveClocks(dispensaryId: string): Promise<any[]> {
-    return this.dataSource.query(
+  async getActiveClocks(dispensaryId: string): Promise<ActiveClockRow[]> {
+    return rawQuery<ActiveClockRow>(
+      this.dataSource,
       `SELECT te.entry_id, te.clock_in, te.profile_id,
         u."firstName", u."lastName", u.email,
         lp.name as position_name,
@@ -201,8 +277,9 @@ export class TimeClockService {
     dispensaryId: string,
     startDate: string,
     endDate: string,
-  ): Promise<any[]> {
-    return this.dataSource.query(
+  ): Promise<PayrollRow[]> {
+    return rawQuery<PayrollRow>(
+      this.dataSource,
       `SELECT
         ep.employee_number,
         u."firstName", u."lastName", u.email,
@@ -247,11 +324,12 @@ export class TimeClockService {
   ): Promise<string> {
     const rows = await this.getPayrollReport(dispensaryId, startDate, endDate);
 
-    const [disp] = await this.dataSource.query(
+    const dispRows = await rawQuery<DispensaryNameRow>(
+      this.dataSource,
       `SELECT name, state FROM dispensaries WHERE entity_id = $1`,
       [dispensaryId],
     );
-    const dispName = disp?.name ?? 'Unknown';
+    const dispName = dispRows[0]?.name ?? 'Unknown';
 
     const headers = [
       'Employee #',
@@ -273,13 +351,13 @@ export class TimeClockService {
       'Gross Pay',
     ].join(',');
 
-    const csvRows = rows.map((r: any) => {
-      const totalHrs = parseFloat(r.total_hours) || 0;
+    const csvRows = rows.map((r) => {
+      const totalHrs = toNumber(r.total_hours);
       const regHrs = Math.min(totalHrs, 40);
       const otHrs = Math.max(0, totalHrs - 40);
-      const rate = parseFloat(r.hourly_rate) || 0;
+      const rate = toNumber(r.hourly_rate);
       const regPay = r.is_exempt
-        ? parseFloat(r.salary) || 0
+        ? toNumber(r.salary)
         : parseFloat((regHrs * rate).toFixed(2));
       const otPay =
         r.overtime_eligible && !r.is_exempt
@@ -300,8 +378,8 @@ export class TimeClockService {
         totalHrs.toFixed(2),
         regHrs.toFixed(2),
         otHrs.toFixed(2),
-        r.shifts_worked,
-        r.total_break_minutes,
+        String(r.shifts_worked),
+        String(r.total_break_minutes),
         regPay.toFixed(2),
         otPay.toFixed(2),
         grossPay.toFixed(2),
@@ -326,10 +404,12 @@ export class TimeClockService {
     startDate: string,
     endDate: string,
   ): Promise<TimeEntry[]> {
-    const [profile] = await this.dataSource.query(
-      `SELECT profile_id FROM employee_profiles WHERE user_id = $1 AND dispensary_id = $2`,
+    const profiles = await rawQuery<ProfileLookupRow>(
+      this.dataSource,
+      `SELECT profile_id, is_exempt FROM employee_profiles WHERE user_id = $1 AND dispensary_id = $2`,
       [userId, dispensaryId],
     );
+    const profile = profiles[0];
     if (!profile) throw new NotFoundException('Employee profile not found');
     return this.getTimeEntries(profile.profile_id, startDate, endDate);
   }
