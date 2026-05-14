@@ -1,9 +1,18 @@
-import { Resolver, Query, Mutation, Args, ID, Int, InputType } from '@nestjs/graphql';
+import {
+  Resolver,
+  Query,
+  Mutation,
+  Args,
+  ID,
+  Int,
+  InputType,
+} from '@nestjs/graphql';
 import { ObjectType, Field } from '@nestjs/graphql';
 import { ManufacturersService, ManufacturerDto } from './manufacturers.service';
 import { Roles } from '../../common/decorators/roles.decorator';
 
-@ObjectType() class ManufacturerResult {
+@ObjectType()
+class ManufacturerResult {
   @Field(() => ID) manufacturerId!: string;
   @Field(() => ID, { nullable: true }) brandId?: string;
   @Field() legalName!: string;
@@ -23,7 +32,8 @@ import { Roles } from '../../common/decorators/roles.decorator';
   @Field(() => Date) updatedAt!: Date;
 }
 
-@ObjectType() class ManufacturerListItem {
+@ObjectType()
+class ManufacturerListItem {
   @Field(() => ID) manufacturerId!: string;
   @Field(() => ID, { nullable: true }) brandId?: string;
   @Field() legalName!: string;
@@ -37,7 +47,8 @@ import { Roles } from '../../common/decorators/roles.decorator';
   @Field(() => Date) createdAt!: Date;
 }
 
-@InputType() class CreateManufacturerInput {
+@InputType()
+class CreateManufacturerInput {
   @Field(() => ID, { nullable: true }) brandId?: string;
   @Field() legalName!: string;
   @Field({ nullable: true }) dbaName?: string;
@@ -53,7 +64,8 @@ import { Roles } from '../../common/decorators/roles.decorator';
   @Field({ nullable: true }) contactPhone?: string;
 }
 
-@InputType() class UpdateManufacturerInput {
+@InputType()
+class UpdateManufacturerInput {
   @Field(() => ID, { nullable: true }) brandId?: string;
   @Field({ nullable: true }) legalName?: string;
   @Field({ nullable: true }) dbaName?: string;
@@ -87,8 +99,10 @@ export class ManufacturersResolver {
   @Roles('super_admin')
   @Query(() => [ManufacturerListItem], { name: 'manufacturers' })
   async listManufacturers(
-    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) limit: number,
-    @Args('offset', { type: () => Int, nullable: true, defaultValue: 0 }) offset: number,
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 })
+    limit: number,
+    @Args('offset', { type: () => Int, nullable: true, defaultValue: 0 })
+    offset: number,
   ): Promise<ManufacturerDto[]> {
     return this.manufacturers.findAll(limit, offset);
   }
