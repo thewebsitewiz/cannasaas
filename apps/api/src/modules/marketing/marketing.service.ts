@@ -1,6 +1,87 @@
-import { Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  OnModuleInit,
+} from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
+
+interface CampaignRow {
+  campaign_id: string;
+  dispensary_id: string;
+  name: string;
+  campaign_type: string;
+  channel: string;
+  audience_filter: { type?: string } | null;
+  subject: string | null;
+  body: string | null;
+  status: string;
+  scheduled_at: Date | string | null;
+  sent_at: Date | string | null;
+  sent_count: number | null;
+  created_at: Date | string;
+  updated_at: Date | string;
+}
+
+interface AutomationRow {
+  automation_id: string;
+  dispensary_id: string;
+  trigger_event: string;
+  delay_minutes: number;
+  template_id: string | null;
+  channel: string;
+  is_active: boolean;
+  created_at: Date | string;
+}
+
+interface CountRow {
+  cnt: number;
+}
+
+export interface CampaignDto {
+  campaignId: string;
+  dispensaryId: string;
+  name: string;
+  campaignType: string;
+  channel: string;
+  audienceFilter: { type?: string } | null;
+  subject?: string;
+  body?: string;
+  status: string;
+  scheduledAt: Date | string | null;
+  sentAt: Date | string | null;
+  sentCount: number;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+export interface AutomationDto {
+  automationId: string;
+  dispensaryId: string;
+  triggerEvent: string;
+  delayMinutes: number;
+  templateId?: string;
+  channel: string;
+  isActive: boolean;
+  createdAt: Date | string;
+}
+
+export interface CampaignStatsDto {
+  campaignId: string;
+  sentCount: number;
+  openRate: number;
+  clickRate: number;
+}
+
+async function rawQuery<T>(
+  ds: DataSource,
+  sql: string,
+  params?: unknown[],
+): Promise<T[]> {
+  const rows = (await ds.query(sql, params)) as unknown;
+  return rows as T[];
+}
 
 @Injectable()
 export class MarketingService implements OnModuleInit {
@@ -51,8 +132,9 @@ export class MarketingService implements OnModuleInit {
     subject?: string;
     body?: string;
     scheduledAt?: string;
-  }): Promise<any> {
-    const [campaign] = await this.dataSource.query(
+  }): Promise<CampaignDto> {
+    const rows = await rawQuery<CampaignRow>(
+      this.dataSource,
       `INSERT INTO marketing_campaigns
         (dispensary_id, name, campaign_type, channel, audience_filter, subject, body, status, scheduled_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
@@ -69,25 +151,27 @@ export class MarketingService implements OnModuleInit {
         input.scheduledAt ?? null,
       ],
     );
-    return this.mapCampaign(campaign);
+    return this.mapCampaign(rows[0]);
   }
 
-  async getCampaigns(dispensaryId: string): Promise<any[]> {
-    const rows = await this.dataSource.query(
+  async getCampaigns(dispensaryId: string): Promise<CampaignDto[]> {
+    const rows = await rawQuery<CampaignRow>(
+      this.dataSource,
       `SELECT * FROM marketing_campaigns WHERE dispensary_id = $1 ORDER BY created_at DESC`,
       [dispensaryId],
     );
-    return rows.map(this.mapCampaign);
+    return rows.map((r) => this.mapCampaign(r));
   }
 
-  async sendCampaign(campaignId: string): Promise<any> {
-    const [campaign] = await this.dataSource.query(
+  async sendCampaign(campaignId: string): Promise<CampaignDto> {
+    const rows = await rawQuery<CampaignRow>(
+      this.dataSource,
       `SELECT * FROM marketing_campaigns WHERE campaign_id = $1`,
       [campaignId],
     );
+    const campaign = rows[0];
     if (!campaign) throw new NotFoundException('Campaign not found');
 
-    // Get audience count
     const audienceCount = await this.getAudienceCount(
       campaign.dispensary_id,
       campaign.audience_filter?.type ?? 'all',
@@ -100,23 +184,27 @@ export class MarketingService implements OnModuleInit {
       [audienceCount, campaignId],
     );
 
-    this.logger.log(`Campaign ${campaignId} queued for delivery to ${audienceCount} recipients`);
+    this.logger.log(
+      `Campaign ${campaignId} queued for delivery to ${String(audienceCount)} recipients`,
+    );
 
-    const [updated] = await this.dataSource.query(
+    const updatedRows = await rawQuery<CampaignRow>(
+      this.dataSource,
       `SELECT * FROM marketing_campaigns WHERE campaign_id = $1`,
       [campaignId],
     );
-    return this.mapCampaign(updated);
+    return this.mapCampaign(updatedRows[0]);
   }
 
   // ── Automations ─────────────────────────────────────────────────────────
 
-  async getAutomatedTriggers(dispensaryId: string): Promise<any[]> {
-    const rows = await this.dataSource.query(
+  async getAutomatedTriggers(dispensaryId: string): Promise<AutomationDto[]> {
+    const rows = await rawQuery<AutomationRow>(
+      this.dataSource,
       `SELECT * FROM marketing_automations WHERE dispensary_id = $1 ORDER BY created_at DESC`,
       [dispensaryId],
     );
-    return rows.map(this.mapAutomation);
+    return rows.map((r) => this.mapAutomation(r));
   }
 
   async createAutomatedTrigger(input: {
@@ -125,8 +213,9 @@ export class MarketingService implements OnModuleInit {
     delayMinutes?: number;
     templateId?: string;
     channel?: string;
-  }): Promise<any> {
-    const [row] = await this.dataSource.query(
+  }): Promise<AutomationDto> {
+    const rows = await rawQuery<AutomationRow>(
+      this.dataSource,
       `INSERT INTO marketing_automations (dispensary_id, trigger_event, delay_minutes, template_id, channel)
        VALUES ($1, $2, $3, $4, $5) RETURNING *`,
       [
@@ -137,19 +226,20 @@ export class MarketingService implements OnModuleInit {
         input.channel ?? 'email',
       ],
     );
-    return this.mapAutomation(row);
+    return this.mapAutomation(rows[0]);
   }
 
   // ── Stats ───────────────────────────────────────────────────────────────
 
-  async getCampaignStats(campaignId: string): Promise<any> {
-    const [campaign] = await this.dataSource.query(
+  async getCampaignStats(campaignId: string): Promise<CampaignStatsDto> {
+    const rows = await rawQuery<CampaignRow>(
+      this.dataSource,
       `SELECT * FROM marketing_campaigns WHERE campaign_id = $1`,
       [campaignId],
     );
+    const campaign = rows[0];
     if (!campaign) throw new NotFoundException('Campaign not found');
 
-    // In production, these would come from notification_log tracking
     const sentCount = campaign.sent_count ?? 0;
     return {
       campaignId,
@@ -161,9 +251,11 @@ export class MarketingService implements OnModuleInit {
 
   // ── Audience Preview ────────────────────────────────────────────────────
 
-  async getAudienceCount(dispensaryId: string, filter: string): Promise<number> {
+  async getAudienceCount(
+    dispensaryId: string,
+    filter: string,
+  ): Promise<number> {
     let sql: string;
-    const params: any[] = [dispensaryId];
 
     switch (filter) {
       case 'loyalty_tier':
@@ -179,18 +271,18 @@ export class MarketingService implements OnModuleInit {
                LEFT JOIN orders o ON o."customerId" = c.customer_id::text AND o."createdAt" >= NOW() - INTERVAL '90 days'
                WHERE c.dispensary_id = $1 AND o."orderId" IS NULL`;
         break;
-      default: // 'all'
+      default:
         sql = `SELECT COUNT(*)::int as cnt FROM customers WHERE dispensary_id = $1`;
         break;
     }
 
-    const [result] = await this.dataSource.query(sql, params);
-    return result?.cnt ?? 0;
+    const rows = await rawQuery<CountRow>(this.dataSource, sql, [dispensaryId]);
+    return rows[0]?.cnt ?? 0;
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────
 
-  private mapCampaign(row: any): any {
+  private mapCampaign(row: CampaignRow): CampaignDto {
     return {
       campaignId: row.campaign_id,
       dispensaryId: row.dispensary_id,
@@ -198,8 +290,8 @@ export class MarketingService implements OnModuleInit {
       campaignType: row.campaign_type,
       channel: row.channel,
       audienceFilter: row.audience_filter,
-      subject: row.subject,
-      body: row.body,
+      subject: row.subject ?? undefined,
+      body: row.body ?? undefined,
       status: row.status,
       scheduledAt: row.scheduled_at,
       sentAt: row.sent_at,
@@ -209,13 +301,13 @@ export class MarketingService implements OnModuleInit {
     };
   }
 
-  private mapAutomation(row: any): any {
+  private mapAutomation(row: AutomationRow): AutomationDto {
     return {
       automationId: row.automation_id,
       dispensaryId: row.dispensary_id,
       triggerEvent: row.trigger_event,
       delayMinutes: row.delay_minutes,
-      templateId: row.template_id,
+      templateId: row.template_id ?? undefined,
       channel: row.channel,
       isActive: row.is_active,
       createdAt: row.created_at,
