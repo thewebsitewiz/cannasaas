@@ -6,7 +6,6 @@ import {
   RecommendedProductDto,
 } from './recommendation.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtPayload } from '../auth/strategies/jwt.strategy';
 
 @ObjectType()
