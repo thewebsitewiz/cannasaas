@@ -1,16 +1,28 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked,
+} from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { CreateOrderGQL } from '@cannasaas/ui-ng';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { CartService } from '../../core/cart/cart.service';
+import {
+  DeliveryEligibility,
+  DeliveryService,
+} from '../../core/delivery/delivery.service';
 import { DispensaryContextService } from '../../core/tenant/dispensary-context.service';
 
 type OrderType = 'pickup' | 'delivery';
 type PaymentMethod = 'cash';
 
 const TAX_RATE = 0.22;
-const DELIVERY_FEE = 5;
+const DEFAULT_DELIVERY_FEE = 5;
 
 @Component({
   selector: 'cs-checkout-page',
@@ -106,10 +118,78 @@ const DELIVERY_FEE = 5;
                   </svg>
                   <div class="text-left">
                     <p class="font-medium text-stone-900">Delivery</p>
-                    <p class="text-xs text-stone-500">45-60 min</p>
+                    <p class="text-xs text-stone-500">
+                      @if (eligibilityZone(); as z) {
+                        {{ z.estimatedMinutesMin }}-{{ z.estimatedMinutesMax }} min
+                      } @else {
+                        45-60 min
+                      }
+                    </p>
                   </div>
                 </button>
               </div>
+
+              @if (orderType() === 'delivery') {
+                <div class="mt-5 rounded-xl border border-stone-200 bg-stone-50 p-4">
+                  <div class="mb-3 flex items-start justify-between gap-3">
+                    <div>
+                      <p class="text-sm font-medium text-stone-900">Delivery Location</p>
+                      <p class="text-xs text-stone-500">
+                        We'll check you're in our delivery zone.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      class="shrink-0 rounded-lg border border-emerald-700 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      [disabled]="locating()"
+                      (click)="onUseMyLocation()"
+                    >
+                      @if (locating()) {
+                        Locating…
+                      } @else {
+                        Use My Location
+                      }
+                    </button>
+                  </div>
+
+                  @if (locationError(); as err) {
+                    <p class="text-xs text-rose-700">{{ err }}</p>
+                  } @else if (eligibilityChecking()) {
+                    <p class="text-xs text-stone-500">Checking delivery availability…</p>
+                  } @else if (eligibility(); as e) {
+                    @if (e.eligible && e.zone; as zone) {
+                      <div class="flex items-center gap-2 text-xs">
+                        <svg
+                          class="h-4 w-4 text-emerald-700"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          aria-hidden="true"
+                        >
+                          <path d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span class="text-stone-700">
+                          <span class="font-medium text-stone-900">{{ zone.name }}</span>
+                          · \${{ zone.deliveryFee.toFixed(2) }} fee
+                          @if (e.distance != null) {
+                            · {{ e.distance.toFixed(1) }} mi away
+                          }
+                        </span>
+                      </div>
+                    } @else {
+                      <p class="text-xs text-rose-700">
+                        {{ e.reason ?? 'Delivery not available at this location.' }}
+                      </p>
+                    }
+                  } @else {
+                    <p class="text-xs text-stone-400">
+                      Tap "Use My Location" to verify delivery availability.
+                    </p>
+                  }
+                </div>
+              }
             </section>
 
             <section class="rounded-xl border border-stone-200 bg-white p-6">
@@ -199,7 +279,7 @@ const DELIVERY_FEE = 5;
                 @if (orderType() === 'delivery') {
                   <div class="flex justify-between">
                     <span class="text-stone-700">Delivery</span>
-                    <span class="tabular-nums text-stone-900">\${{ deliveryFeeLabel }}</span>
+                    <span class="tabular-nums text-stone-900">\${{ deliveryFeeLabel() }}</span>
                   </div>
                 }
                 <p class="pt-1 text-xs text-stone-500">Final tax calculated at checkout by state</p>
@@ -268,6 +348,7 @@ export class CheckoutPage {
   private readonly cart = inject(CartService);
   private readonly auth = inject(AuthService);
   private readonly dispensary = inject(DispensaryContextService);
+  private readonly delivery = inject(DeliveryService);
   private readonly createOrderGQL = inject(CreateOrderGQL);
   private readonly router = inject(Router);
 
@@ -279,19 +360,56 @@ export class CheckoutPage {
   protected readonly loading = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
 
-  protected readonly deliveryFeeLabel = DELIVERY_FEE.toFixed(2);
+  protected readonly coords = signal<{ lat: number; lng: number } | null>(null);
+  protected readonly locating = signal(false);
+  protected readonly locationError = signal<string | null>(null);
+  protected readonly eligibility = signal<DeliveryEligibility | null>(null);
+  protected readonly eligibilityChecking = signal(false);
+
+  protected readonly eligibilityZone = computed(() => {
+    const e = this.eligibility();
+    return e?.eligible && e.zone ? e.zone : null;
+  });
 
   protected readonly subtotalLabel = computed(() => this.cart.subtotal().toFixed(2));
   protected readonly taxLabel = computed(() => (this.cart.subtotal() * TAX_RATE).toFixed(2));
+
+  private readonly deliveryFee = computed(() => {
+    if (this.orderType() !== 'delivery') return 0;
+    return this.eligibilityZone()?.deliveryFee ?? DEFAULT_DELIVERY_FEE;
+  });
+
+  protected readonly deliveryFeeLabel = computed(() => this.deliveryFee().toFixed(2));
+
   protected readonly totalLabel = computed(() => {
     const subtotal = this.cart.subtotal();
     const tax = subtotal * TAX_RATE;
-    const delivery = this.orderType() === 'delivery' ? DELIVERY_FEE : 0;
-    return (subtotal + tax + delivery).toFixed(2);
+    return (subtotal + tax + this.deliveryFee()).toFixed(2);
   });
-  protected readonly canPlaceOrder = computed(
-    () => !this.loading() && this.isAuthenticated() && !this.isEmpty(),
-  );
+
+  protected readonly canPlaceOrder = computed(() => {
+    if (this.loading() || !this.isAuthenticated() || this.isEmpty()) return false;
+    if (this.orderType() === 'delivery') {
+      const e = this.eligibility();
+      return !!e?.eligible;
+    }
+    return true;
+  });
+
+  constructor() {
+    effect(() => {
+      const c = this.coords();
+      if (!c || untracked(() => this.orderType()) !== 'delivery') return;
+      void this.runEligibilityCheck(c.lat, c.lng);
+    });
+
+    effect(() => {
+      if (this.orderType() === 'pickup') {
+        this.eligibility.set(null);
+        this.locationError.set(null);
+      }
+    });
+  }
 
   protected fulfillmentClass(type: OrderType): string {
     return this.orderType() === type ? 'border-emerald-700 bg-emerald-50' : 'border-stone-200';
@@ -299,6 +417,43 @@ export class CheckoutPage {
 
   protected lineTotal(price: number, qty: number): string {
     return (price * qty).toFixed(2);
+  }
+
+  protected onUseMyLocation(): void {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      this.locationError.set('Geolocation is not available in this browser.');
+      return;
+    }
+    this.locating.set(true);
+    this.locationError.set(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        this.coords.set({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        this.locating.set(false);
+      },
+      (err) => {
+        this.locationError.set(
+          err.code === err.PERMISSION_DENIED
+            ? 'Location permission denied. Enable location to check delivery.'
+            : 'Could not determine your location. Try again.',
+        );
+        this.locating.set(false);
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 },
+    );
+  }
+
+  private async runEligibilityCheck(lat: number, lng: number): Promise<void> {
+    this.eligibilityChecking.set(true);
+    try {
+      const result = await this.delivery.checkEligibility(lat, lng, this.cart.subtotal());
+      this.eligibility.set(result);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to check delivery';
+      this.locationError.set(message);
+    } finally {
+      this.eligibilityChecking.set(false);
+    }
   }
 
   async onPlaceOrder(): Promise<void> {
