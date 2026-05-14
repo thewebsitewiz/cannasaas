@@ -1,9 +1,7 @@
 import { Resolver, Query, Mutation, Args, ID, Int, InputType } from '@nestjs/graphql';
 import { ObjectType, Field } from '@nestjs/graphql';
-import { ManufacturersService } from './manufacturers.service';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { ManufacturersService, ManufacturerDto } from './manufacturers.service';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { JwtPayload } from '../auth/strategies/jwt.strategy';
 
 @ObjectType() class ManufacturerResult {
   @Field(() => ID) manufacturerId!: string;
@@ -82,7 +80,7 @@ export class ManufacturersResolver {
   @Query(() => ManufacturerResult, { name: 'manufacturer', nullable: true })
   async manufacturer(
     @Args('manufacturerId', { type: () => ID }) manufacturerId: string,
-  ): Promise<any> {
+  ): Promise<ManufacturerDto> {
     return this.manufacturers.findById(manufacturerId);
   }
 
@@ -91,7 +89,7 @@ export class ManufacturersResolver {
   async listManufacturers(
     @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) limit: number,
     @Args('offset', { type: () => Int, nullable: true, defaultValue: 0 }) offset: number,
-  ): Promise<any[]> {
+  ): Promise<ManufacturerDto[]> {
     return this.manufacturers.findAll(limit, offset);
   }
 
@@ -99,7 +97,7 @@ export class ManufacturersResolver {
   @Query(() => [ManufacturerListItem], { name: 'manufacturersByBrand' })
   async manufacturersByBrand(
     @Args('brandId', { type: () => ID }) brandId: string,
-  ): Promise<any[]> {
+  ): Promise<ManufacturerDto[]> {
     return this.manufacturers.findByBrand(brandId);
   }
 
@@ -109,7 +107,7 @@ export class ManufacturersResolver {
   @Mutation(() => ManufacturerResult, { name: 'createManufacturer' })
   async createManufacturer(
     @Args('input') input: CreateManufacturerInput,
-  ): Promise<any> {
+  ): Promise<ManufacturerDto> {
     return this.manufacturers.create(input);
   }
 
@@ -118,7 +116,7 @@ export class ManufacturersResolver {
   async updateManufacturer(
     @Args('manufacturerId', { type: () => ID }) manufacturerId: string,
     @Args('input') input: UpdateManufacturerInput,
-  ): Promise<any> {
+  ): Promise<ManufacturerDto> {
     return this.manufacturers.update(manufacturerId, input);
   }
 
