@@ -1,4 +1,13 @@
-import { Resolver, Query, Mutation, Args, ID, Int, ObjectType, Field } from '@nestjs/graphql';
+import {
+  Resolver,
+  Query,
+  Mutation,
+  Args,
+  ID,
+  Int,
+  ObjectType,
+  Field,
+} from '@nestjs/graphql';
 import { ForbiddenException } from '@nestjs/common';
 import {
   IdVerificationService,
@@ -39,7 +48,11 @@ export class IdVerificationResolver {
   ): Promise<AgeVerificationDto> {
     if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId)
       throw new ForbiddenException('Access denied');
-    return this.verification.verifyId({ imageBase64: image, dispensaryId, customerId });
+    return this.verification.verifyId({
+      imageBase64: image,
+      dispensaryId,
+      customerId,
+    });
   }
 
   @Roles('budtender', 'dispensary_admin', 'org_admin', 'super_admin')
