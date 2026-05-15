@@ -2,12 +2,14 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   inject,
   resource,
   signal,
+  untracked,
 } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   AutocompleteProductsGQL,
   AutocompleteProductsQuery,
@@ -154,11 +156,32 @@ export class ProductsPage {
   protected readonly dispensary = inject(DispensaryContextService);
   private readonly productsGQL = inject(ProductsGQL);
   private readonly autocompleteGQL = inject(AutocompleteProductsGQL);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly strainFilters = STRAIN_FILTERS;
-  protected readonly search = signal('');
-  protected readonly strainFilter = signal<string | null>(null);
+  protected readonly search = signal(this.route.snapshot.queryParamMap.get('q') ?? '');
+  protected readonly strainFilter = signal<string | null>(
+    this.route.snapshot.queryParamMap.get('strain'),
+  );
   protected readonly suggestionsOpen = signal(false);
+
+  constructor() {
+    effect(() => {
+      const nextQ = this.search().trim() || null;
+      const nextStrain = this.strainFilter() || null;
+      const current = untracked(() => this.route.snapshot.queryParams);
+      if ((current['q'] ?? null) === nextQ && (current['strain'] ?? null) === nextStrain) {
+        return;
+      }
+      void this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { q: nextQ, strain: nextStrain },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
+    });
+  }
 
   protected readonly productsResource = resource<
     ProductListItem[],
