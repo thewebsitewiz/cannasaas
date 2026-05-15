@@ -1,0 +1,15 @@
+/*
+ * Staff POS global styles.
+ * Tailwind v4 + @cannasaas/ui theme wiring lands in story sc-198.
+ */
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+}

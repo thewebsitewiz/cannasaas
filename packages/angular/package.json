@@ -47,7 +47,9 @@
     "watch": "ng build --watch --configuration development",
     "watch:ui": "ng build ui --watch",
     "dev:storefront": "pnpm build:ui && pnpm start:storefront",
-    "start:storefront": "ng serve storefront"
+    "start:storefront": "ng serve storefront",
+    "dev:staff": "pnpm build:ui && pnpm start:staff",
+    "start:staff": "ng serve staff"
   },
   "version": "0.0.0"
 }
