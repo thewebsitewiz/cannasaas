@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { BullModule } from '@nestjs/bullmq';
 import { Payment } from './entities/payment.entity';
 import { DispensaryPaymentProcessor } from './entities/dispensary-payment-processor.entity';
 import { PaymentService } from './payment.service';
@@ -16,9 +17,16 @@ import { CanPayOnboardingResolver } from './onboarding/canpay-onboarding.resolve
 import { NoopPaymentProcessor } from './processors/noop.processor';
 import { PaymentProcessorRegistry } from './processors/payment-processor.registry';
 import { PAYMENT_PROCESSOR } from './processors/payment-processor.interface';
+import { PaymentLifecycleQueueService } from './queue/payment-lifecycle.queue-service';
+import { PaymentLifecycleProcessor } from './queue/payment-lifecycle.processor';
+import { PAYMENT_LIFECYCLE_QUEUE } from './queue/payment-lifecycle.queue';
+import { PaymentWebhookListener } from './listeners/payment-webhook.listener';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Payment, DispensaryPaymentProcessor])],
+  imports: [
+    TypeOrmModule.forFeature([Payment, DispensaryPaymentProcessor]),
+    BullModule.registerQueue({ name: PAYMENT_LIFECYCLE_QUEUE }),
+  ],
   providers: [
     PaymentService,
     PaymentResolver,
@@ -38,6 +46,9 @@ import { PAYMENT_PROCESSOR } from './processors/payment-processor.interface';
       inject: [NoopPaymentProcessor],
     },
     PaymentProcessorRegistry,
+    PaymentLifecycleQueueService,
+    PaymentLifecycleProcessor,
+    PaymentWebhookListener,
   ],
   exports: [
     PaymentService,
@@ -46,6 +57,7 @@ import { PAYMENT_PROCESSOR } from './processors/payment-processor.interface';
     AeropayOnboardingService,
     CanPayOnboardingService,
     PaymentProcessorRegistry,
+    PaymentLifecycleQueueService,
   ],
 })
 export class PaymentsModule {}
