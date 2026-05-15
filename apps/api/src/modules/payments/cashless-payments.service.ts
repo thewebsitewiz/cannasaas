@@ -2,11 +2,11 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import * as crypto from 'crypto';
+import { DispensaryProcessorConfigService } from './dispensary-processor-config.service';
+import { DispensaryProcessorName } from './entities/dispensary-payment-processor.entity';
 
-interface PaymentMethodFlagsRow {
+interface CashFlagRow {
   is_cash_enabled: boolean | null;
-  canpay_enabled: boolean | null;
-  aeropay_enabled: boolean | null;
 }
 
 async function rawQuery<T>(
@@ -22,7 +22,10 @@ async function rawQuery<T>(
 export class CashlessPaymentsService {
   private readonly logger = new Logger(CashlessPaymentsService.name);
 
-  constructor(@InjectDataSource() private dataSource: DataSource) {}
+  constructor(
+    @InjectDataSource() private dataSource: DataSource,
+    private readonly processorConfig: DispensaryProcessorConfigService,
+  ) {}
 
   // ── CanPay ACH Integration ──────────────────────────────────────────────
 
@@ -111,19 +114,29 @@ export class CashlessPaymentsService {
   async getAvailablePaymentMethods(
     dispensaryId: string,
   ): Promise<{ method: string; enabled: boolean }[]> {
-    const rows = await rawQuery<PaymentMethodFlagsRow>(
+    const rows = await rawQuery<CashFlagRow>(
       this.dataSource,
-      `SELECT is_cash_enabled, canpay_enabled, aeropay_enabled
-       FROM dispensaries WHERE entity_id = $1`,
+      `SELECT is_cash_enabled FROM dispensaries WHERE entity_id = $1`,
       [dispensaryId],
     );
     const disp = rows[0];
     if (!disp) throw new NotFoundException('Dispensary not found');
 
+    const processors = await this.processorConfig.list(dispensaryId);
+    const enabledByName = new Map(
+      processors.map((p) => [p.processorName, p.isEnabled]),
+    );
+
     return [
       { method: 'cash', enabled: disp.is_cash_enabled ?? true },
-      { method: 'canpay', enabled: disp.canpay_enabled ?? false },
-      { method: 'aeropay', enabled: disp.aeropay_enabled ?? false },
+      {
+        method: 'canpay',
+        enabled: enabledByName.get(DispensaryProcessorName.CANPAY) ?? false,
+      },
+      {
+        method: 'aeropay',
+        enabled: enabledByName.get(DispensaryProcessorName.AEROPAY) ?? false,
+      },
     ];
   }
 }
