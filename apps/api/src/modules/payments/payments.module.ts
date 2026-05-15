@@ -13,6 +13,9 @@ import { AeropayOnboardingService } from './onboarding/aeropay-onboarding.servic
 import { AeropayOnboardingResolver } from './onboarding/aeropay-onboarding.resolver';
 import { CanPayOnboardingService } from './onboarding/canpay-onboarding.service';
 import { CanPayOnboardingResolver } from './onboarding/canpay-onboarding.resolver';
+import { NoopPaymentProcessor } from './processors/noop.processor';
+import { PaymentProcessorRegistry } from './processors/payment-processor.registry';
+import { PAYMENT_PROCESSOR } from './processors/payment-processor.interface';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Payment, DispensaryPaymentProcessor])],
@@ -28,6 +31,13 @@ import { CanPayOnboardingResolver } from './onboarding/canpay-onboarding.resolve
     AeropayOnboardingResolver,
     CanPayOnboardingService,
     CanPayOnboardingResolver,
+    NoopPaymentProcessor,
+    {
+      provide: PAYMENT_PROCESSOR,
+      useFactory: (noop: NoopPaymentProcessor) => [noop],
+      inject: [NoopPaymentProcessor],
+    },
+    PaymentProcessorRegistry,
   ],
   exports: [
     PaymentService,
@@ -35,6 +45,7 @@ import { CanPayOnboardingResolver } from './onboarding/canpay-onboarding.resolve
     DispensaryProcessorConfigService,
     AeropayOnboardingService,
     CanPayOnboardingService,
+    PaymentProcessorRegistry,
   ],
 })
 export class PaymentsModule {}
