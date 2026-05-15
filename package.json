@@ -72,9 +72,9 @@
     "dev:admin": "turbo run dev --filter=@cannasaas/admin",
     "dev:api": "turbo run dev --filter=@cannasaas/api",
     "dev:kiosk": "pnpm --filter angular dev:kiosk",
-    "dev:sites": "turbo run dev --filter=@cannasaas/storefront --filter=@cannasaas/admin --filter=@cannasaas/staff --parallel",
+    "dev:sites": "turbo run dev --filter=@cannasaas/admin --filter=@cannasaas/staff --parallel",
     "dev:staff": "turbo run dev --filter=@cannasaas/staff",
-    "dev:storefront": "turbo run dev --filter=@cannasaas/storefront",
+    "dev:storefront": "pnpm --filter angular dev:storefront",
     "format": "prettier --write \"**/*.{ts,tsx,json,md,yaml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,json,md,yaml}\"",
     "lint": "turbo run lint",
@@ -87,8 +87,7 @@
     "type-check": "turbo run type-check",
     "type-check:native": "tsgo --noEmit",
     "start:kiosk": "pnpm --filter angular start:kiosk",
-    "dev:storefront-ng": "pnpm --filter angular dev:storefront",
-    "start:storefront-ng": "pnpm --filter angular start:storefront"
+    "start:storefront": "pnpm --filter angular start:storefront"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.95.2",

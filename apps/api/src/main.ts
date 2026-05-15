@@ -55,9 +55,9 @@ async function bootstrap(): Promise<void> {
       if (Array.isArray(o)) return o;
       if (typeof o === 'string') return o.split(',');
       return [
-        'http://localhost:5173',
         'http://localhost:5174',
         'http://localhost:5175',
+        'http://localhost:5273',
       ];
     })(),
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],

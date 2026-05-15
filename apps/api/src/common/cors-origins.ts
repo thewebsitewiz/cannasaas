@@ -9,13 +9,11 @@
  */
 const DEFAULT_DEV_ORIGINS = [
   // React apps (51xx)
-  'http://localhost:5173', // storefront
   'http://localhost:5174', // admin
   'http://localhost:5175', // staff
-  'http://localhost:5176', // legacy kiosk
   'http://localhost:5177', // platform
   'http://localhost:5178',
-  // Angular replacements (52xx — same last digit)
+  // Angular apps (52xx — same last digit as their React predecessor where applicable)
   'http://localhost:5273', // storefront
   'http://localhost:5276', // kiosk
 ].join(',');

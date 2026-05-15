@@ -2,10 +2,9 @@
 
 Customer-facing dispensary storefront. Inherits all rules from the root `CLAUDE.md`.
 
-This file governs the **Angular replacement** at `packages/angular/projects/storefront/`. The legacy React/Next app at `apps/storefront/` continues to run on :5173 during migration and will be deleted once parity is reached (kiosk pattern).
+This file governs the Angular storefront at `packages/angular/projects/storefront/`. The legacy Next.js app at `apps/storefront/` was deleted in May 2026 after Angular reached feature parity (kiosk pattern).
 
-**Port (Angular):** `:5273`
-**Port (legacy React, still running):** `:5173`
+**Port:** `:5273`
 **Audience:** anonymous customers + authenticated dispensary customers
 **Auth:** optional for browsing, required for checkout
 
@@ -32,7 +31,7 @@ Storefront is the **only app with dynamic per-tenant theming**.
 
 **Dynamic per-tenant theme:** an `AppThemeService` queries `theme_configs` for the current dispensary on app init, then sets `document.documentElement.dataset.theme = '<theme-slug>'`. Theme files use `:root[data-theme="X"]` specificity so the switch is attribute-only — no CSS reload.
 
-- Allowed theme slugs are whitelisted in `AppThemeService.ALLOWED_THEMES` — same set as the React `ThemeProvider`. Update both during the migration window.
+- Allowed theme slugs are whitelisted in `AppThemeService.ALLOWED_THEMES`.
 - `AppThemeService` exposes `currentTheme = signal<ThemeSlug>(...)` so components can react.
 - Falls back to `dark` if `theme_configs` returns no row.
 
@@ -63,7 +62,7 @@ The Angular storefront is **client-side rendered**. No `@angular/ssr`, no `provi
 
 ## Cart, checkout, payments
 
-- Cart state: signal-based service in `packages/stores` (or `apps/storefront/src/app/cart`), persisted to `localStorage` keyed by dispensary ID.
+- Cart state: signal-based service in `core/cart/cart.service.ts`, persisted to `localStorage` keyed by dispensary ID.
 - Checkout flow calls dispensary-scoped GraphQL mutations only — `createOrder`, `confirmPayment`. No payment processor SDK on the client.
 - The cannabis-friendly payment processor (replacing Stripe) returns a redirect URL or a tokenized form; the frontend handles whichever pattern the API exposes.
 - **Stripe is forbidden.** If you see `@stripe/*` in this app, remove it.
@@ -73,7 +72,7 @@ The Angular storefront is **client-side rendered**. No `@angular/ssr`, no `provi
 ## Lazy loading + performance
 
 - Every feature route is lazy-loaded.
-- `@defer` blocks for below-the-fold content (related products, reviews, store info).
+- `@defer` blocks for below-the-fold content (related products, reviews, store info, loyalty card on /account).
 - `NgOptimizedImage` for all product images.
 - Critical CSS path: only `styles.css` + Tailwind output ship in the initial chunk.
 
