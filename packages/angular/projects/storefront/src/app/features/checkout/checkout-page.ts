@@ -8,7 +8,7 @@ import {
   untracked,
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { CreateOrderGQL } from '@cannasaas/ui-ng';
+import { CreateOrderGQL, CreateOrderMutationVariables } from '@cannasaas/ui-ng';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { CartService } from '../../core/cart/cart.service';
@@ -23,6 +23,8 @@ type PaymentMethod = 'cash';
 
 const TAX_RATE = 0.22;
 const DEFAULT_DELIVERY_FEE = 5;
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 @Component({
   selector: 'cs-checkout-page',
@@ -130,26 +132,68 @@ const DEFAULT_DELIVERY_FEE = 5;
               </div>
 
               @if (orderType() === 'delivery') {
-                <div class="mt-5 rounded-xl border border-stone-200 bg-stone-50 p-4">
-                  <div class="mb-3 flex items-start justify-between gap-3">
-                    <div>
-                      <p class="text-sm font-medium text-stone-900">Delivery Location</p>
-                      <p class="text-xs text-stone-500">
-                        We'll check you're in our delivery zone.
-                      </p>
+                <div class="mt-5 space-y-4 rounded-xl border border-stone-200 bg-stone-50 p-4">
+                  <div>
+                    <div class="mb-3 flex items-start justify-between gap-3">
+                      <div>
+                        <p class="text-sm font-medium text-stone-900">Delivery Address</p>
+                        <p class="text-xs text-stone-500">
+                          We'll check you're in our delivery zone.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        class="shrink-0 rounded-lg border border-emerald-700 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        [disabled]="locating()"
+                        (click)="onUseMyLocation()"
+                      >
+                        @if (locating()) {
+                          Locating…
+                        } @else {
+                          Use My Location
+                        }
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      class="shrink-0 rounded-lg border border-emerald-700 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50"
-                      [disabled]="locating()"
-                      (click)="onUseMyLocation()"
-                    >
-                      @if (locating()) {
-                        Locating…
-                      } @else {
-                        Use My Location
-                      }
-                    </button>
+
+                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-6">
+                      <input
+                        type="text"
+                        placeholder="Street address"
+                        class="rounded-md border border-stone-200 bg-white px-3 py-2 text-sm sm:col-span-6"
+                        [value]="addressLine1()"
+                        (input)="addressLine1.set(asValue($event))"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Apt, suite, etc. (optional)"
+                        class="rounded-md border border-stone-200 bg-white px-3 py-2 text-sm sm:col-span-6"
+                        [value]="addressLine2()"
+                        (input)="addressLine2.set(asValue($event))"
+                      />
+                      <input
+                        type="text"
+                        placeholder="City"
+                        class="rounded-md border border-stone-200 bg-white px-3 py-2 text-sm sm:col-span-3"
+                        [value]="addressCity()"
+                        (input)="addressCity.set(asValue($event))"
+                      />
+                      <input
+                        type="text"
+                        placeholder="State"
+                        maxlength="2"
+                        class="rounded-md border border-stone-200 bg-white px-3 py-2 text-sm uppercase sm:col-span-1"
+                        [value]="addressState()"
+                        (input)="addressState.set(asValue($event).toUpperCase())"
+                      />
+                      <input
+                        type="text"
+                        placeholder="ZIP"
+                        maxlength="10"
+                        class="rounded-md border border-stone-200 bg-white px-3 py-2 text-sm sm:col-span-2"
+                        [value]="addressPostalCode()"
+                        (input)="addressPostalCode.set(asValue($event))"
+                      />
+                    </div>
                   </div>
 
                   @if (locationError(); as err) {
@@ -190,6 +234,19 @@ const DEFAULT_DELIVERY_FEE = 5;
                   }
                 </div>
               }
+            </section>
+
+            <section class="rounded-xl border border-stone-200 bg-white p-6">
+              <h2 class="mb-4 text-lg font-semibold text-stone-900">Schedule (optional)</h2>
+              <input
+                type="datetime-local"
+                class="w-full rounded-md border border-stone-200 bg-white px-3 py-2 text-sm"
+                [value]="scheduledForLocal()"
+                (input)="scheduledForLocal.set(asValue($event))"
+              />
+              <p class="mt-2 text-xs text-stone-500">
+                Leave blank for the soonest available time.
+              </p>
             </section>
 
             <section class="rounded-xl border border-stone-200 bg-white p-6">
@@ -360,6 +417,13 @@ export class CheckoutPage {
   protected readonly loading = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
 
+  protected readonly addressLine1 = signal('');
+  protected readonly addressLine2 = signal('');
+  protected readonly addressCity = signal('');
+  protected readonly addressState = signal('');
+  protected readonly addressPostalCode = signal('');
+  protected readonly scheduledForLocal = signal('');
+
   protected readonly coords = signal<{ lat: number; lng: number } | null>(null);
   protected readonly locating = signal(false);
   protected readonly locationError = signal<string | null>(null);
@@ -387,11 +451,20 @@ export class CheckoutPage {
     return (subtotal + tax + this.deliveryFee()).toFixed(2);
   });
 
+  private readonly addressFormValid = computed(() => {
+    return (
+      this.addressLine1().trim().length > 0 &&
+      this.addressCity().trim().length > 0 &&
+      this.addressState().trim().length === 2 &&
+      this.addressPostalCode().trim().length >= 3
+    );
+  });
+
   protected readonly canPlaceOrder = computed(() => {
     if (this.loading() || !this.isAuthenticated() || this.isEmpty()) return false;
     if (this.orderType() === 'delivery') {
       const e = this.eligibility();
-      return !!e?.eligible;
+      return !!e?.eligible && this.addressFormValid();
     }
     return true;
   });
@@ -417,6 +490,10 @@ export class CheckoutPage {
 
   protected lineTotal(price: number, qty: number): string {
     return (price * qty).toFixed(2);
+  }
+
+  protected asValue(event: Event): string {
+    return (event.target as HTMLInputElement).value;
   }
 
   protected onUseMyLocation(): void {
@@ -473,21 +550,20 @@ export class CheckoutPage {
     this.errorMessage.set(null);
 
     try {
-      const result = await firstValueFrom(
-        this.createOrderGQL.mutate({
-          variables: {
-            input: {
-              dispensaryId,
-              orderType: this.orderType(),
-              lineItems: this.items().map((i) => ({
-                productId: i.productId,
-                variantId: i.variantId,
-                quantity: i.quantity,
-              })),
-            },
-          },
-        }),
-      );
+      const variables: CreateOrderMutationVariables = {
+        input: {
+          dispensaryId,
+          orderType: this.orderType(),
+          lineItems: this.items().map((i) => ({
+            productId: i.productId,
+            variantId: i.variantId,
+            quantity: i.quantity,
+          })),
+          deliveryAddress: this.buildDeliveryAddress(),
+          scheduledFor: this.buildScheduledFor(),
+        },
+      };
+      const result = await firstValueFrom(this.createOrderGQL.mutate({ variables }));
       const order = result.data?.createOrder;
       if (!order) {
         throw new Error('Failed to create order');
@@ -500,5 +576,31 @@ export class CheckoutPage {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  private buildDeliveryAddress(): CreateOrderMutationVariables['input']['deliveryAddress'] {
+    if (this.orderType() !== 'delivery') return null;
+    const c = this.coords();
+    const zone = this.eligibilityZone();
+    const zoneId = zone && UUID_RE.test(zone.zoneId) ? zone.zoneId : null;
+    return {
+      line1: this.addressLine1().trim(),
+      line2: this.addressLine2().trim() || null,
+      city: this.addressCity().trim(),
+      state: this.addressState().trim().toUpperCase(),
+      postalCode: this.addressPostalCode().trim(),
+      latitude: c?.lat ?? null,
+      longitude: c?.lng ?? null,
+      zoneId,
+      deliveryFee: zone?.deliveryFee ?? null,
+    };
+  }
+
+  private buildScheduledFor(): string | null {
+    const v = this.scheduledForLocal().trim();
+    if (!v) return null;
+    const d = new Date(v);
+    if (Number.isNaN(d.getTime())) return null;
+    return d.toISOString();
   }
 }

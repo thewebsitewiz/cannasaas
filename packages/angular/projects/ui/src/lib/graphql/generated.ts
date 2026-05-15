@@ -4354,6 +4354,7 @@ export type CheckDeliveryEligibilityQuery = {
     reason?: string | null;
     zone?: {
       __typename?: 'DeliveryZoneMatch';
+      zoneId: string;
       name: string;
       deliveryFee: number;
       estimatedMinutesMin: number;
@@ -4831,6 +4832,7 @@ export const CheckDeliveryEligibilityDocument = gql`
       distance
       reason
       zone {
+        zoneId
         name
         deliveryFee
         estimatedMinutesMin
