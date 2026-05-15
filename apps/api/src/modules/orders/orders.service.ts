@@ -552,10 +552,11 @@ export class OrdersService {
         `INSERT INTO orders (
           "orderId", "dispensaryId", "customerUserId", "staffUserId",
           "orderType", "orderStatus", subtotal, "discountTotal", "taxTotal", total,
-          "taxBreakdown", notes, "createdAt", "updatedAt"
+          "taxBreakdown", notes, "fulfillmentAddress", "scheduledPickupAt",
+          "createdAt", "updatedAt"
         ) VALUES (
           gen_random_uuid(), $1, $2, $3, $4, 'pending',
-          $5, 0, $6, $7, $8, $9, NOW(), NOW()
+          $5, 0, $6, $7, $8, $9, $10, $11, NOW(), NOW()
         ) RETURNING "orderId", "createdAt"`,
         [
           input.dispensaryId,
@@ -567,6 +568,8 @@ export class OrdersService {
           total,
           JSON.stringify(taxBreakdown),
           input.notes ?? null,
+          input.deliveryAddress ? JSON.stringify(input.deliveryAddress) : null,
+          input.scheduledFor ?? null,
         ],
       );
       const order = orderRows[0];

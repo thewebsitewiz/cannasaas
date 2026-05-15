@@ -450,10 +450,12 @@ export type CreateManufacturerInput = {
 
 export type CreateOrderInput = {
   customerUserId?: InputMaybe<Scalars['ID']['input']>;
+  deliveryAddress?: InputMaybe<DeliveryAddressInput>;
   dispensaryId: Scalars['ID']['input'];
   lineItems: Array<OrderLineItemInput>;
   notes?: InputMaybe<Scalars['String']['input']>;
   orderType?: InputMaybe<Scalars['String']['input']>;
+  scheduledFor?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type CreateOrganizationInput = {
@@ -511,6 +513,14 @@ export type CreateReviewInput = {
   salesRating?: InputMaybe<Scalars['Int']['input']>;
   strengths?: InputMaybe<Scalars['String']['input']>;
   teamworkRating?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type CreateWalkInCustomerInput = {
+  dispensaryId: Scalars['ID']['input'];
+  email?: InputMaybe<Scalars['String']['input']>;
+  firstName: Scalars['String']['input'];
+  lastName: Scalars['String']['input'];
+  phone?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type CredentialValidationResult = {
@@ -607,6 +617,17 @@ export type CustomerProfile = {
   userId: Scalars['ID']['output'];
 };
 
+export type CustomerSearchResult = {
+  __typename?: 'CustomerSearchResult';
+  ageVerified: Scalars['Boolean']['output'];
+  email: Scalars['String']['output'];
+  firstName?: Maybe<Scalars['String']['output']>;
+  lastName?: Maybe<Scalars['String']['output']>;
+  phone?: Maybe<Scalars['String']['output']>;
+  totalOrders: Scalars['Int']['output'];
+  userId: Scalars['ID']['output'];
+};
+
 export type DailySales = {
   __typename?: 'DailySales';
   date: Scalars['String']['output'];
@@ -627,6 +648,18 @@ export type DashboardData = {
   sales: SalesOverview;
   salesTrend: Array<SalesTrend>;
   topProducts: Array<TopProduct>;
+};
+
+export type DeliveryAddressInput = {
+  city: Scalars['String']['input'];
+  deliveryFee?: InputMaybe<Scalars['Float']['input']>;
+  latitude?: InputMaybe<Scalars['Float']['input']>;
+  line1: Scalars['String']['input'];
+  line2?: InputMaybe<Scalars['String']['input']>;
+  longitude?: InputMaybe<Scalars['Float']['input']>;
+  postalCode: Scalars['String']['input'];
+  state: Scalars['String']['input'];
+  zoneId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type DeliveryEligibilityResult = {
@@ -1454,6 +1487,7 @@ export type Mutation = {
   createTenant: PlatformTenant;
   createTransfer: InventoryTransfer;
   createVendor: Vendor;
+  createWalkInCustomer: CustomerSearchResult;
   deactivateMetrcCredential: Scalars['Boolean']['output'];
   deactivatePromotion: PromotionResult;
   deactivateUser: Scalars['Boolean']['output'];
@@ -1792,6 +1826,10 @@ export type MutationCreateVendorArgs = {
   phone?: InputMaybe<Scalars['String']['input']>;
   state?: InputMaybe<Scalars['String']['input']>;
   vendorType?: Scalars['String']['input'];
+};
+
+export type MutationCreateWalkInCustomerArgs = {
+  input: CreateWalkInCustomerInput;
 };
 
 export type MutationDeactivateMetrcCredentialArgs = {
@@ -2336,6 +2374,7 @@ export type Order = {
   customerUserId?: Maybe<Scalars['String']['output']>;
   discountTotal: Scalars['Float']['output'];
   dispensaryId: Scalars['String']['output'];
+  fulfillmentAddress?: Maybe<Scalars['JSON']['output']>;
   metrcReceiptId?: Maybe<Scalars['String']['output']>;
   metrcReportedAt?: Maybe<Scalars['DateTime']['output']>;
   metrcSyncStatus?: Maybe<Scalars['String']['output']>;
@@ -2934,6 +2973,7 @@ export type Query = {
   salesOverview: SalesOverview;
   salesReport: SalesSummary;
   salesTrend: Array<SalesTrend>;
+  searchCustomers: Array<CustomerSearchResult>;
   searchProducts: Array<SearchResultType>;
   searchStrains: Array<StrainData>;
   shrinkageReport: ShrinkageReport;
@@ -3532,6 +3572,12 @@ export type QuerySalesReportArgs = {
 export type QuerySalesTrendArgs = {
   days?: InputMaybe<Scalars['Int']['input']>;
   dispensaryId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type QuerySearchCustomersArgs = {
+  dispensaryId: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  query: Scalars['String']['input'];
 };
 
 export type QuerySearchProductsArgs = {

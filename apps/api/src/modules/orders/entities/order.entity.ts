@@ -7,6 +7,7 @@ import {
   Index,
 } from 'typeorm';
 import { ObjectType, Field, ID } from '@nestjs/graphql';
+import GraphQLJSON from 'graphql-type-json';
 
 @ObjectType()
 @Entity('orders')
@@ -61,10 +62,9 @@ export class Order {
     name: 'cash_discount_applied',
   })
   cashDiscountApplied!: number;
-  @Column('jsonb', { nullable: true }) fulfillmentAddress?: Record<
-    string,
-    unknown
-  >;
+  @Field(() => GraphQLJSON, { nullable: true })
+  @Column('jsonb', { nullable: true })
+  fulfillmentAddress?: Record<string, unknown>;
   @Field({ nullable: true })
   @Column({ type: 'timestamptz', nullable: true })
   scheduledPickupAt?: Date;
