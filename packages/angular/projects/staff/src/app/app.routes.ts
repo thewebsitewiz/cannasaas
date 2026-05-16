@@ -18,6 +18,11 @@ export const routes: Routes = [
           import('./features/new-order/new-order-page').then((m) => m.NewOrderPage),
       },
       {
+        path: 'queue',
+        loadComponent: () =>
+          import('./features/order-queue/order-queue-page').then((m) => m.OrderQueuePage),
+      },
+      {
         path: 'placeholder',
         loadComponent: () =>
           import('./pages/placeholder/placeholder-page').then((m) => m.PlaceholderPage),
