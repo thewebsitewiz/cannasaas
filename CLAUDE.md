@@ -25,13 +25,13 @@ Monorepo: pnpm workspaces + Turborepo.
 **Frontend — current React / Vite apps**
 
 - **`apps/admin`** — Vite + React, dispensary back-office. Port `:5174`.
-- **`apps/staff`** — Vite + React, in-store POS. Port `:5175`.
 - **`apps/platform`** — React, super-admin cross-tenant management. Port `:5177`.
 
 **Frontend — Angular (multi-project workspace at `packages/angular/`)**
 
 - **`packages/angular/projects/kiosk`** — Angular 21, self-service touch terminal. Port `:5276`. Replaces the former React `apps/kiosk` (deleted).
 - **`packages/angular/projects/storefront`** — Angular 21, customer-facing dispensary site. Port `:5273`. Authoritative as of May 2026; the former Next.js `apps/storefront` was deleted after parity was reached. CSR only — no SSR.
+- **`packages/angular/projects/staff`** — Angular 21, in-store POS. Port `:5275`. Authoritative as of May 2026; the former Vite/React `apps/staff` was deleted after parity (sc-207).
 - **`packages/angular/projects/ui`** — shared Angular library: design tokens, GraphQL operations, components.
 
 Future Angular rewrites of admin, staff, and platform land as additional projects in `packages/angular/projects/<name>/`, **not** as standalone `apps/*` workspaces. The multi-project workspace shares one `node_modules`, one Angular version, and the `ui` library across all projects.
@@ -44,7 +44,7 @@ Future Angular rewrites of admin, staff, and platform land as additional project
 - **`packages/types`** — shared TypeScript types.
 - **`packages/stores`** — shared signal stores / utilities.
 
-**Migration status:** kiosk and storefront migrations to Angular are complete; the React versions of both have been deleted. Admin, staff, and platform remain on React/Vite. Every per-app CLAUDE.md inherits from this file plus its own.
+**Migration status:** kiosk, storefront, and staff migrations to Angular are complete; the React versions of all three have been deleted. Admin and platform remain on React/Vite. Every per-app CLAUDE.md inherits from this file plus its own.
 
 ---
 
@@ -250,7 +250,7 @@ Theme delivery differs by app — see each app's CLAUDE.md.
 
 - Payment integration uses a cannabis-friendly processor (currently being selected/integrated in `apps/api`).
 - Frontend never holds processor SDK keys directly. The API mediates all payment intents and webhooks.
-- Cart/checkout flows in `packages/angular/projects/storefront` and `apps/staff` call dispensary-scoped GraphQL mutations only — no direct processor SDK imports.
+- Cart/checkout flows in `packages/angular/projects/storefront` and `packages/angular/projects/staff` call dispensary-scoped GraphQL mutations only — no direct processor SDK imports.
 - If you encounter `stripe`, `@stripe/*`, or `Stripe`-named code in a PR, reject it.
 
 ---
@@ -356,10 +356,10 @@ ng generate guard features/foo --functional
 
 **Stopping**
 
-- `haltall` — kill all app ports (3000, 5174–5178, 5273, 5276)
-- `stopapi`, `stopstr`, `stopadm`, `stopstf`, `stopksk` — per-port (`stopstr` now targets the Angular storefront on :5273)
+- `haltall` — kill all app ports (3000, 5174, 5177, 5273, 5275, 5276)
+- `stopapi`, `stopstr`, `stopadm`, `stopstf`, `stopksk` — per-port. `stopstr` now targets Angular storefront on :5273; `stopstf` targets Angular staff on :5275 (sc-207).
 - `ports` — `lsof -i -P -n | grep LISTEN`
-- `checkall` — what's on 5174–5178 and 5273, 5276 (Angular)
+- `checkall` — what's on 5174, 5177 (React) and 5273, 5275, 5276 (Angular)
 
 **Docker**
 

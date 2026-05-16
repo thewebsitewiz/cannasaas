@@ -11,17 +11,17 @@ CannaSaas is a full-stack platform that gives cannabis dispensaries everything t
 
 **Tech Stack:**
 
-| Layer            | Technology                                                               |
-| ---------------- | ------------------------------------------------------------------------ |
-| API              | NestJS, TypeORM, PostgreSQL, GraphQL, BullMQ, Redis                      |
-| Storefront       | Angular 21, signals, Apollo Angular, CSR (no SSR)                        |
-| Admin            | Vite + React, TanStack Query                                             |
-| Staff Portal     | Vite + React (dark terminal UI, tablet-optimized)                        |
-| Kiosk            | Angular 21 (touch-first, large targets)                                  |
-| Platform Manager | Vite + React (super-admin tenant management)                             |
-| Shared Packages  | `packages/ui`, `packages/types`, `packages/angular/projects/ui`          |
-| Monorepo         | pnpm workspaces + Turborepo                                              |
-| Design System    | CSS custom properties, runtime theme switching, Google Fonts             |
+| Layer            | Technology                                                      |
+| ---------------- | --------------------------------------------------------------- |
+| API              | NestJS, TypeORM, PostgreSQL, GraphQL, BullMQ, Redis             |
+| Storefront       | Angular 21, signals, Apollo Angular, CSR (no SSR)               |
+| Admin            | Vite + React, TanStack Query                                    |
+| Staff Portal     | Vite + React (dark terminal UI, tablet-optimized)               |
+| Kiosk            | Angular 21 (touch-first, large targets)                         |
+| Platform Manager | Vite + React (super-admin tenant management)                    |
+| Shared Packages  | `packages/ui`, `packages/types`, `packages/angular/projects/ui` |
+| Monorepo         | pnpm workspaces + Turborepo                                     |
+| Design System    | CSS custom properties, runtime theme switching, Google Fonts    |
 
 ---
 
@@ -146,7 +146,7 @@ pda               # Shell alias → cd to root, start API
 pnpm dev:storefront              # port 5273 (Angular, packages/angular/projects/storefront)
 pnpm dev:kiosk                   # port 5276 (Angular, packages/angular/projects/kiosk)
 cd apps/admin && pnpm dev        # port 5174
-cd apps/staff && pnpm dev        # port 5175
+pnpm dev:staff                   # port 5275 (Angular, packages/angular/projects/staff)
 cd apps/platform && pnpm dev     # port 5177
 ```
 
