@@ -1,0 +1,15 @@
+query SearchProductsLookup(
+  $dispensaryId: String!
+  $query: String!
+  $limit: Int = 20
+) {
+  searchProducts(dispensaryId: $dispensaryId, query: $query, limit: $limit) {
+    productId
+    name
+    strainType
+    thcPercent
+    cbdPercent
+    effects
+    flavors
+  }
+}

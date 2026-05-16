@@ -1,0 +1,16 @@
+query AvailableTimeSlots(
+  $dispensaryId: ID!
+  $slotType: String!
+  $date: String!
+) {
+  availableTimeSlots(
+    dispensaryId: $dispensaryId
+    slotType: $slotType
+    date: $date
+  ) {
+    slotId
+    startTime
+    endTime
+    spotsRemaining
+  }
+}
