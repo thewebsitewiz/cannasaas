@@ -23,6 +23,11 @@ export const routes: Routes = [
           import('./features/order-queue/order-queue-page').then((m) => m.OrderQueuePage),
       },
       {
+        path: 'timesheets',
+        loadComponent: () =>
+          import('./features/timesheets/timesheets-page').then((m) => m.TimesheetsPage),
+      },
+      {
         path: 'placeholder',
         loadComponent: () =>
           import('./pages/placeholder/placeholder-page').then((m) => m.PlaceholderPage),
