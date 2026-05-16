@@ -1,0 +1,21 @@
+query MyTimeEntries(
+  $dispensaryId: ID!
+  $startDate: String!
+  $endDate: String!
+) {
+  myTimeEntries(
+    dispensaryId: $dispensaryId
+    startDate: $startDate
+    endDate: $endDate
+  ) {
+    entryId
+    clockIn
+    clockOut
+    breakMinutes
+    totalHours
+    overtimeHours
+    status
+    notes
+    approvedAt
+  }
+}
