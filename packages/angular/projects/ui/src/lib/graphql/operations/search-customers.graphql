@@ -1,0 +1,11 @@
+query SearchCustomers($dispensaryId: ID!, $query: String!, $limit: Int) {
+  searchCustomers(dispensaryId: $dispensaryId, query: $query, limit: $limit) {
+    userId
+    email
+    firstName
+    lastName
+    phone
+    ageVerified
+    totalOrders
+  }
+}
