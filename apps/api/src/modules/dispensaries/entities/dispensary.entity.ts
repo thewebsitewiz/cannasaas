@@ -131,6 +131,19 @@ export class Dispensary {
   @Column({ default: true, name: 'cash_delivery_enabled' })
   cash_delivery_enabled!: boolean;
 
+  // ── Payment Processor ───────────────────────────────────────────────
+  // Which dispensary-enabled processor handles new orders by default.
+  // NULL = cash-only. CHECK constraint in the migration restricts values
+  // to the same set as DispensaryProcessorName.
+
+  @Field({ name: 'activePaymentProcessor', nullable: true })
+  @Column({
+    type: 'text',
+    nullable: true,
+    name: 'active_payment_processor',
+  })
+  active_payment_processor?: string;
+
   // ── Design System ────────────────────────────────────────────────────
 
   @Field({ name: 'designSystem' })
