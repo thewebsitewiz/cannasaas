@@ -4334,6 +4334,24 @@ export type CreateOrderMutation = {
   };
 };
 
+export type CreateWalkInCustomerMutationVariables = Exact<{
+  input: CreateWalkInCustomerInput;
+}>;
+
+export type CreateWalkInCustomerMutation = {
+  __typename?: 'Mutation';
+  createWalkInCustomer: {
+    __typename?: 'CustomerSearchResult';
+    userId: string;
+    email: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    phone?: string | null;
+    ageVerified: boolean;
+    totalOrders: number;
+  };
+};
+
 export type CustomerByPhoneQueryVariables = Exact<{
   dispensaryId: Scalars['ID']['input'];
   phone: Scalars['String']['input'];
@@ -4713,6 +4731,26 @@ export type RegisterMutation = {
   register: { __typename?: 'AuthToken'; accessToken: string; expiresIn: number };
 };
 
+export type SearchCustomersQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+  query: Scalars['String']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+export type SearchCustomersQuery = {
+  __typename?: 'Query';
+  searchCustomers: Array<{
+    __typename?: 'CustomerSearchResult';
+    userId: string;
+    email: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    phone?: string | null;
+    ageVerified: boolean;
+    totalOrders: number;
+  }>;
+};
+
 export type ThemeConfigQueryVariables = Exact<{
   dispensaryId: Scalars['String']['input'];
 }>;
@@ -4837,6 +4875,33 @@ export class CreateOrderGQL extends Apollo.Mutation<
   CreateOrderMutationVariables
 > {
   override document = CreateOrderDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const CreateWalkInCustomerDocument = gql`
+  mutation CreateWalkInCustomer($input: CreateWalkInCustomerInput!) {
+    createWalkInCustomer(input: $input) {
+      userId
+      email
+      firstName
+      lastName
+      phone
+      ageVerified
+      totalOrders
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class CreateWalkInCustomerGQL extends Apollo.Mutation<
+  CreateWalkInCustomerMutation,
+  CreateWalkInCustomerMutationVariables
+> {
+  override document = CreateWalkInCustomerDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);
@@ -5359,6 +5424,33 @@ export const RegisterDocument = gql`
 })
 export class RegisterGQL extends Apollo.Mutation<RegisterMutation, RegisterMutationVariables> {
   override document = RegisterDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const SearchCustomersDocument = gql`
+  query SearchCustomers($dispensaryId: ID!, $query: String!, $limit: Int) {
+    searchCustomers(dispensaryId: $dispensaryId, query: $query, limit: $limit) {
+      userId
+      email
+      firstName
+      lastName
+      phone
+      ageVerified
+      totalOrders
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class SearchCustomersGQL extends Apollo.Query<
+  SearchCustomersQuery,
+  SearchCustomersQueryVariables
+> {
+  override document = SearchCustomersDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);
