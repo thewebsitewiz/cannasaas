@@ -52,6 +52,7 @@ import { RecommendationModule } from './modules/recommendations/recommendation.m
 import { KnowledgeModule } from './modules/knowledge/knowledge.module';
 import { MarketingModule } from './modules/marketing/marketing.module';
 import { SearchModule } from './modules/search/search.module';
+import { RegisterSessionsModule } from './modules/register-sessions/register-sessions.module';
 import { BiotrackModule } from './modules/biotrack/biotrack.module';
 import { IdVerificationModule } from './modules/verification/id-verification.module';
 import { CacheModule } from './common/services/cache.module';
@@ -122,6 +123,7 @@ import { join } from 'path';
     RecommendationModule,
     KnowledgeModule,
     SearchModule,
+    RegisterSessionsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
