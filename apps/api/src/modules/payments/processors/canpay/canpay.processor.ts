@@ -13,6 +13,8 @@ import {
 } from '../payment-processor.interface';
 import { CanPayClient } from './canpay.client';
 import { CanPayRefundStatus, CanPayTransactionStatus } from './canpay.types';
+import { parseCanPayWebhook } from './canpay-webhook.parser';
+import { WebhookHeaders } from '../payment-processor.interface';
 
 function mapTransactionStatus(
   s: CanPayTransactionStatus,
@@ -46,6 +48,7 @@ interface CanPayConfig {
   readonly baseUrl: string;
   readonly apiKey: string;
   readonly merchantId: string;
+  readonly webhookSecret: string | null;
 }
 
 /**
@@ -71,6 +74,8 @@ export class CanPayPaymentProcessor implements PaymentProcessor {
     const baseUrl = configService.get<string>('CANPAY_BASE_URL');
     const apiKey = configService.get<string>('CANPAY_API_KEY');
     const merchantId = configService.get<string>('CANPAY_MERCHANT_ID');
+    const webhookSecret =
+      configService.get<string>('CANPAY_WEBHOOK_SECRET') ?? null;
 
     if (!baseUrl || !apiKey || !merchantId) {
       this.logger.warn(
@@ -80,8 +85,13 @@ export class CanPayPaymentProcessor implements PaymentProcessor {
       this.client = null;
       return;
     }
+    if (!webhookSecret) {
+      this.logger.warn(
+        'CANPAY_WEBHOOK_SECRET is not configured — webhook verification will throw on use.',
+      );
+    }
 
-    this.config = { baseUrl, apiKey, merchantId };
+    this.config = { baseUrl, apiKey, merchantId, webhookSecret };
     this.client = new CanPayClient({ baseUrl, apiKey });
   }
 
@@ -128,10 +138,17 @@ export class CanPayPaymentProcessor implements PaymentProcessor {
     };
   }
 
-  verifyWebhookSignature(): ProcessorWebhookEvent {
-    throw new Error(
-      'CanPayPaymentProcessor.verifyWebhookSignature is implemented in sc-216',
-    );
+  verifyWebhookSignature(
+    rawBody: string | Buffer,
+    headers: WebhookHeaders,
+  ): ProcessorWebhookEvent {
+    const config = this.requireConfig();
+    if (!config.webhookSecret) {
+      throw new Error(
+        'CanPay webhook verification requires CANPAY_WEBHOOK_SECRET',
+      );
+    }
+    return parseCanPayWebhook(rawBody, headers, config.webhookSecret);
   }
 
   /** Test seam: replace the underlying client. */
