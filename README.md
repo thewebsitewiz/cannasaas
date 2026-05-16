@@ -16,7 +16,7 @@ CannaSaas is a full-stack platform that gives cannabis dispensaries everything t
 | API              | NestJS, TypeORM, PostgreSQL, GraphQL, BullMQ, Redis             |
 | Storefront       | Angular 21, signals, Apollo Angular, CSR (no SSR)               |
 | Admin            | Vite + React, TanStack Query                                    |
-| Staff Portal     | Vite + React (dark terminal UI, tablet-optimized)               |
+| Staff Portal     | Angular 21 (tablet-optimized, dark/light theme switcher)        |
 | Kiosk            | Angular 21 (touch-first, large targets)                         |
 | Platform Manager | Vite + React (super-admin tenant management)                    |
 | Shared Packages  | `packages/ui`, `packages/types`, `packages/angular/projects/ui` |
@@ -33,7 +33,6 @@ cannasaas/
 │   ├── api/                    # NestJS GraphQL API (port 3000)
 │   │   └── src/modules/        # 33 domain modules (see below)
 │   ├── admin/                  # Vite React admin portal (port 5174)
-│   ├── staff/                  # Vite React POS / floor ops (port 5175)
 │   └── platform/               # Vite React super-admin panel (port 5177)
 │
 ├── packages/
@@ -46,6 +45,7 @@ cannasaas/
 │       └── projects/
 │           ├── kiosk/          # Self-service touch terminal (port 5276)
 │           ├── storefront/     # Customer-facing dispensary site (port 5273)
+│           ├── staff/          # In-store POS (port 5275)
 │           └── ui/             # Shared Angular library (design tokens, GraphQL ops, components)
 │
 ├── docs/                       # Architecture docs, prototypes, design system reference
