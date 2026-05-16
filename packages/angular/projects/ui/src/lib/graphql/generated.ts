@@ -4300,6 +4300,23 @@ export type AvailableRewardsQuery = {
   }>;
 };
 
+export type AvailableTimeSlotsQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+  slotType: Scalars['String']['input'];
+  date: Scalars['String']['input'];
+}>;
+
+export type AvailableTimeSlotsQuery = {
+  __typename?: 'Query';
+  availableTimeSlots: Array<{
+    __typename?: 'AvailableSlotResult';
+    slotId: string;
+    startTime: string;
+    endTime: string;
+    spotsRemaining: number;
+  }>;
+};
+
 export type CreateOrderMutationVariables = Exact<{
   input: CreateOrderInput;
 }>;
@@ -4355,6 +4372,23 @@ export type CustomerByPhoneQuery = {
   } | null;
 };
 
+export type DeliveryZonesForFulfillmentQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+}>;
+
+export type DeliveryZonesForFulfillmentQuery = {
+  __typename?: 'Query';
+  deliveryZones: Array<{
+    __typename?: 'DeliveryZone';
+    zoneId: string;
+    name: string;
+    radiusMiles: number;
+    deliveryFee: number;
+    minOrderAmount?: number | null;
+    freeDeliveryThreshold?: number | null;
+  }>;
+};
+
 export type CheckDeliveryEligibilityQueryVariables = Exact<{
   dispensaryId: Scalars['ID']['input'];
   latitude: Scalars['Float']['input'];
@@ -4396,23 +4430,6 @@ export type DeliveryZonesQuery = {
     freeDeliveryThreshold?: number | null;
     estimatedMinutesMin?: number | null;
     estimatedMinutesMax?: number | null;
-  }>;
-};
-
-export type AvailableTimeSlotsQueryVariables = Exact<{
-  dispensaryId: Scalars['ID']['input'];
-  slotType: Scalars['String']['input'];
-  date: Scalars['String']['input'];
-}>;
-
-export type AvailableTimeSlotsQuery = {
-  __typename?: 'Query';
-  availableTimeSlots: Array<{
-    __typename?: 'AvailableSlotResult';
-    slotId: string;
-    startTime: string;
-    endTime: string;
-    spotsRemaining: number;
   }>;
 };
 
@@ -4794,6 +4811,26 @@ export type SearchCustomersQuery = {
   }>;
 };
 
+export type SearchProductsLookupQueryVariables = Exact<{
+  dispensaryId: Scalars['String']['input'];
+  query: Scalars['String']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+export type SearchProductsLookupQuery = {
+  __typename?: 'Query';
+  searchProducts: Array<{
+    __typename?: 'SearchResultType';
+    productId: string;
+    name: string;
+    strainType?: string | null;
+    thcPercent?: number | null;
+    cbdPercent?: number | null;
+    effects?: Array<string> | null;
+    flavors?: Array<string> | null;
+  }>;
+};
+
 export type ThemeConfigQueryVariables = Exact<{
   dispensaryId: Scalars['String']['input'];
 }>;
@@ -4866,6 +4903,30 @@ export class AvailableRewardsGQL extends Apollo.Query<
   AvailableRewardsQueryVariables
 > {
   override document = AvailableRewardsDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const AvailableTimeSlotsDocument = gql`
+  query AvailableTimeSlots($dispensaryId: ID!, $slotType: String!, $date: String!) {
+    availableTimeSlots(dispensaryId: $dispensaryId, slotType: $slotType, date: $date) {
+      slotId
+      startTime
+      endTime
+      spotsRemaining
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class AvailableTimeSlotsGQL extends Apollo.Query<
+  AvailableTimeSlotsQuery,
+  AvailableTimeSlotsQueryVariables
+> {
+  override document = AvailableTimeSlotsDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);
@@ -4952,6 +5013,32 @@ export class CustomerByPhoneGQL extends Apollo.Query<
     super(apollo);
   }
 }
+export const DeliveryZonesForFulfillmentDocument = gql`
+  query DeliveryZonesForFulfillment($dispensaryId: ID!) {
+    deliveryZones(dispensaryId: $dispensaryId) {
+      zoneId
+      name
+      radiusMiles
+      deliveryFee
+      minOrderAmount
+      freeDeliveryThreshold
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class DeliveryZonesForFulfillmentGQL extends Apollo.Query<
+  DeliveryZonesForFulfillmentQuery,
+  DeliveryZonesForFulfillmentQueryVariables
+> {
+  override document = DeliveryZonesForFulfillmentDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
 export const CheckDeliveryEligibilityDocument = gql`
   query CheckDeliveryEligibility(
     $dispensaryId: ID!
@@ -5015,30 +5102,6 @@ export class DeliveryZonesGQL extends Apollo.Query<
   DeliveryZonesQueryVariables
 > {
   override document = DeliveryZonesDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const AvailableTimeSlotsDocument = gql`
-  query AvailableTimeSlots($dispensaryId: ID!, $slotType: String!, $date: String!) {
-    availableTimeSlots(dispensaryId: $dispensaryId, slotType: $slotType, date: $date) {
-      slotId
-      startTime
-      endTime
-      spotsRemaining
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class AvailableTimeSlotsGQL extends Apollo.Query<
-  AvailableTimeSlotsQuery,
-  AvailableTimeSlotsQueryVariables
-> {
-  override document = AvailableTimeSlotsDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);
@@ -5571,6 +5634,33 @@ export class SearchCustomersGQL extends Apollo.Query<
   SearchCustomersQueryVariables
 > {
   override document = SearchCustomersDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const SearchProductsLookupDocument = gql`
+  query SearchProductsLookup($dispensaryId: String!, $query: String!, $limit: Int = 20) {
+    searchProducts(dispensaryId: $dispensaryId, query: $query, limit: $limit) {
+      productId
+      name
+      strainType
+      thcPercent
+      cbdPercent
+      effects
+      flavors
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class SearchProductsLookupGQL extends Apollo.Query<
+  SearchProductsLookupQuery,
+  SearchProductsLookupQueryVariables
+> {
+  override document = SearchProductsLookupDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);
