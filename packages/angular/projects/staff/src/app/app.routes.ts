@@ -9,8 +9,15 @@ export const routes: Routes = [
   {
     path: '',
     canMatch: [dispensaryScopedGuard],
-    loadComponent: () =>
-      import('./pages/placeholder/placeholder-page').then((m) => m.PlaceholderPage),
+    loadComponent: () => import('./layout/staff-shell').then((m) => m.StaffShell),
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        loadComponent: () =>
+          import('./pages/placeholder/placeholder-page').then((m) => m.PlaceholderPage),
+      },
+    ],
   },
   { path: '**', redirectTo: '' },
 ];
