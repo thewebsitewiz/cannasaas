@@ -14,6 +14,12 @@ import { AeropayOnboardingService } from './onboarding/aeropay-onboarding.servic
 import { AeropayOnboardingResolver } from './onboarding/aeropay-onboarding.resolver';
 import { CanPayOnboardingService } from './onboarding/canpay-onboarding.service';
 import { CanPayOnboardingResolver } from './onboarding/canpay-onboarding.resolver';
+import {
+  AEROPAY_CREDENTIAL_VALIDATOR,
+  CANPAY_CREDENTIAL_VALIDATOR,
+} from './onboarding/processor-credential-validator';
+import { AeropayCredentialValidator } from './processors/aeropay/aeropay-credential-validator';
+import { CanPayCredentialValidator } from './processors/canpay/canpay-credential-validator';
 import { NoopPaymentProcessor } from './processors/noop.processor';
 import { AeropayPaymentProcessor } from './processors/aeropay/aeropay.processor';
 import { CanPayPaymentProcessor } from './processors/canpay/canpay.processor';
@@ -58,6 +64,16 @@ import { PaymentWebhookListener } from './listeners/payment-webhook.listener';
       ],
     },
     PaymentProcessorRegistry,
+    AeropayCredentialValidator,
+    CanPayCredentialValidator,
+    {
+      provide: AEROPAY_CREDENTIAL_VALIDATOR,
+      useExisting: AeropayCredentialValidator,
+    },
+    {
+      provide: CANPAY_CREDENTIAL_VALIDATOR,
+      useExisting: CanPayCredentialValidator,
+    },
     PaymentLifecycleQueueService,
     PaymentLifecycleProcessor,
     PaymentWebhookListener,
