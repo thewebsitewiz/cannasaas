@@ -1,7 +1,11 @@
 @import 'tailwindcss';
 
-/* Single-tenant staff POS: theme bundled at build time. data-theme attr is for parity. */
+/*
+ * Two themes bundled: modern (light) is default, dark for low-light shifts.
+ * Switching is attribute-only via ThemeService — no CSS reload.
+ */
 @import '../../../dist/ui/themes/theme.modern.css';
+@import '../../../dist/ui/themes/theme.dark.css';
 
 /*
  * Tailwind v4 in this monorepo: scan only this app + the @cannasaas/ui-ng lib.
