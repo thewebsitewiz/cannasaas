@@ -15,6 +15,11 @@ export const routes: Routes = [
         path: '',
         pathMatch: 'full',
         loadComponent: () =>
+          import('./features/new-order/new-order-page').then((m) => m.NewOrderPage),
+      },
+      {
+        path: 'placeholder',
+        loadComponent: () =>
           import('./pages/placeholder/placeholder-page').then((m) => m.PlaceholderPage),
       },
     ],
