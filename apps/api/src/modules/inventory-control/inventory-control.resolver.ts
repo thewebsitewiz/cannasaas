@@ -1,13 +1,23 @@
 import { Resolver, Query, Mutation, Args, ID, Int } from '@nestjs/graphql';
 import { ObjectType, Field, InputType } from '@nestjs/graphql';
-import { ForbiddenException } from '@nestjs/common';
-import { InventoryControlService } from './inventory-control.service';
-import { InventoryTransfer, InventoryTransferItem, InventoryCount, InventoryCountItem, InventoryAdjustment, LkpAdjustmentReason } from './entities/inventory-control.entity';
+import {
+  InventoryControlService,
+  InventoryHealthDto,
+} from './inventory-control.service';
+import {
+  InventoryTransfer,
+  InventoryTransferItem,
+  InventoryCount,
+  InventoryCountItem,
+  InventoryAdjustment,
+  LkpAdjustmentReason,
+} from './entities/inventory-control.entity';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtPayload } from '../auth/strategies/jwt.strategy';
 
-@ObjectType() class InventoryHealth {
+@ObjectType()
+class InventoryHealth {
   @Field(() => Int) totalSkus!: number;
   @Field(() => Int) totalUnits!: number;
   @Field(() => Int) lowStock!: number;
@@ -19,11 +29,13 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field(() => Int) pendingAdjustments!: number;
 }
 
-@InputType() class TransferItemInput {
+@InputType()
+class TransferItemInput {
   @Field(() => ID) variantId!: string;
   @Field(() => Int) quantity!: number;
 }
-@InputType() class ReceiveItemInput {
+@InputType()
+class ReceiveItemInput {
   @Field(() => ID) itemId!: string;
   @Field(() => Int) quantityReceived!: number;
   @Field({ nullable: true }) notes?: string;
@@ -40,13 +52,18 @@ export class InventoryControlResolver {
   async createTransfer(
     @Args('fromDispensaryId', { type: () => ID }) fromDispensaryId: string,
     @Args('toDispensaryId', { type: () => ID }) toDispensaryId: string,
-    @Args('items', { type: () => [TransferItemInput] }) items: TransferItemInput[],
+    @Args('items', { type: () => [TransferItemInput] })
+    items: TransferItemInput[],
     @Args('notes', { nullable: true }) notes: string,
     @CurrentUser() user: JwtPayload,
   ): Promise<InventoryTransfer> {
     return this.invCtrl.createTransfer({
-      organizationId: user.organizationId || '', fromDispensaryId, toDispensaryId,
-      requestedByUserId: user.sub, notes, items,
+      organizationId: user.organizationId || '',
+      fromDispensaryId,
+      toDispensaryId,
+      requestedByUserId: user.sub,
+      notes,
+      items,
     });
   }
 
@@ -61,7 +78,9 @@ export class InventoryControlResolver {
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
   @Mutation(() => InventoryTransfer, { name: 'shipTransfer' })
-  async shipTransfer(@Args('transferId', { type: () => ID }) transferId: string): Promise<InventoryTransfer> {
+  async shipTransfer(
+    @Args('transferId', { type: () => ID }) transferId: string,
+  ): Promise<InventoryTransfer> {
     return this.invCtrl.shipTransfer(transferId);
   }
 
@@ -69,7 +88,8 @@ export class InventoryControlResolver {
   @Mutation(() => InventoryTransfer, { name: 'receiveTransfer' })
   async receiveTransfer(
     @Args('transferId', { type: () => ID }) transferId: string,
-    @Args('items', { type: () => [ReceiveItemInput] }) items: ReceiveItemInput[],
+    @Args('items', { type: () => [ReceiveItemInput] })
+    items: ReceiveItemInput[],
   ): Promise<InventoryTransfer> {
     return this.invCtrl.receiveTransfer(transferId, items);
   }
@@ -89,13 +109,15 @@ export class InventoryControlResolver {
   async transfers(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @Args('direction', { nullable: true }) direction: string,
-  ): Promise<any[]> {
+  ): Promise<unknown[]> {
     return this.invCtrl.getTransfers(dispensaryId, direction);
   }
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
   @Query(() => [InventoryTransferItem], { name: 'transferItems' })
-  async transferItems(@Args('transferId', { type: () => ID }) transferId: string): Promise<InventoryTransferItem[]> {
+  async transferItems(
+    @Args('transferId', { type: () => ID }) transferId: string,
+  ): Promise<InventoryTransferItem[]> {
     return this.invCtrl.getTransferItems(transferId);
   }
 
@@ -120,7 +142,12 @@ export class InventoryControlResolver {
     @Args('notes', { nullable: true }) notes: string,
     @CurrentUser() user: JwtPayload,
   ): Promise<InventoryCountItem> {
-    return this.invCtrl.recordCount(countItemId, countedQuantity, user.sub, notes);
+    return this.invCtrl.recordCount(
+      countItemId,
+      countedQuantity,
+      user.sub,
+      notes,
+    );
   }
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
@@ -135,13 +162,17 @@ export class InventoryControlResolver {
 
   @Roles('budtender', 'dispensary_admin', 'org_admin', 'super_admin')
   @Query(() => [InventoryCountItem], { name: 'countItems' })
-  async countItems(@Args('countId', { type: () => ID }) countId: string): Promise<InventoryCountItem[]> {
+  async countItems(
+    @Args('countId', { type: () => ID }) countId: string,
+  ): Promise<InventoryCountItem[]> {
     return this.invCtrl.getCountItems(countId);
   }
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
   @Query(() => [InventoryCountItem], { name: 'varianceReport' })
-  async varianceReport(@Args('countId', { type: () => ID }) countId: string): Promise<any[]> {
+  async varianceReport(
+    @Args('countId', { type: () => ID }) countId: string,
+  ): Promise<unknown[]> {
     return this.invCtrl.getVarianceReport(countId);
   }
 
@@ -157,7 +188,14 @@ export class InventoryControlResolver {
     @Args('notes', { nullable: true }) notes: string,
     @CurrentUser() user: JwtPayload,
   ): Promise<InventoryAdjustment> {
-    return this.invCtrl.createAdjustment({ dispensaryId, variantId, reasonCode, quantityChange, submittedByUserId: user.sub, notes });
+    return this.invCtrl.createAdjustment({
+      dispensaryId,
+      variantId,
+      reasonCode,
+      quantityChange,
+      submittedByUserId: user.sub,
+      notes,
+    });
   }
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
@@ -173,14 +211,17 @@ export class InventoryControlResolver {
   @Query(() => [InventoryAdjustment], { name: 'inventoryAdjustments' })
   async adjustments(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
-    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) limit: number,
-  ): Promise<any[]> {
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 })
+    limit: number,
+  ): Promise<unknown[]> {
     return this.invCtrl.getAdjustments(dispensaryId, limit);
   }
 
   @Query(() => [LkpAdjustmentReason], { name: 'adjustmentReasons' })
   async reasons(): Promise<LkpAdjustmentReason[]> {
-    return this.invCtrl.getAdjustmentReasons();
+    return this.invCtrl.getAdjustmentReasons() as unknown as Promise<
+      LkpAdjustmentReason[]
+    >;
   }
 
   // ── Alerts & Health ───────────────────────────────────────────────────────
@@ -189,22 +230,28 @@ export class InventoryControlResolver {
   @Query(() => InventoryHealth, { name: 'inventoryHealth' })
   async health(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
-  ): Promise<any> {
+  ): Promise<InventoryHealthDto> {
     return this.invCtrl.getInventoryHealthDashboard(dispensaryId);
   }
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
-  @Query(() => [InventoryAdjustment], { name: 'expiringInventory', nullable: true })
+  @Query(() => [InventoryAdjustment], {
+    name: 'expiringInventory',
+    nullable: true,
+  })
   async expiring(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
-    @Args('daysAhead', { type: () => Int, nullable: true, defaultValue: 30 }) daysAhead: number,
-  ): Promise<any[]> {
+    @Args('daysAhead', { type: () => Int, nullable: true, defaultValue: 30 })
+    daysAhead: number,
+  ): Promise<unknown[]> {
     return this.invCtrl.getExpiringInventory(dispensaryId, daysAhead);
   }
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
   @Query(() => [InventoryAdjustment], { name: 'reorderAlerts' })
-  async reorder(@Args('dispensaryId', { type: () => ID }) dispensaryId: string): Promise<any[]> {
+  async reorder(
+    @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
+  ): Promise<unknown[]> {
     return this.invCtrl.getReorderAlerts(dispensaryId);
   }
 
@@ -212,8 +259,13 @@ export class InventoryControlResolver {
   @Query(() => [InventoryAdjustment], { name: 'deadStock' })
   async deadStock(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
-    @Args('daysSinceMovement', { type: () => Int, nullable: true, defaultValue: 30 }) days: number,
-  ): Promise<any[]> {
+    @Args('daysSinceMovement', {
+      type: () => Int,
+      nullable: true,
+      defaultValue: 30,
+    })
+    days: number,
+  ): Promise<unknown[]> {
     return this.invCtrl.getDeadStock(dispensaryId, days);
   }
 }

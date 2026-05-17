@@ -1,0 +1,589 @@
+{
+  "timestamp": "2026-04-26T18:19:09.189Z",
+  "dryRun": false,
+  "workflowStateId": 500000007,
+  "epics": {
+    "created": 5,
+    "skipped": 21,
+    "failed": 0
+  },
+  "stories": {
+    "created": 109,
+    "failed": 0
+  },
+  "epicNameToId": {
+    "Customer Accounts & Authentication": 16,
+    "Product Catalog & Discovery": 17,
+    "Payments & Tax": 18,
+    "Promotions & Loyalty": 19,
+    "Sales Channels & Fulfillment": 20,
+    "Staff Management & HR": 21,
+    "Inventory Management": 50,
+    "Analytics & Reporting": 23,
+    "Design System": 24,
+    "Data Integrity & Code Quality": 25,
+    "Real-time & Mobile": 26,
+    "DevOps & Production Hardening": 53,
+    "Cannabis-Friendly Payment Processor": 56,
+    "Real-time Inventory Management": 58,
+    "Compliance & Regulatory": 28,
+    "Multi-tenancy & Tenant Administration": 29,
+    "Billing & Subscription Management": 30,
+    "Notifications & Communications": 31,
+    "Security & Access Control": 32,
+    "Onboarding & Self-Service Setup": 33,
+    "Customer Support Tooling": 34,
+    "Documentation": 35,
+    "Testing & QA Infrastructure": 36,
+    "Performance & Scalability": 37,
+    "Accessibility (WCAG)": 38,
+    "Internationalization": 59
+  },
+  "storyResults": [
+    {
+      "name": "Test and fix register page",
+      "id": 62,
+      "epic": "Customer Accounts & Authentication"
+    },
+    {
+      "name": "Build customer account portal with order history",
+      "id": 63,
+      "epic": "Customer Accounts & Authentication"
+    },
+    {
+      "name": "Wire real product images end-to-end",
+      "id": 64,
+      "epic": "Product Catalog & Discovery"
+    },
+    {
+      "name": "Implement full-text search with autocomplete",
+      "id": 65,
+      "epic": "Product Catalog & Discovery"
+    },
+    {
+      "name": "Wire /products page to searchProducts query",
+      "id": 66,
+      "epic": "Product Catalog & Discovery"
+    },
+    {
+      "name": "Integrate Otreeba for strain enrichment",
+      "id": 68,
+      "epic": "Product Catalog & Discovery"
+    },
+    {
+      "name": "Build product image upload with S3 wiring",
+      "id": 70,
+      "epic": "Product Catalog & Discovery"
+    },
+    {
+      "name": "Implement taxBreakdown GraphQL JSON scalar",
+      "id": 72,
+      "epic": "Payments & Tax"
+    },
+    {
+      "name": "Build promotions/discounts engine",
+      "id": 73,
+      "epic": "Promotions & Loyalty"
+    },
+    {
+      "name": "Build loyalty/rewards system",
+      "id": 74,
+      "epic": "Promotions & Loyalty"
+    },
+    {
+      "name": "Wire kiosk app to API",
+      "id": 75,
+      "epic": "Sales Channels & Fulfillment"
+    },
+    {
+      "name": "Build delivery/fulfillment module",
+      "id": 76,
+      "epic": "Sales Channels & Fulfillment"
+    },
+    {
+      "name": "Integrate POS systems (Dutchie/Treez)",
+      "id": 77,
+      "epic": "Sales Channels & Fulfillment"
+    },
+    {
+      "name": "Build staffing module with cert/expiration tracking",
+      "id": 78,
+      "epic": "Staff Management & HR"
+    },
+    {
+      "name": "Build time clock and payroll export",
+      "id": 80,
+      "epic": "Staff Management & HR"
+    },
+    {
+      "name": "Build staff scheduling",
+      "id": 81,
+      "epic": "Staff Management & HR"
+    },
+    {
+      "name": "Add timesheet submission to staff portal",
+      "id": 82,
+      "epic": "Staff Management & HR"
+    },
+    {
+      "name": "Add timesheet approval workflow to admin portal",
+      "id": 83,
+      "epic": "Staff Management & HR"
+    },
+    {
+      "name": "Add inventory filters to staff inventory screen",
+      "id": 84,
+      "epic": "Inventory Management"
+    },
+    {
+      "name": "Add inventory filters to admin inventory screen",
+      "id": 85,
+      "epic": "Inventory Management"
+    },
+    {
+      "name": "Build analytics/reporting dashboards",
+      "id": 86,
+      "epic": "Analytics & Reporting"
+    },
+    {
+      "name": "Build Spring Bloom theme in admin",
+      "id": 87,
+      "epic": "Design System"
+    },
+    {
+      "name": "Add additional design themes",
+      "id": 88,
+      "epic": "Design System"
+    },
+    {
+      "name": "Build admin theme preview",
+      "id": 89,
+      "epic": "Design System"
+    },
+    {
+      "name": "Unify theme-presets and design-systems mechanisms",
+      "id": 90,
+      "epic": "Design System"
+    },
+    {
+      "name": "Fix dispensary UUID issue",
+      "id": 92,
+      "epic": "Data Integrity & Code Quality"
+    },
+    {
+      "name": "Add CRON job for failed Metrc retries",
+      "id": 93,
+      "epic": "Data Integrity & Code Quality"
+    },
+    {
+      "name": "Fix ESLint config",
+      "id": 94,
+      "epic": "Data Integrity & Code Quality"
+    },
+    {
+      "name": "Implement WebSocket real-time updates",
+      "id": 95,
+      "epic": "Real-time & Mobile"
+    },
+    {
+      "name": "Add PWA mobile support",
+      "id": 96,
+      "epic": "Real-time & Mobile"
+    },
+    {
+      "name": "Production Docker Compose setup",
+      "id": 97,
+      "epic": "DevOps & Production Hardening"
+    },
+    {
+      "name": "Build CI/CD pipeline",
+      "id": 98,
+      "epic": "DevOps & Production Hardening"
+    },
+    {
+      "name": "Environment-specific configs",
+      "id": 99,
+      "epic": "DevOps & Production Hardening"
+    },
+    {
+      "name": "SSL/domain setup",
+      "id": 100,
+      "epic": "DevOps & Production Hardening"
+    },
+    {
+      "name": "Database backup strategy",
+      "id": 101,
+      "epic": "DevOps & Production Hardening"
+    },
+    {
+      "name": "Monitoring and alerting",
+      "id": 102,
+      "epic": "DevOps & Production Hardening"
+    },
+    {
+      "name": "Evaluate cannabis-friendly payment processors",
+      "id": 103,
+      "epic": "Cannabis-Friendly Payment Processor"
+    },
+    {
+      "name": "Integrate selected payment processor",
+      "id": 104,
+      "epic": "Cannabis-Friendly Payment Processor"
+    },
+    {
+      "name": "Production webhook registration",
+      "id": 105,
+      "epic": "Cannabis-Friendly Payment Processor"
+    },
+    {
+      "name": "Webhook signature verification",
+      "id": 106,
+      "epic": "Cannabis-Friendly Payment Processor"
+    },
+    {
+      "name": "Failed payment retry logic",
+      "id": 108,
+      "epic": "Cannabis-Friendly Payment Processor"
+    },
+    {
+      "name": "Refund flow",
+      "id": 110,
+      "epic": "Cannabis-Friendly Payment Processor"
+    },
+    {
+      "name": "Real-time stock decrement on order placement",
+      "id": 112,
+      "epic": "Real-time Inventory Management"
+    },
+    {
+      "name": "Low-stock alerts",
+      "id": 113,
+      "epic": "Real-time Inventory Management"
+    },
+    {
+      "name": "Stock reconciliation against Metrc",
+      "id": 114,
+      "epic": "Real-time Inventory Management"
+    },
+    {
+      "name": "Manual stock adjustments with audit trail",
+      "id": 115,
+      "epic": "Real-time Inventory Management"
+    },
+    {
+      "name": "Bulk inventory import",
+      "id": 116,
+      "epic": "Real-time Inventory Management"
+    },
+    {
+      "name": "Purchase limits per customer per day",
+      "id": 118,
+      "epic": "Compliance & Regulatory"
+    },
+    {
+      "name": "Tax reporting exports for state filings",
+      "id": 119,
+      "epic": "Compliance & Regulatory"
+    },
+    {
+      "name": "Audit logs for regulated actions",
+      "id": 120,
+      "epic": "Compliance & Regulatory"
+    },
+    {
+      "name": "COA document attachment per product/batch",
+      "id": 121,
+      "epic": "Compliance & Regulatory"
+    },
+    {
+      "name": "Seed-to-sale traceability reporting",
+      "id": 122,
+      "epic": "Compliance & Regulatory"
+    },
+    {
+      "name": "Tenant onboarding/provisioning workflow",
+      "id": 123,
+      "epic": "Multi-tenancy & Tenant Administration"
+    },
+    {
+      "name": "Tenant-level configuration",
+      "id": 125,
+      "epic": "Multi-tenancy & Tenant Administration"
+    },
+    {
+      "name": "Tenant suspension/offboarding",
+      "id": 126,
+      "epic": "Multi-tenancy & Tenant Administration"
+    },
+    {
+      "name": "Super-admin tooling",
+      "id": 127,
+      "epic": "Multi-tenancy & Tenant Administration"
+    },
+    {
+      "name": "Tenant-level usage metering",
+      "id": 128,
+      "epic": "Multi-tenancy & Tenant Administration"
+    },
+    {
+      "name": "Define plan tiers (Starter/Growth/Enterprise)",
+      "id": 130,
+      "epic": "Billing & Subscription Management"
+    },
+    {
+      "name": "Subscription lifecycle management",
+      "id": 131,
+      "epic": "Billing & Subscription Management"
+    },
+    {
+      "name": "Invoice generation",
+      "id": 132,
+      "epic": "Billing & Subscription Management"
+    },
+    {
+      "name": "Dunning for failed payments",
+      "id": 133,
+      "epic": "Billing & Subscription Management"
+    },
+    {
+      "name": "Plan upgrade/downgrade flows",
+      "id": 134,
+      "epic": "Billing & Subscription Management"
+    },
+    {
+      "name": "Branded transactional email templates per tenant",
+      "id": 135,
+      "epic": "Notifications & Communications"
+    },
+    {
+      "name": "SMS notifications",
+      "id": 136,
+      "epic": "Notifications & Communications"
+    },
+    {
+      "name": "Push notifications for PWA",
+      "id": 137,
+      "epic": "Notifications & Communications"
+    },
+    {
+      "name": "In-app notifications for staff/admin",
+      "id": 138,
+      "epic": "Notifications & Communications"
+    },
+    {
+      "name": "Marketing email opt-in management",
+      "id": 139,
+      "epic": "Notifications & Communications"
+    },
+    {
+      "name": "RBAC refinement",
+      "id": 140,
+      "epic": "Security & Access Control"
+    },
+    {
+      "name": "2FA/MFA for admin and staff",
+      "id": 141,
+      "epic": "Security & Access Control"
+    },
+    {
+      "name": "Session management",
+      "id": 142,
+      "epic": "Security & Access Control"
+    },
+    {
+      "name": "Password reset flows",
+      "id": 143,
+      "epic": "Security & Access Control"
+    },
+    {
+      "name": "API rate limiting",
+      "id": 144,
+      "epic": "Security & Access Control"
+    },
+    {
+      "name": "Audit logging for sensitive actions",
+      "id": 145,
+      "epic": "Security & Access Control"
+    },
+    {
+      "name": "Secret rotation procedures",
+      "id": 146,
+      "epic": "Security & Access Control"
+    },
+    {
+      "name": "New dispensary signup flow",
+      "id": 147,
+      "epic": "Onboarding & Self-Service Setup"
+    },
+    {
+      "name": "Guided setup wizard",
+      "id": 149,
+      "epic": "Onboarding & Self-Service Setup"
+    },
+    {
+      "name": "Sample data seeding",
+      "id": 150,
+      "epic": "Onboarding & Self-Service Setup"
+    },
+    {
+      "name": "Onboarding email drip",
+      "id": 151,
+      "epic": "Onboarding & Self-Service Setup"
+    },
+    {
+      "name": "Internal support portal",
+      "id": 152,
+      "epic": "Customer Support Tooling"
+    },
+    {
+      "name": "Tenant impersonation capability with audit",
+      "id": 153,
+      "epic": "Customer Support Tooling"
+    },
+    {
+      "name": "Support ticket integration",
+      "id": 154,
+      "epic": "Customer Support Tooling"
+    },
+    {
+      "name": "Customer-facing help center",
+      "id": 155,
+      "epic": "Customer Support Tooling"
+    },
+    {
+      "name": "In-app chat or contact form",
+      "id": 156,
+      "epic": "Customer Support Tooling"
+    },
+    {
+      "name": "API documentation",
+      "id": 157,
+      "epic": "Documentation"
+    },
+    {
+      "name": "Admin user guides",
+      "id": 159,
+      "epic": "Documentation"
+    },
+    {
+      "name": "Staff training materials",
+      "id": 160,
+      "epic": "Documentation"
+    },
+    {
+      "name": "Video walkthroughs",
+      "id": 161,
+      "epic": "Documentation"
+    },
+    {
+      "name": "Changelog and release notes",
+      "id": 162,
+      "epic": "Documentation"
+    },
+    {
+      "name": "Ops runbooks",
+      "id": 163,
+      "epic": "Documentation"
+    },
+    {
+      "name": "E2E test suite (Playwright)",
+      "id": 164,
+      "epic": "Testing & QA Infrastructure"
+    },
+    {
+      "name": "Integration test coverage for critical paths",
+      "id": 166,
+      "epic": "Testing & QA Infrastructure"
+    },
+    {
+      "name": "Load and performance testing",
+      "id": 167,
+      "epic": "Testing & QA Infrastructure"
+    },
+    {
+      "name": "Smoke test suite for deploys",
+      "id": 169,
+      "epic": "Testing & QA Infrastructure"
+    },
+    {
+      "name": "Test data management",
+      "id": 170,
+      "epic": "Testing & QA Infrastructure"
+    },
+    {
+      "name": "Database query optimization pass",
+      "id": 171,
+      "epic": "Performance & Scalability"
+    },
+    {
+      "name": "Add Redis caching layer",
+      "id": 172,
+      "epic": "Performance & Scalability"
+    },
+    {
+      "name": "CDN for static assets",
+      "id": 173,
+      "epic": "Performance & Scalability"
+    },
+    {
+      "name": "Image optimization pipeline",
+      "id": 174,
+      "epic": "Performance & Scalability"
+    },
+    {
+      "name": "GraphQL query complexity limits",
+      "id": 175,
+      "epic": "Performance & Scalability"
+    },
+    {
+      "name": "N+1 query auditing",
+      "id": 176,
+      "epic": "Performance & Scalability"
+    },
+    {
+      "name": "Storefront WCAG 2.1 AA audit",
+      "id": 177,
+      "epic": "Accessibility (WCAG)"
+    },
+    {
+      "name": "Keyboard navigation support",
+      "id": 178,
+      "epic": "Accessibility (WCAG)"
+    },
+    {
+      "name": "Screen reader support",
+      "id": 179,
+      "epic": "Accessibility (WCAG)"
+    },
+    {
+      "name": "Color contrast verification across all themes",
+      "id": 180,
+      "epic": "Accessibility (WCAG)"
+    },
+    {
+      "name": "Accessibility statement page",
+      "id": 181,
+      "epic": "Accessibility (WCAG)"
+    },
+    {
+      "name": "i18n framework integration",
+      "id": 182,
+      "epic": "Internationalization"
+    },
+    {
+      "name": "CAD currency handling",
+      "id": 183,
+      "epic": "Internationalization"
+    },
+    {
+      "name": "French (Quebec) language support",
+      "id": 184,
+      "epic": "Internationalization"
+    },
+    {
+      "name": "CTLS vs Metrc abstraction layer",
+      "id": 185,
+      "epic": "Internationalization"
+    }
+  ]
+}

@@ -41,7 +41,7 @@ export class ComplianceLog {
   action!: string;
 
   @Column({ type: 'jsonb', nullable: true })
-  details!: Record<string, any>;
+  details!: Record<string, unknown>;
 
   @Field({ nullable: true })
   @Column({ type: 'varchar', nullable: true, name: 'ip_address' })

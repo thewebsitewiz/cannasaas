@@ -1,7 +1,16 @@
-import { Resolver, Query, Mutation, Args, ID, Int, InputType, ObjectType } from '@nestjs/graphql';
+import {
+  Resolver,
+  Query,
+  Mutation,
+  Args,
+  ID,
+  Int,
+  InputType,
+  ObjectType,
+} from '@nestjs/graphql';
 import { Field } from '@nestjs/graphql';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { DataSource, QueryRunner } from 'typeorm';
 import { BadRequestException } from '@nestjs/common';
 import { Roles } from '../../common/decorators/roles.decorator';
 import * as bcrypt from 'bcrypt';
@@ -29,6 +38,50 @@ export class CreateWalkInCustomerInput {
   @Field(() => ID) dispensaryId!: string;
 }
 
+interface CustomerSearchRow {
+  userId: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  phone: string | null;
+  ageVerified: boolean;
+  totalOrders: number;
+}
+
+interface DispensaryDomainRow {
+  email: string | null;
+  website: string | null;
+}
+
+interface UserExistsRow {
+  id: string;
+}
+
+interface NewUserRow {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+}
+
+async function rawQuery<T>(
+  ds: DataSource,
+  sql: string,
+  params?: unknown[],
+): Promise<T[]> {
+  const rows = (await ds.query(sql, params)) as unknown;
+  return rows as T[];
+}
+
+async function runnerQuery<T>(
+  qr: QueryRunner,
+  sql: string,
+  params?: unknown[],
+): Promise<T[]> {
+  const rows = (await qr.query(sql, params)) as unknown;
+  return rows as T[];
+}
+
 // ── Resolver ─────────────────────────────────────────────────
 
 @Resolver()
@@ -44,15 +97,18 @@ export class StaffPosResolver {
   async searchCustomers(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @Args('query') query: string,
-    @Args('limit', { type: () => Int, nullable: true, defaultValue: 10 }) rawLimit = 10,
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 10 })
+    rawLimit = 10,
   ): Promise<CustomerSearchResult[]> {
+    void dispensaryId;
     const q = query.trim();
     if (q.length < 2) return [];
 
     const limit = Math.min(rawLimit, 50);
     const pattern = `%${q}%`;
 
-    const rows = await this.ds.query(
+    const rows = await rawQuery<CustomerSearchRow>(
+      this.ds,
       `SELECT
          u.id AS "userId",
          u.email,
@@ -79,7 +135,15 @@ export class StaffPosResolver {
       [pattern, limit],
     );
 
-    return rows;
+    return rows.map((r) => ({
+      userId: r.userId,
+      email: r.email,
+      firstName: r.firstName ?? undefined,
+      lastName: r.lastName ?? undefined,
+      phone: r.phone ?? undefined,
+      ageVerified: r.ageVerified,
+      totalOrders: r.totalOrders,
+    }));
   }
 
   /**
@@ -92,34 +156,37 @@ export class StaffPosResolver {
   async createWalkInCustomer(
     @Args('input') input: CreateWalkInCustomerInput,
   ): Promise<CustomerSearchResult> {
-    if (!input.firstName?.trim()) {
+    if (!input.firstName.trim()) {
       throw new BadRequestException('First name is required');
     }
 
-    // Generate placeholder email from dispensary domain if none provided
-    let email = input.email?.trim() || '';
+    let email = input.email?.trim() ?? '';
     if (!email) {
-      const [disp] = await this.ds.query(
+      const dispRows = await rawQuery<DispensaryDomainRow>(
+        this.ds,
         `SELECT email, website FROM dispensaries WHERE entity_id = $1`,
         [input.dispensaryId],
       );
+      const disp = dispRows[0];
       let domain = 'pos.local';
       if (disp?.email) {
-        domain = disp.email.split('@')[1] || domain;
+        domain = disp.email.split('@')[1] ?? domain;
       } else if (disp?.website) {
-        domain = disp.website.replace(/^https?:\/\//, '').replace(/\/.*$/, '') || domain;
+        domain =
+          disp.website.replace(/^https?:\/\//, '').replace(/\/.*$/, '') ||
+          domain;
       }
       const digits = String(Math.floor(100000 + Math.random() * 900000));
       email = `walkin-${digits}@pos.${domain}`;
     }
 
-    // Check for existing user with this email (if real email provided)
     if (input.email?.trim()) {
-      const [existing] = await this.ds.query(
+      const existing = await rawQuery<UserExistsRow>(
+        this.ds,
         `SELECT id FROM users WHERE email = $1`,
         [email],
       );
-      if (existing) {
+      if (existing[0]) {
         throw new BadRequestException(
           `A customer with email ${email} already exists. Use the search to find them.`,
         );
@@ -131,21 +198,30 @@ export class StaffPosResolver {
     await qr.startTransaction();
 
     try {
-      // Random password — walk-in customers can reset later if they want online access
-      const passwordHash = await bcrypt.hash(crypto.randomBytes(16).toString('hex'), 12);
+      const passwordHash = await bcrypt.hash(
+        crypto.randomBytes(16).toString('hex'),
+        12,
+      );
 
-      const [user] = await qr.query(
+      const userRows = await runnerQuery<NewUserRow>(
+        qr,
         `INSERT INTO users (id, email, "passwordHash", role, "firstName", "lastName", "isActive", "emailVerified", "dispensaryId")
          VALUES (gen_random_uuid(), $1, $2, 'customer', $3, $4, true, false, $5)
          RETURNING id, email, "firstName", "lastName"`,
-        [email, passwordHash, input.firstName.trim(), input.lastName?.trim() || null, input.dispensaryId],
+        [
+          email,
+          passwordHash,
+          input.firstName.trim(),
+          input.lastName.trim() || null,
+          input.dispensaryId,
+        ],
       );
+      const user = userRows[0];
 
-      // Create customer profile
       await qr.query(
         `INSERT INTO customer_profiles (profile_id, user_id, phone, preferred_dispensary_id, marketing_opt_in, sms_opt_in)
          VALUES (gen_random_uuid(), $1, $2, $3, false, false)`,
-        [user.id, input.phone?.trim() || null, input.dispensaryId],
+        [user.id, input.phone?.trim() ?? null, input.dispensaryId],
       );
 
       await qr.commitTransaction();
@@ -153,8 +229,8 @@ export class StaffPosResolver {
       return {
         userId: user.id,
         email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        firstName: user.firstName ?? undefined,
+        lastName: user.lastName ?? undefined,
         phone: input.phone?.trim() || undefined,
         ageVerified: false,
         totalOrders: 0,

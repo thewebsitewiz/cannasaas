@@ -9,7 +9,11 @@ import {
 } from '@nestjs/graphql';
 import { ObjectType, Field } from '@nestjs/graphql';
 import { ForbiddenException } from '@nestjs/common';
-import { TimeClockService } from './timeclock.service';
+import {
+  TimeClockService,
+  ActiveClockRow,
+  PayrollRow as PayrollRawRow,
+} from './timeclock.service';
 import { TimeEntry } from './entities/time-entry.entity';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -104,16 +108,21 @@ export class TimeClockResolver {
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @CurrentUser() user: JwtPayload,
   ): Promise<ActiveClock[]> {
-    const rows = await this.timeClock.getActiveClocks(dispensaryId);
-    return rows.map((r: any) => ({
+    void user;
+    const rows: ActiveClockRow[] =
+      await this.timeClock.getActiveClocks(dispensaryId);
+    return rows.map((r) => ({
       entryId: r.entry_id,
       profileId: r.profile_id,
       firstName: r.firstName,
       lastName: r.lastName,
       email: r.email,
-      positionName: r.position_name,
-      clockIn: r.clock_in,
-      hoursSoFar: parseFloat(r.hours_so_far),
+      positionName: r.position_name ?? undefined,
+      clockIn: r.clock_in instanceof Date ? r.clock_in : new Date(r.clock_in),
+      hoursSoFar:
+        typeof r.hours_so_far === 'number'
+          ? r.hours_so_far
+          : parseFloat(r.hours_so_far),
     }));
   }
 
@@ -147,38 +156,47 @@ export class TimeClockResolver {
     @Args('startDate') startDate: string,
     @Args('endDate') endDate: string,
     @CurrentUser() user: JwtPayload,
-  ): Promise<any[]> {
+  ): Promise<PayrollRow[]> {
     if (
       user.role === 'dispensary_admin' &&
       dispensaryId !== user.dispensaryId
     ) {
       throw new ForbiddenException('Access denied');
     }
-    const rows = await this.timeClock.getPayrollReport(
+    const rows: PayrollRawRow[] = await this.timeClock.getPayrollReport(
       dispensaryId,
       startDate,
       endDate,
     );
-    return rows.map((r: any) => ({
-      employeeNumber: r.employee_number,
-      firstName: r.firstName,
-      lastName: r.lastName,
-      email: r.email,
-      positionName: r.position_name,
-      payType: r.pay_type,
-      hourlyRate: r.hourly_rate ? parseFloat(r.hourly_rate) : null,
-      salary: r.salary ? parseFloat(r.salary) : null,
-      isExempt: r.is_exempt,
-      overtimeEligible: r.overtime_eligible,
-      totalHours: parseFloat(r.total_hours) || 0,
-      overtimeHours: parseFloat(r.overtime_hours) || 0,
-      shiftsWorked: parseInt(r.shifts_worked, 10),
-      totalBreakMinutes: parseInt(r.total_break_minutes, 10),
-      regularPay: r.regular_pay ? parseFloat(r.regular_pay) : null,
-      grossPayWithOt: r.gross_pay_with_ot
-        ? parseFloat(r.gross_pay_with_ot)
-        : null,
-    }));
+    return rows.map((r) => {
+      const hourly = r.hourly_rate == null ? undefined : Number(r.hourly_rate);
+      const salary = r.salary == null ? undefined : Number(r.salary);
+      return {
+        employeeNumber: r.employee_number ?? undefined,
+        firstName: r.firstName,
+        lastName: r.lastName,
+        email: r.email,
+        positionName: r.position_name ?? undefined,
+        payType: r.pay_type,
+        hourlyRate: hourly,
+        salary,
+        isExempt: r.is_exempt,
+        overtimeEligible: r.overtime_eligible,
+        totalHours: Number(r.total_hours) || 0,
+        overtimeHours: Number(r.overtime_hours) || 0,
+        shiftsWorked:
+          typeof r.shifts_worked === 'number'
+            ? r.shifts_worked
+            : parseInt(r.shifts_worked, 10),
+        totalBreakMinutes:
+          typeof r.total_break_minutes === 'number'
+            ? r.total_break_minutes
+            : parseInt(r.total_break_minutes, 10),
+        regularPay: r.regular_pay == null ? undefined : Number(r.regular_pay),
+        grossPayWithOt:
+          r.gross_pay_with_ot == null ? undefined : Number(r.gross_pay_with_ot),
+      };
+    });
   }
 
   @Roles('budtender', 'dispensary_admin', 'org_admin', 'super_admin')

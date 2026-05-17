@@ -1,0 +1,12 @@
+query MyCurrentRegisterSession($dispensaryId: ID!) {
+  myCurrentRegisterSession(dispensaryId: $dispensaryId) {
+    id
+    dispensaryId
+    openedByUserId
+    openingCashCents
+    closingCashCents
+    status
+    openedAt
+    closedAt
+  }
+}

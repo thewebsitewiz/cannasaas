@@ -25,6 +25,8 @@ export class OtreebaSyncCron {
       if (result.total < 50) break; // Last page
     }
 
-    this.logger.log(`Weekly sync complete: ${totalImported} imported, ${totalSkipped} skipped`);
+    this.logger.log(
+      `Weekly sync complete: ${totalImported} imported, ${totalSkipped} skipped`,
+    );
   }
 }

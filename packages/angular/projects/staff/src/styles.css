@@ -1,0 +1,34 @@
+@import 'tailwindcss';
+
+/*
+ * Two themes bundled: modern (light) is default, dark for low-light shifts.
+ * Switching is attribute-only via ThemeService — no CSS reload.
+ */
+@import '../../../dist/ui/themes/theme.modern.css';
+@import '../../../dist/ui/themes/theme.dark.css';
+
+/*
+ * Tailwind v4 in this monorepo: scan only this app + the @cannasaas/ui-ng lib.
+ * Without these, Tailwind scans from workspace root and bloats CSS by 10×+.
+ */
+@source './**/*.{ts,html}';
+@source '../../ui/src/**/*.{ts,html,css}';
+
+/* Staff-wide defaults: tabular numbers for prices, no text inflation on touch hardware. */
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family: var(--font-body, system-ui, sans-serif);
+  background: var(--color-bg, #f8f9fa);
+  color: var(--color-text, #0d1117);
+}
+
+/* Prices and order totals should be tabular by default — no jumping digits on update. */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}

@@ -28,7 +28,8 @@ export class PosResolver {
   constructor(private readonly pos: PosService) {}
 
   private guard(user: JwtPayload, dispensaryId: string): void {
-    if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId) throw new ForbiddenException('Access denied');
+    if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId)
+      throw new ForbiddenException('Access denied');
   }
 
   // ── Integration Management ────────────────────────────────────────────────
@@ -48,12 +49,19 @@ export class PosResolver {
   async upsertIntegration(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @Args('provider') provider: string,
-    @Args('credentials', { type: () => GraphQLJSON }) credentials: Record<string, any>,
-    @Args('dispensaryExternalId', { nullable: true }) dispensaryExternalId: string,
+    @Args('credentials', { type: () => GraphQLJSON })
+    credentials: Record<string, unknown>,
+    @Args('dispensaryExternalId', { nullable: true })
+    dispensaryExternalId: string,
     @CurrentUser() user: JwtPayload,
   ): Promise<PosIntegration> {
     this.guard(user, dispensaryId);
-    return this.pos.upsertIntegration({ dispensaryId, provider, credentials, dispensaryExternalId });
+    return this.pos.upsertIntegration({
+      dispensaryId,
+      provider,
+      credentials,
+      dispensaryExternalId,
+    });
   }
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')

@@ -1,4 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, Index } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
+  Index,
+} from 'typeorm';
 import { ObjectType, Field, ID } from '@nestjs/graphql';
 
 @ObjectType()
@@ -32,10 +40,6 @@ export class Organization {
   @Field()
   @Column({ default: 'active', length: 50 })
   subscription_status!: string;
-
-  @Field({ nullable: true })
-  @Column({ nullable: true, length: 255 })
-  stripe_customer_id?: string;
 
   @Field(() => Date)
   @CreateDateColumn({ type: 'timestamptz' })

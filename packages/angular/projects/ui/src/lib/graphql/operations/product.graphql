@@ -1,0 +1,31 @@
+query Product($dispensaryId: ID!, $id: ID!) {
+  product(dispensaryId: $dispensaryId, id: $id) {
+    id
+    name
+    sku
+    description
+    shortDescription
+    strainName
+    strainType
+    thcPercent
+    cbdPercent
+    effects
+    flavors
+    primaryCategoryId
+    productTypeId
+    brandId
+    isActive
+    isApproved
+    variants {
+      variantId
+      name
+      sku
+      quantityPerUnit
+      retailPrice
+      stockQuantity
+      stockStatus
+      sortOrder
+      isActive
+    }
+  }
+}

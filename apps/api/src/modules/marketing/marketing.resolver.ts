@@ -1,6 +1,21 @@
-import { Resolver, Query, Mutation, Args, ID, Int, Float, ObjectType, Field } from '@nestjs/graphql';
+import {
+  Resolver,
+  Query,
+  Mutation,
+  Args,
+  ID,
+  Int,
+  Float,
+  ObjectType,
+  Field,
+} from '@nestjs/graphql';
 import { ForbiddenException } from '@nestjs/common';
-import { MarketingService } from './marketing.service';
+import {
+  MarketingService,
+  CampaignDto,
+  AutomationDto,
+  CampaignStatsDto,
+} from './marketing.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtPayload } from '../auth/strategies/jwt.strategy';
@@ -13,7 +28,7 @@ class MarketingCampaign {
   @Field() name!: string;
   @Field() campaignType!: string;
   @Field() channel!: string;
-  @Field(() => GraphQLJSON, { nullable: true }) audienceFilter?: any;
+  @Field(() => GraphQLJSON, { nullable: true }) audienceFilter?: unknown;
   @Field({ nullable: true }) subject?: string;
   @Field({ nullable: true }) body?: string;
   @Field() status!: string;
@@ -65,7 +80,7 @@ export class MarketingResolver {
     @Args('body', { nullable: true }) body: string,
     @Args('scheduledAt', { nullable: true }) scheduledAt: string,
     @CurrentUser() user: JwtPayload,
-  ): Promise<MarketingCampaign> {
+  ): Promise<CampaignDto> {
     this.guard(user, dispensaryId);
     return this.marketing.createCampaign({
       dispensaryId,
@@ -84,7 +99,7 @@ export class MarketingResolver {
   async getCampaigns(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @CurrentUser() user: JwtPayload,
-  ): Promise<MarketingCampaign[]> {
+  ): Promise<CampaignDto[]> {
     this.guard(user, dispensaryId);
     return this.marketing.getCampaigns(dispensaryId);
   }
@@ -95,7 +110,7 @@ export class MarketingResolver {
     @Args('campaignId', { type: () => ID }) campaignId: string,
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @CurrentUser() user: JwtPayload,
-  ): Promise<MarketingCampaign> {
+  ): Promise<CampaignDto> {
     this.guard(user, dispensaryId);
     return this.marketing.sendCampaign(campaignId);
   }
@@ -105,7 +120,7 @@ export class MarketingResolver {
   async getAutomations(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @CurrentUser() user: JwtPayload,
-  ): Promise<MarketingAutomation[]> {
+  ): Promise<AutomationDto[]> {
     this.guard(user, dispensaryId);
     return this.marketing.getAutomatedTriggers(dispensaryId);
   }
@@ -115,11 +130,12 @@ export class MarketingResolver {
   async createAutomation(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @Args('triggerEvent') triggerEvent: string,
-    @Args('delayMinutes', { type: () => Int, defaultValue: 0 }) delayMinutes: number,
+    @Args('delayMinutes', { type: () => Int, defaultValue: 0 })
+    delayMinutes: number,
     @Args('templateId', { nullable: true }) templateId: string,
     @Args('channel', { defaultValue: 'email' }) channel: string,
     @CurrentUser() user: JwtPayload,
-  ): Promise<MarketingAutomation> {
+  ): Promise<AutomationDto> {
     this.guard(user, dispensaryId);
     return this.marketing.createAutomatedTrigger({
       dispensaryId,
@@ -134,7 +150,7 @@ export class MarketingResolver {
   @Query(() => CampaignStats, { name: 'campaignStats' })
   async getStats(
     @Args('campaignId', { type: () => ID }) campaignId: string,
-  ): Promise<CampaignStats> {
+  ): Promise<CampaignStatsDto> {
     return this.marketing.getCampaignStats(campaignId);
   }
 

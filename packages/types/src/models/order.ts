@@ -17,7 +17,7 @@
  *   completed → refunded
  */
 
-import type { CartItem, AppliedCoupon } from './cart-item';
+import type { AppliedCoupon } from './coupon';
 import type { Address, UserSummary } from './user';
 
 // ── Status ────────────────────────────────────────────────────────────────────
@@ -37,7 +37,12 @@ export type FulfillmentMethod = 'pickup' | 'delivery';
 
 export type PaymentMethod = 'card' | 'cash' | 'debit';
 
-export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded' | 'partially_refunded';
+export type PaymentStatus =
+  | 'pending'
+  | 'paid'
+  | 'failed'
+  | 'refunded'
+  | 'partially_refunded';
 
 // ── Order Line Item ───────────────────────────────────────────────────────────
 
@@ -116,9 +121,6 @@ export interface Order {
   paymentMethod: PaymentMethod;
   paymentStatus: PaymentStatus;
 
-  /** Stripe PaymentIntent ID — used to track refunds */
-  stripePaymentIntentId?: string | null;
-
   /** Amount refunded so far (supports partial refunds) */
   refundedAmount?: number;
 
@@ -157,8 +159,6 @@ export interface CreateOrderRequest {
   /** Required when fulfillmentMethod is 'delivery' */
   deliveryAddressId?: string;
   paymentMethod: PaymentMethod;
-  /** Stripe PaymentMethod ID from Stripe.js */
-  stripePaymentMethodId?: string;
   scheduledAt?: string;
   customerNotes?: string;
   /** Applied promo code (validated server-side) */

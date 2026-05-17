@@ -15,14 +15,78 @@ const CONDITION_EFFECT_MAP: Record<string, string[]> = {
   headache: ['pain-relief', 'relaxing', 'calming'],
 };
 
+interface KnowledgeProductRow {
+  productId: string;
+  productName: string;
+  strainType: string | null;
+  effects: unknown;
+  terpenes: unknown;
+  thcContent: string | number | null;
+  cbdContent: string | number | null;
+  description: string | null;
+  categoryName?: string | null;
+}
+
+export interface KnowledgeProductDto {
+  productId: string;
+  productName: string;
+  strainType?: string;
+  categoryName?: string;
+  effects?: string[];
+  terpenes?: string[];
+  thcContent?: number;
+  cbdContent?: number;
+  description?: string;
+  matchedCondition?: string;
+  matchedEffects?: string[];
+}
+
+async function rawQuery<T>(
+  ds: DataSource,
+  sql: string,
+  params?: unknown[],
+): Promise<T[]> {
+  const rows = (await ds.query(sql, params)) as unknown;
+  return rows as T[];
+}
+
+function toNumber(val: string | number | null | undefined): number | undefined {
+  if (val == null) return undefined;
+  const n = typeof val === 'number' ? val : parseFloat(val);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+function toStringArray(val: unknown): string[] | undefined {
+  if (!Array.isArray(val)) return undefined;
+  return val.map((v) => String(v));
+}
+
+function mapProduct(r: KnowledgeProductRow): KnowledgeProductDto {
+  return {
+    productId: r.productId,
+    productName: r.productName,
+    strainType: r.strainType ?? undefined,
+    categoryName: r.categoryName ?? undefined,
+    effects: toStringArray(r.effects),
+    terpenes: toStringArray(r.terpenes),
+    thcContent: toNumber(r.thcContent),
+    cbdContent: toNumber(r.cbdContent),
+    description: r.description ?? undefined,
+  };
+}
+
 @Injectable()
 export class KnowledgeService {
   private readonly logger = new Logger(KnowledgeService.name);
 
   constructor(@InjectDataSource() private ds: DataSource) {}
 
-  async searchByEffect(effect: string, dispensaryId: string): Promise<any[]> {
-    const rows = await this.ds.query(
+  async searchByEffect(
+    effect: string,
+    dispensaryId: string,
+  ): Promise<KnowledgeProductDto[]> {
+    const rows = await rawQuery<KnowledgeProductRow>(
+      this.ds,
       `SELECT p.id as "productId", p.name as "productName", p.strain_type as "strainType",
         p.effects, p.terpenes, p.thc_content as "thcContent", p.cbd_content as "cbdContent",
         p.description
@@ -33,26 +97,27 @@ export class KnowledgeService {
       [dispensaryId, JSON.stringify([effect])],
     );
 
-    return rows.map((r: any) => ({
-      productId: r.productId,
-      productName: r.productName,
-      strainType: r.strainType,
-      effects: r.effects,
-      terpenes: r.terpenes,
-      thcContent: r.thcContent ? parseFloat(r.thcContent) : null,
-      cbdContent: r.cbdContent ? parseFloat(r.cbdContent) : null,
-      description: r.description,
-    }));
+    return rows.map(mapProduct);
   }
 
-  async searchByCondition(condition: string, dispensaryId: string): Promise<any[]> {
-    const effects = CONDITION_EFFECT_MAP[condition.toLowerCase()] || [condition.toLowerCase()];
+  async searchByCondition(
+    condition: string,
+    dispensaryId: string,
+  ): Promise<KnowledgeProductDto[]> {
+    const effects = CONDITION_EFFECT_MAP[condition.toLowerCase()] ?? [
+      condition.toLowerCase(),
+    ];
 
-    // Build a query that matches any of the mapped effects
-    const placeholders = effects.map((_, i) => `p.effects @> $${i + 2}::jsonb`).join(' OR ');
-    const params: any[] = [dispensaryId, ...effects.map(e => JSON.stringify([e]))];
+    const placeholders = effects
+      .map((_, i) => `p.effects @> $${String(i + 2)}::jsonb`)
+      .join(' OR ');
+    const params: unknown[] = [
+      dispensaryId,
+      ...effects.map((e) => JSON.stringify([e])),
+    ];
 
-    const rows = await this.ds.query(
+    const rows = await rawQuery<KnowledgeProductRow>(
+      this.ds,
       `SELECT p.id as "productId", p.name as "productName", p.strain_type as "strainType",
         p.effects, p.terpenes, p.thc_content as "thcContent", p.cbd_content as "cbdContent",
         p.description
@@ -63,26 +128,24 @@ export class KnowledgeService {
       params,
     );
 
-    return rows.map((r: any) => ({
-      productId: r.productId,
-      productName: r.productName,
-      strainType: r.strainType,
-      effects: r.effects,
-      terpenes: r.terpenes,
-      thcContent: r.thcContent ? parseFloat(r.thcContent) : null,
-      cbdContent: r.cbdContent ? parseFloat(r.cbdContent) : null,
-      description: r.description,
+    return rows.map((r) => ({
+      ...mapProduct(r),
       matchedCondition: condition,
       matchedEffects: effects,
     }));
   }
 
-  async getProductComparison(productIds: string[]): Promise<any[]> {
+  async getProductComparison(
+    productIds: string[],
+  ): Promise<KnowledgeProductDto[]> {
     if (productIds.length === 0) return [];
 
-    const placeholders = productIds.map((_, i) => `$${i + 1}`).join(',');
+    const placeholders = productIds
+      .map((_, i) => `$${String(i + 1)}`)
+      .join(',');
 
-    const rows = await this.ds.query(
+    const rows = await rawQuery<KnowledgeProductRow>(
+      this.ds,
       `SELECT p.id as "productId", p.name as "productName", p.strain_type as "strainType",
         p.effects, p.terpenes, p.thc_content as "thcContent", p.cbd_content as "cbdContent",
         p.description,
@@ -94,16 +157,6 @@ export class KnowledgeService {
       productIds,
     );
 
-    return rows.map((r: any) => ({
-      productId: r.productId,
-      productName: r.productName,
-      strainType: r.strainType,
-      categoryName: r.categoryName,
-      effects: r.effects,
-      terpenes: r.terpenes,
-      thcContent: r.thcContent ? parseFloat(r.thcContent) : null,
-      cbdContent: r.cbdContent ? parseFloat(r.cbdContent) : null,
-      description: r.description,
-    }));
+    return rows.map(mapProduct);
   }
 }

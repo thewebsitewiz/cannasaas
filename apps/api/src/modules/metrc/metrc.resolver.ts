@@ -2,7 +2,12 @@ import { Resolver, Query, Mutation, Args, ID, Int } from '@nestjs/graphql';
 import { ForbiddenException } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
-import { MetrcService } from './metrc.service';
+import {
+  MetrcService,
+  BulkTagUidsResponse,
+  FailedSyncDashboard as FailedSyncDashboardResult,
+  SyncSaleResult,
+} from './metrc.service';
 import { MetrcCredential } from './entities/metrc-credential.entity';
 import { Product } from '../products/entities/product.entity';
 import { ProductVariant } from '../products/entities/product-variant.entity';
@@ -35,11 +40,13 @@ export class MetrcResolver {
   @Query(() => MetrcCredential, { name: 'metrcCredential', nullable: true })
   async getCredential(
     @CurrentUser() user: JwtPayload,
-    @Args('dispensaryId', { type: () => ID, nullable: true }) dispensaryId?: string,
+    @Args('dispensaryId', { type: () => ID, nullable: true })
+    dispensaryId?: string,
   ): Promise<MetrcCredential | null> {
     const targetId = dispensaryId ?? user.dispensaryId;
     if (!targetId) throw new ForbiddenException('dispensaryId required');
-    if (user.role === 'dispensary_admin' && targetId !== user.dispensaryId) throw new ForbiddenException('Access denied');
+    if (user.role === 'dispensary_admin' && targetId !== user.dispensaryId)
+      throw new ForbiddenException('Access denied');
     return this.metrc.getCredential(targetId);
   }
 
@@ -55,17 +62,24 @@ export class MetrcResolver {
     @Args('input') input: UpsertCredentialInput,
     @CurrentUser() user: JwtPayload,
   ): Promise<MetrcCredential> {
-    if (user.role === 'dispensary_admin' && input.dispensaryId !== user.dispensaryId) throw new ForbiddenException('Access denied');
+    if (
+      user.role === 'dispensary_admin' &&
+      input.dispensaryId !== user.dispensaryId
+    )
+      throw new ForbiddenException('Access denied');
     return this.metrc.upsertCredential(input);
   }
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
-  @Mutation(() => CredentialValidationResult, { name: 'validateMetrcCredential' })
+  @Mutation(() => CredentialValidationResult, {
+    name: 'validateMetrcCredential',
+  })
   async validateCredential(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @CurrentUser() user: JwtPayload,
   ): Promise<CredentialValidationResult> {
-    if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId) throw new ForbiddenException('Access denied');
+    if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId)
+      throw new ForbiddenException('Access denied');
     return this.metrc.validateCredential(dispensaryId);
   }
 
@@ -75,7 +89,8 @@ export class MetrcResolver {
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @CurrentUser() user: JwtPayload,
   ): Promise<boolean> {
-    if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId) throw new ForbiddenException('Access denied');
+    if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId)
+      throw new ForbiddenException('Access denied');
     return this.metrc.deactivateCredential(dispensaryId);
   }
 
@@ -86,8 +101,12 @@ export class MetrcResolver {
   async tagProductUid(
     @Args('input') input: TagProductUidInput,
     @CurrentUser() user: JwtPayload,
-  ): Promise<any> {
-    if (user.role === 'dispensary_admin' && input.dispensaryId !== user.dispensaryId) throw new ForbiddenException('Access denied');
+  ): Promise<unknown> {
+    if (
+      user.role === 'dispensary_admin' &&
+      input.dispensaryId !== user.dispensaryId
+    )
+      throw new ForbiddenException('Access denied');
     return this.metrc.tagProductUid(input, this.dataSource);
   }
 
@@ -96,8 +115,12 @@ export class MetrcResolver {
   async tagPackageLabel(
     @Args('input') input: TagPackageLabelInput,
     @CurrentUser() user: JwtPayload,
-  ): Promise<any> {
-    if (user.role === 'dispensary_admin' && input.dispensaryId !== user.dispensaryId) throw new ForbiddenException('Access denied');
+  ): Promise<unknown> {
+    if (
+      user.role === 'dispensary_admin' &&
+      input.dispensaryId !== user.dispensaryId
+    )
+      throw new ForbiddenException('Access denied');
     return this.metrc.tagPackageLabel(input, this.dataSource);
   }
 
@@ -106,20 +129,26 @@ export class MetrcResolver {
   async setMetrcCategory(
     @Args('input') input: SetMetrcCategoryInput,
     @CurrentUser() user: JwtPayload,
-  ): Promise<any> {
-    if (user.role === 'dispensary_admin' && input.dispensaryId !== user.dispensaryId) throw new ForbiddenException('Access denied');
+  ): Promise<unknown> {
+    if (
+      user.role === 'dispensary_admin' &&
+      input.dispensaryId !== user.dispensaryId
+    )
+      throw new ForbiddenException('Access denied');
     return this.metrc.setMetrcCategory(input, this.dataSource);
   }
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
   @Query(() => ComplianceReport, { name: 'metrcComplianceReport' })
   async complianceReport(
-    @Args('dispensaryId', { type: () => ID, nullable: true }) dispensaryId: string,
+    @Args('dispensaryId', { type: () => ID, nullable: true })
+    dispensaryId: string,
     @CurrentUser() user: JwtPayload,
   ): Promise<ComplianceReport> {
     const targetId = dispensaryId ?? user.dispensaryId;
     if (!targetId) throw new ForbiddenException('dispensaryId required');
-    if (user.role === 'dispensary_admin' && targetId !== user.dispensaryId) throw new ForbiddenException('Access denied');
+    if (user.role === 'dispensary_admin' && targetId !== user.dispensaryId)
+      throw new ForbiddenException('Access denied');
     return this.metrc.generateComplianceReport(targetId, this.dataSource);
   }
 
@@ -128,8 +157,12 @@ export class MetrcResolver {
   async bulkTagUids(
     @Args('input') input: BulkTagUidInput,
     @CurrentUser() user: JwtPayload,
-  ): Promise<BulkTagResult> {
-    if (user.role === 'dispensary_admin' && input.dispensaryId !== user.dispensaryId) throw new ForbiddenException('Access denied');
+  ): Promise<BulkTagUidsResponse> {
+    if (
+      user.role === 'dispensary_admin' &&
+      input.dispensaryId !== user.dispensaryId
+    )
+      throw new ForbiddenException('Access denied');
     return this.metrc.bulkTagUids(input, this.dataSource);
   }
 
@@ -140,8 +173,14 @@ export class MetrcResolver {
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @CurrentUser() user: JwtPayload,
   ): Promise<boolean> {
-    if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId) throw new ForbiddenException('Access denied');
-    return this.metrc.approveProduct(productId, dispensaryId, user.sub, this.dataSource);
+    if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId)
+      throw new ForbiddenException('Access denied');
+    return this.metrc.approveProduct(
+      productId,
+      dispensaryId,
+      user.sub,
+      this.dataSource,
+    );
   }
 
   @Roles('budtender', 'dispensary_admin', 'org_admin', 'super_admin')
@@ -150,8 +189,9 @@ export class MetrcResolver {
     @Args('orderId', { type: () => ID }) orderId: string,
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @CurrentUser() user: JwtPayload,
-  ): Promise<any> {
-    if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId) throw new ForbiddenException('Access denied');
+  ): Promise<SyncSaleResult> {
+    if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId)
+      throw new ForbiddenException('Access denied');
     return this.metrc.syncSaleToMetrc(orderId, dispensaryId, this.dataSource);
   }
 
@@ -163,7 +203,8 @@ export class MetrcResolver {
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @CurrentUser() user: JwtPayload,
   ): Promise<number> {
-    if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId) throw new ForbiddenException('Access denied');
+    if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId)
+      throw new ForbiddenException('Access denied');
     return this.syncQueue.enqueueRetryFailed(dispensaryId);
   }
 
@@ -174,8 +215,11 @@ export class MetrcResolver {
   async failedMetrcSyncs(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @CurrentUser() user: JwtPayload,
-  ): Promise<any> {
-    if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId) {
+  ): Promise<FailedSyncDashboardResult> {
+    if (
+      user.role === 'dispensary_admin' &&
+      dispensaryId !== user.dispensaryId
+    ) {
       throw new ForbiddenException('Access denied');
     }
     return this.metrc.getFailedSyncDashboard(dispensaryId, this.dataSource);

@@ -53,5 +53,7 @@ export class CircuitBreaker {
     }
   }
 
-  getState(): CircuitState { return this.state; }
+  getState(): CircuitState {
+    return this.state;
+  }
 }

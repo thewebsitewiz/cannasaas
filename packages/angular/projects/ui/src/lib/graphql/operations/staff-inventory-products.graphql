@@ -1,0 +1,32 @@
+query StaffInventoryProducts(
+  $dispensaryId: ID!
+  $limit: Int = 200
+  $offset: Int
+  $search: String
+) {
+  products(
+    dispensaryId: $dispensaryId
+    limit: $limit
+    offset: $offset
+    search: $search
+  ) {
+    id
+    name
+    sku
+    strainName
+    strainType
+    thcPercent
+    cbdPercent
+    isActive
+    variants {
+      variantId
+      name
+      sku
+      barcode
+      retailPrice
+      stockQuantity
+      stockStatus
+      isActive
+    }
+  }
+}

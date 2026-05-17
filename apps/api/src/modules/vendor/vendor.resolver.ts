@@ -1,37 +1,71 @@
-import { Resolver, Query, Mutation, Args, ID, Int, Float } from '@nestjs/graphql';
+import {
+  Resolver,
+  Query,
+  Mutation,
+  Args,
+  ID,
+  Int,
+  Float,
+} from '@nestjs/graphql';
 import { ObjectType, Field, InputType } from '@nestjs/graphql';
-import { VendorService } from './vendor.service';
+import {
+  VendorService,
+  VendorWithRelations,
+  PurchaseOrderWithItems,
+  PoLineItemInput,
+  VendorStatsDto,
+} from './vendor.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtPayload } from '../auth/strategies/jwt.strategy';
 import GraphQLJSON from 'graphql-type-json';
 
-@ObjectType() class Vendor {
-  @Field(() => ID) vendor_id!: string; @Field() name!: string; @Field() vendor_type!: string;
-  @Field({ nullable: true }) license_number?: string; @Field({ nullable: true }) license_state?: string;
-  @Field({ nullable: true }) city?: string; @Field({ nullable: true }) state?: string;
-  @Field({ nullable: true }) phone?: string; @Field({ nullable: true }) email?: string;
-  @Field({ nullable: true }) payment_terms?: string; @Field(() => Float, { nullable: true }) rating?: number;
+@ObjectType()
+class Vendor {
+  @Field(() => ID) vendor_id!: string;
+  @Field() name!: string;
+  @Field() vendor_type!: string;
+  @Field({ nullable: true }) license_number?: string;
+  @Field({ nullable: true }) license_state?: string;
+  @Field({ nullable: true }) city?: string;
+  @Field({ nullable: true }) state?: string;
+  @Field({ nullable: true }) phone?: string;
+  @Field({ nullable: true }) email?: string;
+  @Field({ nullable: true }) payment_terms?: string;
+  @Field(() => Float, { nullable: true }) rating?: number;
   @Field() is_active!: boolean;
-  @Field(() => Int, { nullable: true }) total_pos?: number; @Field(() => Float, { nullable: true }) total_spend?: number;
-  @Field(() => GraphQLJSON, { nullable: true }) contacts?: any;
+  @Field(() => Int, { nullable: true }) total_pos?: number;
+  @Field(() => Float, { nullable: true }) total_spend?: number;
+  @Field(() => GraphQLJSON, { nullable: true }) contacts?: unknown;
 }
 
-@ObjectType() class PurchaseOrder {
-  @Field(() => ID) po_id!: string; @Field() po_number!: string; @Field() status!: string;
-  @Field({ nullable: true }) vendor_name?: string; @Field({ nullable: true }) order_date?: string;
-  @Field({ nullable: true }) expected_delivery?: string; @Field({ nullable: true }) payment_status?: string;
-  @Field(() => Float) subtotal!: number; @Field(() => Float) total!: number;
-  @Field(() => Int, { nullable: true }) line_items?: number; @Field(() => Int, { nullable: true }) total_units?: number;
-  @Field(() => GraphQLJSON, { nullable: true }) items?: any;
+@ObjectType()
+class PurchaseOrder {
+  @Field(() => ID) po_id!: string;
+  @Field() po_number!: string;
+  @Field() status!: string;
+  @Field({ nullable: true }) vendor_name?: string;
+  @Field({ nullable: true }) order_date?: string;
+  @Field({ nullable: true }) expected_delivery?: string;
+  @Field({ nullable: true }) payment_status?: string;
+  @Field(() => Float) subtotal!: number;
+  @Field(() => Float) total!: number;
+  @Field(() => Int, { nullable: true }) line_items?: number;
+  @Field(() => Int, { nullable: true }) total_units?: number;
+  @Field(() => GraphQLJSON, { nullable: true }) items?: unknown;
 }
 
-@ObjectType() class VendorStats {
-  @Field(() => Int) activeVendors!: number; @Field(() => Int) totalPOs!: number;
-  @Field(() => Int) openPOs!: number; @Field(() => Float) totalSpend!: number; @Field(() => Float) outstanding!: number;
+@ObjectType()
+class VendorStats {
+  @Field(() => Int) activeVendors!: number;
+  @Field(() => Int) totalPOs!: number;
+  @Field(() => Int) openPOs!: number;
+  @Field(() => Float) totalSpend!: number;
+  @Field(() => Float) outstanding!: number;
 }
 
-@InputType() class POLineItemInput {
+@InputType()
+class POLineItemInput {
   @Field({ nullable: true }) variantId?: string;
   @Field() productName!: string;
   @Field({ nullable: true }) sku?: string;
@@ -45,13 +79,15 @@ export class VendorResolver {
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
   @Query(() => [Vendor], { name: 'vendors' })
-  async vendorList(@CurrentUser() user: JwtPayload): Promise<any[]> {
-    return this.vendors.getVendors(user.organizationId || '');
+  async vendorList(@CurrentUser() user: JwtPayload): Promise<unknown[]> {
+    return this.vendors.getVendors(user.organizationId ?? '');
   }
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
   @Query(() => GraphQLJSON, { name: 'vendor' })
-  async vendor(@Args('vendorId', { type: () => ID }) vendorId: string): Promise<any> {
+  async vendor(
+    @Args('vendorId', { type: () => ID }) vendorId: string,
+  ): Promise<VendorWithRelations> {
     return this.vendors.getVendor(vendorId);
   }
 
@@ -66,13 +102,24 @@ export class VendorResolver {
     @Args('state', { nullable: true }) state: string,
     @Args('phone', { nullable: true }) phone: string,
     @Args('email', { nullable: true }) email: string,
-    @Args('paymentTerms', { nullable: true, defaultValue: 'net_30' }) paymentTerms: string,
+    @Args('paymentTerms', { nullable: true, defaultValue: 'net_30' })
+    paymentTerms: string,
     @Args('contactName', { nullable: true }) contactName: string,
     @Args('contactTitle', { nullable: true }) contactTitle: string,
     @CurrentUser() user: JwtPayload,
-  ): Promise<any> {
-    return this.vendors.createVendor(user.organizationId || '', {
-      name, vendorType, licenseNumber, licenseState, city, state, phone, email, paymentTerms, contactName, contactTitle,
+  ): Promise<unknown> {
+    return this.vendors.createVendor(user.organizationId ?? '', {
+      name,
+      vendorType,
+      licenseNumber,
+      licenseState,
+      city,
+      state,
+      phone,
+      email,
+      paymentTerms,
+      contactName,
+      contactTitle,
     });
   }
 
@@ -86,8 +133,15 @@ export class VendorResolver {
     @Args('isActive', { nullable: true }) isActive: boolean,
     @Args('paymentTerms', { nullable: true }) paymentTerms: string,
     @Args('notes', { nullable: true }) notes: string,
-  ): Promise<any> {
-    return this.vendors.updateVendor(vendorId, { name, phone, email, isActive, paymentTerms, notes });
+  ): Promise<VendorWithRelations> {
+    return this.vendors.updateVendor(vendorId, {
+      name,
+      phone,
+      email,
+      isActive,
+      paymentTerms,
+      notes,
+    });
   }
 
   // ── Purchase Orders ───────────────────────────────────────────────────
@@ -97,13 +151,15 @@ export class VendorResolver {
   async poList(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @Args('status', { nullable: true }) status: string,
-  ): Promise<any[]> {
+  ): Promise<unknown[]> {
     return this.vendors.getPurchaseOrders(dispensaryId, status);
   }
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
   @Query(() => GraphQLJSON, { name: 'purchaseOrder' })
-  async po(@Args('poId', { type: () => ID }) poId: string): Promise<any> {
+  async po(
+    @Args('poId', { type: () => ID }) poId: string,
+  ): Promise<PurchaseOrderWithItems> {
     return this.vendors.getPurchaseOrder(poId);
   }
 
@@ -112,11 +168,17 @@ export class VendorResolver {
   async createPO(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @Args('vendorId', { type: () => ID }) vendorId: string,
-    @Args('items', { type: () => [POLineItemInput] }) items: any[],
+    @Args('items', { type: () => [POLineItemInput] }) items: PoLineItemInput[],
     @Args('notes', { nullable: true }) notes: string,
     @CurrentUser() user: JwtPayload,
-  ): Promise<any> {
-    return this.vendors.createPurchaseOrder(dispensaryId, vendorId, items, user.sub, notes);
+  ): Promise<PurchaseOrderWithItems> {
+    return this.vendors.createPurchaseOrder(
+      dispensaryId,
+      vendorId,
+      items,
+      user.sub,
+      notes,
+    );
   }
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
@@ -125,7 +187,7 @@ export class VendorResolver {
     @Args('poId', { type: () => ID }) poId: string,
     @Args('status') status: string,
     @CurrentUser() user: JwtPayload,
-  ): Promise<any> {
+  ): Promise<PurchaseOrderWithItems> {
     return this.vendors.updatePOStatus(poId, status, user.sub);
   }
 
@@ -133,7 +195,7 @@ export class VendorResolver {
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
   @Query(() => VendorStats, { name: 'vendorStats' })
-  async stats(@CurrentUser() user: JwtPayload): Promise<any> {
-    return this.vendors.getVendorStats(user.organizationId || '');
+  async stats(@CurrentUser() user: JwtPayload): Promise<VendorStatsDto> {
+    return this.vendors.getVendorStats(user.organizationId ?? '');
   }
 }

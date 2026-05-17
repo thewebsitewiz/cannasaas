@@ -1,0 +1,21 @@
+query Dispensary($entityId: ID!) {
+  dispensary(entityId: $entityId) {
+    entityId
+    name
+    addressLine1
+    city
+    county
+    municipality
+    isActive
+    isPickupEnabled
+    isDeliveryEnabled
+    isCashEnabled
+    cashDiscountPercent
+    licenseNumber
+    licenseType
+    metrcLicenseNumber
+    email
+    latitude
+    longitude
+  }
+}

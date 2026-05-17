@@ -12,7 +12,9 @@ export const AppDataSource = new DataSource({
   migrationsRun: false,
   synchronize: true,
   logging:
-    process.env['NODE_ENV'] !== 'production' ? ['query', 'error'] : ['error', 'warn'],
+    process.env['NODE_ENV'] !== 'production'
+      ? ['query', 'error']
+      : ['error', 'warn'],
   maxQueryExecutionTime: 1000, // Log queries slower than 1 second
   extra: {
     max: parseInt(process.env['DB_POOL_MAX'] ?? '20', 10),

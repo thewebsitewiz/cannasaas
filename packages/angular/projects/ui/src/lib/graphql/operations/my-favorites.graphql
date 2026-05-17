@@ -1,0 +1,10 @@
+query MyFavorites($dispensaryId: ID!, $limit: Int) {
+  myFavorites(dispensaryId: $dispensaryId, limit: $limit) {
+    productId
+    variantId
+    productName
+    variantName
+    price
+    orderCount
+  }
+}

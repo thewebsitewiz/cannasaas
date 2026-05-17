@@ -7,7 +7,9 @@ import { PosService } from './pos.service';
 import { PosResolver } from './pos.resolver';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PosIntegration, PosProductMapping, PosSyncLog])],
+  imports: [
+    TypeOrmModule.forFeature([PosIntegration, PosProductMapping, PosSyncLog]),
+  ],
   providers: [PosService, PosResolver],
   exports: [PosService],
 })

@@ -1,0 +1,46 @@
+query CheckDeliveryEligibility(
+  $dispensaryId: ID!
+  $latitude: Float!
+  $longitude: Float!
+  $orderSubtotal: Float
+) {
+  checkDeliveryEligibility(
+    dispensaryId: $dispensaryId
+    latitude: $latitude
+    longitude: $longitude
+    orderSubtotal: $orderSubtotal
+  ) {
+    eligible
+    distance
+    reason
+    zone {
+      zoneId
+      name
+      deliveryFee
+      estimatedMinutesMin
+      estimatedMinutesMax
+    }
+  }
+}
+
+query DeliveryZones($dispensaryId: ID!) {
+  deliveryZones(dispensaryId: $dispensaryId) {
+    zoneId
+    name
+    radiusMiles
+    deliveryFee
+    minOrderAmount
+    freeDeliveryThreshold
+    estimatedMinutesMin
+    estimatedMinutesMax
+  }
+}
+
+query AvailableTimeSlots($dispensaryId: ID!, $slotType: String!, $date: String!) {
+  availableTimeSlots(dispensaryId: $dispensaryId, slotType: $slotType, date: $date) {
+    slotId
+    startTime
+    endTime
+    spotsRemaining
+  }
+}

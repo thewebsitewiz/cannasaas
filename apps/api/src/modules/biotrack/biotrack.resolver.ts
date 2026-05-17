@@ -1,4 +1,13 @@
-import { Resolver, Query, Mutation, Args, ID, ObjectType, Field, Int } from '@nestjs/graphql';
+import {
+  Resolver,
+  Query,
+  Mutation,
+  Args,
+  ID,
+  ObjectType,
+  Field,
+  Int,
+} from '@nestjs/graphql';
 import { ForbiddenException } from '@nestjs/common';
 import { BiotrackService } from './biotrack.service';
 import { BiotrackCredential } from './entities/biotrack-credential.entity';
@@ -29,7 +38,10 @@ export class BiotrackResolver {
   }
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
-  @Query(() => BiotrackCredential, { name: 'biotrackCredential', nullable: true })
+  @Query(() => BiotrackCredential, {
+    name: 'biotrackCredential',
+    nullable: true,
+  })
   async getCredential(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @CurrentUser() user: JwtPayload,
@@ -49,11 +61,19 @@ export class BiotrackResolver {
     @CurrentUser() user: JwtPayload,
   ): Promise<BiotrackCredential> {
     this.guard(user, dispensaryId);
-    return this.biotrack.upsertCredential({ dispensaryId, apiKey, apiSecret, state, licenseNumber });
+    return this.biotrack.upsertCredential({
+      dispensaryId,
+      apiKey,
+      apiSecret,
+      state,
+      licenseNumber,
+    });
   }
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
-  @Mutation(() => BiotrackValidationResult, { name: 'validateBiotrackCredential' })
+  @Mutation(() => BiotrackValidationResult, {
+    name: 'validateBiotrackCredential',
+  })
   async validateCredential(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @CurrentUser() user: JwtPayload,

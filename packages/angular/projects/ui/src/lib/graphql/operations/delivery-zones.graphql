@@ -1,0 +1,10 @@
+query DeliveryZonesForFulfillment($dispensaryId: ID!) {
+  deliveryZones(dispensaryId: $dispensaryId) {
+    zoneId
+    name
+    radiusMiles
+    deliveryFee
+    minOrderAmount
+    freeDeliveryThreshold
+  }
+}

@@ -59,8 +59,13 @@ export interface PosProvider {
   fetchProductById(externalId: string): Promise<PosProduct | null>;
 
   // Inventory
-  fetchInventory(): Promise<Array<{ externalVariantId: string; quantity: number }>>;
-  updateInventory(externalVariantId: string, quantity: number): Promise<boolean>;
+  fetchInventory(): Promise<
+    Array<{ externalVariantId: string; quantity: number }>
+  >;
+  updateInventory(
+    externalVariantId: string,
+    quantity: number,
+  ): Promise<boolean>;
 
   // Orders
   pushOrder(order: PosOrderPayload): Promise<{ externalOrderId: string }>;

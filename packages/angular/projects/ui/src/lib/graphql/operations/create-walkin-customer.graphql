@@ -1,0 +1,11 @@
+mutation CreateWalkInCustomer($input: CreateWalkInCustomerInput!) {
+  createWalkInCustomer(input: $input) {
+    userId
+    email
+    firstName
+    lastName
+    phone
+    ageVerified
+    totalOrders
+  }
+}

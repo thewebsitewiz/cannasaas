@@ -1,0 +1,27 @@
+name,description,labels,state
+Customer Accounts & Authentication,"Customer-facing account creation, login, and order history. Required for any meaningful customer experience.","tier-2,customer-facing",to do
+Product Catalog & Discovery,"Real product imagery, search/autocomplete, strain enrichment, and image upload pipeline.","tier-2,tier-3,tier-4,tier-5,customer-facing",to do
+Payments & Tax,Tax breakdown on receipts and customer-facing tax display. (See also: Cannabis Payment Processor epic.),"tier-2,critical-path",to do
+Promotions & Loyalty,Promotions/discounts engine and loyalty/rewards system - core sales drivers for dispensaries.,"tier-3,tier-4,growth",to do
+Sales Channels & Fulfillment,"In-store kiosk, delivery/fulfillment module, and POS integrations (Dutchie/Treez).","tier-3,tier-5,growth",to do
+Staff Management & HR,"Staffing module, time clock, payroll export, scheduling, and timesheet workflows for staff and admin portals.","tier-3,tier-4,tier-6,compliance",to do
+Inventory Management,"Inventory filters in staff and admin screens, plus real-time stock control, low-stock alerts, and Metrc reconciliation.","tier-2,critical-path",to do
+Analytics & Reporting,"Dashboards for sales, inventory, customer behavior, and operational metrics.","tier-4,growth",to do
+Design System,"Spring Bloom theme, additional themes, admin theme preview, and unification of theme-presets vs design-systems.","tier-4,tech-debt",to do
+Data Integrity & Code Quality,"Dispensary UUID fix, Metrc retry CRON, ESLint config, and ongoing code quality work.","tier-2,tier-3,compliance,tech-debt",to do
+Real-time & Mobile,WebSocket real-time updates and PWA mobile support.,"tier-5,polish",to do
+DevOps & Production Hardening,"Docker Compose, CI/CD, environment configs, SSL/domain, backups, and monitoring/alerting.","tier-6,production",to do
+Cannabis-Friendly Payment Processor,"Evaluate and integrate a cannabis-friendly payment processor (Stripe is OFF the table per ToS). Includes webhook registration, signature verification, retry logic, and refunds.","critical-path,blocker",to do
+Real-time Inventory Management,"Real-time stock decrement, low-stock alerts, Metrc reconciliation, manual stock adjustments with audit, and bulk import.",critical-path,to do
+Compliance & Regulatory,"Purchase limits (NY/NJ/CT), tax reporting exports, audit logs, COA document attachment, and seed-to-sale traceability. Age verification already done.","compliance,blocker",to do
+Multi-tenancy & Tenant Administration,"Tenant onboarding, configuration, suspension/offboarding, super-admin tooling, and usage metering.",platform,to do
+Billing & Subscription Management,"Dispensary-facing billing for Starter/Growth/Enterprise tiers - subscription lifecycle, invoicing, dunning, plan changes.","platform,revenue",to do
+Notifications & Communications,"Branded transactional email per tenant, SMS, push notifications, in-app notifications, marketing opt-in management.",platform,to do
+Security & Access Control,"RBAC refinement, 2FA/MFA, session management, password reset, rate limiting, audit logs, secret rotation.","security,compliance",to do
+Onboarding & Self-Service Setup,"New dispensary signup flow, guided setup wizard, sample data seeding, onboarding drip.","growth,platform",to do
+Customer Support Tooling,"Internal support portal, tenant impersonation with audit, support tickets, help center, contact form.",operations,to do
+Documentation,"API docs, admin/staff guides, video walkthroughs, changelog, ops runbooks.",operations,to do
+Testing & QA Infrastructure,"E2E suite, integration tests for critical paths, load testing, smoke tests, test data management.",quality,to do
+Performance & Scalability,"DB query optimization, Redis caching, CDN, image optimization, GraphQL complexity limits, N+1 auditing.",performance,to do
+Accessibility (WCAG),"Storefront WCAG 2.1 AA audit, keyboard navigation, screen reader support, theme contrast verification, accessibility statement.","compliance,quality",to do
+Internationalization,"i18n framework, CAD currency, French/Quebec support, CTLS abstraction layer (for Phase 5 Canada expansion).","future,canada",to do

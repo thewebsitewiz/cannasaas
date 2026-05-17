@@ -1,9 +1,54 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { DataSource, QueryRunner } from 'typeorm';
 import { Payment } from './entities/payment.entity';
+
+interface CashConfigRow {
+  cash_discount_percent: string | number | null;
+  is_cash_enabled: boolean;
+  cash_delivery_enabled: boolean;
+}
+
+interface OrderRow {
+  orderId: string;
+  subtotal: string | number;
+  taxTotal: string | number;
+  total: string | number;
+  discountTotal: string | number;
+  orderStatus: string;
+  payment_method: string | null;
+}
+
+async function rawQuery<T>(
+  ds: DataSource,
+  sql: string,
+  params?: unknown[],
+): Promise<T[]> {
+  const rows = (await ds.query(sql, params)) as unknown;
+  return rows as T[];
+}
+
+async function runnerQuery<T>(
+  qr: QueryRunner,
+  sql: string,
+  params?: unknown[],
+): Promise<T[]> {
+  const rows = (await qr.query(sql, params)) as unknown;
+  return rows as T[];
+}
+
+function toNumber(val: string | number | null | undefined): number {
+  if (val == null) return 0;
+  const n = typeof val === 'number' ? val : parseFloat(val);
+  return Number.isFinite(n) ? n : 0;
+}
 
 @Injectable()
 export class PaymentService {
@@ -16,24 +61,39 @@ export class PaymentService {
 
   // ── Cash Discount Config (Admin) ──────────────────────────────────────────
 
-  async getCashDiscount(dispensaryId: string): Promise<{ cashDiscountPercent: number; isCashEnabled: boolean; cashDeliveryEnabled: boolean }> {
-    const [disp] = await this.dataSource.query(
+  async getCashDiscount(dispensaryId: string): Promise<{
+    cashDiscountPercent: number;
+    isCashEnabled: boolean;
+    cashDeliveryEnabled: boolean;
+  }> {
+    const rows = await rawQuery<CashConfigRow>(
+      this.dataSource,
       `SELECT cash_discount_percent, is_cash_enabled, cash_delivery_enabled FROM dispensaries WHERE entity_id = $1`,
       [dispensaryId],
     );
+    const disp = rows[0];
     if (!disp) throw new NotFoundException('Dispensary not found');
     return {
-      cashDiscountPercent: parseFloat(disp.cash_discount_percent ?? 0),
+      cashDiscountPercent: toNumber(disp.cash_discount_percent),
       isCashEnabled: disp.is_cash_enabled,
       cashDeliveryEnabled: disp.cash_delivery_enabled,
     };
   }
 
-  async setCashDiscount(dispensaryId: string, percent: number, cashDeliveryEnabled?: boolean): Promise<{ cashDiscountPercent: number; isCashEnabled: boolean; cashDeliveryEnabled: boolean }> {
-    if (percent < 0 || percent > 20) throw new BadRequestException('Cash discount must be between 0% and 20%');
+  async setCashDiscount(
+    dispensaryId: string,
+    percent: number,
+    cashDeliveryEnabled?: boolean,
+  ): Promise<{
+    cashDiscountPercent: number;
+    isCashEnabled: boolean;
+    cashDeliveryEnabled: boolean;
+  }> {
+    if (percent < 0 || percent > 20)
+      throw new BadRequestException('Cash discount must be between 0% and 20%');
 
     let sql = `UPDATE dispensaries SET cash_discount_percent = $1, is_cash_enabled = $2, updated_at = NOW()`;
-    const params: any[] = [percent, percent > 0];
+    const params: unknown[] = [percent, percent > 0];
 
     if (cashDeliveryEnabled !== undefined) {
       sql += `, cash_delivery_enabled = $3 WHERE entity_id = $4`;
@@ -50,9 +110,18 @@ export class PaymentService {
 
   // ── Calculate Cash Discount ───────────────────────────────────────────────
 
-  async calculateCashDiscount(dispensaryId: string, subtotal: number): Promise<{ discountPercent: number; discountAmount: number; adjustedSubtotal: number }> {
+  async calculateCashDiscount(
+    dispensaryId: string,
+    subtotal: number,
+  ): Promise<{
+    discountPercent: number;
+    discountAmount: number;
+    adjustedSubtotal: number;
+  }> {
     const config = await this.getCashDiscount(dispensaryId);
-    const discountAmount = parseFloat((subtotal * (config.cashDiscountPercent / 100)).toFixed(2));
+    const discountAmount = parseFloat(
+      (subtotal * (config.cashDiscountPercent / 100)).toFixed(2),
+    );
     return {
       discountPercent: config.cashDiscountPercent,
       discountAmount,
@@ -74,25 +143,34 @@ export class PaymentService {
     await qr.startTransaction();
 
     try {
-      // Get order
-      const [order] = await qr.query(
+      const orderRows = await runnerQuery<OrderRow>(
+        qr,
         `SELECT "orderId", subtotal, "taxTotal", total, "discountTotal", "orderStatus", payment_method
          FROM orders WHERE "orderId" = $1 AND "dispensaryId" = $2`,
         [input.orderId, input.dispensaryId],
       );
+      const order = orderRows[0];
       if (!order) throw new NotFoundException('Order not found');
-      if (order.orderStatus === 'cancelled') throw new BadRequestException('Cannot pay for a cancelled order');
+      if (order.orderStatus === 'cancelled')
+        throw new BadRequestException('Cannot pay for a cancelled order');
 
-      let finalTotal = parseFloat(order.total);
+      let finalTotal = toNumber(order.total);
       let cashDiscountApplied = 0;
 
       // Apply cash discount if requested
       if (input.applyDiscount) {
-        const discount = await this.calculateCashDiscount(input.dispensaryId, parseFloat(order.subtotal));
+        const discount = await this.calculateCashDiscount(
+          input.dispensaryId,
+          toNumber(order.subtotal),
+        );
         if (discount.discountPercent > 0) {
           cashDiscountApplied = discount.discountAmount;
-          const newDiscountTotal = parseFloat(order.discountTotal) + cashDiscountApplied;
-          finalTotal = parseFloat(order.subtotal) - newDiscountTotal + parseFloat(order.taxTotal);
+          const newDiscountTotal =
+            toNumber(order.discountTotal) + cashDiscountApplied;
+          finalTotal =
+            toNumber(order.subtotal) -
+            newDiscountTotal +
+            toNumber(order.taxTotal);
           finalTotal = parseFloat(finalTotal.toFixed(2));
 
           // Update order with cash discount
@@ -117,10 +195,14 @@ export class PaymentService {
 
       // Validate tendered amount
       if (input.cashTendered < finalTotal) {
-        throw new BadRequestException(`Cash tendered ($${input.cashTendered.toFixed(2)}) is less than total ($${finalTotal.toFixed(2)})`);
+        throw new BadRequestException(
+          `Cash tendered ($${input.cashTendered.toFixed(2)}) is less than total ($${finalTotal.toFixed(2)})`,
+        );
       }
 
-      const changeGiven = parseFloat((input.cashTendered - finalTotal).toFixed(2));
+      const changeGiven = parseFloat(
+        (input.cashTendered - finalTotal).toFixed(2),
+      );
 
       // Create payment record
       const payment = this.paymentRepo.create({
@@ -137,7 +219,7 @@ export class PaymentService {
 
       this.logger.log(
         `Cash payment: order=${input.orderId} total=$${finalTotal} tendered=$${input.cashTendered} change=$${changeGiven}` +
-        (cashDiscountApplied > 0 ? ` discount=$${cashDiscountApplied}` : ''),
+          (cashDiscountApplied > 0 ? ` discount=$${cashDiscountApplied}` : ''),
       );
 
       await qr.commitTransaction();
@@ -150,39 +232,12 @@ export class PaymentService {
     }
   }
 
-  // ── Process Card Payment (placeholder) ────────────────────────────────────
-
-  async processCardPayment(input: {
-    orderId: string;
-    dispensaryId: string;
-    stripePaymentIntentId: string;
-  }): Promise<Payment> {
-    const [order] = await this.dataSource.query(
-      `SELECT "orderId", total FROM orders WHERE "orderId" = $1 AND "dispensaryId" = $2`,
-      [input.orderId, input.dispensaryId],
-    );
-    if (!order) throw new NotFoundException('Order not found');
-
-    await this.dataSource.query(
-      `UPDATE orders SET payment_method = 'card', "updatedAt" = NOW() WHERE "orderId" = $1`,
-      [input.orderId],
-    );
-
-    const payment = this.paymentRepo.create({
-      orderId: input.orderId,
-      dispensaryId: input.dispensaryId,
-      method: 'card',
-      amount: parseFloat(order.total),
-      stripePaymentIntentId: input.stripePaymentIntentId,
-      status: 'completed',
-    });
-
-    return this.paymentRepo.save(payment);
-  }
-
   // ── Get Payment for Order ─────────────────────────────────────────────────
 
   async getPaymentForOrder(orderId: string): Promise<Payment | null> {
-    return this.paymentRepo.findOne({ where: { orderId }, order: { createdAt: 'DESC' } });
+    return this.paymentRepo.findOne({
+      where: { orderId },
+      order: { createdAt: 'DESC' },
+    });
   }
 }

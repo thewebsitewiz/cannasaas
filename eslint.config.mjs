@@ -6,7 +6,13 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['eslint.config.mjs'],
+    ignores: [
+      'eslint.config.mjs',
+      // typeorm-generated migrations: do not modify by hand
+      '**/migrations/**',
+      // tenant seed: large fixture file, scheduled for cleanup post-launch
+      '**/seeds/tenant-seed.ts',
+    ],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,

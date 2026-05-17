@@ -1,4 +1,14 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, Index, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
+  Index,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { ObjectType, Field, ID, Float } from '@nestjs/graphql';
 import { Company } from '../../companies/entities/company.entity';
 
@@ -104,7 +114,13 @@ export class Dispensary {
   timezone?: string;
 
   @Field(() => Float, { name: 'cashDiscountPercent', nullable: true })
-  @Column({ type: 'decimal', precision: 5, scale: 2, default: 0, name: 'cash_discount_percent' })
+  @Column({
+    type: 'decimal',
+    precision: 5,
+    scale: 2,
+    default: 0,
+    name: 'cash_discount_percent',
+  })
   cash_discount_percent?: number;
 
   @Field({ name: 'isCashEnabled' })
@@ -114,6 +130,19 @@ export class Dispensary {
   @Field({ name: 'cashDeliveryEnabled' })
   @Column({ default: true, name: 'cash_delivery_enabled' })
   cash_delivery_enabled!: boolean;
+
+  // ── Payment Processor ───────────────────────────────────────────────
+  // Which dispensary-enabled processor handles new orders by default.
+  // NULL = cash-only. CHECK constraint in the migration restricts values
+  // to the same set as DispensaryProcessorName.
+
+  @Field({ name: 'activePaymentProcessor', nullable: true })
+  @Column({
+    type: 'text',
+    nullable: true,
+    name: 'active_payment_processor',
+  })
+  active_payment_processor?: string;
 
   // ── Design System ────────────────────────────────────────────────────
 

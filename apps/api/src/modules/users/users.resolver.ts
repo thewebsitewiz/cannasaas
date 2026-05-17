@@ -1,10 +1,17 @@
 import { Resolver, Query, Mutation, Args, ID } from '@nestjs/graphql';
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtPayload } from '../auth/strategies/jwt.strategy';
+import { Role } from '../auth/enums/role.enum';
+
+const VALID_ROLES: ReadonlySet<string> = new Set(Object.values(Role));
 
 @Resolver(() => User)
 export class UsersResolver {
@@ -25,7 +32,10 @@ export class UsersResolver {
   ): Promise<User | null> {
     const user = await this.users.findById(id);
     if (!user) return null;
-    if (currentUser.role === 'dispensary_admin' && user.dispensaryId !== currentUser.dispensaryId) {
+    if (
+      currentUser.role === 'dispensary_admin' &&
+      user.dispensaryId !== currentUser.dispensaryId
+    ) {
       throw new ForbiddenException('Access denied');
     }
     return user;
@@ -37,7 +47,10 @@ export class UsersResolver {
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @CurrentUser() currentUser: JwtPayload,
   ): Promise<User[]> {
-    if (currentUser.role === 'dispensary_admin' && dispensaryId !== currentUser.dispensaryId) {
+    if (
+      currentUser.role === 'dispensary_admin' &&
+      dispensaryId !== currentUser.dispensaryId
+    ) {
       throw new ForbiddenException('Access denied');
     }
     return this.users.findByDispensary(dispensaryId);
@@ -49,7 +62,10 @@ export class UsersResolver {
     @Args('userId', { type: () => ID }) userId: string,
     @Args('role') role: string,
   ): Promise<User> {
-    return this.users.updateRole(userId, role);
+    if (!VALID_ROLES.has(role)) {
+      throw new BadRequestException(`Invalid role: ${role}`);
+    }
+    return this.users.updateRole(userId, role as Role);
   }
 
   @Mutation(() => Boolean, { name: 'deactivateUser' })

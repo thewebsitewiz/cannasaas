@@ -1,4 +1,12 @@
-import { Resolver, Query, Mutation, Args, ID, ObjectType, Field } from '@nestjs/graphql';
+import {
+  Resolver,
+  Query,
+  Mutation,
+  Args,
+  ID,
+  ObjectType,
+  Field,
+} from '@nestjs/graphql';
 import { ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -51,7 +59,10 @@ export class DesignSystemResolver {
     @Args('designSystemFile') designSystemFile: string,
   ): Promise<DesignSystemConfig> {
     // Scope check: dispensary admins can only update their own
-    if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId) {
+    if (
+      user.role === 'dispensary_admin' &&
+      dispensaryId !== user.dispensaryId
+    ) {
       throw new ForbiddenException('Access denied');
     }
 

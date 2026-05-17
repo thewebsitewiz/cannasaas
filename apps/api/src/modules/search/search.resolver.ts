@@ -1,4 +1,14 @@
-import { Resolver, Query, Mutation, Args, Float, Int, ObjectType, Field, InputType } from '@nestjs/graphql';
+import {
+  Resolver,
+  Query,
+  Mutation,
+  Args,
+  Float,
+  Int,
+  ObjectType,
+  Field,
+  InputType,
+} from '@nestjs/graphql';
 import { SearchService } from './search.service';
 
 @ObjectType()
@@ -31,16 +41,23 @@ export class SearchResolver {
     @Args('query') query: string,
     @Args('dispensaryId') dispensaryId: string,
     @Args('filters', { nullable: true }) filters?: SearchFiltersInput,
-    @Args('limit', { type: () => Int, nullable: true, defaultValue: 20 }) limit?: number,
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 20 })
+    limit?: number,
   ): Promise<SearchResultType[]> {
-    return this.searchService.search(query, dispensaryId, filters ?? undefined, limit);
+    return this.searchService.search(
+      query,
+      dispensaryId,
+      filters ?? undefined,
+      limit,
+    );
   }
 
   @Query(() => [SearchResultType], { name: 'vibeSearch' })
   async vibeSearch(
     @Args('vibe') vibe: string,
     @Args('dispensaryId') dispensaryId: string,
-    @Args('limit', { type: () => Int, nullable: true, defaultValue: 10 }) limit?: number,
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 10 })
+    limit?: number,
   ): Promise<SearchResultType[]> {
     return this.searchService.vibeSearch(vibe, dispensaryId, limit);
   }

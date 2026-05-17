@@ -16,7 +16,11 @@ export class MetrcSyncQueueService {
   ) {}
 
   async enqueueSaleSync(orderId: string, dispensaryId: string): Promise<void> {
-    const jobData: SyncSaleJobData = { orderId, dispensaryId, attemptNumber: 1 };
+    const jobData: SyncSaleJobData = {
+      orderId,
+      dispensaryId,
+      attemptNumber: 1,
+    };
 
     await this.queue.add(MetrcJobName.SYNC_SALE, jobData, {
       attempts: 5,
@@ -32,30 +36,36 @@ export class MetrcSyncQueueService {
   }
 
   async enqueueRetryFailed(dispensaryId: string): Promise<number> {
-    // Find all failed syncs for this dispensary
-    const failed = await this.dataSource.query(
+    const rows = (await this.dataSource.query(
       `SELECT "orderId" FROM orders
        WHERE "dispensaryId" = $1
        AND "metrcSyncStatus" = 'failed'
        AND "orderStatus" = 'completed'
        ORDER BY "createdAt" ASC`,
-      [dispensaryId]
-    );
+      [dispensaryId],
+    )) as unknown;
+    const failed = rows as Array<{ orderId: string }>;
 
     for (const order of failed) {
       await this.queue.add(
         MetrcJobName.RETRY_FAILED,
-        { orderId: order.orderId, dispensaryId, attemptNumber: 1 } as SyncSaleJobData,
+        {
+          orderId: order.orderId,
+          dispensaryId,
+          attemptNumber: 1,
+        } satisfies SyncSaleJobData,
         {
           attempts: 3,
           backoff: { type: 'exponential', delay: 30_000 },
           removeOnComplete: { count: 100 },
           removeOnFail: { count: 200 },
-        }
+        },
       );
     }
 
-    this.logger.log(`Enqueued ${failed.length} retry jobs for dispensary ${dispensaryId}`);
+    this.logger.log(
+      `Enqueued ${failed.length} retry jobs for dispensary ${dispensaryId}`,
+    );
     return failed.length;
   }
 

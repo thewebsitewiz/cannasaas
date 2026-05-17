@@ -1,0 +1,15 @@
+mutation ConfirmOrder($orderId: ID!, $dispensaryId: ID) {
+  confirmOrder(orderId: $orderId, dispensaryId: $dispensaryId)
+}
+
+mutation StartPreparingOrder($orderId: ID!, $dispensaryId: ID) {
+  startPreparingOrder(orderId: $orderId, dispensaryId: $dispensaryId)
+}
+
+mutation MarkOrderReady($orderId: ID!, $dispensaryId: ID) {
+  markOrderReady(orderId: $orderId, dispensaryId: $dispensaryId)
+}
+
+mutation CompleteOrder($orderId: ID!, $dispensaryId: ID!) {
+  completeOrder(input: { orderId: $orderId, dispensaryId: $dispensaryId })
+}

@@ -1,15 +1,31 @@
-import { Resolver, Query, Mutation, Args, ID, Int, Float, ResolveField, Parent } from '@nestjs/graphql';
+import {
+  Resolver,
+  Query,
+  Mutation,
+  Args,
+  ID,
+  Int,
+  Float,
+  ResolveField,
+  Parent,
+} from '@nestjs/graphql';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { ForbiddenException } from '@nestjs/common';
-import { CreateProductInput, UpdateProductInput, UpdateVariantPriceInput } from "./dto/product-crud.input";
+import {
+  CreateProductInput,
+  UpdateProductInput,
+  UpdateVariantPriceInput,
+} from './dto/product-crud.input';
 import { ProductsService } from './products.service';
 import { ProductSearchService } from './product-search.service';
 import { ProductSearchInput } from './dto/product-search.input';
-import { ProductSearchResult, AutocompleteResult } from './dto/product-search-result.type';
+import {
+  ProductSearchResult,
+  AutocompleteResult,
+} from './dto/product-search-result.type';
 import { Product } from './entities/product.entity';
 import { ProductVariant } from './entities/product-variant.entity';
-import { ProductPricing } from './entities/product-pricing.entity';
 import { LkpProductType } from './entities/lookups/lookups.entity';
 import { LkpProductCategory } from './entities/lookups/lookups.entity';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -29,10 +45,13 @@ export class ProductsResolver {
   @Query(() => [Product], { name: 'products' })
   async findAll(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
-    @Args('productTypeId', { type: () => Int, nullable: true }) productTypeId?: number,
-    @Args('categoryId', { type: () => Int, nullable: true }) categoryId?: number,
+    @Args('productTypeId', { type: () => Int, nullable: true })
+    productTypeId?: number,
+    @Args('categoryId', { type: () => Int, nullable: true })
+    categoryId?: number,
     @Args('search', { nullable: true }) search?: string,
-    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) rawLimit = 50,
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 })
+    rawLimit = 50,
     @Args('offset', { type: () => Int, nullable: true }) offset?: number,
   ): Promise<Product[]> {
     const limit = Math.min(rawLimit, 100);
@@ -62,18 +81,26 @@ export class ProductsResolver {
   @Query(() => [Product], { name: 'adminProducts' })
   async findAllAdmin(
     @CurrentUser() user: JwtPayload,
-    @Args('dispensaryId', { type: () => ID, nullable: true }) dispensaryId?: string,
-    @Args('productTypeId', { type: () => Int, nullable: true }) productTypeId?: number,
-    @Args('categoryId', { type: () => Int, nullable: true }) categoryId?: number,
+    @Args('dispensaryId', { type: () => ID, nullable: true })
+    dispensaryId?: string,
+    @Args('productTypeId', { type: () => Int, nullable: true })
+    productTypeId?: number,
+    @Args('categoryId', { type: () => Int, nullable: true })
+    categoryId?: number,
     @Args('search', { nullable: true }) search?: string,
-    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) rawLimit = 50,
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 })
+    rawLimit = 50,
     @Args('offset', { type: () => Int, nullable: true }) offset?: number,
   ): Promise<Product[]> {
     const limit = Math.min(rawLimit, 100);
     const targetDispensaryId = dispensaryId ?? user.dispensaryId;
-    if (!targetDispensaryId) throw new ForbiddenException('dispensaryId required');
+    if (!targetDispensaryId)
+      throw new ForbiddenException('dispensaryId required');
 
-    if (user.role === 'dispensary_admin' && targetDispensaryId !== user.dispensaryId) {
+    if (
+      user.role === 'dispensary_admin' &&
+      targetDispensaryId !== user.dispensaryId
+    ) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -92,7 +119,8 @@ export class ProductsResolver {
   @Query(() => Int, { name: 'productCount' })
   async count(
     @CurrentUser() user: JwtPayload,
-    @Args('dispensaryId', { type: () => ID, nullable: true }) dispensaryId?: string,
+    @Args('dispensaryId', { type: () => ID, nullable: true })
+    dispensaryId?: string,
   ): Promise<number> {
     const targetId = dispensaryId ?? user.dispensaryId;
     if (!targetId) throw new ForbiddenException('dispensaryId required');
@@ -114,9 +142,7 @@ export class ProductsResolver {
 
   // Field resolvers
   @ResolveField(() => [ProductVariant], { name: 'variants' })
-  async variants(
-    @Parent() product: Product,
-  ): Promise<ProductVariant[]> {
+  async variants(@Parent() product: Product): Promise<ProductVariant[]> {
     return this.products.findVariants(product.id, product.dispensary_id);
   }
 
@@ -135,7 +161,8 @@ export class ProductsResolver {
   async autocomplete(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @Args('query') query: string,
-    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) rawLimit = 50,
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 })
+    rawLimit = 50,
   ): Promise<AutocompleteResult[]> {
     const limit = Math.min(rawLimit, 100);
     return this.search.autocomplete(dispensaryId, query, limit);
@@ -145,20 +172,30 @@ export class ProductsResolver {
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
   @Mutation(() => Product, { name: 'createProduct' })
-  async createProduct(@Args('input') input: CreateProductInput): Promise<Product> {
+  async createProduct(
+    @Args('input') input: CreateProductInput,
+  ): Promise<Product> {
     return this.products.createProduct(input);
   }
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
   @Mutation(() => Product, { name: 'updateProduct' })
-  async updateProduct(@Args('input') input: UpdateProductInput): Promise<Product> {
+  async updateProduct(
+    @Args('input') input: UpdateProductInput,
+  ): Promise<Product> {
     return this.products.updateProduct(input);
   }
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
   @Mutation(() => Boolean, { name: 'updateVariantPrice' })
-  async updateVariantPrice(@Args('input') input: UpdateVariantPriceInput): Promise<boolean> {
-    await this.products.updateVariantPrice(input.variantId, input.dispensaryId, input.price);
+  async updateVariantPrice(
+    @Args('input') input: UpdateVariantPriceInput,
+  ): Promise<boolean> {
+    await this.products.updateVariantPrice(
+      input.variantId,
+      input.dispensaryId,
+      input.price,
+    );
     return true;
   }
 
@@ -171,6 +208,24 @@ export class ProductsResolver {
     return this.products.deleteProduct(productId, dispensaryId);
   }
 }
+interface InventoryQtyRow {
+  quantity_available: string | number;
+}
+
+interface InventoryStockRow {
+  quantity_available: string | number;
+  reorder_threshold: string | number | null;
+}
+
+async function rawQuery<T>(
+  ds: DataSource,
+  sql: string,
+  params?: unknown[],
+): Promise<T[]> {
+  const rows = (await ds.query(sql, params)) as unknown;
+  return rows as T[];
+}
+
 @Resolver(() => ProductVariant)
 export class ProductVariantResolver {
   constructor(
@@ -186,22 +241,24 @@ export class ProductVariantResolver {
 
   @ResolveField(() => Float, { name: 'stockQuantity', nullable: true })
   async stockQuantity(@Parent() variant: ProductVariant): Promise<number> {
-    const [row] = await this.ds.query(
+    const rows = await rawQuery<InventoryQtyRow>(
+      this.ds,
       'SELECT quantity_available FROM inventory WHERE variant_id = $1 AND dispensary_id = $2',
       [variant.variant_id, variant.dispensary_id],
     );
     // Return 0 when no inventory row exists — NOT null.
     // null tells the frontend "no limit" which lets customers add unlimited qty.
-    return row ? Number(row.quantity_available) : 0;
+    return rows[0] ? Number(rows[0].quantity_available) : 0;
   }
 
   @ResolveField(() => String, { name: 'stockStatus', nullable: true })
   async stockStatus(@Parent() variant: ProductVariant): Promise<string> {
-    const [row] = await this.ds.query(
+    const rows = await rawQuery<InventoryStockRow>(
+      this.ds,
       'SELECT quantity_available, reorder_threshold FROM inventory WHERE variant_id = $1 AND dispensary_id = $2',
       [variant.variant_id, variant.dispensary_id],
     );
-    // No inventory row = out of stock, not unknown
+    const row = rows[0];
     if (!row) return 'out_of_stock';
     const qty = Number(row.quantity_available);
     const threshold = Number(row.reorder_threshold ?? 10);

@@ -7,7 +7,9 @@ import { PromotionsService } from './promotions.service';
 import { PromotionsResolver } from './promotions.resolver';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Promotion, PromotionProduct, PromotionCategory])],
+  imports: [
+    TypeOrmModule.forFeature([Promotion, PromotionProduct, PromotionCategory]),
+  ],
   providers: [PromotionsService, PromotionsResolver],
   exports: [TypeOrmModule, PromotionsService],
 })

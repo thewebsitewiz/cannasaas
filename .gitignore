@@ -5,6 +5,7 @@ build
 
 .next
 
+
 # dependencies
 node_modules
 
@@ -94,3 +95,13 @@ docs/html files.zip
 docs/old scripts and sections/
 docs/package-lock.json
 docs/package.json
+
+# Backups (do not track)
+.claude-md-backup-*/
+.stock-fix-backup-*/
+.theme-backup-*/
+
+# Stale artifacts
+cannasaas-api/
+package-lock.json
+zomzc

@@ -1,0 +1,14 @@
+query Orders($dispensaryId: ID!, $limit: Int, $offset: Int) {
+  orders(dispensaryId: $dispensaryId, limit: $limit, offset: $offset) {
+    orderId
+    dispensaryId
+    customerUserId
+    orderType
+    orderStatus
+    subtotal
+    taxTotal
+    total
+    createdAt
+    updatedAt
+  }
+}

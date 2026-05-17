@@ -2,14 +2,70 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 
+interface VelocityRow {
+  totalSold: string | number;
+}
+
+interface ReorderRawRow {
+  inventoryId: string;
+  variantId: string;
+  productName: string;
+  variantName: string | null;
+  quantityAvailable: string | number;
+  avgDailySales: string | number;
+  leadTimeDays: string | number;
+  daysOfStockRemaining: string | number;
+  suggestedReorderDate: Date | string | null;
+  suggestedQuantity: string | number;
+}
+
+export interface ReorderSuggestionDto {
+  inventoryId: string;
+  variantId: string;
+  productName: string;
+  variantName?: string;
+  quantityAvailable: number;
+  avgDailySales: number;
+  leadTimeDays: number;
+  daysOfStockRemaining: number;
+  suggestedReorderDate: string | null;
+  suggestedQuantity: number;
+}
+
+async function rawQuery<T>(
+  ds: DataSource,
+  sql: string,
+  params?: unknown[],
+): Promise<T[]> {
+  const rows = (await ds.query(sql, params)) as unknown;
+  return rows as T[];
+}
+
+function toNumber(val: string | number | null | undefined): number {
+  if (val == null) return 0;
+  const n = typeof val === 'number' ? val : parseFloat(val);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function toInt(val: string | number | null | undefined): number {
+  if (val == null) return 0;
+  const n = typeof val === 'number' ? Math.trunc(val) : parseInt(val, 10);
+  return Number.isFinite(n) ? n : 0;
+}
+
 @Injectable()
 export class ReorderSuggestionService {
   private readonly logger = new Logger(ReorderSuggestionService.name);
 
   constructor(@InjectDataSource() private ds: DataSource) {}
 
-  async getSalesVelocity(variantId: string, dispensaryId: string, days = 30): Promise<number> {
-    const [result] = await this.ds.query(
+  async getSalesVelocity(
+    variantId: string,
+    dispensaryId: string,
+    days = 30,
+  ): Promise<number> {
+    const rows = await rawQuery<VelocityRow>(
+      this.ds,
       `SELECT COALESCE(SUM(li.quantity), 0) as "totalSold"
        FROM order_line_items li
        JOIN orders o ON o."orderId" = li."orderId"
@@ -18,15 +74,15 @@ export class ReorderSuggestionService {
          AND o."createdAt" >= NOW() - INTERVAL '1 day' * $3`,
       [variantId, dispensaryId, days],
     );
-
-    const totalSold = parseFloat(result.totalSold);
+    const totalSold = toNumber(rows[0]?.totalSold);
     return days > 0 ? totalSold / days : 0;
   }
 
-  async getReorderSuggestions(dispensaryId: string): Promise<any[]> {
-    // For each inventory item: calculate avg daily sales, days of stock remaining,
-    // vendor lead time, suggested reorder date, suggested quantity
-    const rows = await this.ds.query(
+  async getReorderSuggestions(
+    dispensaryId: string,
+  ): Promise<ReorderSuggestionDto[]> {
+    const rows = await rawQuery<ReorderRawRow>(
+      this.ds,
       `WITH sales_30d AS (
         SELECT pv.variant_id,
           COALESCE(SUM(li.quantity), 0) as total_sold,
@@ -88,17 +144,21 @@ export class ReorderSuggestionService {
       [dispensaryId],
     );
 
-    return rows.map((r: any) => ({
+    return rows.map((r) => ({
       inventoryId: r.inventoryId,
       variantId: r.variantId,
       productName: r.productName,
-      variantName: r.variantName,
-      quantityAvailable: parseFloat(r.quantityAvailable),
-      avgDailySales: parseFloat(parseFloat(r.avgDailySales).toFixed(2)),
-      leadTimeDays: parseFloat(parseFloat(r.leadTimeDays).toFixed(1)),
-      daysOfStockRemaining: parseFloat(parseFloat(r.daysOfStockRemaining).toFixed(1)),
-      suggestedReorderDate: r.suggestedReorderDate ? new Date(r.suggestedReorderDate).toISOString() : null,
-      suggestedQuantity: parseInt(r.suggestedQuantity, 10),
+      variantName: r.variantName ?? undefined,
+      quantityAvailable: toNumber(r.quantityAvailable),
+      avgDailySales: parseFloat(toNumber(r.avgDailySales).toFixed(2)),
+      leadTimeDays: parseFloat(toNumber(r.leadTimeDays).toFixed(1)),
+      daysOfStockRemaining: parseFloat(
+        toNumber(r.daysOfStockRemaining).toFixed(1),
+      ),
+      suggestedReorderDate: r.suggestedReorderDate
+        ? new Date(r.suggestedReorderDate).toISOString()
+        : null,
+      suggestedQuantity: toInt(r.suggestedQuantity),
     }));
   }
 }

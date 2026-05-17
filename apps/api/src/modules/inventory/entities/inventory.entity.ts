@@ -27,27 +27,62 @@ export class Inventory {
   dispensaryId!: string;
 
   @Field()
-  @Column({ type: 'numeric', precision: 12, scale: 4, default: 0, name: 'quantity_on_hand' })
+  @Column({
+    type: 'numeric',
+    precision: 12,
+    scale: 4,
+    default: 0,
+    name: 'quantity_on_hand',
+  })
   quantityOnHand!: number;
 
   @Field()
-  @Column({ type: 'numeric', precision: 12, scale: 4, default: 0, name: 'quantity_reserved' })
+  @Column({
+    type: 'numeric',
+    precision: 12,
+    scale: 4,
+    default: 0,
+    name: 'quantity_reserved',
+  })
   quantityReserved!: number;
 
   @Field()
-  @Column({ type: 'numeric', precision: 12, scale: 4, default: 0, name: 'quantity_available' })
+  @Column({
+    type: 'numeric',
+    precision: 12,
+    scale: 4,
+    default: 0,
+    name: 'quantity_available',
+  })
   quantityAvailable!: number;
 
   @Field({ nullable: true })
-  @Column({ type: 'numeric', precision: 12, scale: 4, nullable: true, name: 'reorder_threshold' })
+  @Column({
+    type: 'numeric',
+    precision: 12,
+    scale: 4,
+    nullable: true,
+    name: 'reorder_threshold',
+  })
   reorderThreshold!: number;
 
   @Field({ nullable: true })
-  @Column({ type: 'numeric', precision: 12, scale: 4, nullable: true, name: 'reorder_quantity' })
+  @Column({
+    type: 'numeric',
+    precision: 12,
+    scale: 4,
+    nullable: true,
+    name: 'reorder_quantity',
+  })
   reorderQuantity!: number;
 
   @Field({ nullable: true })
-  @Column({ type: 'varchar', length: 200, nullable: true, name: 'location_in_store' })
+  @Column({
+    type: 'varchar',
+    length: 200,
+    nullable: true,
+    name: 'location_in_store',
+  })
   locationInStore!: string;
 
   @Field({ nullable: true })

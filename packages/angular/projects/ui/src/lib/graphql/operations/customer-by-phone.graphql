@@ -1,0 +1,8 @@
+query CustomerByPhone($dispensaryId: ID!, $phone: String!) {
+  customerByPhone(dispensaryId: $dispensaryId, phone: $phone) {
+    customerId
+    firstName
+    lastName
+    loyaltyPoints
+  }
+}

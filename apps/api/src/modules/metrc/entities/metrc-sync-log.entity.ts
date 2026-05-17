@@ -43,7 +43,7 @@ export class MetrcSyncLog {
   status!: string;
 
   @Column({ type: 'jsonb', nullable: true, name: 'metrc_response' })
-  metrcResponse!: Record<string, any>;
+  metrcResponse!: Record<string, unknown>;
 
   @Field({ nullable: true })
   @Column({ type: 'text', nullable: true, name: 'error_message' })

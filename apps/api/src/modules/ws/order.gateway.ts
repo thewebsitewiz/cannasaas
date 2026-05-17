@@ -12,6 +12,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { ALLOWED_ORIGINS } from '../../common/cors-origins';
 
 interface ConnectedClient {
   userId: string;
@@ -21,9 +22,71 @@ interface ConnectedClient {
   rooms: Set<string>;
 }
 
+interface JwtPayload {
+  sub: string;
+  email: string;
+  role: string;
+  dispensaryId?: string;
+}
+
+interface OrderCompletedPayload {
+  orderId: string;
+  dispensaryId?: string;
+  customerUserId?: string;
+  total?: number;
+  orderType?: string;
+}
+
+interface OrderStatusChangedPayload {
+  orderId: string;
+  dispensaryId: string;
+  customerUserId?: string;
+  status: string;
+  total?: number;
+  orderType?: string;
+}
+
+interface LowStockPayload {
+  dispensaryId: string;
+  productName: string;
+  quantity: number;
+}
+
+interface StockChangedPayload {
+  dispensaryId: string;
+  inventoryId: string;
+  variantId: string;
+  productName: string;
+  previousAvailable: number;
+  newAvailable: number;
+  reorderThreshold: number | null;
+  status: 'in_stock' | 'low_stock' | 'out_of_stock';
+  source: 'adjustment' | 'reserve' | 'release';
+}
+
+interface DeliveryStatusChangedPayload {
+  dispensaryId: string;
+  tripId: string;
+  driverId: string;
+  status: string;
+  orderId?: string;
+  customerUserId?: string;
+}
+
+const STAFF_ROLES: ReadonlySet<string> = new Set([
+  'budtender',
+  'shift_lead',
+  'dispensary_admin',
+  'org_admin',
+  'super_admin',
+]);
+
 @WebSocketGateway({
   cors: {
-    origin: (process.env['CORS_ORIGINS'] || 'http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176,http://localhost:5177').split(','),
+    // ALLOWED_ORIGINS resolves at module load from CORS_ORIGINS env (or a
+    // dev fallback if unset). Decorator metadata cannot reach ConfigService,
+    // so a top-level constant is the cleanest available path.
+    origin: [...ALLOWED_ORIGINS],
     credentials: true,
   },
   namespace: '/',
@@ -41,16 +104,43 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   // ── Connection Lifecycle ──────────────────────────────────────────────
 
-  async handleConnection(client: Socket): Promise<void> {
+  handleConnection(client: Socket): void {
     try {
-      const token = client.handshake.auth?.token || client.handshake.headers?.authorization?.replace('Bearer ', '');
+      const handshakeAuth = client.handshake.auth as
+        | { token?: string; storefrontDispensaryId?: string }
+        | undefined;
+      const authHeader = client.handshake.headers.authorization;
+      const token = handshakeAuth?.token ?? authHeader?.replace('Bearer ', '');
+
+      // Storefront clients connect anonymously with just a dispensaryId
+      // in the handshake; they only receive public stock events.
+      if (!token && handshakeAuth?.storefrontDispensaryId) {
+        const dispensaryId = handshakeAuth.storefrontDispensaryId;
+        const storefrontRoom = 'storefront:' + dispensaryId;
+        void client.join(storefrontRoom);
+        this.logger.log(
+          'WS connected (storefront): dispensary=' +
+            dispensaryId +
+            ' [' +
+            client.id +
+            ']',
+        );
+        client.emit('connected', {
+          anonymous: true,
+          rooms: [storefrontRoom],
+        });
+        return;
+      }
+
       if (!token) {
         this.logger.warn('WS connection rejected — no token');
         client.disconnect();
         return;
       }
 
-      const payload = this.jwt.verify(token, { secret: this.config.get('jwt.secret') });
+      const payload = this.jwt.verify<JwtPayload>(token, {
+        secret: this.config.get<string>('jwt.secret'),
+      });
       const info: ConnectedClient = {
         userId: payload.sub,
         email: payload.email,
@@ -64,26 +154,33 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
       // Auto-join rooms based on role
       if (info.dispensaryId) {
         const dispRoom = 'dispensary:' + info.dispensaryId;
-        client.join(dispRoom);
+        void client.join(dispRoom);
         info.rooms.add(dispRoom);
       }
 
       const userRoom = 'user:' + info.userId;
-      client.join(userRoom);
+      void client.join(userRoom);
       info.rooms.add(userRoom);
 
-      // Staff joins staff-specific room
-      if (['budtender', 'shift_lead', 'dispensary_admin', 'org_admin', 'super_admin'].includes(info.role)) {
+      if (STAFF_ROLES.has(info.role) && info.dispensaryId) {
         const staffRoom = 'staff:' + info.dispensaryId;
-        client.join(staffRoom);
+        void client.join(staffRoom);
         info.rooms.add(staffRoom);
       }
 
-      this.logger.log('WS connected: ' + info.email + ' (' + info.role + ') [' + client.id + ']');
+      this.logger.log(
+        'WS connected: ' +
+          info.email +
+          ' (' +
+          info.role +
+          ') [' +
+          client.id +
+          ']',
+      );
       client.emit('connected', { userId: info.userId, rooms: [...info.rooms] });
-
-    } catch (err: any) {
-      this.logger.warn('WS auth failed: ' + err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.logger.warn('WS auth failed: ' + message);
       client.disconnect();
     }
   }
@@ -91,7 +188,9 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleDisconnect(client: Socket): void {
     const info = this.clients.get(client.id);
     if (info) {
-      this.logger.log('WS disconnected: ' + info.email + ' [' + client.id + ']');
+      this.logger.log(
+        'WS disconnected: ' + info.email + ' [' + client.id + ']',
+      );
       this.clients.delete(client.id);
     }
   }
@@ -99,24 +198,33 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
   // ── Client Messages ───────────────────────────────────────────────────
 
   @SubscribeMessage('subscribe:order')
-  handleSubscribeOrder(@ConnectedSocket() client: Socket, @MessageBody() data: { orderId: string }): void {
+  handleSubscribeOrder(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { orderId: string },
+  ): void {
     const room = 'order:' + data.orderId;
-    client.join(room);
+    void client.join(room);
     const info = this.clients.get(client.id);
     if (info) info.rooms.add(room);
     client.emit('subscribed', { room });
   }
 
   @SubscribeMessage('unsubscribe:order')
-  handleUnsubscribeOrder(@ConnectedSocket() client: Socket, @MessageBody() data: { orderId: string }): void {
+  handleUnsubscribeOrder(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { orderId: string },
+  ): void {
     const room = 'order:' + data.orderId;
-    client.leave(room);
+    void client.leave(room);
     const info = this.clients.get(client.id);
     if (info) info.rooms.delete(room);
   }
 
   @SubscribeMessage('driver:location')
-  handleDriverLocation(@ConnectedSocket() client: Socket, @MessageBody() data: { driverId: string; lat: number; lng: number }): void {
+  handleDriverLocation(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { driverId: string; lat: number; lng: number },
+  ): void {
     const info = this.clients.get(client.id);
     if (!info) return;
     // Broadcast to dispensary staff
@@ -138,7 +246,7 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
   // ── Event Listeners (from EventEmitter2) ──────────────────────────────
 
   @OnEvent('order.completed')
-  handleOrderCompleted(payload: any): void {
+  handleOrderCompleted(payload: OrderCompletedPayload): void {
     const event = {
       type: 'order.confirmed',
       orderId: payload.orderId,
@@ -149,12 +257,12 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
       timestamp: new Date().toISOString(),
     };
 
-    // Notify customer
     if (payload.customerUserId) {
-      this.server.to('user:' + payload.customerUserId).emit('order:update', event);
+      this.server
+        .to('user:' + payload.customerUserId)
+        .emit('order:update', event);
     }
 
-    // Notify dispensary staff
     if (payload.dispensaryId) {
       this.server.to('staff:' + payload.dispensaryId).emit('order:new', event);
     }
@@ -163,7 +271,7 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @OnEvent('order.status_changed')
-  handleOrderStatusChanged(payload: { orderId: string; dispensaryId: string; customerUserId?: string; status: string; total?: number; orderType?: string }): void {
+  handleOrderStatusChanged(payload: OrderStatusChangedPayload): void {
     const event = {
       type: 'order.status_changed',
       orderId: payload.orderId,
@@ -172,24 +280,27 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
       timestamp: new Date().toISOString(),
     };
 
-    // Notify anyone subscribed to this order
     this.server.to('order:' + payload.orderId).emit('order:update', event);
 
-    // Notify customer
     if (payload.customerUserId) {
-      this.server.to('user:' + payload.customerUserId).emit('order:update', event);
+      this.server
+        .to('user:' + payload.customerUserId)
+        .emit('order:update', event);
     }
 
-    // Notify dispensary staff
     if (payload.dispensaryId) {
-      this.server.to('staff:' + payload.dispensaryId).emit('order:update', event);
+      this.server
+        .to('staff:' + payload.dispensaryId)
+        .emit('order:update', event);
     }
 
-    this.logger.log('WS broadcast: ' + payload.status + ' → ' + payload.orderId);
+    this.logger.log(
+      'WS broadcast: ' + payload.status + ' → ' + payload.orderId,
+    );
   }
 
   @OnEvent('inventory.low_stock')
-  handleLowStock(payload: { dispensaryId: string; productName: string; quantity: number }): void {
+  handleLowStock(payload: LowStockPayload): void {
     this.server.to('staff:' + payload.dispensaryId).emit('inventory:alert', {
       type: 'low_stock',
       productName: payload.productName,
@@ -198,8 +309,33 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
+  @OnEvent('inventory.stock_changed')
+  handleStockChanged(payload: StockChangedPayload): void {
+    // Storefront customers see only the per-variant public projection —
+    // never the full payload (productName + threshold leak operator
+    // context; status + available are what the badge needs).
+    this.server.to('storefront:' + payload.dispensaryId).emit('stock:changed', {
+      type: 'stock_changed',
+      variantId: payload.variantId,
+      available: payload.newAvailable,
+      status: payload.status,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  @OnEvent('inventory.out_of_stock')
+  handleOutOfStock(payload: LowStockPayload): void {
+    // Operator-facing toast.
+    this.server.to('staff:' + payload.dispensaryId).emit('inventory:alert', {
+      type: 'out_of_stock',
+      productName: payload.productName,
+      quantity: payload.quantity,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
   @OnEvent('delivery.status_changed')
-  handleDeliveryUpdate(payload: { dispensaryId: string; tripId: string; driverId: string; status: string; orderId?: string; customerUserId?: string }): void {
+  handleDeliveryUpdate(payload: DeliveryStatusChangedPayload): void {
     const event = {
       type: 'delivery.update',
       tripId: payload.tripId,
@@ -208,12 +344,14 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
       timestamp: new Date().toISOString(),
     };
 
-    // Staff
-    this.server.to('staff:' + payload.dispensaryId).emit('delivery:update', event);
+    this.server
+      .to('staff:' + payload.dispensaryId)
+      .emit('delivery:update', event);
 
-    // Customer tracking their delivery
     if (payload.customerUserId) {
-      this.server.to('user:' + payload.customerUserId).emit('delivery:update', event);
+      this.server
+        .to('user:' + payload.customerUserId)
+        .emit('delivery:update', event);
     }
 
     if (payload.orderId) {
@@ -228,6 +366,10 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   getConnectedUsers(): { userId: string; email: string; role: string }[] {
-    return [...this.clients.values()].map(c => ({ userId: c.userId, email: c.email, role: c.role }));
+    return [...this.clients.values()].map((c) => ({
+      userId: c.userId,
+      email: c.email,
+      role: c.role,
+    }));
   }
 }

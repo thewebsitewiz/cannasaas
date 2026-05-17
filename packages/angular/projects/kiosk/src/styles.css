@@ -1,0 +1,40 @@
+@import 'tailwindcss';
+
+/* Single-tenant kiosk: theme bundled at build time. data-theme attr is for parity. */
+@import '../../../dist/ui/themes/theme.casual.css';
+
+/*
+ * Tailwind v4 in this monorepo: scan only this app + the @cannasaas/ui-ng lib.
+ * Without these, Tailwind scans from workspace root and bloats CSS by 10×+.
+ */
+@source './**/*.{ts,html}';
+@source '../../ui/src/**/*.{ts,html,css}';
+
+/* Kiosk-wide defaults: large fonts, no text selection, no caret. */
+html {
+  font-size: 18px;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family: var(--cs-font-sans, system-ui, sans-serif);
+  background: var(--cs-color-bg, #fafaf9);
+  color: var(--cs-color-text, #1c1917);
+}
+
+*,
+*::before,
+*::after {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* No hover affordances on touch hardware. */
+@media (hover: none) {
+  * {
+    transition-property: none !important;
+  }
+}

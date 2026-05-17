@@ -7,16 +7,15 @@ import { DashboardPage } from './pages/DashboardPage';
 import { InventoryControlPage } from './pages/InventoryControlPage';
 import { InventoryPage } from './pages/InventoryPage';
 import { LoginPage } from './pages/LoginPage';
-import { LoyaltyPage } from './pages/LoyaltyPage';
 import { OrdersPage } from './pages/OrdersPage';
 import { ProductsPage } from './pages/ProductsPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { SchedulingPage } from './pages/SchedulingPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { StaffingPage } from './pages/StaffingPage';
-import ThemePage from './pages/Settings/ThemePage';
+import ThemePage from './pages/settings/ThemePage';
+import { PaymentProcessorsPage } from './pages/settings/PaymentProcessorsPage';
 import { TimeClockPage } from './pages/TimeClockPage';
-import { VendorsPage } from './pages/VendorsPage';
 import { MenuBoardPage } from './pages/MenuBoardPage';
 import { OnboardingPage } from './pages/OnboardingPage';
 import { TaxManagementPage } from './pages/TaxManagementPage';
@@ -34,7 +33,14 @@ export function App() {
     <ErrorBoundary>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
+        <Route
+          path="/onboarding"
+          element={
+            <ProtectedRoute>
+              <OnboardingPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/"
           element={
@@ -50,6 +56,7 @@ export function App() {
           <Route path="compliance" element={<CompliancePage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="settings/theme" element={<ThemePage />} />
+          <Route path="settings/payments" element={<PaymentProcessorsPage />} />
           <Route path="staffing" element={<StaffingPage />} />
           <Route path="inventory-control" element={<InventoryControlPage />} />
           <Route path="timeclock" element={<TimeClockPage />} />

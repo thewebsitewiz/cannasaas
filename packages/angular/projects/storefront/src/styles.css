@@ -1,0 +1,28 @@
+@import 'tailwindcss';
+
+/*
+ * Tailwind v4 monorepo scoping. Without these the PostCSS plugin scans from
+ * workspace root and drags every other app's classes into the storefront
+ * bundle. See root CLAUDE.md → "Tailwind v4 in monorepos".
+ */
+@source './**/*.{ts,html}';
+@source '../../ui/src/**/*.{ts,html,css}';
+
+/*
+ * No theme is imported statically. AppThemeService link-injects the resolved
+ * tenant theme at runtime via @cannasaas/ui-ng ThemeService.loadTheme().
+ * Theme files live at /themes/theme.<slug>.css (served from public/themes/).
+ */
+
+:root {
+  color-scheme: light dark;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family: var(--cs-font-sans, system-ui, sans-serif);
+  background: var(--cs-color-bg, #fafaf9);
+  color: var(--cs-color-text, #1c1917);
+}

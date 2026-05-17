@@ -40,7 +40,7 @@
       "prettier --write"
     ],
     "*.{ts,tsx}": [
-      "eslint --fix --max-warnings=0",
+      "eslint --fix --max-warnings=0 --no-warn-ignored",
       "prettier --write"
     ]
   },
@@ -71,10 +71,11 @@
     "dev": "turbo run dev --parallel",
     "dev:admin": "turbo run dev --filter=@cannasaas/admin",
     "dev:api": "turbo run dev --filter=@cannasaas/api",
-    "dev:kiosk": "turbo run dev --filter=@cannasaas/kiosk",
-    "dev:sites": "turbo run dev --filter=@cannasaas/storefront --filter=@cannasaas/admin --filter=@cannasaas/staff --filter=@cannasaas/kiosk --parallel",
-    "dev:staff": "turbo run dev --filter=@cannasaas/staff",
-    "dev:storefront": "turbo run dev --filter=@cannasaas/storefront",
+    "dev:kiosk": "pnpm --filter angular dev:kiosk",
+    "dev:sites": "turbo run dev --filter=@cannasaas/admin --parallel",
+    "dev:staff": "pnpm --filter angular dev:staff",
+    "dev:storefront": "pnpm --filter angular dev:storefront",
+    "start:staff": "pnpm --filter angular start:staff",
     "format": "prettier --write \"**/*.{ts,tsx,json,md,yaml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,json,md,yaml}\"",
     "lint": "turbo run lint",
@@ -85,7 +86,9 @@
     "test:e2e": "turbo run test:e2e",
     "test:watch": "turbo run test -- --watch",
     "type-check": "turbo run type-check",
-    "type-check:native": "tsgo --noEmit"
+    "type-check:native": "tsgo --noEmit",
+    "start:kiosk": "pnpm --filter angular start:kiosk",
+    "start:storefront": "pnpm --filter angular start:storefront"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.95.2",

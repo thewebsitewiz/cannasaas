@@ -11,17 +11,17 @@ CannaSaas is a full-stack platform that gives cannabis dispensaries everything t
 
 **Tech Stack:**
 
-| Layer            | Technology                                                               |
-| ---------------- | ------------------------------------------------------------------------ |
-| API              | NestJS, TypeORM, PostgreSQL, GraphQL, BullMQ, Redis                      |
-| Storefront       | Next.js 14 (App Router), React 18, TanStack Query                        |
-| Admin            | Vite + React 18, TanStack Query                                          |
-| Staff Portal     | Vite + React 18 (dark terminal UI, tablet-optimized)                     |
-| Kiosk            | Vite + React 18 (touch-first, large targets)                             |
-| Platform Manager | Vite + React 18 (super-admin tenant management)                          |
-| Shared Packages  | `packages/ui`, `packages/types`, `packages/utils`, `packages/api-client` |
-| Monorepo         | pnpm workspaces + Turborepo                                              |
-| Design System    | CSS custom properties, runtime theme switching, Google Fonts             |
+| Layer            | Technology                                                      |
+| ---------------- | --------------------------------------------------------------- |
+| API              | NestJS, TypeORM, PostgreSQL, GraphQL, BullMQ, Redis             |
+| Storefront       | Angular 21, signals, Apollo Angular, CSR (no SSR)               |
+| Admin            | Vite + React, TanStack Query                                    |
+| Staff Portal     | Angular 21 (tablet-optimized, dark/light theme switcher)        |
+| Kiosk            | Angular 21 (touch-first, large targets)                         |
+| Platform Manager | Vite + React (super-admin tenant management)                    |
+| Shared Packages  | `packages/ui`, `packages/types`, `packages/angular/projects/ui` |
+| Monorepo         | pnpm workspaces + Turborepo                                     |
+| Design System    | CSS custom properties, runtime theme switching, Google Fonts    |
 
 ---
 
@@ -32,21 +32,21 @@ cannasaas/
 ├── apps/
 │   ├── api/                    # NestJS GraphQL API (port 3000)
 │   │   └── src/modules/        # 33 domain modules (see below)
-│   ├── storefront/             # Next.js customer-facing shop (port 5173)
 │   ├── admin/                  # Vite React admin portal (port 5174)
-│   ├── staff/                  # Vite React POS / floor ops (port 5175)
-│   ├── kiosk/                  # Vite React self-service terminal (port 5176)
 │   └── platform/               # Vite React super-admin panel (port 5177)
 │
 ├── packages/
 │   ├── ui/                     # Shared components, design system CSS, themes
 │   │   └── src/
-│   │       ├── casual.css      # Default design system (Lora + Plus Jakarta Sans)
-│   │       ├── spring-bloom.css # Alt design system (Sora + Nunito Sans)
 │   │       └── themes/         # Runtime color themes (casual, dark, regal, etc.)
 │   ├── types/                  # Shared TypeScript types
-│   ├── utils/                  # NY/NJ/CT tax helpers, Zod schemas
-│   └── api-client/             # Axios + TanStack Query hooks
+│   ├── stores/                 # Shared signal stores / utilities
+│   └── angular/                # Angular 21 multi-project workspace
+│       └── projects/
+│           ├── kiosk/          # Self-service touch terminal (port 5276)
+│           ├── storefront/     # Customer-facing dispensary site (port 5273)
+│           ├── staff/          # In-store POS (port 5275)
+│           └── ui/             # Shared Angular library (design tokens, GraphQL ops, components)
 │
 ├── docs/                       # Architecture docs, prototypes, design system reference
 ├── pnpm-workspace.yaml
@@ -143,10 +143,10 @@ pnpm dev          # Starts all apps via Turborepo
 pda               # Shell alias → cd to root, start API
 
 # Individual apps
-cd apps/storefront && npx next dev --port 5173
+pnpm dev:storefront              # port 5273 (Angular, packages/angular/projects/storefront)
+pnpm dev:kiosk                   # port 5276 (Angular, packages/angular/projects/kiosk)
 cd apps/admin && pnpm dev        # port 5174
-cd apps/staff && pnpm dev        # port 5175
-cd apps/kiosk && pnpm dev        # port 5176
+pnpm dev:staff                   # port 5275 (Angular, packages/angular/projects/staff)
 cd apps/platform && pnpm dev     # port 5177
 ```
 
@@ -161,11 +161,8 @@ JWT_REFRESH_SECRET=your-refresh-secret
 METRC_INTEGRATOR_API_KEY=your-key
 METRC_SANDBOX_MODE=true
 
-# apps/storefront/.env
-NEXT_PUBLIC_API_URL=http://localhost:3000
-NEXT_PUBLIC_DISPENSARY_ID=c0000000-0000-0000-0000-000000000001
-VITE_DISPENSARY_ID=c0000000-0000-0000-0000-000000000001
-VITE_API_URL=http://localhost:3000/graphql
+# Angular apps read API URL from src/environments/environment.ts
+# (no separate .env required for the storefront or kiosk)
 ```
 
 ---

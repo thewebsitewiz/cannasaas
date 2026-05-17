@@ -1,11 +1,24 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
-import { Repository, FindManyOptions, ILike, DataSource } from 'typeorm';
+import {
+  Repository,
+  FindManyOptions,
+  FindOptionsWhere,
+  ILike,
+  DataSource,
+} from 'typeorm';
 import { Product } from './entities/product.entity';
 import { ProductVariant } from './entities/product-variant.entity';
 import { ProductPricing } from './entities/product-pricing.entity';
-import { LkpProductType, LkpProductCategory } from './entities/lookups/lookups.entity';
+import {
+  LkpProductType,
+  LkpProductCategory,
+} from './entities/lookups/lookups.entity';
 import { CacheService } from '../../common/services/cache.service';
+import {
+  CreateProductInput,
+  UpdateProductInput,
+} from './dto/product-crud.input';
 
 export interface ProductsFilter {
   dispensaryId: string;
@@ -21,10 +34,14 @@ export interface ProductsFilter {
 export class ProductsService {
   constructor(
     @InjectRepository(Product) private productRepo: Repository<Product>,
-    @InjectRepository(ProductVariant) private variantRepo: Repository<ProductVariant>,
-    @InjectRepository(ProductPricing) private pricingRepo: Repository<ProductPricing>,
-    @InjectRepository(LkpProductType) private productTypeRepo: Repository<LkpProductType>,
-    @InjectRepository(LkpProductCategory) private categoryRepo: Repository<LkpProductCategory>,
+    @InjectRepository(ProductVariant)
+    private variantRepo: Repository<ProductVariant>,
+    @InjectRepository(ProductPricing)
+    private pricingRepo: Repository<ProductPricing>,
+    @InjectRepository(LkpProductType)
+    private productTypeRepo: Repository<LkpProductType>,
+    @InjectRepository(LkpProductCategory)
+    private categoryRepo: Repository<LkpProductCategory>,
     @InjectDataSource() private dataSource: DataSource,
     private readonly cache: CacheService,
   ) {}
@@ -45,7 +62,9 @@ export class ProductsService {
   }
 
   private async _queryProducts(filter: ProductsFilter): Promise<Product[]> {
-    const where: any = { dispensary_id: filter.dispensaryId };
+    const where: FindOptionsWhere<Product> = {
+      dispensary_id: filter.dispensaryId,
+    };
     if (filter.isActive !== undefined) where.is_active = filter.isActive;
     if (filter.productTypeId) where.product_type_id = filter.productTypeId;
     if (filter.categoryId) where.primary_category_id = filter.categoryId;
@@ -65,16 +84,23 @@ export class ProductsService {
   }
 
   async findById(id: string, dispensaryId?: string): Promise<Product> {
-    const where: any = { id };
+    const where: FindOptionsWhere<Product> = { id };
     if (dispensaryId) where.dispensary_id = dispensaryId;
     const product = await this.productRepo.findOne({ where });
     if (!product) throw new NotFoundException(`Product ${id} not found`);
     return product;
   }
 
-  async findVariants(productId: string, dispensaryId: string): Promise<ProductVariant[]> {
+  async findVariants(
+    productId: string,
+    dispensaryId: string,
+  ): Promise<ProductVariant[]> {
     return this.variantRepo.find({
-      where: { product_id: productId, dispensary_id: dispensaryId, is_active: true },
+      where: {
+        product_id: productId,
+        dispensary_id: dispensaryId,
+        is_active: true,
+      },
       order: { sort_order: 'ASC' },
     });
   }
@@ -86,26 +112,36 @@ export class ProductsService {
       .where('p.variant_id = :variantId', { variantId })
       .andWhere('p.price_type = :type', { type: 'retail' })
       .andWhere('p.effective_from <= :now', { now })
-      .andWhere('(p.effective_until IS NULL OR p.effective_until > :now)', { now })
+      .andWhere('(p.effective_until IS NULL OR p.effective_until > :now)', {
+        now,
+      })
       .orderBy('p.effective_from', 'DESC')
       .getOne();
   }
 
   async findProductTypes(): Promise<LkpProductType[]> {
-    return this.productTypeRepo.find({ where: { is_active: true }, order: { sort_order: 'ASC' } });
+    return this.productTypeRepo.find({
+      where: { is_active: true },
+      order: { sort_order: 'ASC' },
+    });
   }
 
   async findCategories(): Promise<LkpProductCategory[]> {
-    return this.categoryRepo.find({ where: { is_active: true }, order: { sort_order: 'ASC' } });
+    return this.categoryRepo.find({
+      where: { is_active: true },
+      order: { sort_order: 'ASC' },
+    });
   }
 
   async countByDispensary(dispensaryId: string): Promise<number> {
-    return this.productRepo.count({ where: { dispensary_id: dispensaryId, is_active: true } });
+    return this.productRepo.count({
+      where: { dispensary_id: dispensaryId, is_active: true },
+    });
   }
 
   // ═══ CRUD ═══
 
-  async createProduct(input: any): Promise<Product> {
+  async createProduct(input: CreateProductInput): Promise<Product> {
     const qr = this.dataSource.createQueryRunner();
     await qr.connect();
     await qr.startTransaction();
@@ -153,14 +189,15 @@ export class ProductsService {
     }
   }
 
-  async updateProduct(input: any): Promise<Product> {
+  async updateProduct(input: UpdateProductInput): Promise<Product> {
     const product = await this.productRepo.findOne({
       where: { id: input.productId, dispensary_id: input.dispensaryId },
     });
     if (!product) throw new NotFoundException('Product not found');
 
     if (input.name !== undefined) product.name = input.name;
-    if (input.description !== undefined) product.description = input.description;
+    if (input.description !== undefined)
+      product.description = input.description;
     if (input.strainType !== undefined) product.strain_type = input.strainType;
     if (input.strainName !== undefined) product.strain_name = input.strainName;
     if (input.thcPercent !== undefined) product.thc_percent = input.thcPercent;
@@ -171,7 +208,11 @@ export class ProductsService {
     return this.productRepo.save(product);
   }
 
-  async updateVariantPrice(variantId: string, dispensaryId: string, price: number): Promise<void> {
+  async updateVariantPrice(
+    variantId: string,
+    dispensaryId: string,
+    price: number,
+  ): Promise<void> {
     // Expire current pricing
     await this.dataSource.query(
       `UPDATE product_pricing SET effective_until = NOW() WHERE variant_id = $1 AND dispensary_id = $2 AND effective_until IS NULL`,
@@ -185,8 +226,14 @@ export class ProductsService {
     );
   }
 
-  async deleteProduct(productId: string, dispensaryId: string): Promise<boolean> {
-    const result = await this.productRepo.softDelete({ id: productId, dispensary_id: dispensaryId });
+  async deleteProduct(
+    productId: string,
+    dispensaryId: string,
+  ): Promise<boolean> {
+    const result = await this.productRepo.softDelete({
+      id: productId,
+      dispensary_id: dispensaryId,
+    });
     return (result.affected ?? 0) > 0;
   }
 }

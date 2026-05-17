@@ -1,4 +1,4 @@
-import { ChevronRight, Palette } from 'lucide-react';
+import { ChevronRight, CreditCard, Palette } from 'lucide-react';
 import { DollarSign, Percent, Save, Truck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -7,6 +7,12 @@ import { DesignSystemPicker } from '../components/DesignSystemPicker';
 import { Link } from 'react-router-dom';
 import { gqlRequest } from '../lib/graphql-client';
 import { useAuthStore } from '../stores/auth.store';
+
+interface CashDiscountConfig {
+  cashDiscountPercent: number;
+  isCashEnabled: boolean;
+  cashDeliveryEnabled: boolean;
+}
 
 const GET_CONFIG = `query($id: ID!) { cashDiscountConfig(dispensaryId: $id) { cashDiscountPercent isCashEnabled cashDeliveryEnabled } }`;
 const SET_CONFIG = `mutation($id: ID!, $pct: Float!, $delivery: Boolean) { setCashDiscount(dispensaryId: $id, percent: $pct, cashDeliveryEnabled: $delivery) { cashDiscountPercent isCashEnabled cashDeliveryEnabled } }`;
@@ -21,7 +27,9 @@ export function SettingsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ['cashConfig', dispensaryId],
     queryFn: () =>
-      gqlRequest<{ cashDiscountConfig: any }>(GET_CONFIG, { id: dispensaryId }),
+      gqlRequest<{ cashDiscountConfig: CashDiscountConfig }>(GET_CONFIG, {
+        id: dispensaryId,
+      }),
     select: (d) => d.cashDiscountConfig,
     enabled: !!dispensaryId,
   });
@@ -41,7 +49,7 @@ export function SettingsPage() {
         delivery: cashDelivery,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cashConfig'] });
+      void queryClient.invalidateQueries({ queryKey: ['cashConfig'] });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     },
@@ -70,6 +78,31 @@ export function SettingsPage() {
                 </h3>
                 <p className="text-xs text-txt-muted mt-0.5">
                   Customize colors, fonts & branding
+                </p>
+              </div>
+            </div>
+            <ChevronRight
+              size={16}
+              className="text-txt-muted group-hover:text-brand-500 transition-colors"
+            />
+          </div>
+        </Link>
+
+        <Link
+          to="/settings/payments"
+          className="group bg-surface rounded-xl border border-bdr p-5 hover:border-brand-500 hover:shadow-sm transition-all"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-brand-50 rounded-lg">
+                <CreditCard size={20} className="text-brand-500" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-txt">
+                  Payment Processors
+                </h3>
+                <p className="text-xs text-txt-muted mt-0.5">
+                  Enable Aeropay / CanPay, provision merchant credentials
                 </p>
               </div>
             </div>
@@ -143,7 +176,9 @@ export function SettingsPage() {
 
         {/* Save */}
         <button
-          onClick={() => mutation.mutate()}
+          onClick={() => {
+            mutation.mutate();
+          }}
           disabled={mutation.isPending}
           className="flex items-center gap-2 bg-brand-600 text-txt-inverse font-semibold px-6 py-2.5 rounded-lg hover:bg-brand-700 transition-colors disabled:opacity-50"
         >

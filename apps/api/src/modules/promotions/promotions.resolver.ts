@@ -1,11 +1,27 @@
-import { Resolver, Query, Mutation, Args, ID, Int, Float, InputType } from '@nestjs/graphql';
+import {
+  Resolver,
+  Query,
+  Mutation,
+  Args,
+  ID,
+  Int,
+  Float,
+  InputType,
+} from '@nestjs/graphql';
 import { ObjectType, Field } from '@nestjs/graphql';
-import { PromotionsService } from './promotions.service';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import {
+  PromotionsService,
+  PromotionRow,
+  PromotionListItem as PromotionListItemDto,
+  EligibilityResult as EligibilityResultDto,
+  DiscountResult as DiscountResultDto,
+  PromotionProductRow,
+  PromotionCategoryRow,
+} from './promotions.service';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { JwtPayload } from '../auth/strategies/jwt.strategy';
 
-@ObjectType() class PromotionResult {
+@ObjectType()
+class PromotionResult {
   @Field(() => ID) promoId!: string;
   @Field(() => ID) dispensaryId!: string;
   @Field() name!: string;
@@ -31,7 +47,8 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field(() => Date) updatedAt!: Date;
 }
 
-@ObjectType() class PromotionListItem {
+@ObjectType()
+class PromotionListItem {
   @Field(() => ID) promoId!: string;
   @Field(() => ID) dispensaryId!: string;
   @Field() name!: string;
@@ -48,13 +65,15 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field(() => Date) createdAt!: Date;
 }
 
-@ObjectType() class EligibilityResult {
+@ObjectType()
+class EligibilityResult {
   @Field() eligible!: boolean;
   @Field({ nullable: true }) reason?: string;
   @Field(() => PromotionResult, { nullable: true }) promotion?: PromotionResult;
 }
 
-@ObjectType() class DiscountResult {
+@ObjectType()
+class DiscountResult {
   @Field(() => ID) promoId!: string;
   @Field() promoName!: string;
   @Field() type!: string;
@@ -62,7 +81,8 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field(() => Float) newTotal!: number;
 }
 
-@ObjectType() class PromotionProductResult {
+@ObjectType()
+class PromotionProductResult {
   @Field(() => ID) id!: string;
   @Field(() => ID) promoId!: string;
   @Field(() => ID, { nullable: true }) productId?: string;
@@ -70,14 +90,16 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field() isEligible!: boolean;
 }
 
-@ObjectType() class PromotionCategoryResult {
+@ObjectType()
+class PromotionCategoryResult {
   @Field(() => ID) id!: string;
   @Field(() => ID) promoId!: string;
   @Field(() => Int) categoryId!: number;
   @Field() isEligible!: boolean;
 }
 
-@InputType() class CreatePromotionInput {
+@InputType()
+class CreatePromotionInput {
   @Field() name!: string;
   @Field({ nullable: true }) description?: string;
   @Field() type!: string;
@@ -97,7 +119,8 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field({ nullable: true }) endAt?: string;
 }
 
-@InputType() class UpdatePromotionInput {
+@InputType()
+class UpdatePromotionInput {
   @Field({ nullable: true }) name?: string;
   @Field({ nullable: true }) description?: string;
   @Field({ nullable: true }) code?: string;
@@ -121,7 +144,7 @@ export class PromotionsResolver {
   @Query(() => PromotionResult, { name: 'promotion', nullable: true })
   async promotion(
     @Args('promoId', { type: () => ID }) promoId: string,
-  ): Promise<any> {
+  ): Promise<PromotionRow> {
     return this.promotions.findById(promoId);
   }
 
@@ -129,17 +152,25 @@ export class PromotionsResolver {
   @Query(() => [PromotionListItem], { name: 'promotionsByDispensary' })
   async promotionsByDispensary(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
-    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) limit: number,
-    @Args('offset', { type: () => Int, nullable: true, defaultValue: 0 }) offset: number,
-  ): Promise<any[]> {
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 })
+    limit: number,
+    @Args('offset', { type: () => Int, nullable: true, defaultValue: 0 })
+    offset: number,
+  ): Promise<PromotionListItemDto[]> {
     return this.promotions.findByDispensary(dispensaryId, limit, offset);
   }
 
-  @Roles('dispensary_admin', 'org_admin', 'super_admin', 'budtender', 'customer')
+  @Roles(
+    'dispensary_admin',
+    'org_admin',
+    'super_admin',
+    'budtender',
+    'customer',
+  )
   @Query(() => [PromotionListItem], { name: 'activePromotions' })
   async activePromotions(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
-  ): Promise<any[]> {
+  ): Promise<PromotionListItemDto[]> {
     return this.promotions.getActivePromotions(dispensaryId);
   }
 
@@ -149,7 +180,7 @@ export class PromotionsResolver {
     @Args('promoId', { type: () => ID }) promoId: string,
     @Args('orderTotal', { type: () => Float }) orderTotal: number,
     @Args('customerId', { type: () => ID, nullable: true }) customerId: string,
-  ): Promise<any> {
+  ): Promise<EligibilityResultDto> {
     return this.promotions.checkEligibility(promoId, orderTotal, customerId);
   }
 
@@ -157,7 +188,7 @@ export class PromotionsResolver {
   @Query(() => [PromotionProductResult], { name: 'promotionProducts' })
   async promotionProducts(
     @Args('promoId', { type: () => ID }) promoId: string,
-  ): Promise<any[]> {
+  ): Promise<PromotionProductRow[]> {
     return this.promotions.getPromotionProducts(promoId);
   }
 
@@ -165,7 +196,7 @@ export class PromotionsResolver {
   @Query(() => [PromotionCategoryResult], { name: 'promotionCategories' })
   async promotionCategories(
     @Args('promoId', { type: () => ID }) promoId: string,
-  ): Promise<any[]> {
+  ): Promise<PromotionCategoryRow[]> {
     return this.promotions.getPromotionCategories(promoId);
   }
 
@@ -176,7 +207,7 @@ export class PromotionsResolver {
   async createPromotion(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @Args('input') input: CreatePromotionInput,
-  ): Promise<any> {
+  ): Promise<PromotionRow> {
     return this.promotions.create(dispensaryId, input);
   }
 
@@ -185,7 +216,7 @@ export class PromotionsResolver {
   async updatePromotion(
     @Args('promoId', { type: () => ID }) promoId: string,
     @Args('input') input: UpdatePromotionInput,
-  ): Promise<any> {
+  ): Promise<PromotionRow> {
     return this.promotions.update(promoId, input);
   }
 
@@ -193,7 +224,7 @@ export class PromotionsResolver {
   @Mutation(() => PromotionResult, { name: 'activatePromotion' })
   async activatePromotion(
     @Args('promoId', { type: () => ID }) promoId: string,
-  ): Promise<any> {
+  ): Promise<PromotionRow> {
     return this.promotions.activate(promoId);
   }
 
@@ -201,7 +232,7 @@ export class PromotionsResolver {
   @Mutation(() => PromotionResult, { name: 'deactivatePromotion' })
   async deactivatePromotion(
     @Args('promoId', { type: () => ID }) promoId: string,
-  ): Promise<any> {
+  ): Promise<PromotionRow> {
     return this.promotions.deactivate(promoId);
   }
 
@@ -210,7 +241,7 @@ export class PromotionsResolver {
   async applyPromoDiscount(
     @Args('promoId', { type: () => ID }) promoId: string,
     @Args('orderTotal', { type: () => Float }) orderTotal: number,
-  ): Promise<any> {
+  ): Promise<DiscountResultDto> {
     return this.promotions.applyDiscount(promoId, orderTotal);
   }
 }

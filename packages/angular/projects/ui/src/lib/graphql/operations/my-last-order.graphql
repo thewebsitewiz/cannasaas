@@ -1,0 +1,20 @@
+query MyLastOrder($dispensaryId: ID!) {
+  myLastOrder(dispensaryId: $dispensaryId) {
+    orderId
+    orderType
+    orderStatus
+    subtotal
+    taxTotal
+    total
+    paymentMethod
+    createdAt
+    lineItems {
+      productId
+      variantId
+      productName
+      variantName
+      quantity
+      price
+    }
+  }
+}

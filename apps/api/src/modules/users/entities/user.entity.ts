@@ -7,6 +7,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { Role } from '../../auth/enums/role.enum';
 
 @ObjectType()
 @Entity('users')
@@ -23,9 +24,9 @@ export class User {
   @Column({ nullable: true })
   passwordHash?: string;
 
-  @Field()
-  @Column({ default: 'customer' })
-  role!: string;
+  @Field(() => String)
+  @Column({ type: 'varchar', default: Role.CUSTOMER })
+  role!: Role;
 
   @Field({ nullable: true })
   @Column({ type: 'uuid', nullable: true })

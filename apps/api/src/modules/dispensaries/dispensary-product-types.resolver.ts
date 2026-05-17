@@ -1,4 +1,13 @@
-import { Resolver, Query, Mutation, Args, ID, Int, InputType, ObjectType } from '@nestjs/graphql';
+import {
+  Resolver,
+  Query,
+  Mutation,
+  Args,
+  ID,
+  Int,
+  InputType,
+  ObjectType,
+} from '@nestjs/graphql';
 import { Field } from '@nestjs/graphql';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -39,7 +48,7 @@ export class DispensaryProductTypesResolver {
   async getDispensaryProductTypes(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
   ): Promise<DispensaryProductType[]> {
-    const rows = await this.ds.query(
+    const rowsRaw = (await this.ds.query(
       `SELECT
          pt.product_type_id AS "productTypeId",
          pt.code,
@@ -53,8 +62,8 @@ export class DispensaryProductTypesResolver {
        WHERE pt.is_active = true
        ORDER BY COALESCE(dpt.sort_order, pt.sort_order)`,
       [dispensaryId],
-    );
-    return rows;
+    )) as unknown;
+    return rowsRaw as DispensaryProductType[];
   }
 
   /**
@@ -62,10 +71,13 @@ export class DispensaryProductTypesResolver {
    * Upserts all provided types in one transaction.
    */
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
-  @Mutation(() => [DispensaryProductType], { name: 'saveDispensaryProductTypes' })
+  @Mutation(() => [DispensaryProductType], {
+    name: 'saveDispensaryProductTypes',
+  })
   async saveDispensaryProductTypes(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
-    @Args('types', { type: () => [DispensaryProductTypeInput] }) types: DispensaryProductTypeInput[],
+    @Args('types', { type: () => [DispensaryProductTypeInput] })
+    types: DispensaryProductTypeInput[],
   ): Promise<DispensaryProductType[]> {
     const qr = this.ds.createQueryRunner();
     await qr.connect();

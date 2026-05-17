@@ -1,12 +1,29 @@
-import { Resolver, Query, Mutation, Args, ID, Int, Float } from '@nestjs/graphql';
+import {
+  Resolver,
+  Query,
+  Mutation,
+  Args,
+  ID,
+  Int,
+  Float,
+} from '@nestjs/graphql';
 import { ObjectType, Field } from '@nestjs/graphql';
-import { SchedulingService } from './scheduling.service';
-import { ScheduledShift, ShiftSwapRequest, TimeOffRequest, DriverProfile, DeliveryTrip } from './entities/scheduling.entity';
+import { SchedulingService, DriverStatsDto } from './scheduling.service';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
+import {
+  ScheduledShift,
+  ShiftSwapRequest,
+  TimeOffRequest,
+  DriverProfile,
+  DeliveryTrip,
+} from './entities/scheduling.entity';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtPayload } from '../auth/strategies/jwt.strategy';
 
-@ObjectType() class DriverStats {
+@ObjectType()
+class DriverStats {
   @Field(() => Int) totalTrips!: number;
   @Field(() => Int) completed!: number;
   @Field(() => Float) avgDeliveryMinutes!: number;
@@ -18,7 +35,19 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
 
 @Resolver()
 export class SchedulingResolver {
-  constructor(private readonly scheduling: SchedulingService) {}
+  constructor(
+    private readonly scheduling: SchedulingService,
+    @InjectDataSource() private readonly ds: DataSource,
+  ) {}
+
+  private async profileIdForUser(userId: string): Promise<string | null> {
+    const rows = (await this.ds.query(
+      `SELECT profile_id FROM employee_profiles WHERE user_id = $1`,
+      [userId],
+    )) as unknown;
+    const arr = rows as Array<{ profile_id: string }>;
+    return arr[0]?.profile_id ?? null;
+  }
 
   // ── Shifts ────────────────────────────────────────────────────────────────
 
@@ -27,7 +56,7 @@ export class SchedulingResolver {
   async weekSchedule(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @Args('weekStart') weekStart: string,
-  ): Promise<any[]> {
+  ): Promise<unknown[]> {
     return this.scheduling.getWeekSchedule(dispensaryId, weekStart);
   }
 
@@ -38,11 +67,9 @@ export class SchedulingResolver {
     @Args('endDate') endDate: string,
     @CurrentUser() user: JwtPayload,
   ): Promise<ScheduledShift[]> {
-    const [profile] = await this.scheduling['ds'].query(
-      `SELECT profile_id FROM employee_profiles WHERE user_id = $1`, [user.sub],
-    );
-    if (!profile) return [];
-    return this.scheduling.getMyShifts(profile.profile_id, startDate, endDate);
+    const profileId = await this.profileIdForUser(user.sub);
+    if (!profileId) return [];
+    return this.scheduling.getMyShifts(profileId, startDate, endDate);
   }
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
@@ -56,12 +83,22 @@ export class SchedulingResolver {
     @Args('notes', { nullable: true }) notes: string,
     @CurrentUser() user: JwtPayload,
   ): Promise<ScheduledShift> {
-    return this.scheduling.createShift({ dispensaryId, profileId, shiftDate, startTime, endTime, notes, createdByUserId: user.sub });
+    return this.scheduling.createShift({
+      dispensaryId,
+      profileId,
+      shiftDate,
+      startTime,
+      endTime,
+      notes,
+      createdByUserId: user.sub,
+    });
   }
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
   @Mutation(() => Boolean, { name: 'deleteShift' })
-  async deleteShift(@Args('shiftId', { type: () => ID }) shiftId: string): Promise<boolean> {
+  async deleteShift(
+    @Args('shiftId', { type: () => ID }) shiftId: string,
+  ): Promise<boolean> {
     return this.scheduling.deleteShift(shiftId);
   }
 
@@ -89,7 +126,7 @@ export class SchedulingResolver {
   async coverageGaps(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @Args('weekStart') weekStart: string,
-  ): Promise<any[]> {
+  ): Promise<unknown[]> {
     return this.scheduling.getCoverageGaps(dispensaryId, weekStart);
   }
 
@@ -102,10 +139,10 @@ export class SchedulingResolver {
     @Args('reason', { nullable: true }) reason: string,
     @CurrentUser() user: JwtPayload,
   ): Promise<ShiftSwapRequest> {
-    const [profile] = await this.scheduling['ds'].query(
-      `SELECT profile_id FROM employee_profiles WHERE user_id = $1`, [user.sub],
-    );
-    return this.scheduling.requestSwap(shiftId, profile.profile_id, reason);
+    const profileId = await this.profileIdForUser(user.sub);
+    if (!profileId)
+      throw new Error('No employee profile found for current user');
+    return this.scheduling.requestSwap(shiftId, profileId, reason);
   }
 
   @Roles('budtender', 'dispensary_admin')
@@ -114,10 +151,10 @@ export class SchedulingResolver {
     @Args('swapId', { type: () => ID }) swapId: string,
     @CurrentUser() user: JwtPayload,
   ): Promise<ShiftSwapRequest> {
-    const [profile] = await this.scheduling['ds'].query(
-      `SELECT profile_id FROM employee_profiles WHERE user_id = $1`, [user.sub],
-    );
-    return this.scheduling.claimSwap(swapId, profile.profile_id);
+    const profileId = await this.profileIdForUser(user.sub);
+    if (!profileId)
+      throw new Error('No employee profile found for current user');
+    return this.scheduling.claimSwap(swapId, profileId);
   }
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
@@ -140,10 +177,15 @@ export class SchedulingResolver {
     @Args('reason', { nullable: true }) reason: string,
     @CurrentUser() user: JwtPayload,
   ): Promise<TimeOffRequest> {
-    const [profile] = await this.scheduling['ds'].query(
-      `SELECT profile_id FROM employee_profiles WHERE user_id = $1`, [user.sub],
-    );
-    return this.scheduling.requestTimeOff(profile.profile_id, user.dispensaryId || '', { startDate, endDate, requestType, reason });
+    const profileId = await this.profileIdForUser(user.sub);
+    if (!profileId)
+      throw new Error('No employee profile found for current user');
+    return this.scheduling.requestTimeOff(profileId, user.dispensaryId ?? '', {
+      startDate,
+      endDate,
+      requestType,
+      reason,
+    });
   }
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
@@ -161,7 +203,7 @@ export class SchedulingResolver {
   async timeOffRequests(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @Args('status', { nullable: true }) status: string,
-  ): Promise<any[]> {
+  ): Promise<unknown[]> {
     return this.scheduling.getTimeOffRequests(dispensaryId, status);
   }
 
@@ -169,7 +211,9 @@ export class SchedulingResolver {
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
   @Query(() => [DriverProfile], { name: 'drivers' })
-  async drivers(@Args('dispensaryId', { type: () => ID }) dispensaryId: string): Promise<any[]> {
+  async drivers(
+    @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
+  ): Promise<unknown[]> {
     return this.scheduling.getDrivers(dispensaryId);
   }
 
@@ -191,10 +235,17 @@ export class SchedulingResolver {
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @Args('deliveryAddress') deliveryAddress: string,
     @Args('orderId', { type: () => ID, nullable: true }) orderId: string,
-    @Args('distanceMiles', { type: () => Float, nullable: true }) distanceMiles: number,
-    @Args('estimatedMinutes', { type: () => Int, nullable: true }) estimatedMinutes: number,
+    @Args('distanceMiles', { type: () => Float, nullable: true })
+    distanceMiles: number,
+    @Args('estimatedMinutes', { type: () => Int, nullable: true })
+    estimatedMinutes: number,
   ): Promise<DeliveryTrip> {
-    return this.scheduling.assignDelivery(driverId, dispensaryId, { orderId, deliveryAddress, distanceMiles, estimatedMinutes });
+    return this.scheduling.assignDelivery(driverId, dispensaryId, {
+      orderId,
+      deliveryAddress,
+      distanceMiles,
+      estimatedMinutes,
+    });
   }
 
   @Roles('budtender', 'dispensary_admin')
@@ -210,7 +261,8 @@ export class SchedulingResolver {
   @Query(() => [DeliveryTrip], { name: 'driverTrips' })
   async driverTrips(
     @Args('driverId', { type: () => ID }) driverId: string,
-    @Args('days', { type: () => Int, nullable: true, defaultValue: 7 }) days: number,
+    @Args('days', { type: () => Int, nullable: true, defaultValue: 7 })
+    days: number,
   ): Promise<DeliveryTrip[]> {
     return this.scheduling.getDriverTrips(driverId, days);
   }
@@ -219,8 +271,9 @@ export class SchedulingResolver {
   @Query(() => DriverStats, { name: 'driverStats' })
   async driverStats(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
-    @Args('days', { type: () => Int, nullable: true, defaultValue: 30 }) days: number,
-  ): Promise<any> {
+    @Args('days', { type: () => Int, nullable: true, defaultValue: 30 })
+    days: number,
+  ): Promise<DriverStatsDto> {
     return this.scheduling.getDriverStats(dispensaryId, days);
   }
 }

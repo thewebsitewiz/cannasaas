@@ -8,7 +8,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Dispensary])],
-  providers: [DispensaryProductTypesResolver, DesignSystemResolver, DispensariesService, DispensariesResolver],
+  providers: [
+    DispensaryProductTypesResolver,
+    DesignSystemResolver,
+    DispensariesService,
+    DispensariesResolver,
+  ],
   exports: [TypeOrmModule, DispensariesService],
 })
 export class DispensariesModule {}

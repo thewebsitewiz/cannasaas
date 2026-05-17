@@ -1,10 +1,76 @@
 import { Logger } from '@nestjs/common';
-import { PosProvider, PosCredentials, PosProduct, PosVariant, PosOrderPayload } from '../interfaces/pos-provider.interface';
-import axios, { AxiosInstance, AxiosError } from 'axios';
+import {
+  PosProvider,
+  PosCredentials,
+  PosProduct,
+  PosVariant,
+  PosOrderPayload,
+} from '../interfaces/pos-provider.interface';
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
 
 /** Max retries for transient failures (5xx, network errors). */
 const MAX_RETRIES = 2;
 const RETRY_DELAY_MS = 1000;
+
+interface DutchieGraphQLError {
+  message: string;
+}
+
+interface DutchieGraphQLResponse<T> {
+  data?: T;
+  errors?: DutchieGraphQLError[];
+}
+
+interface RawDutchieVariant {
+  id?: string;
+  option?: string;
+  price?: string | number;
+  quantity?: string | number;
+}
+
+interface RawDutchiePotency {
+  formatted?: string;
+}
+
+interface RawDutchieProduct {
+  id?: string;
+  name?: string;
+  brand?: { name?: string } | null;
+  category?: string;
+  strainType?: string;
+  description?: string;
+  image?: string;
+  potencyThc?: RawDutchiePotency | null;
+  potencyCbd?: RawDutchiePotency | null;
+  variants?: RawDutchieVariant[];
+}
+
+interface FetchMenuData {
+  menu?: { products?: RawDutchieProduct[] };
+}
+
+interface FetchProductData {
+  product?: RawDutchieProduct;
+}
+
+interface UpdateInventoryData {
+  updateInventory?: { success?: boolean; message?: string };
+}
+
+interface CreateOrderData {
+  createOrder?: { id?: string; status?: string };
+}
+
+interface DispensaryData {
+  dispensary?: { id?: string; name?: string };
+}
+
+type TimedRequestConfig = AxiosRequestConfig & { __startTime?: number };
+
+function errorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  return String(err);
+}
 
 export class DutchieAdapter implements PosProvider {
   readonly providerName = 'dutchie';
@@ -17,9 +83,9 @@ export class DutchieAdapter implements PosProvider {
     this.client = axios.create({
       baseURL: credentials.endpoint || 'https://dutchie.com/graphql',
       headers: {
-        'Authorization': `Bearer ${credentials.apiKey}`,
+        Authorization: `Bearer ${credentials.apiKey}`,
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
+        Accept: 'application/json',
       },
       timeout: 30_000,
     });
@@ -27,33 +93,40 @@ export class DutchieAdapter implements PosProvider {
     // Response interceptor: log slow requests
     this.client.interceptors.response.use(
       (response) => {
-        const duration = Date.now() - (response.config as any).__startTime;
+        const config = response.config as TimedRequestConfig;
+        const startTime = config.__startTime ?? Date.now();
+        const duration = Date.now() - startTime;
         if (duration > 5000) {
-          this.logger.warn(`Dutchie request took ${duration}ms: ${response.config.url}`);
+          this.logger.warn(
+            `Dutchie request took ${duration}ms: ${response.config.url}`,
+          );
         }
         return response;
       },
-      (error) => Promise.reject(error),
+      (error: unknown) =>
+        Promise.reject(
+          error instanceof Error ? error : new Error(errorMessage(error)),
+        ),
     );
 
     // Request interceptor: track timing
     this.client.interceptors.request.use((config) => {
-      (config as any).__startTime = Date.now();
+      (config as TimedRequestConfig).__startTime = Date.now();
       return config;
     });
   }
 
   async testConnection(): Promise<boolean> {
     try {
-      const response = await this.gql(
+      const data = await this.gql<DispensaryData>(
         `query TestConnection($dispensaryId: ID!) {
           dispensary(id: $dispensaryId) { id name }
         }`,
         { dispensaryId: this.dispensaryId },
       );
-      return !!response?.dispensary;
-    } catch (err: any) {
-      this.logger.error(`Dutchie connection test failed: ${err.message}`);
+      return !!data?.dispensary;
+    } catch (err: unknown) {
+      this.logger.error(`Dutchie connection test failed: ${errorMessage(err)}`);
       return false;
     }
   }
@@ -66,7 +139,7 @@ export class DutchieAdapter implements PosProvider {
       let hasMore = true;
 
       while (hasMore) {
-        const data = await this.gql(
+        const data = await this.gql<FetchMenuData>(
           `query FetchMenu($dispensaryId: ID!, $limit: Int, $offset: Int) {
             menu(dispensaryId: $dispensaryId, limit: $limit, offset: $offset) {
               products {
@@ -83,7 +156,7 @@ export class DutchieAdapter implements PosProvider {
           { dispensaryId: this.dispensaryId, limit, offset },
         );
 
-        const products = data?.menu?.products ?? [];
+        const products: RawDutchieProduct[] = data?.menu?.products ?? [];
         for (const p of products) {
           allProducts.push(this.mapProduct(p));
         }
@@ -93,17 +166,19 @@ export class DutchieAdapter implements PosProvider {
         offset += limit;
       }
 
-      this.logger.log(`Dutchie fetchProducts: retrieved ${allProducts.length} products`);
+      this.logger.log(
+        `Dutchie fetchProducts: retrieved ${allProducts.length} products`,
+      );
       return allProducts;
-    } catch (err: any) {
-      this.logger.error(`Dutchie fetchProducts failed: ${err.message}`);
+    } catch (err: unknown) {
+      this.logger.error(`Dutchie fetchProducts failed: ${errorMessage(err)}`);
       return [];
     }
   }
 
   async fetchProductById(externalId: string): Promise<PosProduct | null> {
     try {
-      const data = await this.gql(
+      const data = await this.gql<FetchProductData>(
         `query FetchProduct($productId: ID!) {
           product(id: $productId) {
             id name brand { name } category
@@ -117,31 +192,42 @@ export class DutchieAdapter implements PosProvider {
       );
       const p = data?.product;
       return p ? this.mapProduct(p) : null;
-    } catch (err: any) {
-      this.logger.error(`Dutchie fetchProductById(${externalId}) failed: ${err.message}`);
+    } catch (err: unknown) {
+      this.logger.error(
+        `Dutchie fetchProductById(${externalId}) failed: ${errorMessage(err)}`,
+      );
       return null;
     }
   }
 
-  async fetchInventory(): Promise<Array<{ externalVariantId: string; quantity: number }>> {
+  async fetchInventory(): Promise<
+    Array<{ externalVariantId: string; quantity: number }>
+  > {
     try {
       const products = await this.fetchProducts();
-      const inventory: Array<{ externalVariantId: string; quantity: number }> = [];
+      const inventory: Array<{ externalVariantId: string; quantity: number }> =
+        [];
       for (const p of products) {
         for (const v of p.variants) {
-          inventory.push({ externalVariantId: v.externalId, quantity: v.quantity });
+          inventory.push({
+            externalVariantId: v.externalId,
+            quantity: v.quantity,
+          });
         }
       }
       return inventory;
-    } catch (err: any) {
-      this.logger.error(`Dutchie fetchInventory failed: ${err.message}`);
+    } catch (err: unknown) {
+      this.logger.error(`Dutchie fetchInventory failed: ${errorMessage(err)}`);
       return [];
     }
   }
 
-  async updateInventory(externalVariantId: string, quantity: number): Promise<boolean> {
+  async updateInventory(
+    externalVariantId: string,
+    quantity: number,
+  ): Promise<boolean> {
     try {
-      const data = await this.gql(
+      const data = await this.gql<UpdateInventoryData>(
         `mutation UpdateInventory($input: UpdateInventoryInput!) {
           updateInventory(input: $input) { success message }
         }`,
@@ -154,15 +240,19 @@ export class DutchieAdapter implements PosProvider {
         );
       }
       return success;
-    } catch (err: any) {
-      this.logger.error(`Dutchie updateInventory(${externalVariantId}) failed: ${err.message}`);
+    } catch (err: unknown) {
+      this.logger.error(
+        `Dutchie updateInventory(${externalVariantId}) failed: ${errorMessage(err)}`,
+      );
       return false;
     }
   }
 
-  async pushOrder(order: PosOrderPayload): Promise<{ externalOrderId: string }> {
+  async pushOrder(
+    order: PosOrderPayload,
+  ): Promise<{ externalOrderId: string }> {
     try {
-      const data = await this.gql(
+      const data = await this.gql<CreateOrderData>(
         `mutation CreateOrder($input: CreateOrderInput!) {
           createOrder(input: $input) { id status }
         }`,
@@ -186,17 +276,22 @@ export class DutchieAdapter implements PosProvider {
       );
       const externalOrderId = data?.createOrder?.id;
       if (!externalOrderId) {
-        this.logger.warn('Dutchie createOrder returned no id — generating fallback');
+        this.logger.warn(
+          'Dutchie createOrder returned no id — generating fallback',
+        );
         return { externalOrderId: `dutchie-${Date.now()}` };
       }
       return { externalOrderId };
-    } catch (err: any) {
-      this.logger.error(`Dutchie pushOrder failed: ${err.message}`);
+    } catch (err: unknown) {
+      this.logger.error(`Dutchie pushOrder failed: ${errorMessage(err)}`);
       return { externalOrderId: `dutchie-err-${Date.now()}` };
     }
   }
 
-  async updateOrderStatus(externalOrderId: string, status: string): Promise<void> {
+  async updateOrderStatus(
+    externalOrderId: string,
+    status: string,
+  ): Promise<void> {
     try {
       await this.gql(
         `mutation UpdateOrderStatus($input: UpdateOrderStatusInput!) {
@@ -204,8 +299,10 @@ export class DutchieAdapter implements PosProvider {
         }`,
         { input: { orderId: externalOrderId, status: status.toUpperCase() } },
       );
-    } catch (err: any) {
-      this.logger.error(`Dutchie updateOrderStatus(${externalOrderId}) failed: ${err.message}`);
+    } catch (err: unknown) {
+      this.logger.error(
+        `Dutchie updateOrderStatus(${externalOrderId}) failed: ${errorMessage(err)}`,
+      );
     }
   }
 
@@ -215,32 +312,42 @@ export class DutchieAdapter implements PosProvider {
    * Execute a GraphQL query/mutation against the Dutchie endpoint with
    * automatic retry for transient failures.
    */
-  private async gql(query: string, variables: Record<string, any> = {}, attempt = 0): Promise<any> {
+  private async gql<T = unknown>(
+    query: string,
+    variables: Record<string, unknown> = {},
+    attempt = 0,
+  ): Promise<T | null> {
     try {
-      const response = await this.client.post('', { query, variables });
+      const response = await this.client.post<DutchieGraphQLResponse<T>>('', {
+        query,
+        variables,
+      });
 
       // Dutchie may return 200 with GraphQL-level errors
       if (response.data?.errors?.length) {
-        const msgs = response.data.errors.map((e: any) => e.message).join('; ');
+        const msgs = response.data.errors.map((e) => e.message).join('; ');
         throw new Error(`GraphQL errors: ${msgs}`);
       }
 
       return response.data?.data ?? null;
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (attempt < MAX_RETRIES && this.isRetryable(err)) {
         const delay = RETRY_DELAY_MS * Math.pow(2, attempt);
-        this.logger.warn(`Dutchie request failed (attempt ${attempt + 1}), retrying in ${delay}ms: ${err.message}`);
+        this.logger.warn(
+          `Dutchie request failed (attempt ${attempt + 1}), retrying in ${delay}ms: ${errorMessage(err)}`,
+        );
         await this.sleep(delay);
-        return this.gql(query, variables, attempt + 1);
+        return this.gql<T>(query, variables, attempt + 1);
       }
       throw err;
     }
   }
 
   /** Returns true for network errors and 5xx status codes. */
-  private isRetryable(err: any): boolean {
-    if (!err.response) return true; // network / timeout error
-    const status = (err as AxiosError).response?.status ?? 0;
+  private isRetryable(err: unknown): boolean {
+    const axiosErr = err as AxiosError;
+    if (!axiosErr.response) return true; // network / timeout error
+    const status = axiosErr.response.status ?? 0;
     return status >= 500 && status < 600;
   }
 
@@ -248,9 +355,9 @@ export class DutchieAdapter implements PosProvider {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  private mapProduct(p: any): PosProduct {
+  private mapProduct(p: RawDutchieProduct): PosProduct {
     return {
-      externalId: p.id,
+      externalId: p.id ?? '',
       name: p.name ?? 'Unknown Product',
       category: p.category ?? '',
       brand: p.brand?.name,
@@ -259,12 +366,14 @@ export class DutchieAdapter implements PosProvider {
       cbdContent: this.parsePercent(p.potencyCbd?.formatted),
       description: p.description,
       imageUrl: p.image,
-      variants: (p.variants ?? []).map((v: any): PosVariant => ({
-        externalId: v.id,
-        name: v.option ?? 'Default',
-        price: parseFloat(v.price ?? 0),
-        quantity: parseInt(v.quantity ?? 0, 10),
-      })),
+      variants: (p.variants ?? []).map(
+        (v): PosVariant => ({
+          externalId: v.id ?? '',
+          name: v.option ?? 'Default',
+          price: parseFloat(String(v.price ?? 0)),
+          quantity: parseInt(String(v.quantity ?? 0), 10),
+        }),
+      ),
     };
   }
 

@@ -6,7 +6,83 @@ import { DataSource } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
 import * as crypto from 'crypto';
-import { MetrcManifest, MetrcManifestItem, WasteDestructionLog, AuditLog, ReconciliationReport, ReconciliationItem } from './entities/compliance.entity';
+import {
+  MetrcManifest,
+  MetrcManifestItem,
+  WasteDestructionLog,
+  AuditLog,
+  ReconciliationReport,
+  ReconciliationItem,
+} from './entities/compliance.entity';
+
+interface MetrcCredentialRow {
+  credential_id: string;
+  user_api_key: string | null;
+  integrator_api_key: string | null;
+  user_api_key_encrypted: string | null;
+  integrator_api_key_encrypted: string | null;
+  encryption_version: number | null;
+}
+
+interface TransferRow {
+  transfer_id: string;
+  from_dispensary_id: string;
+  to_dispensary_id: string;
+  from_name: string | null;
+  to_name: string | null;
+  from_license: string | null;
+  to_license: string | null;
+}
+
+interface TransferItemRow {
+  variant_id: string;
+  product_name: string;
+  quantity_requested: number | string;
+  metrc_package_tag: string | null;
+}
+
+interface LocalInventoryRow {
+  variant_id: string;
+  product_name: string;
+  quantity_on_hand: string;
+  metrc_package_label: string | null;
+}
+
+interface MetrcProductReconRow {
+  metrc_item_uid: string;
+  name: string;
+  expected_qty: string;
+}
+
+interface ProductMetrcUidRow {
+  metrc_item_uid: string | null;
+}
+
+interface UserEmailRow {
+  email: string;
+}
+
+interface DispensaryActiveRow {
+  entity_id: string;
+}
+
+interface WasteLogInput {
+  dispensaryId: string;
+  productName: string;
+  variantId?: string;
+  quantity: number;
+  unitOfMeasure: string;
+  wasteType: string;
+  destructionMethod?: string;
+  reason: string;
+  witness1Name: string;
+  witness1Title?: string;
+  witness2Name?: string;
+  witness2Title?: string;
+  photoUrls?: string[];
+  submittedByUserId: string;
+  notes?: string;
+}
 
 @Injectable()
 export class ComplianceService {
@@ -14,17 +90,29 @@ export class ComplianceService {
   private encryptionKey: Buffer;
 
   constructor(
-    @InjectRepository(MetrcManifest) private manifestRepo: Repository<MetrcManifest>,
-    @InjectRepository(MetrcManifestItem) private manifestItemRepo: Repository<MetrcManifestItem>,
-    @InjectRepository(WasteDestructionLog) private wasteRepo: Repository<WasteDestructionLog>,
+    @InjectRepository(MetrcManifest)
+    private manifestRepo: Repository<MetrcManifest>,
+    @InjectRepository(MetrcManifestItem)
+    private manifestItemRepo: Repository<MetrcManifestItem>,
+    @InjectRepository(WasteDestructionLog)
+    private wasteRepo: Repository<WasteDestructionLog>,
     @InjectRepository(AuditLog) private auditRepo: Repository<AuditLog>,
-    @InjectRepository(ReconciliationReport) private reconRepo: Repository<ReconciliationReport>,
-    @InjectRepository(ReconciliationItem) private reconItemRepo: Repository<ReconciliationItem>,
+    @InjectRepository(ReconciliationReport)
+    private reconRepo: Repository<ReconciliationReport>,
+    @InjectRepository(ReconciliationItem)
+    private reconItemRepo: Repository<ReconciliationItem>,
     @InjectDataSource() private ds: DataSource,
     private config: ConfigService,
   ) {
-    const keyStr = this.config.get<string>('ENCRYPTION_KEY', 'cannasaas-dev-key-change-in-prod-32b');
-    const saltBytes = crypto.createHash('sha256').update(keyStr).digest().subarray(0, 16);
+    const keyStr = this.config.get<string>(
+      'ENCRYPTION_KEY',
+      'cannasaas-dev-key-change-in-prod-32b',
+    );
+    const saltBytes = crypto
+      .createHash('sha256')
+      .update(keyStr)
+      .digest()
+      .subarray(0, 16);
     this.encryptionKey = crypto.scryptSync(keyStr, saltBytes, 32);
   }
 
@@ -41,59 +129,99 @@ export class ComplianceService {
   decrypt(ciphertext: string): string {
     const parts = ciphertext.split(':');
     const iv = Buffer.from(parts[0], 'hex');
-    const decipher = crypto.createDecipheriv('aes-256-cbc', this.encryptionKey, iv);
+    const decipher = crypto.createDecipheriv(
+      'aes-256-cbc',
+      this.encryptionKey,
+      iv,
+    );
     let decrypted = decipher.update(parts[1], 'hex', 'utf8');
     decrypted += decipher.final('utf8');
     return decrypted;
   }
 
   async encryptCredentials(dispensaryId: string): Promise<void> {
-    const creds = await this.ds.query(
+    const creds: MetrcCredentialRow[] = await this.ds.query(
       'SELECT credential_id, user_api_key, integrator_api_key, encryption_version FROM metrc_credentials WHERE dispensary_id = $1',
       [dispensaryId],
     );
-    if (creds.length === 0 || creds[0].encryption_version >= 1) return;
+    if (creds.length === 0 || (creds[0].encryption_version ?? 0) >= 1) return;
     const cred = creds[0];
     const encUser = cred.user_api_key ? this.encrypt(cred.user_api_key) : null;
-    const encInt = cred.integrator_api_key ? this.encrypt(cred.integrator_api_key) : null;
+    const encInt = cred.integrator_api_key
+      ? this.encrypt(cred.integrator_api_key)
+      : null;
     await this.ds.query(
       'UPDATE metrc_credentials SET user_api_key_encrypted = $1, integrator_api_key_encrypted = $2, user_api_key = $3, integrator_api_key = $4, encryption_version = 1, updated_at = NOW() WHERE credential_id = $5',
-      [encUser, encInt, '***encrypted***', cred.integrator_api_key ? '***encrypted***' : null, cred.credential_id],
+      [
+        encUser,
+        encInt,
+        '***encrypted***',
+        cred.integrator_api_key ? '***encrypted***' : null,
+        cred.credential_id,
+      ],
     );
     this.logger.log('Credentials encrypted for dispensary ' + dispensaryId);
   }
 
   async encryptAllCredentials(): Promise<number> {
-    const creds = await this.ds.query('SELECT dispensary_id FROM metrc_credentials WHERE encryption_version = 0 OR encryption_version IS NULL');
-    for (const c of creds) { await this.encryptCredentials(c.dispensary_id); }
+    const creds: Array<{ dispensary_id: string }> = await this.ds.query(
+      'SELECT dispensary_id FROM metrc_credentials WHERE encryption_version = 0 OR encryption_version IS NULL',
+    );
+    for (const c of creds) {
+      await this.encryptCredentials(c.dispensary_id);
+    }
     return creds.length;
   }
 
-  async getDecryptedApiKey(dispensaryId: string): Promise<{ userApiKey: string; integratorApiKey?: string }> {
-    const creds = await this.ds.query(
+  async getDecryptedApiKey(
+    dispensaryId: string,
+  ): Promise<{ userApiKey: string; integratorApiKey?: string }> {
+    const creds: MetrcCredentialRow[] = await this.ds.query(
       'SELECT user_api_key, user_api_key_encrypted, integrator_api_key, integrator_api_key_encrypted, encryption_version FROM metrc_credentials WHERE dispensary_id = $1',
       [dispensaryId],
     );
     if (creds.length === 0) throw new NotFoundException('No credentials found');
     const cred = creds[0];
-    if (cred.encryption_version >= 1 && cred.user_api_key_encrypted) {
-      return { userApiKey: this.decrypt(cred.user_api_key_encrypted), integratorApiKey: cred.integrator_api_key_encrypted ? this.decrypt(cred.integrator_api_key_encrypted) : undefined };
+    if ((cred.encryption_version ?? 0) >= 1 && cred.user_api_key_encrypted) {
+      return {
+        userApiKey: this.decrypt(cred.user_api_key_encrypted),
+        integratorApiKey: cred.integrator_api_key_encrypted
+          ? this.decrypt(cred.integrator_api_key_encrypted)
+          : undefined,
+      };
     }
-    return { userApiKey: cred.user_api_key, integratorApiKey: cred.integrator_api_key };
+    return {
+      userApiKey: cred.user_api_key ?? '',
+      integratorApiKey: cred.integrator_api_key ?? undefined,
+    };
   }
 
   // ═══ MANIFESTS ═══
 
-  async generateManifest(transferId: string, userId: string): Promise<any> {
-    const transfers = await this.ds.query(
+  async generateManifest(
+    transferId: string,
+    userId: string,
+  ): Promise<MetrcManifest> {
+    const transfers: TransferRow[] = await this.ds.query(
       'SELECT it.*, df.name as from_name, df.license_number as from_license, dt.name as to_name, dt.license_number as to_license FROM inventory_transfers it JOIN dispensaries df ON df.entity_id = it.from_dispensary_id JOIN dispensaries dt ON dt.entity_id = it.to_dispensary_id WHERE it.transfer_id = $1',
       [transferId],
     );
-    if (transfers.length === 0) throw new NotFoundException('Transfer not found');
+    if (transfers.length === 0)
+      throw new NotFoundException('Transfer not found');
     const t = transfers[0];
-    const manifestNumber = 'MFT-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
-    const items = await this.ds.query('SELECT * FROM inventory_transfer_items WHERE transfer_id = $1', [transferId]);
-    const totalQty = items.reduce((s: number, i: any) => s + (i.quantity_requested || 0), 0);
+    const manifestNumber =
+      'MFT-' +
+      Date.now().toString(36).toUpperCase() +
+      '-' +
+      Math.random().toString(36).slice(2, 6).toUpperCase();
+    const items: TransferItemRow[] = await this.ds.query(
+      'SELECT * FROM inventory_transfer_items WHERE transfer_id = $1',
+      [transferId],
+    );
+    const totalQty = items.reduce(
+      (s, i) => s + (Number(i.quantity_requested) || 0),
+      0,
+    );
 
     const manifest = this.manifestRepo.create({
       transfer_id: transferId,
@@ -101,8 +229,8 @@ export class ComplianceService {
       manifest_number: manifestNumber,
       from_license: t.from_license || 'N/A',
       to_license: t.to_license || 'N/A',
-      from_facility_name: t.from_name,
-      to_facility_name: t.to_name,
+      from_facility_name: t.from_name ?? undefined,
+      to_facility_name: t.to_name ?? undefined,
       total_packages: items.length,
       total_quantity: totalQty,
       status: 'draft',
@@ -111,22 +239,34 @@ export class ComplianceService {
 
     for (const item of items) {
       const mi = this.manifestItemRepo.create({
-        manifest_id: (saved as any).manifestId,
+        manifest_id: saved.manifestId,
         variant_id: item.variant_id,
         product_name: item.product_name,
-        quantity: item.quantity_requested,
-        metrc_package_tag: item.metrc_package_tag,
+        quantity: Number(item.quantity_requested),
+        metrc_package_tag: item.metrc_package_tag ?? undefined,
       });
       await this.manifestItemRepo.save(mi);
     }
 
-    await this.logAudit(t.from_dispensary_id, userId, 'create', 'manifest', (saved as any).manifestId, { transferId, manifestNumber });
+    await this.logAudit(
+      t.from_dispensary_id,
+      userId,
+      'create',
+      'manifest',
+      saved.manifestId,
+      { transferId, manifestNumber },
+    );
     this.logger.log('Manifest generated: ' + manifestNumber);
     return saved;
   }
 
-  async getManifests(dispensaryId: string, status?: string): Promise<MetrcManifest[]> {
-    const where: any = { dispensary_id: dispensaryId };
+  async getManifests(
+    dispensaryId: string,
+    status?: string,
+  ): Promise<MetrcManifest[]> {
+    const where: { dispensary_id: string; status?: string } = {
+      dispensary_id: dispensaryId,
+    };
     if (status) where.status = status;
     return this.manifestRepo.find({ where, order: { created_at: 'DESC' } });
   }
@@ -135,24 +275,23 @@ export class ComplianceService {
     return this.manifestItemRepo.find({ where: { manifest_id: manifestId } });
   }
 
-  async updateManifestStatus(manifestId: string, status: string, userId: string): Promise<MetrcManifest> {
+  async updateManifestStatus(
+    manifestId: string,
+    status: string,
+    userId: string,
+  ): Promise<MetrcManifest> {
     const manifest = await this.manifestRepo.findOne({ where: { manifestId } });
     if (!manifest) throw new NotFoundException('Manifest not found');
     manifest.status = status;
-    await this.logAudit(null, userId, 'update', 'manifest', manifestId, { status });
+    await this.logAudit(null, userId, 'update', 'manifest', manifestId, {
+      status,
+    });
     return this.manifestRepo.save(manifest);
   }
 
   // ═══ WASTE/DESTRUCTION ═══
 
-  async logWaste(input: {
-    dispensaryId: string; productName: string; variantId?: string;
-    quantity: number; unitOfMeasure: string; wasteType: string;
-    destructionMethod?: string; reason: string;
-    witness1Name: string; witness1Title?: string;
-    witness2Name?: string; witness2Title?: string;
-    photoUrls?: string[]; submittedByUserId: string; notes?: string;
-  }): Promise<WasteDestructionLog> {
+  async logWaste(input: WasteLogInput): Promise<WasteDestructionLog> {
     const log = this.wasteRepo.create({
       dispensary_id: input.dispensaryId,
       variant_id: input.variantId,
@@ -172,15 +311,28 @@ export class ComplianceService {
       destroyed_at: new Date(),
     });
     const saved = await this.wasteRepo.save(log);
-    await this.logAudit(input.dispensaryId, input.submittedByUserId, 'create', 'waste_log', (saved as any).logId, { productName: input.productName, quantity: input.quantity });
+    await this.logAudit(
+      input.dispensaryId,
+      input.submittedByUserId,
+      'create',
+      'waste_log',
+      saved.logId,
+      { productName: input.productName, quantity: input.quantity },
+    );
 
     if (input.variantId) {
-      await this.ds.query('UPDATE inventory SET quantity_on_hand = GREATEST(0, quantity_on_hand - $1), quantity_available = GREATEST(0, quantity_available - $1), updated_at = NOW() WHERE variant_id = $2 AND dispensary_id = $3', [input.quantity, input.variantId, input.dispensaryId]);
+      await this.ds.query(
+        'UPDATE inventory SET quantity_on_hand = GREATEST(0, quantity_on_hand - $1), quantity_available = GREATEST(0, quantity_available - $1), updated_at = NOW() WHERE variant_id = $2 AND dispensary_id = $3',
+        [input.quantity, input.variantId, input.dispensaryId],
+      );
     }
-    return saved as WasteDestructionLog;
+    return saved;
   }
 
-  async approveWaste(logId: string, userId: string): Promise<WasteDestructionLog> {
+  async approveWaste(
+    logId: string,
+    userId: string,
+  ): Promise<WasteDestructionLog> {
     const log = await this.wasteRepo.findOne({ where: { logId } });
     if (!log) throw new NotFoundException('Waste log not found');
     log.status = 'completed';
@@ -188,7 +340,10 @@ export class ComplianceService {
     return this.wasteRepo.save(log);
   }
 
-  async getWasteLogs(dispensaryId: string, limit = 50): Promise<WasteDestructionLog[]> {
+  async getWasteLogs(
+    dispensaryId: string,
+    limit = 50,
+  ): Promise<WasteDestructionLog[]> {
     return this.wasteRepo.find({
       where: { dispensary_id: dispensaryId },
       order: { created_at: 'DESC' },
@@ -196,16 +351,29 @@ export class ComplianceService {
     });
   }
 
-  async getWasteTypes(): Promise<any[]> {
-    return this.ds.query('SELECT * FROM lkp_waste_types WHERE is_active = true ORDER BY waste_type_id');
+  async getWasteTypes(): Promise<Array<Record<string, unknown>>> {
+    return this.ds.query(
+      'SELECT * FROM lkp_waste_types WHERE is_active = true ORDER BY waste_type_id',
+    );
   }
 
   // ═══ AUDIT LOGGING ═══
 
-  async logAudit(dispensaryId: string | null, userId: string | null, action: string, entityType: string, entityId: string, changes: any, ipAddress?: string): Promise<void> {
+  async logAudit(
+    dispensaryId: string | null,
+    userId: string | null,
+    action: string,
+    entityType: string,
+    entityId: string,
+    changes: Record<string, unknown>,
+    ipAddress?: string,
+  ): Promise<void> {
     let email: string | undefined;
     if (userId) {
-      const users = await this.ds.query('SELECT email FROM users WHERE id = $1', [userId]);
+      const users: UserEmailRow[] = await this.ds.query(
+        'SELECT email FROM users WHERE id = $1',
+        [userId],
+      );
       email = users[0]?.email;
     }
     const entry = this.auditRepo.create({
@@ -221,15 +389,24 @@ export class ComplianceService {
     await this.auditRepo.save(entry);
   }
 
-  async getAuditLog(dispensaryId: string, limit = 100, entityType?: string, action?: string): Promise<AuditLog[]> {
-    const qb = this.auditRepo.createQueryBuilder('a')
+  async getAuditLog(
+    dispensaryId: string,
+    limit = 100,
+    entityType?: string,
+    action?: string,
+  ): Promise<AuditLog[]> {
+    const qb = this.auditRepo
+      .createQueryBuilder('a')
       .where('a.dispensary_id = :dispensaryId', { dispensaryId });
     if (entityType) qb.andWhere('a.entity_type = :entityType', { entityType });
     if (action) qb.andWhere('a.action = :action', { action });
     return qb.orderBy('a.created_at', 'DESC').take(limit).getMany();
   }
 
-  async getEntityAuditTrail(entityType: string, entityId: string): Promise<AuditLog[]> {
+  async getEntityAuditTrail(
+    entityType: string,
+    entityId: string,
+  ): Promise<AuditLog[]> {
     return this.auditRepo.find({
       where: { entity_type: entityType, entity_id: entityId },
       order: { created_at: 'ASC' },
@@ -238,24 +415,35 @@ export class ComplianceService {
 
   // ═══ RECONCILIATION ═══
 
-  async runReconciliation(dispensaryId: string, userId: string): Promise<ReconciliationReport> {
+  async runReconciliation(
+    dispensaryId: string,
+    userId: string,
+  ): Promise<ReconciliationReport> {
     const today = new Date().toISOString().split('T')[0];
 
     // Delete existing report for today
-    await this.ds.query('DELETE FROM reconciliation_items WHERE report_id IN (SELECT report_id FROM reconciliation_reports WHERE dispensary_id = $1 AND report_date = $2)', [dispensaryId, today]);
-    await this.ds.query('DELETE FROM reconciliation_reports WHERE dispensary_id = $1 AND report_date = $2', [dispensaryId, today]);
+    await this.ds.query(
+      'DELETE FROM reconciliation_items WHERE report_id IN (SELECT report_id FROM reconciliation_reports WHERE dispensary_id = $1 AND report_date = $2)',
+      [dispensaryId, today],
+    );
+    await this.ds.query(
+      'DELETE FROM reconciliation_reports WHERE dispensary_id = $1 AND report_date = $2',
+      [dispensaryId, today],
+    );
 
-    const localItems = await this.ds.query(
+    const localItems: LocalInventoryRow[] = await this.ds.query(
       'SELECT i.variant_id, i.quantity_on_hand, p.name as product_name, pv.metrc_package_label FROM inventory i JOIN product_variants pv ON pv.variant_id = i.variant_id JOIN products p ON p.id = pv.product_id WHERE i.dispensary_id = $1',
       [dispensaryId],
     );
 
-    const metrcProducts = await this.ds.query(
+    const metrcProducts: MetrcProductReconRow[] = await this.ds.query(
       'SELECT p.metrc_item_uid, p.name, SUM(i.quantity_on_hand) as expected_qty FROM products p JOIN product_variants pv ON pv.product_id = p.id JOIN inventory i ON i.variant_id = pv.variant_id WHERE p.dispensary_id = $1 AND p.metrc_item_uid IS NOT NULL GROUP BY p.metrc_item_uid, p.name',
       [dispensaryId],
     );
 
-    const metrcMap = new Map<string, any>(metrcProducts.map((m: any) => [m.metrc_item_uid, m]));
+    const metrcMap = new Map<string, MetrcProductReconRow>(
+      metrcProducts.map((m) => [m.metrc_item_uid, m]),
+    );
 
     const report = this.reconRepo.create({
       dispensary_id: dispensaryId,
@@ -264,7 +452,7 @@ export class ComplianceService {
       total_local_items: localItems.length,
       total_metrc_items: metrcProducts.length,
     });
-    const savedReport = await this.reconRepo.save(report) as ReconciliationReport;
+    const savedReport = await this.reconRepo.save(report);
     const reportId = savedReport.reportId;
 
     let matched = 0;
@@ -273,13 +461,17 @@ export class ComplianceService {
     const seen = new Set<string>();
 
     for (const local of localItems) {
-      const productMetrc = await this.ds.query(
+      const productMetrc: ProductMetrcUidRow[] = await this.ds.query(
         'SELECT p.metrc_item_uid FROM products p JOIN product_variants pv ON pv.product_id = p.id WHERE pv.variant_id = $1',
         [local.variant_id],
       );
       const uid = productMetrc[0]?.metrc_item_uid;
       const qty = Math.round(parseFloat(local.quantity_on_hand) || 0);
 
+      // NOTE: the existing code writes a `variant_id` column on
+      // reconciliation_items even though ReconciliationItem entity doesn't
+      // declare it. Likely real entity-schema drift; out of scope for this
+      // lint cleanup. Cast through unknown to preserve runtime behavior.
       if (uid && metrcMap.has(uid)) {
         seen.add(uid);
         matched++;
@@ -291,8 +483,8 @@ export class ComplianceService {
           local_quantity: qty,
           metrc_quantity: qty,
           variance: 0,
-          status: "matched",
-        } as any);
+          status: 'matched',
+        } as unknown as ReconciliationItem);
         await this.reconItemRepo.save(item);
       } else {
         localOnly++;
@@ -303,7 +495,7 @@ export class ComplianceService {
           product_name: local.product_name,
           local_quantity: qty,
           status: 'local_only',
-        } as any);
+        } as unknown as ReconciliationItem);
         await this.reconItemRepo.save(item);
       }
     }
@@ -313,13 +505,29 @@ export class ComplianceService {
     savedReport.discrepancy_count = discrepancies;
     const final = await this.reconRepo.save(savedReport);
 
-    await this.logAudit(dispensaryId, userId, 'create', 'reconciliation', reportId, { matched, discrepancies, localOnly });
-    this.logger.log('Reconciliation: ' + matched + ' matched, ' + discrepancies + ' discrepancies');
+    await this.logAudit(
+      dispensaryId,
+      userId,
+      'create',
+      'reconciliation',
+      reportId,
+      { matched, discrepancies, localOnly },
+    );
+    this.logger.log(
+      'Reconciliation: ' +
+        matched +
+        ' matched, ' +
+        discrepancies +
+        ' discrepancies',
+    );
 
     return final;
   }
 
-  async getReconciliationReports(dispensaryId: string, limit = 10): Promise<ReconciliationReport[]> {
+  async getReconciliationReports(
+    dispensaryId: string,
+    limit = 10,
+  ): Promise<ReconciliationReport[]> {
     return this.reconRepo.find({
       where: { dispensary_id: dispensaryId },
       order: { report_date: 'DESC' },
@@ -327,8 +535,13 @@ export class ComplianceService {
     });
   }
 
-  async getReconciliationItems(reportId: string, statusFilter?: string): Promise<ReconciliationItem[]> {
-    const where: any = { report_id: reportId };
+  async getReconciliationItems(
+    reportId: string,
+    statusFilter?: string,
+  ): Promise<ReconciliationItem[]> {
+    const where: { report_id: string; status?: string } = {
+      report_id: reportId,
+    };
     if (statusFilter) where.status = statusFilter;
     return this.reconItemRepo.find({ where, order: { product_name: 'ASC' } });
   }
@@ -336,10 +549,18 @@ export class ComplianceService {
   @Cron('0 6 * * *')
   async dailyReconciliation(): Promise<void> {
     this.logger.log('Running daily reconciliation...');
-    const dispensaries = await this.ds.query('SELECT entity_id FROM dispensaries WHERE is_active = true');
+    const dispensaries: DispensaryActiveRow[] = await this.ds.query(
+      'SELECT entity_id FROM dispensaries WHERE is_active = true',
+    );
     for (const d of dispensaries) {
-      try { await this.runReconciliation(d.entity_id, 'system'); }
-      catch (err: any) { this.logger.error('Reconciliation failed for ' + d.entity_id + ': ' + err.message); }
+      try {
+        await this.runReconciliation(d.entity_id, 'system');
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        this.logger.error(
+          'Reconciliation failed for ' + d.entity_id + ': ' + message,
+        );
+      }
     }
   }
 }

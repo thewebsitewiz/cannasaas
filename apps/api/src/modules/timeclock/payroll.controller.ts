@@ -16,11 +16,17 @@ export class PayrollController {
     @Res() res: Response,
   ): Promise<void> {
     if (!dispensaryId || !startDate || !endDate) {
-      res.status(400).json({ error: 'dispensaryId, startDate, and endDate are required' });
+      res
+        .status(400)
+        .json({ error: 'dispensaryId, startDate, and endDate are required' });
       return;
     }
 
-    const csv = await this.timeClock.generatePayrollCsv(dispensaryId, startDate, endDate);
+    const csv = await this.timeClock.generatePayrollCsv(
+      dispensaryId,
+      startDate,
+      endDate,
+    );
     const filename = `payroll-${startDate}-to-${endDate}.csv`;
 
     res.setHeader('Content-Type', 'text/csv');

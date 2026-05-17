@@ -45,7 +45,6 @@ import { PosModule } from './modules/pos/pos.module';
 import { LoyaltyModule } from './modules/loyalty/loyalty.module';
 import { VendorModule } from './modules/vendor/vendor.module';
 import { ImageModule } from './modules/image/image.module';
-import { StripeModule } from './modules/stripe/stripe.module';
 import { PlatformModule } from './modules/platform/platform.module';
 import { ThemeModule } from './modules/theme/theme.module';
 import { HealthModule } from './modules/health/health.module';
@@ -53,11 +52,14 @@ import { RecommendationModule } from './modules/recommendations/recommendation.m
 import { KnowledgeModule } from './modules/knowledge/knowledge.module';
 import { MarketingModule } from './modules/marketing/marketing.module';
 import { SearchModule } from './modules/search/search.module';
+import { RegisterSessionsModule } from './modules/register-sessions/register-sessions.module';
 import { BiotrackModule } from './modules/biotrack/biotrack.module';
 import { IdVerificationModule } from './modules/verification/id-verification.module';
 import { CacheModule } from './common/services/cache.module';
 import { SentryModule } from './common/services/sentry.module';
 import { MetricsModule } from './common/services/metrics.module';
+import { WebhooksModule } from './modules/webhooks/webhooks.module';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -76,8 +78,8 @@ import { MetricsModule } from './common/services/metrics.module';
     EventEmitterModule.forRoot(),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
-      autoSchemaFile: true,
-      sortSchema: true,
+      autoSchemaFile: join(process.cwd(), 'schema.gql'),
+      sortSchema: true, // optional, makes diffs cleaner
       playground: process.env['NODE_ENV'] !== 'production',
       context: ({ req, res }: { req: unknown; res: unknown }) => ({ req, res }),
       plugins: [depthLimitPlugin, complexityLimitPlugin],
@@ -113,7 +115,6 @@ import { MetricsModule } from './common/services/metrics.module';
     LoyaltyModule,
     VendorModule,
     ImageModule,
-    StripeModule,
     PlatformModule,
     ThemeModule,
     HealthModule,
@@ -123,6 +124,8 @@ import { MetricsModule } from './common/services/metrics.module';
     RecommendationModule,
     KnowledgeModule,
     SearchModule,
+    RegisterSessionsModule,
+    WebhooksModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

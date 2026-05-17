@@ -1,258 +1,393 @@
-# CLAUDE.md
+# CLAUDE.md — CannaSaaS
 
-Project-level context for AI coding agents working in this repo.
-Human developers should also read this — it's the fastest onboarding we have.
-
-Last updated: April 2026
+Project-level context for AI coding agents and human developers.
+Last updated: May 2026.
 
 ---
 
 ## What this is
 
-CannaSaas is a multi-tenant SaaS platform for licensed cannabis dispensary operators, targeting the NY/NJ/CT tri-state market. The hierarchy is `organizations → companies → dispensaries`, with RBAC and Metrc compliance built in from the ground up.
+CannaSaaS is a multi-tenant SaaS platform for licensed cannabis dispensary operators, targeting the NY/NJ/CT tri-state market. Hierarchy: `organizations → companies → dispensaries`, with RBAC and Metrc compliance built in.
 
-Founders: Dennis Luken, Philip John Basile (Chief AI Officer), Daryl Schmoldt (CTO).
+Founders: Dennis Luken (Senior Architect), Philip John Basile (Chief AI Officer), Daryl Schmoldt (CTO).
 GitHub: `thewebsitewiz/cannasaas`.
 
 ---
 
 ## Stack
 
-Monorepo managed with pnpm workspaces + turborepo.
+Monorepo: pnpm workspaces + Turborepo.
 
-- **API** — NestJS, GraphQL (code-first via `@nestjs/graphql`), TypeORM, PostgreSQL, Redis + BullMQ for background jobs, port `3000`.
-- **Storefront** — Next.js 15 (App Router, Turbopack dev), React 19, port `5173`. Customer-facing shop.
-- **Admin** — React + Vite, port `5174`. Dispensary back-office management.
-- **Staff** — React + Vite, port `5175`. POS / floor operations.
-- **Kiosk** — React + Vite, port `5176`. Self-service touch terminal.
-- **Platform** — React + Vite, port `5177`. Super-admin cross-tenant management.
-- **Packages** — `@cannasaas/ui`, `@cannasaas/types`, `@cannasaas/stores` shared across apps.
+**Backend**
 
-Tailwind v4 with `@theme` blocks in admin. Tailwind v3 with classic config in storefront. Both consume CSS variables via `var()` so theme swaps require zero recompile.
+- **`apps/api`** — NestJS, GraphQL (code-first), TypeORM, PostgreSQL, Redis + BullMQ. Port `:3000`.
+
+**Frontend — current React / Vite apps**
+
+- **`apps/admin`** — Vite + React, dispensary back-office. Port `:5174`.
+- **`apps/platform`** — React, super-admin cross-tenant management. Port `:5177`.
+
+**Frontend — Angular (multi-project workspace at `packages/angular/`)**
+
+- **`packages/angular/projects/kiosk`** — Angular 21, self-service touch terminal. Port `:5276`. Replaces the former React `apps/kiosk` (deleted).
+- **`packages/angular/projects/storefront`** — Angular 21, customer-facing dispensary site. Port `:5273`. Authoritative as of May 2026; the former Next.js `apps/storefront` was deleted after parity was reached. CSR only — no SSR.
+- **`packages/angular/projects/staff`** — Angular 21, in-store POS. Port `:5275`. Authoritative as of May 2026; the former Vite/React `apps/staff` was deleted after parity (sc-207).
+- **`packages/angular/projects/ui`** — shared Angular library: design tokens, GraphQL operations, components.
+
+Future Angular rewrites of admin, staff, and platform land as additional projects in `packages/angular/projects/<name>/`, **not** as standalone `apps/*` workspaces. The multi-project workspace shares one `node_modules`, one Angular version, and the `ui` library across all projects.
+
+**Port scheme:** React apps live on `51xx`; Angular apps on `52xx` (the original migration mapped React :517N → Angular :527N).
+
+**Shared packages**
+
+- **`packages/ui`** — design tokens + theme CSS at `packages/ui/src/themes/theme.*.css` (consumed by React apps).
+- **`packages/types`** — shared TypeScript types.
+- **`packages/stores`** — shared signal stores / utilities.
+
+**Migration status:** kiosk, storefront, and staff migrations to Angular are complete; the React versions of all three have been deleted. Admin and platform remain on React/Vite. Every per-app CLAUDE.md inherits from this file plus its own.
 
 ---
 
-## Running locally
+## Critical path (May 2026)
 
-Docker Desktop **must be running** before starting the API — Postgres and Redis come from containers.
+In priority order. Don't work on nice-to-haves while these are open.
 
-```bash
-cs              # cd to project root + nvm use
-dockup          # docker compose up -d postgres (also starts redis)
-pde             # haltall + pnpm dev (runs all 6 apps in parallel)
-```
-
-Stop everything: `haltall` (kills 3000, 5173, 5174, 5175, 5176, 5177).
-
-Test DB: PostgreSQL at `postgres/postgres@localhost:5432`, database `cannasaas`. Test dispensary ID is `c0000000-0000-0000-0000-000000000001`. Admin user is `admin@cannasaas.com` (no `dispensaryId` — super admin); dispensary-scoped admin is `admin@greenleaf.com`.
-
----
-
-## Critical path (as of April 2026)
-
-In priority order. Don't work on nice-to-haves if these aren't done.
-
-1. **Stripe payment integration** — backend ~90% complete. Needs live keys and the production webhook endpoint wired in the Stripe dashboard.
-2. **Inventory management** — real-time stock tracking, low-stock alerts, stock-level events surfaced to admin.
-
-**Important, next tier:**
-
-- Admin/staff/kiosk portals fully wired to API (some pages still mocked)
-- Delivery/fulfillment module
-- Loyalty/rewards
-- Customer accounts (order history, saved addresses)
-- Notification system
+1. **Cannabis-friendly payment processor integration** — replaces Stripe (Stripe ToS prohibits cannabis). Backend abstraction in progress.
+2. **Real-time inventory management** — stock tracking, low-stock alerts, stock-level events surfaced to admin.
 
 **Already shipped — don't re-implement:**
 
-- Full order lifecycle with Metrc sale receipt sync
+- Order lifecycle with Metrc sale receipt sync
 - BullMQ retry queue with exponential backoff
 - Stock validation with `FOR UPDATE` row locks
 - Walk-in POS customer flow (placeholder emails `walkin-######@pos.{domain}`)
 - Order lifecycle email notifications (skipping `in_store` orders)
-- Menu Categories admin page with per-dispensary product type enable/disable and drag-to-reorder
-- Staff POS `NewOrderPage`, super admin `TaxManagementPage`, staff `OrderQueuePage`, `TimesheetsPage` with `myTimeEntries` backend query
-- 15 product types including PETS (14) and APPAREL (15)
-- Age verification (21+ gate) on storefront
-- Storefront checkout fully wired to API
+- Menu Categories admin page with per-dispensary product type enable/disable + drag-to-reorder
+- Staff POS `NewOrderPage`, super-admin `TaxManagementPage`, staff `OrderQueuePage`, `TimesheetsPage`
+- 15 product types
+- Age verification (21+) on storefront
+- Storefront checkout wired to API
 
 ---
 
-## Architectural patterns we've settled on
+## Multi-tenant model (every Angular app must enforce this)
 
-- **File patching** — prefer Python-based patching over `sed -i ''`. macOS `sed` is unreliable for multi-line patches. For anything non-trivial use a short Python script.
-- **Complete replacement files** over partial patches when Claude is generating code. Discovery scripts that dump file contents to stdout work well for codebase context gathering.
-- **Conventional commits** — enforced by commitlint/husky. Use `--no-verify` on commits when lint hooks are blocking forward progress (we do this regularly; it's not a workaround of last resort).
-- **TypeORM migrations** — `apps/api/src/migrations/`. API uses `ts-node --swc`.
-
----
-
-## Theme system
-
-Single source of truth: `packages/ui/src/themes/theme.*.css`. 10 themes: `apothecary`, `casual`, `citrus`, `dark`, `earthy`, `midnight`, `minimal`, `modern`, `neon`, `regal`.
-
-**Delivery by app:**
-
-- **Admin + Staff** — bundle all 10 via static imports in `main.tsx` from `@cannasaas/ui/src/themes/`. Bundler resolves through the workspace package.
-- **Storefront** — link-injection at runtime.
-  - `public/all-themes.css` loaded statically by `layout.tsx` (the design-system baseline — ~5200 lines, §1–§35, portal activation via `[data-portal]`).
-  - `public/themes/theme.*.css` dynamically injected by `ThemeProvider.tsx` based on the `theme_configs` GraphQL query. Selector specificity: `:root[data-theme="dark"]`.
-
-**The `theme_configs` table** holds per-dispensary template selection. `theme.resolver.ts` + `theme.service.ts` expose read/write via GraphQL. `ThemePage.tsx` + `ThemeSelector.tsx` in admin give the picker UI.
-
-**There is no brand customization layer.** No custom colors/fonts per tenant. Every dispensary on the "dark" template gets the same green and font. Adding this is a nice-to-have, not critical path (see Tech debt below for the shape of the future migration).
+- All data is scoped to a `dispensary` (UUID).
+- Test dispensary ID: `c0000000-0000-0000-0000-000000000001`.
+- Super-admin users (no `dispensaryId` claim) can operate cross-tenant — only `apps/platform` should expose this surface.
+- Storefront resolves dispensary by **subdomain or path** (per existing convention).
+- Admin/staff/kiosk resolve dispensary from the authenticated user's claims.
+- Platform resolves dispensary from an explicit selector in the UI (impersonation).
+- **Every GraphQL operation must be dispensary-scoped** unless it's a platform-level query and the resolver explicitly allows cross-tenant.
 
 ---
 
-## Known tech debt — flagged, not blocking
+## Angular 21 — Hard Rules (apply to all 5 frontend apps)
 
-### Two parallel theme mechanisms still coexist
+**Standalone, signals, OnPush, modern syntax. No exceptions.**
 
-The "unification sprint" cleaned up file duplication but didn't actually merge the two conceptual systems:
+- **Standalone components only.** No `NgModule`s anywhere.
+- **Signals first** for state: `signal()`, `computed()`, `effect()`, `linkedSignal()`, `resource()`, `rxResource()`.
+- **New control flow only:** `@if`, `@for`, `@switch`, `@defer`, `@let`. Never `*ngIf`, `*ngFor`, `*ngSwitch`.
+- **`inject()` for DI.** No constructor parameter injection.
+- **Signal I/O:** `input()`, `input.required()`, `output()`, `model()`. Never `@Input()` / `@Output()` decorators.
+- **`ChangeDetectionStrategy.OnPush`** on every component. No exceptions.
+- **TypeScript strict.** No `any`, no `as any`, no `// @ts-ignore`.
+- **Functional guards/resolvers/interceptors:** `CanActivateFn`, `ResolveFn`, `HttpInterceptorFn`. No class-based variants.
+- **`provideRouter`, `provideHttpClient(withFetch())`** in `app.config.ts`. No `RouterModule.forRoot`, no `HttpClientModule`.
+- **Zone.js stays** for now. Do not switch to zoneless without an explicit decision — that's a separate migration.
 
-1. **theme-presets** — toggled via `data-theme` attribute, overrides `all-themes.css` (10 themes)
-2. **design-systems** — whitelisted CSS link injection replacing the baseline entirely (currently `casual.css` + `spring-bloom.css`)
+### Required component shape
 
-`ThemeProvider.tsx` and `ThemeLoader.tsx` both maintain duplicated `ALLOWED_FILES` whitelists. Adding a new design system means editing both, or behavior silently diverges. Unify into one model post-Stripe/inventory.
+```ts
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+} from '@angular/core';
+import { ProductService } from './product.service';
 
-### Orphaned files
+@Component({
+  selector: 'cs-product-list',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    @if (loading()) {
+      <p>Loading…</p>
+    } @else {
+      @for (product of products(); track product.id) {
+        <article>{{ product.name }}</article>
+      } @empty {
+        <p>No products.</p>
+      }
+    }
+  `,
+})
+export class ProductListComponent {
+  private readonly productService = inject(ProductService);
+  readonly products = this.productService.products;
+  readonly loading = this.productService.loading;
+  readonly count = computed(() => this.products().length);
+}
+```
 
-- `apps/storefront/src/spring-bloom.css` — wrong location to be served (Next.js only serves from `public/`). Either move to `public/styles/` and wire it, or delete.
+### State management
 
-### Misc
+Default: signals in injectable services. No `BehaviorSubject` for app state.
 
-- `packages/ui/src/themes/inject.ts` has a `setThemePreset()` that's duplicated inline in `ThemeProvider.tsx`. Storefront should use the shared utility or we should delete it.
-- `packages/ui/src/theme-vars.css` appears orphaned (only self-referenced in its own header comment). Verify and remove.
-- API startup retries DB/Redis 9 times with stack traces before failing. Add a preflight TCP probe so failure is fast and clean.
+For async data, prefer `resource()` / `rxResource()` over hand-rolled loading-state signals:
 
----
+```ts
+readonly products = resource({
+  request: () => ({ dispensaryId: this.dispensaryId() }),
+  loader: ({ request }) => this.api.fetchProducts(request.dispensaryId),
+});
+// products.value(), products.isLoading(), products.error()
+```
 
-## Post-launch capability additions
+For complex cross-feature state with derived selectors and async lifecycle: **NgRx SignalStore** (`@ngrx/signals`). Not classic NgRx. Not Akita. Not NGXS.
 
-### CannaSaas MCP server
+### RxJS rules
 
-**Status:** not started · **Priority:** high value, post-launch · **Effort:** 1–2 days for v1
+- Bridge to signals at the boundary: `toSignal(this.http.get(...))`. Components consume signals only.
+- Use RxJS only for genuine async streams: HTTP, websockets, debounced inputs, intervals.
+- `takeUntilDestroyed()` on any manual subscription. Otherwise prefer `toSignal` / `AsyncPipe` / `resource()`.
+- Never `.subscribe()` inside a template-bound getter or signal computation.
 
-Expose CannaSaas's GraphQL API as an MCP (Model Context Protocol) server so Claude Code (and any MCP-compatible client) can query/mutate the dev database directly without any paste-and-run ceremony.
+### Forms
 
-**Why this matters for us specifically.** Every CannaSaas session currently starts with Claude needing context about current DB state — what dispensaries exist, what products are seeded, what the `theme_configs` row for the test tenant looks like, what orders are in-flight. We solve this today by running discovery scripts and pasting output. An MCP server eliminates that round-trip: Claude queries the API directly, reads the live schema, and operates on real data.
+- **Reactive Forms** as default. No template-driven forms.
+- Strictly typed: `FormControl<string>`, `FormGroup<{ name: FormControl<string> }>`. No untyped controls.
+- Bridge form values to signals when needed: `toSignal(form.valueChanges, { initialValue: form.getRawValue() })`.
+- **Signal Forms** (Angular 21 experimental) — do **not** use in production code. Prototypes only, isolated to feature branches, tagged `// EXPERIMENTAL: Signal Forms`.
 
-**Minimum viable v1** — Python MCP server (FastMCP) running locally that exposes:
+### Routing
 
-- **Tool** `graphql_query(query, variables)` — proxies to `localhost:3000/graphql` with dev auth
-- **Tool** `describe_schema()` — dumps the current GraphQL schema
-- **Resource** `dispensaries://all` — list of dispensaries with IDs and names (so Claude can reference them without lookup)
-- **Resource** `schema://graphql` — the current SDL as a resource
-- **Prompt** `new-resolver` — templated workflow for adding a new GraphQL resolver following CannaSaas conventions
-- **Prompt** `new-migration` — templated workflow for TypeORM migrations with `synchronize: false` and the seed-data pattern
-
-**v2 additions** (after v1 proves value):
-
-- **Tool** `run_migration(name)` — wraps `pnpm migration:run` with safety checks
-- **Tool** `seed_test_dispensary()` — idempotent setup for the `c0000000-…-000001` test tenant
-- **Tool** `metrc_sync_status(dispensaryId)` — check BullMQ queue state for Metrc jobs
-- **Resource** `metrc://compliance-rules` — current compliance patterns as reference
-
-**Implementation notes.** Put it at `tools/mcp-server/` (not `apps/` — it's tooling, not a deployable). Python + FastMCP SDK; don't add TypeScript MCP tooling to the stack. Authenticate to the local API with a dev-only token via `.env.local`. The server should refuse to run if `NODE_ENV=production` — dev-only guardrail. Document setup in `tools/mcp-server/README.md` and reference it from this file.
-
-**Dependency.** Don't start this cold. It's the natural capstone for Phase 2 of the Claude learning curriculum (Intro MCP + Advanced MCP from Anthropic Academy). Building it before doing the courses will take 3× longer.
-
-**Success criteria.** From a fresh Claude Code session in the repo, you can ask "show me all dispensaries with active theme overrides" and get a real answer without pasting schema or running a script. When that works reliably, v1 is done.
-
-### Claude skills for repeated CannaSaas patterns
-
-Live at `.claude/skills/` in the repo root. Check them into git so the team (and future-you) shares them. Candidates in rough priority order:
-
-- `metrc-compliance-check` — knows CannaSaas compliance patterns and flag states
-- `add-migration` — scaffolds TypeORM migrations matching repo conventions
-- `dispensary-scoped-query` — enforces tenant isolation on new resolvers
-- `new-nestjs-module` — scaffolds `apps/api/src/modules/{feature}/` structure
-
-Build these alongside the MCP server — the skills depend on Phase 4 of the learning curriculum (Building Claude Skills on Anthropic Academy).
-
-### Recommended sequencing
-
-These shouldn't block Stripe + inventory. Once those ship:
-
-1. Finish learning curriculum Phases 1–2 (prompt engineering, Claude Code, both MCP courses)
-2. Build skills files (~1 week of evening work, immediate return)
-3. Build MCP server v1 (1–2 days)
-4. Use v1 for a sprint before building v2 — make sure the abstractions hold up under real use
-5. Revisit the two-theme-system unification using the MCP server — it'll go faster when Claude can query `theme_configs` directly
-
----
-
-## Gotchas that cost time to rediscover
-
-**Next.js storefront `_next/static/chunks/*.js` 404s are always a stale build cache** — not missing files, not a bad import, not a theme problem. Fix: `rm -rf apps/storefront/.next apps/storefront/node_modules/.cache` then restart. The `nuclearClean` alias does exactly this. Don't chase CSS imports when `_next` chunks are 404ing; clear the cache first.
-
-**The Next.js RSC webpack crash** (`Cannot read properties of undefined (reading 'call')`) is pre-existing. Worked around with `transpilePackages` and the Turbopack dev flag. Don't spend time rediscovering this.
-
-**The API starts BullMQ before verifying DB connectivity**, so you'll see 20+ Redis connection errors before TypeORM even begins. Start Docker first (`docker info` should succeed) before running `pde`.
-
-**`docs/package.json` and `docs/package-lock.json` keep reappearing** and trigger Next.js "multiple lockfiles detected" warnings. They shouldn't exist. Delete on sight.
-
-**Dennis's `.zshrc` was rebuilt April 2026** after accumulating 450+ duplicated pyenv lines from a self-appending `echo >> ~/.zshrc` bug. New version uses `typeset -U path` for auto-dedup, pyenv init in `.zprofile` (not `.zshrc`), official nvm auto-switch hook. Project aliases live in `~/.oh-my-zsh/custom/b.cannasaas.zsh` and survive zshrc rebuilds.
+- Top-level routes in `app.routes.ts`. Feature routes co-located: `features/foo/foo.routes.ts`.
+- Lazy-load every feature:
+  ```ts
+  { path: 'products', loadChildren: () => import('./features/products/products.routes').then(m => m.PRODUCTS_ROUTES) }
+  ```
+- Functional guards only.
 
 ---
 
-## Aliases worth knowing
+## GraphQL / API integration
 
-Defined in `~/.oh-my-zsh/custom/a.shell-command.zsh` and `b.cannasaas.zsh`:
+- Client: **Apollo Angular** — `apollo-angular@^13` + `@apollo/client@^4` + `graphql@^16`. Peer deps support Angular 19/20/21 (verified May 2026).
+- Endpoint: `http://localhost:3000/graphql` (dev). Read from `environment.ts` per env.
+- **All types generated by GraphQL Code Generator.** Hand-written response types are forbidden — they drift from the schema. Run `pnpm graphql:codegen` after schema changes.
+- Queries/mutations co-located with the feature: `feature/foo.graphql`.
+- Wrap Apollo's `valueChanges` Observable with `toSignal()` at the service boundary so components consume signals.
+- Every operation is dispensary-scoped via header or variable. No exceptions outside `apps/platform`.
+
+---
+
+## Styling — Tailwind v4 + CSS custom properties
+
+**Tailwind v4 everywhere.** No Sass, no Less, no CSS-in-JS, no other utility frameworks.
+
+### Per-app setup
+
+```bash
+# in each app directory
+ng add tailwindcss
+```
+
+This installs `@tailwindcss/postcss` + creates `.postcssrc.json`. Each app's `src/styles.css` starts with:
+
+```css
+@import 'tailwindcss';
+@import '@cannasaas/ui/themes/all-themes.css';
+
+/* Scope class detection to this app + its workspace deps. */
+@source './**/*.{ts,html}';
+@source '../../packages/ui/src/**/*.{ts,html,css}';
+```
+
+**Why `@source` is non-negotiable in this monorepo.** Tailwind v4's PostCSS plugin scans from workspace root by default. Without `@source`, every app ships classes from packages it doesn't use, bloating production CSS by 10×+.
+
+### Tokens come from `@cannasaas/ui`
+
+CSS custom properties drive theming. Components reference tokens via Tailwind utilities mapped to vars (`bg-bg`, `text-fg`, `border-bdr`) or directly in component CSS via `var(--cs-color-primary)`.
+
+**Never hardcode color, font, or spacing values in components.** Always reference a CSS custom property defined in `@cannasaas/ui` themes.
+
+### Theme files
+
+`packages/ui/src/themes/theme.*.css` — 10 themes: `apothecary`, `casual`, `citrus`, `dark`, `earthy`, `midnight`, `minimal`, `modern`, `neon`, `regal`.
+
+Theme delivery differs by app — see each app's CLAUDE.md.
+
+### Component styles
+
+- Component-scoped CSS (Angular's default `:host` behavior). No global styles outside `src/styles.css`.
+- Reach for component CSS only when Tailwind utilities can't express it cleanly (complex pseudo-element effects, keyframes, container queries with custom logic).
+- Animations: prefer CSS over Angular Animations API.
+
+---
+
+## Testing
+
+- **Vitest** is the test runner (Angular 21 default; Karma is being retired).
+- Use the standard Angular Vitest builder configured by `ng new` / `ng add`.
+- Standalone-component test pattern:
+  ```ts
+  TestBed.configureTestingModule({
+    imports: [MyComponent],
+    providers: [{ provide: SomeService, useValue: mock }],
+  });
+  ```
+  No `declarations:`. No `NO_ERRORS_SCHEMA` unless justified.
+- Mock services with object literals + `provide:` overrides. Spies only when verifying call arguments.
+- E2E: not specified. Ask before adding Cypress/Playwright.
+
+---
+
+## Payments — Cannabis-friendly processor only
+
+**Stripe is forbidden anywhere in this codebase.** Stripe ToS prohibits cannabis transactions. This is a legal/business hard rule, not a preference.
+
+- Payment integration uses a cannabis-friendly processor (currently being selected/integrated in `apps/api`).
+- Frontend never holds processor SDK keys directly. The API mediates all payment intents and webhooks.
+- Cart/checkout flows in `packages/angular/projects/storefront` and `packages/angular/projects/staff` call dispensary-scoped GraphQL mutations only — no direct processor SDK imports.
+- If you encounter `stripe`, `@stripe/*`, or `Stripe`-named code in a PR, reject it.
+
+---
+
+## React → Angular migration discipline
+
+Do **not** carry React idioms into the Angular code.
+
+- Don't simulate hooks. Use signals + DI services.
+- Don't reach for HOCs or render props. Use directives, content projection (`<ng-content>`), or component composition.
+- Don't recreate React Context. Use Angular DI — `providedIn: 'root'` for global, route-level providers for feature scope.
+- Don't port TanStack Query. Apollo cache + `resource()` covers it.
+- Don't port React Hook Form. Reactive Forms (typed).
+- Don't keep `useState` patterns. State lives in signals on services or component class fields.
+- A 1:1 file-for-file port is rarely the right move. Re-derive the component tree where the React structure was carrying React-specific weight.
+- When porting a screen, **confirm the GraphQL operations it uses still match the API schema** before writing the Angular version. Schema may have moved.
+
+---
+
+## Forbidden patterns
+
+If you catch yourself writing any of these, stop and rewrite:
+
+- `NgModule`, `BrowserModule`, `CommonModule`, `FormsModule` (imports)
+- `*ngIf`, `*ngFor`, `*ngSwitch`, structural-directive shorthand
+- `[ngClass]`, `[ngStyle]` (use `[class.x]`, `[style.x.px]` bindings)
+- `@Input()` / `@Output()` decorators
+- Constructor parameter injection
+- `ChangeDetectionStrategy.Default`
+- `BehaviorSubject` / `Subject` for state that components read
+- `any`, `as any`, `// @ts-ignore`, `// @ts-expect-error` without a tracked issue
+- `.subscribe()` without `takeUntilDestroyed()` or equivalent teardown
+- Class-based `CanActivate` / `Resolve` / `HttpInterceptor`
+- `RouterModule.forRoot` / `RouterModule.forChild`
+- `HttpClientModule`
+- Hand-written GraphQL response types
+- Karma / Jasmine config in new code
+- Sass, Less, CSS-in-JS, UnoCSS, or any utility framework other than Tailwind v4
+- Hardcoded colors, fonts, or spacing (use `@cannasaas/ui` tokens)
+- Signal Forms in production code (experimental in v21)
+- Selectorless components (roadmap for v22, not in v21)
+- React patterns ported wholesale (see migration section)
+- **Stripe imports, references, or integration code anywhere**
+
+---
+
+## Monorepo conventions
+
+- **Package manager:** pnpm. Never npm or yarn.
+- **Workspace deps:** `"@cannasaas/ui": "workspace:*"`.
+- **Commits:** Conventional Commits, scoped: `feat(storefront): ...`, `fix(admin): ...`, `feat(staff): ...`, `feat(kiosk): ...`, `feat(platform): ...`.
+- **`git commit --no-verify` is allowed.** Hooks are advisory.
+- **TypeORM migrations** only in `apps/api/src/migrations/`. Never `synchronize: true` in production. Frontend never touches the DB directly — always through GraphQL.
+- **TypeScript strict** across all packages and apps.
+
+---
+
+## Code delivery (Dennis's working preferences)
+
+- **Full file replacements over diffs.** Write the whole file every time.
+- **No beginner framing.** Skip "first, let's understand…" preambles.
+- **Commands and concrete code over prose.** Show, don't narrate.
+- **Python file-patching scripts over `sed`** when batch-editing files on macOS.
+- **Direct, code-first responses.** Don't pad with explanation unless asked.
+- **Shell scripts for multi-step operations** rather than long copy-paste command sequences.
+- **Fact-check anything time-sensitive** — Angular API surface, package versions, doc URLs. Don't guess; verify or say so.
+
+---
+
+## Dev commands
+
+```bash
+# from repo root
+pnpm dev                              # all apps
+pnpm dev:sites                        # all sites, no api
+pnpm --filter <app> dev               # single app
+pnpm --filter <app> build             # production build
+pnpm --filter <app> test              # Vitest
+pnpm --filter <app> lint              # lint
+pnpm graphql:codegen                  # regen types after schema change
+
+# in any app directory
+ng generate component features/foo --change-detection=OnPush --inline-template=false
+ng generate service features/foo
+ng generate guard features/foo --functional
+```
+
+---
+
+## Aliases (in `~/.oh-my-zsh/custom/`)
 
 **Navigation**
 
-- `cs` — cd to project root + `nvm use`
+- `cs` — repo root + `nvm use`
 - `csapi`, `csadm`, `csstf`, `csstr`, `csksk` — cd into each app
 
 **Dev loop**
 
-- `pde` — full-stack dev (`cs; haltall; pnpm dev`)
-- `pds` — sites only, no api (`cs; haltall; pnpm dev:sites`)
+- `pde` — full-stack (`cs; haltall; pnpm dev`)
+- `pds` — sites only (`cs; haltall; pnpm dev:sites`)
 - `pda` — clear + `restartapi`
-- `runall`, `runapi`, `runstr`, `runadm`, `runstf`, `runksk` — per-app dev (storefront variant includes `nuclearClean`)
+- `runall`, `runapi`, `runstr`, `runadm`, `runstf`, `runksk` — per-app dev
 
-**Stopping things**
+**Stopping**
 
-- `haltall` — kill all app ports (3000, 5173–5177)
-- `stopapi`, `stopstr`, `stopadm`, `stopstf`, `stopksk` — per-port
+- `haltall` — kill all app ports (3000, 5174, 5177, 5273, 5275, 5276)
+- `stopapi`, `stopstr`, `stopadm`, `stopstf`, `stopksk` — per-port. `stopstr` now targets Angular storefront on :5273; `stopstf` targets Angular staff on :5275 (sc-207).
 - `ports` — `lsof -i -P -n | grep LISTEN`
-- `checkall` — what's on 5173–5176
+- `checkall` — what's on 5174, 5177 (React) and 5273, 5275, 5276 (Angular)
 
 **Docker**
 
 - `dockup` — postgres + redis up
-- `dockshutdown` — remove the containers
+- `dockshutdown` — remove containers
 - `dockerremove` — full reset including postgres volume (destroys data)
 - `dockerlogs` — follow postgres logs
 
 **Build/clean**
 
-- `nuclearClean` — `rm -rf apps/storefront/.next apps/storefront/node_modules/.cache`
-- `removeDist`, `rebuildDist`, `removeNext`
-
-**Git shortcuts** — oh-my-zsh git plugin provides `gs`, `ga`, `gc`, `gp`, `gst`, `gd`, etc. Use `--no-verify` flag when husky/lint hooks are blocking.
+- `removeDist`, `rebuildDist`
 
 ---
 
-## Coding conventions
+## Gotchas that cost time to rediscover
 
-- TypeScript strict throughout. No `any` unless genuinely unavoidable.
-- NestJS modules: one feature per module under `apps/api/src/modules/{feature}/`. DTOs in `dto/`, entities at module root.
-- GraphQL code-first — resolvers define schema, no separate `.gql` files.
-- React components functional, hooks-based. `useState`/`useReducer` for local state, no Redux.
-- Tailwind classes reference CSS variables (`bg-bg`, `text-txt`, `border-bdr`) so theme swaps don't require recompile.
-- File naming: PascalCase for components (`NewOrderPage.tsx`), camelCase for utilities (`formatCurrency.ts`), kebab-case for CSS (`theme.dark.css`).
+- **API starts BullMQ before verifying DB connectivity** — you'll see 20+ Redis connection errors before TypeORM even begins. `docker info` should succeed before `pde`.
+- **`docs/package.json` and `docs/package-lock.json` keep reappearing** and trigger Next.js "multiple lockfiles" warnings. They shouldn't exist. Delete on sight.
+- **Tailwind v4 in monorepos:** missing `@source` directives produce silently bloated builds. Check each app's `styles.css`.
+- **Apollo cache after schema changes:** if queries return stale shape, run `pnpm graphql:codegen` and clear Apollo's in-memory cache (`client.resetStore()`).
 
 ---
 
-## When in doubt
+## Known tech debt — flagged, not blocking
 
-1. **Check if a discovery script would help.** Dumping relevant files to stdout for context is usually faster than guessing. Examples live in `scripts/`.
-2. **Don't re-solve problems in the "Gotchas" section.** Clear `.next`, start Docker, delete `docs/package*.json`.
-3. **Critical path > architectural cleanup.** If Stripe or inventory isn't done, tech debt work should be declined with a "let's do this after launch" note.
-4. **Prefer complete replacement files over partial patches** when generating more than a few lines of change. Makes review easier and avoids sed-on-macOS headaches.
-5. **Dennis prefers shell scripts for multi-step operations** rather than long copy-paste command sequences — easier to rerun, easier to roll back.
+- **`packages/ui/src/theme-vars.css`** appears orphaned. Verify and remove.
+- **API startup retries** DB/Redis 9 times with stack traces. Add a preflight TCP probe.
+- **`STRIPE_*` env vars** still live in `apps/api/.env.example`. Stripe is forbidden — purge alongside any remaining processor placeholders when wiring the cannabis-friendly processor.
 
 ---
 
@@ -261,5 +396,15 @@ Defined in `~/.oh-my-zsh/custom/a.shell-command.zsh` and `b.cannasaas.zsh`:
 - macOS (Apple Silicon), zsh + Oh My Zsh, Homebrew tooling
 - Node via nvm (repo `.nvmrc` is v20.20.1)
 - Python via pyenv
-- Postgres.app at `/Applications/Postgres.app/Contents/Versions/latest/bin` (not used — Docker owns the DB)
+- Docker Desktop required (Postgres + Redis)
 - pgAdmin 4 at `/Applications/pgAdmin 4.app/Contents/SharedSupport`
+
+---
+
+## When in doubt
+
+1. Check the per-app `CLAUDE.md` first — it overrides nothing here but adds app-specific rules.
+2. Don't re-solve problems in the "Gotchas" section.
+3. Tech debt is a first-class blocker. Do not move forward on new features while lint/type debt remains open in touched areas.
+4. Prefer complete replacement files over partial patches when generating more than a few lines.
+5. Verify time-sensitive facts (Angular API, package versions, docs) — don't guess.

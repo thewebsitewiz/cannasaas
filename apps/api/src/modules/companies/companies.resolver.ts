@@ -1,11 +1,22 @@
-import { Resolver, Query, Mutation, Args, ID, Int, InputType } from '@nestjs/graphql';
+import {
+  Resolver,
+  Query,
+  Mutation,
+  Args,
+  ID,
+  Int,
+  InputType,
+} from '@nestjs/graphql';
 import { ObjectType, Field } from '@nestjs/graphql';
-import { CompaniesService } from './companies.service';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import {
+  CompaniesService,
+  CompanyDto,
+  CompanyListItemDto,
+} from './companies.service';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { JwtPayload } from '../auth/strategies/jwt.strategy';
 
-@ObjectType() class CompanyResult {
+@ObjectType()
+class CompanyResult {
   @Field(() => ID) companyId!: string;
   @Field(() => ID) organizationId!: string;
   @Field() legalName!: string;
@@ -27,7 +38,8 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field(() => Date) updatedAt!: Date;
 }
 
-@ObjectType() class CompanyListItem {
+@ObjectType()
+class CompanyListItem {
   @Field(() => ID) companyId!: string;
   @Field(() => ID) organizationId!: string;
   @Field() legalName!: string;
@@ -40,7 +52,8 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field(() => Date) createdAt!: Date;
 }
 
-@InputType() class CreateCompanyInput {
+@InputType()
+class CreateCompanyInput {
   @Field(() => ID) organizationId!: string;
   @Field() legalName!: string;
   @Field({ nullable: true }) dbaName?: string;
@@ -58,7 +71,8 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field({ nullable: true }) zip?: string;
 }
 
-@InputType() class UpdateCompanyInput {
+@InputType()
+class UpdateCompanyInput {
   @Field({ nullable: true }) legalName?: string;
   @Field({ nullable: true }) dbaName?: string;
   @Field({ nullable: true }) ein?: string;
@@ -86,16 +100,18 @@ export class CompaniesResolver {
   @Query(() => CompanyResult, { name: 'company', nullable: true })
   async company(
     @Args('companyId', { type: () => ID }) companyId: string,
-  ): Promise<any> {
+  ): Promise<CompanyDto> {
     return this.companies.findById(companyId);
   }
 
   @Roles('super_admin')
   @Query(() => [CompanyListItem], { name: 'companies' })
   async listCompanies(
-    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) limit: number,
-    @Args('offset', { type: () => Int, nullable: true, defaultValue: 0 }) offset: number,
-  ): Promise<any[]> {
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 })
+    limit: number,
+    @Args('offset', { type: () => Int, nullable: true, defaultValue: 0 })
+    offset: number,
+  ): Promise<CompanyListItemDto[]> {
     return this.companies.findAll(limit, offset);
   }
 
@@ -103,7 +119,7 @@ export class CompaniesResolver {
   @Query(() => [CompanyListItem], { name: 'companiesByOrganization' })
   async companiesByOrganization(
     @Args('organizationId', { type: () => ID }) organizationId: string,
-  ): Promise<any[]> {
+  ): Promise<CompanyListItemDto[]> {
     return this.companies.findByOrganization(organizationId);
   }
 
@@ -113,7 +129,7 @@ export class CompaniesResolver {
   @Mutation(() => CompanyResult, { name: 'createCompany' })
   async createCompany(
     @Args('input') input: CreateCompanyInput,
-  ): Promise<any> {
+  ): Promise<CompanyDto> {
     return this.companies.create(input);
   }
 
@@ -122,7 +138,7 @@ export class CompaniesResolver {
   async updateCompany(
     @Args('companyId', { type: () => ID }) companyId: string,
     @Args('input') input: UpdateCompanyInput,
-  ): Promise<any> {
+  ): Promise<CompanyDto> {
     return this.companies.update(companyId, input);
   }
 

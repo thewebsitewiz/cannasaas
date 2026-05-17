@@ -1,11 +1,18 @@
-import { Resolver, Query, Mutation, Args, ID, Int, InputType } from '@nestjs/graphql';
+import {
+  Resolver,
+  Query,
+  Mutation,
+  Args,
+  ID,
+  Int,
+  InputType,
+} from '@nestjs/graphql';
 import { ObjectType, Field } from '@nestjs/graphql';
-import { BrandsService } from './brands.service';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { BrandsService, BrandDto } from './brands.service';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { JwtPayload } from '../auth/strategies/jwt.strategy';
 
-@ObjectType() class BrandResult {
+@ObjectType()
+class BrandResult {
   @Field(() => ID) brandId!: string;
   @Field(() => ID) organizationId!: string;
   @Field() name!: string;
@@ -18,7 +25,8 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field(() => Date) updatedAt!: Date;
 }
 
-@ObjectType() class BrandListItem {
+@ObjectType()
+class BrandListItem {
   @Field(() => ID) brandId!: string;
   @Field(() => ID) organizationId!: string;
   @Field() name!: string;
@@ -28,7 +36,8 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field(() => Date) createdAt!: Date;
 }
 
-@InputType() class CreateBrandInput {
+@InputType()
+class CreateBrandInput {
   @Field(() => ID) organizationId!: string;
   @Field() name!: string;
   @Field({ nullable: true }) slug?: string;
@@ -37,7 +46,8 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field({ nullable: true }) websiteUrl?: string;
 }
 
-@InputType() class UpdateBrandInput {
+@InputType()
+class UpdateBrandInput {
   @Field({ nullable: true }) name?: string;
   @Field({ nullable: true }) slug?: string;
   @Field({ nullable: true }) description?: string;
@@ -56,16 +66,18 @@ export class BrandsResolver {
   @Query(() => BrandResult, { name: 'brand', nullable: true })
   async brand(
     @Args('brandId', { type: () => ID }) brandId: string,
-  ): Promise<any> {
+  ): Promise<BrandDto> {
     return this.brands.findById(brandId);
   }
 
   @Roles('super_admin')
   @Query(() => [BrandListItem], { name: 'brands' })
   async listBrands(
-    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) limit: number,
-    @Args('offset', { type: () => Int, nullable: true, defaultValue: 0 }) offset: number,
-  ): Promise<any[]> {
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 })
+    limit: number,
+    @Args('offset', { type: () => Int, nullable: true, defaultValue: 0 })
+    offset: number,
+  ): Promise<BrandDto[]> {
     return this.brands.findAll(limit, offset);
   }
 
@@ -73,7 +85,7 @@ export class BrandsResolver {
   @Query(() => [BrandListItem], { name: 'brandsByOrganization' })
   async brandsByOrganization(
     @Args('organizationId', { type: () => ID }) organizationId: string,
-  ): Promise<any[]> {
+  ): Promise<BrandDto[]> {
     return this.brands.findByOrganization(organizationId);
   }
 
@@ -81,9 +93,7 @@ export class BrandsResolver {
 
   @Roles('org_admin', 'super_admin')
   @Mutation(() => BrandResult, { name: 'createBrand' })
-  async createBrand(
-    @Args('input') input: CreateBrandInput,
-  ): Promise<any> {
+  async createBrand(@Args('input') input: CreateBrandInput): Promise<BrandDto> {
     return this.brands.create(input);
   }
 
@@ -92,7 +102,7 @@ export class BrandsResolver {
   async updateBrand(
     @Args('brandId', { type: () => ID }) brandId: string,
     @Args('input') input: UpdateBrandInput,
-  ): Promise<any> {
+  ): Promise<BrandDto> {
     return this.brands.update(brandId, input);
   }
 

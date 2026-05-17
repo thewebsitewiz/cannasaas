@@ -1,11 +1,24 @@
-import { Resolver, Query, Mutation, Args, ID, Int, InputType } from '@nestjs/graphql';
+import {
+  Resolver,
+  Query,
+  Mutation,
+  Args,
+  ID,
+  Int,
+  InputType,
+} from '@nestjs/graphql';
 import { ObjectType, Field } from '@nestjs/graphql';
-import { OrganizationsService } from './organizations.service';
+import {
+  OrganizationsService,
+  OrganizationDto,
+  OrganizationListItemDto,
+} from './organizations.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtPayload } from '../auth/strategies/jwt.strategy';
 
-@ObjectType() class OrganizationResult {
+@ObjectType()
+class OrganizationResult {
   @Field(() => ID) organizationId!: string;
   @Field() name!: string;
   @Field() slug!: string;
@@ -13,12 +26,12 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field({ nullable: true }) billingAddress?: string;
   @Field() subscriptionTier!: string;
   @Field() subscriptionStatus!: string;
-  @Field({ nullable: true }) stripeCustomerId?: string;
   @Field(() => Date) createdAt!: Date;
   @Field(() => Date) updatedAt!: Date;
 }
 
-@ObjectType() class OrganizationListItem {
+@ObjectType()
+class OrganizationListItem {
   @Field(() => ID) organizationId!: string;
   @Field() name!: string;
   @Field() slug!: string;
@@ -28,7 +41,8 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field(() => Date) createdAt!: Date;
 }
 
-@InputType() class CreateOrganizationInput {
+@InputType()
+class CreateOrganizationInput {
   @Field() name!: string;
   @Field() slug!: string;
   @Field({ nullable: true }) billingEmail?: string;
@@ -36,17 +50,18 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
   @Field({ nullable: true }) subscriptionTier?: string;
 }
 
-@InputType() class UpdateOrganizationInput {
+@InputType()
+class UpdateOrganizationInput {
   @Field({ nullable: true }) name?: string;
   @Field({ nullable: true }) slug?: string;
   @Field({ nullable: true }) billingEmail?: string;
   @Field({ nullable: true }) billingAddress?: string;
 }
 
-@InputType() class UpdateSubscriptionInput {
+@InputType()
+class UpdateSubscriptionInput {
   @Field({ nullable: true }) subscriptionTier?: string;
   @Field({ nullable: true }) subscriptionStatus?: string;
-  @Field({ nullable: true }) stripeCustomerId?: string;
 }
 
 @Resolver()
@@ -59,7 +74,7 @@ export class OrganizationsResolver {
   @Query(() => OrganizationResult, { name: 'organization', nullable: true })
   async organization(
     @Args('organizationId', { type: () => ID }) organizationId: string,
-  ): Promise<any> {
+  ): Promise<OrganizationDto> {
     return this.organizations.findById(organizationId);
   }
 
@@ -67,7 +82,7 @@ export class OrganizationsResolver {
   @Query(() => OrganizationResult, { name: 'myOrganization', nullable: true })
   async myOrganization(
     @CurrentUser() user: JwtPayload,
-  ): Promise<any> {
+  ): Promise<OrganizationDto | null> {
     if (!user.organizationId) return null;
     return this.organizations.findById(user.organizationId);
   }
@@ -75,9 +90,11 @@ export class OrganizationsResolver {
   @Roles('super_admin')
   @Query(() => [OrganizationListItem], { name: 'organizations' })
   async listOrganizations(
-    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 }) limit: number,
-    @Args('offset', { type: () => Int, nullable: true, defaultValue: 0 }) offset: number,
-  ): Promise<any[]> {
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 })
+    limit: number,
+    @Args('offset', { type: () => Int, nullable: true, defaultValue: 0 })
+    offset: number,
+  ): Promise<OrganizationListItemDto[]> {
     return this.organizations.findAll(limit, offset);
   }
 
@@ -87,7 +104,7 @@ export class OrganizationsResolver {
   @Mutation(() => OrganizationResult, { name: 'createOrganization' })
   async createOrganization(
     @Args('input') input: CreateOrganizationInput,
-  ): Promise<any> {
+  ): Promise<OrganizationDto> {
     return this.organizations.create(input);
   }
 
@@ -96,7 +113,7 @@ export class OrganizationsResolver {
   async updateOrganization(
     @Args('organizationId', { type: () => ID }) organizationId: string,
     @Args('input') input: UpdateOrganizationInput,
-  ): Promise<any> {
+  ): Promise<OrganizationDto> {
     return this.organizations.update(organizationId, input);
   }
 
@@ -105,7 +122,7 @@ export class OrganizationsResolver {
   async updateSubscription(
     @Args('organizationId', { type: () => ID }) organizationId: string,
     @Args('input') input: UpdateSubscriptionInput,
-  ): Promise<any> {
+  ): Promise<OrganizationDto> {
     return this.organizations.updateSubscription(organizationId, input);
   }
 
