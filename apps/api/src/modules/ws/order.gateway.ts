@@ -52,6 +52,18 @@ interface LowStockPayload {
   quantity: number;
 }
 
+interface StockChangedPayload {
+  dispensaryId: string;
+  inventoryId: string;
+  variantId: string;
+  productName: string;
+  previousAvailable: number;
+  newAvailable: number;
+  reorderThreshold: number | null;
+  status: 'in_stock' | 'low_stock' | 'out_of_stock';
+  source: 'adjustment' | 'reserve' | 'release';
+}
+
 interface DeliveryStatusChangedPayload {
   dispensaryId: string;
   tripId: string;
@@ -95,10 +107,31 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleConnection(client: Socket): void {
     try {
       const handshakeAuth = client.handshake.auth as
-        | { token?: string }
+        | { token?: string; storefrontDispensaryId?: string }
         | undefined;
       const authHeader = client.handshake.headers.authorization;
       const token = handshakeAuth?.token ?? authHeader?.replace('Bearer ', '');
+
+      // Storefront clients connect anonymously with just a dispensaryId
+      // in the handshake; they only receive public stock events.
+      if (!token && handshakeAuth?.storefrontDispensaryId) {
+        const dispensaryId = handshakeAuth.storefrontDispensaryId;
+        const storefrontRoom = 'storefront:' + dispensaryId;
+        void client.join(storefrontRoom);
+        this.logger.log(
+          'WS connected (storefront): dispensary=' +
+            dispensaryId +
+            ' [' +
+            client.id +
+            ']',
+        );
+        client.emit('connected', {
+          anonymous: true,
+          rooms: [storefrontRoom],
+        });
+        return;
+      }
+
       if (!token) {
         this.logger.warn('WS connection rejected — no token');
         client.disconnect();
@@ -270,6 +303,31 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleLowStock(payload: LowStockPayload): void {
     this.server.to('staff:' + payload.dispensaryId).emit('inventory:alert', {
       type: 'low_stock',
+      productName: payload.productName,
+      quantity: payload.quantity,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  @OnEvent('inventory.stock_changed')
+  handleStockChanged(payload: StockChangedPayload): void {
+    // Storefront customers see only the per-variant public projection —
+    // never the full payload (productName + threshold leak operator
+    // context; status + available are what the badge needs).
+    this.server.to('storefront:' + payload.dispensaryId).emit('stock:changed', {
+      type: 'stock_changed',
+      variantId: payload.variantId,
+      available: payload.newAvailable,
+      status: payload.status,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  @OnEvent('inventory.out_of_stock')
+  handleOutOfStock(payload: LowStockPayload): void {
+    // Operator-facing toast.
+    this.server.to('staff:' + payload.dispensaryId).emit('inventory:alert', {
+      type: 'out_of_stock',
       productName: payload.productName,
       quantity: payload.quantity,
       timestamp: new Date().toISOString(),
