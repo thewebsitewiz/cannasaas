@@ -4616,6 +4616,28 @@ export type MyOrdersQuery = {
   };
 };
 
+export type MyTimeEntriesQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+  startDate: Scalars['String']['input'];
+  endDate: Scalars['String']['input'];
+}>;
+
+export type MyTimeEntriesQuery = {
+  __typename?: 'Query';
+  myTimeEntries: Array<{
+    __typename?: 'TimeEntry';
+    entryId: string;
+    clockIn: string;
+    clockOut?: string | null;
+    breakMinutes: number;
+    totalHours?: number | null;
+    overtimeHours?: number | null;
+    status: string;
+    notes?: string | null;
+    approvedAt?: string | null;
+  }>;
+};
+
 export type ConfirmOrderMutationVariables = Exact<{
   orderId: Scalars['ID']['input'];
   dispensaryId?: InputMaybe<Scalars['ID']['input']>;
@@ -5327,6 +5349,35 @@ export const MyOrdersDocument = gql`
 })
 export class MyOrdersGQL extends Apollo.Query<MyOrdersQuery, MyOrdersQueryVariables> {
   override document = MyOrdersDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const MyTimeEntriesDocument = gql`
+  query MyTimeEntries($dispensaryId: ID!, $startDate: String!, $endDate: String!) {
+    myTimeEntries(dispensaryId: $dispensaryId, startDate: $startDate, endDate: $endDate) {
+      entryId
+      clockIn
+      clockOut
+      breakMinutes
+      totalHours
+      overtimeHours
+      status
+      notes
+      approvedAt
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class MyTimeEntriesGQL extends Apollo.Query<
+  MyTimeEntriesQuery,
+  MyTimeEntriesQueryVariables
+> {
+  override document = MyTimeEntriesDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);
