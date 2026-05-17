@@ -7,6 +7,8 @@ import {
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 
+import { StockEventEmitterService } from './stock-event-emitter.service';
+
 // ── DB row types ──────────────────────────────────────────────────────────
 
 export interface InventoryRow {
@@ -118,7 +120,10 @@ function toInt(val: string | number | null | undefined): number {
 export class InventoryService {
   private readonly logger = new Logger(InventoryService.name);
 
-  constructor(@InjectDataSource() private ds: DataSource) {}
+  constructor(
+    @InjectDataSource() private ds: DataSource,
+    private readonly stockEvents: StockEventEmitterService,
+  ) {}
 
   // ═══ READ ═══
 
@@ -240,8 +245,21 @@ export class InventoryService {
         transactionType +
         ')',
     );
+    const inventoryRow = await this.findById(inventoryId);
+    await this.stockEvents.recordChange({
+      dispensaryId: inv.dispensary_id,
+      inventoryId,
+      variantId: inv.variant_id,
+      previousAvailable: toNumber(inv.quantity_available) - delta,
+      newAvailable: toNumber(inv.quantity_available),
+      reorderThreshold:
+        inventoryRow.reorderThreshold != null
+          ? toNumber(inventoryRow.reorderThreshold)
+          : null,
+      source: 'adjustment',
+    });
     return {
-      inventory: await this.findById(inventoryId),
+      inventory: inventoryRow,
       transaction: txRows[0],
     };
   }
@@ -301,8 +319,21 @@ export class InventoryService {
     this.logger.log(
       'Stock reserved: ' + inventoryId + ' qty=' + String(quantity),
     );
+    const inventoryRow = await this.findById(inventoryId);
+    await this.stockEvents.recordChange({
+      dispensaryId: inv.dispensary_id,
+      inventoryId,
+      variantId: inv.variant_id,
+      previousAvailable,
+      newAvailable,
+      reorderThreshold:
+        inventoryRow.reorderThreshold != null
+          ? toNumber(inventoryRow.reorderThreshold)
+          : null,
+      source: 'reserve',
+    });
     return {
-      inventory: await this.findById(inventoryId),
+      inventory: inventoryRow,
       transaction: txRows[0],
     };
   }
@@ -356,8 +387,21 @@ export class InventoryService {
     this.logger.log(
       'Reserve released: ' + inventoryId + ' qty=' + String(release),
     );
+    const inventoryRow = await this.findById(inventoryId);
+    await this.stockEvents.recordChange({
+      dispensaryId: inv.dispensary_id,
+      inventoryId,
+      variantId: inv.variant_id,
+      previousAvailable,
+      newAvailable,
+      reorderThreshold:
+        inventoryRow.reorderThreshold != null
+          ? toNumber(inventoryRow.reorderThreshold)
+          : null,
+      source: 'release',
+    });
     return {
-      inventory: await this.findById(inventoryId),
+      inventory: inventoryRow,
       transaction: txRows[0],
     };
   }
