@@ -4861,6 +4861,39 @@ export type SearchProductsLookupQuery = {
   }>;
 };
 
+export type StaffInventoryProductsQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+export type StaffInventoryProductsQuery = {
+  __typename?: 'Query';
+  products: Array<{
+    __typename?: 'Product';
+    id: string;
+    name: string;
+    sku?: string | null;
+    strainName?: string | null;
+    strainType?: string | null;
+    thcPercent?: number | null;
+    cbdPercent?: number | null;
+    isActive: boolean;
+    variants: Array<{
+      __typename?: 'ProductVariant';
+      variantId: string;
+      name: string;
+      sku?: string | null;
+      barcode?: string | null;
+      retailPrice?: number | null;
+      stockQuantity?: number | null;
+      stockStatus?: string | null;
+      isActive: boolean;
+    }>;
+  }>;
+};
+
 export type ThemeConfigQueryVariables = Exact<{
   dispensaryId: Scalars['String']['input'];
 }>;
@@ -5746,6 +5779,49 @@ export class SearchProductsLookupGQL extends Apollo.Query<
   SearchProductsLookupQueryVariables
 > {
   override document = SearchProductsLookupDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const StaffInventoryProductsDocument = gql`
+  query StaffInventoryProducts(
+    $dispensaryId: ID!
+    $limit: Int = 200
+    $offset: Int
+    $search: String
+  ) {
+    products(dispensaryId: $dispensaryId, limit: $limit, offset: $offset, search: $search) {
+      id
+      name
+      sku
+      strainName
+      strainType
+      thcPercent
+      cbdPercent
+      isActive
+      variants {
+        variantId
+        name
+        sku
+        barcode
+        retailPrice
+        stockQuantity
+        stockStatus
+        isActive
+      }
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class StaffInventoryProductsGQL extends Apollo.Query<
+  StaffInventoryProductsQuery,
+  StaffInventoryProductsQueryVariables
+> {
+  override document = StaffInventoryProductsDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);

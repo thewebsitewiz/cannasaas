@@ -28,6 +28,11 @@ export const routes: Routes = [
           import('./features/timesheets/timesheets-page').then((m) => m.TimesheetsPage),
       },
       {
+        path: 'inventory',
+        loadComponent: () =>
+          import('./features/inventory/inventory-page').then((m) => m.InventoryPage),
+      },
+      {
         path: 'products',
         loadComponent: () =>
           import('./features/product-lookup/product-lookup-page').then((m) => m.ProductLookupPage),
