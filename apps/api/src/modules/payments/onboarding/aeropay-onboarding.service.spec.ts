@@ -8,6 +8,10 @@ import {
 } from '../entities/dispensary-payment-processor.entity';
 import { CredentialEncryptionService } from '../security/credential-encryption.service';
 import { AeropayOnboardingService } from './aeropay-onboarding.service';
+import {
+  AEROPAY_CREDENTIAL_VALIDATOR,
+  ProcessorCredentialValidationError,
+} from './processor-credential-validator';
 
 type MockRepo = {
   findOne: jest.Mock;
@@ -141,6 +145,72 @@ describe('AeropayOnboardingService', () => {
       expect(encryption.encrypt).toHaveBeenCalledWith(
         JSON.stringify({ merchantId: 'merch', apiKey: 'sk' }),
       );
+    });
+
+    it('persists credentials unvalidated (with a warning) when no validator is registered', async () => {
+      repo.findOne.mockResolvedValue(null);
+      const result = await service.provision({
+        dispensaryId: 'd-1',
+        merchantId: 'merch',
+        apiKey: 'sk',
+      });
+      expect(result.isEnabled).toBe(true);
+      expect(repo.save).toHaveBeenCalled();
+    });
+  });
+
+  describe('provision with a registered validator', () => {
+    let validatorService: AeropayOnboardingService;
+    const validate = jest.fn();
+
+    beforeEach(async () => {
+      const moduleRef = await Test.createTestingModule({
+        providers: [
+          AeropayOnboardingService,
+          {
+            provide: getRepositoryToken(DispensaryPaymentProcessor),
+            useValue: repo,
+          },
+          {
+            provide: CredentialEncryptionService,
+            useValue: encryption as CredentialEncryptionService,
+          },
+          {
+            provide: AEROPAY_CREDENTIAL_VALIDATOR,
+            useValue: { validate },
+          },
+        ],
+      }).compile();
+      validatorService = moduleRef.get(AeropayOnboardingService);
+      validate.mockReset();
+    });
+
+    it('forwards credentials + sandbox flag to the validator', async () => {
+      repo.findOne.mockResolvedValue(null);
+      validate.mockResolvedValue(undefined);
+      await validatorService.provision({
+        dispensaryId: 'd-1',
+        merchantId: 'merch',
+        apiKey: 'sk',
+        isSandbox: false,
+      });
+      expect(validate).toHaveBeenCalledWith({
+        credentials: { merchantId: 'merch', apiKey: 'sk' },
+        isSandbox: false,
+      });
+    });
+
+    it('wraps a validator failure in ProcessorCredentialValidationError and does not persist', async () => {
+      repo.findOne.mockResolvedValue(null);
+      validate.mockRejectedValue(new Error('401 Unauthorized'));
+      await expect(
+        validatorService.provision({
+          dispensaryId: 'd-1',
+          merchantId: 'merch',
+          apiKey: 'sk',
+        }),
+      ).rejects.toThrow(ProcessorCredentialValidationError);
+      expect(repo.save).not.toHaveBeenCalled();
     });
   });
 

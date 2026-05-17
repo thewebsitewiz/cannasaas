@@ -1,4 +1,10 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  Logger,
+  Optional,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -7,6 +13,11 @@ import {
   DispensaryProcessorName,
 } from '../entities/dispensary-payment-processor.entity';
 import { CredentialEncryptionService } from '../security/credential-encryption.service';
+import {
+  CANPAY_CREDENTIAL_VALIDATOR,
+  ProcessorCredentialValidationError,
+  ProcessorCredentialValidator,
+} from './processor-credential-validator';
 
 export interface CanPayProvisionInput {
   readonly dispensaryId: string;
@@ -28,6 +39,9 @@ export class CanPayOnboardingService {
     @InjectRepository(DispensaryPaymentProcessor)
     private readonly repo: Repository<DispensaryPaymentProcessor>,
     private readonly encryption: CredentialEncryptionService,
+    @Optional()
+    @Inject(CANPAY_CREDENTIAL_VALIDATOR)
+    private readonly validator: ProcessorCredentialValidator<CanPayCredentials> | null = null,
   ) {}
 
   async provision(
@@ -44,6 +58,8 @@ export class CanPayOnboardingService {
       merchantId: input.merchantId.trim(),
       apiKey: input.apiKey.trim(),
     };
+    await this.validateOrWarn(credentials, input.isSandbox ?? true);
+
     const encrypted = this.encryption.encrypt(JSON.stringify(credentials));
     const now = new Date();
 
@@ -81,6 +97,25 @@ export class CanPayOnboardingService {
       `Provisioned CanPay for dispensary=${input.dispensaryId} merchant=${credentials.merchantId}`,
     );
     return saved;
+  }
+
+  private async validateOrWarn(
+    credentials: CanPayCredentials,
+    isSandbox: boolean,
+  ): Promise<void> {
+    if (!this.validator) {
+      this.logger.warn(
+        `No CANPAY_CREDENTIAL_VALIDATOR registered — provisioning credentials unvalidated. ` +
+          `Wire the CanPayPaymentProcessor as a validator once sc-215 lands on main.`,
+      );
+      return;
+    }
+    try {
+      await this.validator.validate({ credentials, isSandbox });
+    } catch (err: unknown) {
+      const detail = err instanceof Error ? err.message : 'unknown error';
+      throw new ProcessorCredentialValidationError('CanPay', detail);
+    }
   }
 
   async deprovision(

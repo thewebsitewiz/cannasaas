@@ -8,6 +8,10 @@ import {
 } from '../entities/dispensary-payment-processor.entity';
 import { CredentialEncryptionService } from '../security/credential-encryption.service';
 import { CanPayOnboardingService } from './canpay-onboarding.service';
+import {
+  CANPAY_CREDENTIAL_VALIDATOR,
+  ProcessorCredentialValidationError,
+} from './processor-credential-validator';
 
 type MockRepo = {
   findOne: jest.Mock;
@@ -126,6 +130,61 @@ describe('CanPayOnboardingService', () => {
       expect(result.credentialsEncrypted).toBe(
         'enc({"merchantId":"merch-new","apiKey":"sk_new"})',
       );
+    });
+  });
+
+  describe('provision with a registered validator', () => {
+    let validatorService: CanPayOnboardingService;
+    const validate = jest.fn();
+
+    beforeEach(async () => {
+      const moduleRef = await Test.createTestingModule({
+        providers: [
+          CanPayOnboardingService,
+          {
+            provide: getRepositoryToken(DispensaryPaymentProcessor),
+            useValue: repo,
+          },
+          {
+            provide: CredentialEncryptionService,
+            useValue: encryption as CredentialEncryptionService,
+          },
+          {
+            provide: CANPAY_CREDENTIAL_VALIDATOR,
+            useValue: { validate },
+          },
+        ],
+      }).compile();
+      validatorService = moduleRef.get(CanPayOnboardingService);
+      validate.mockReset();
+    });
+
+    it('forwards credentials + sandbox flag to the validator', async () => {
+      repo.findOne.mockResolvedValue(null);
+      validate.mockResolvedValue(undefined);
+      await validatorService.provision({
+        dispensaryId: 'd-1',
+        merchantId: 'merch',
+        apiKey: 'sk',
+        isSandbox: true,
+      });
+      expect(validate).toHaveBeenCalledWith({
+        credentials: { merchantId: 'merch', apiKey: 'sk' },
+        isSandbox: true,
+      });
+    });
+
+    it('wraps a validator failure in ProcessorCredentialValidationError and does not persist', async () => {
+      repo.findOne.mockResolvedValue(null);
+      validate.mockRejectedValue(new Error('401 Unauthorized'));
+      await expect(
+        validatorService.provision({
+          dispensaryId: 'd-1',
+          merchantId: 'merch',
+          apiKey: 'sk',
+        }),
+      ).rejects.toThrow(ProcessorCredentialValidationError);
+      expect(repo.save).not.toHaveBeenCalled();
     });
   });
 

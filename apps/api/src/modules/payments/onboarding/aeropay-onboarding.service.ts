@@ -1,4 +1,10 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  Logger,
+  Optional,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -7,6 +13,11 @@ import {
   DispensaryProcessorName,
 } from '../entities/dispensary-payment-processor.entity';
 import { CredentialEncryptionService } from '../security/credential-encryption.service';
+import {
+  AEROPAY_CREDENTIAL_VALIDATOR,
+  ProcessorCredentialValidationError,
+  ProcessorCredentialValidator,
+} from './processor-credential-validator';
 
 export interface AeropayProvisionInput {
   readonly dispensaryId: string;
@@ -28,6 +39,9 @@ export class AeropayOnboardingService {
     @InjectRepository(DispensaryPaymentProcessor)
     private readonly repo: Repository<DispensaryPaymentProcessor>,
     private readonly encryption: CredentialEncryptionService,
+    @Optional()
+    @Inject(AEROPAY_CREDENTIAL_VALIDATOR)
+    private readonly validator: ProcessorCredentialValidator<AeropayCredentials> | null = null,
   ) {}
 
   async provision(
@@ -44,6 +58,8 @@ export class AeropayOnboardingService {
       merchantId: input.merchantId.trim(),
       apiKey: input.apiKey.trim(),
     };
+    await this.validateOrWarn(credentials, input.isSandbox ?? true);
+
     const encrypted = this.encryption.encrypt(JSON.stringify(credentials));
     const now = new Date();
 
@@ -81,6 +97,25 @@ export class AeropayOnboardingService {
       `Provisioned Aeropay for dispensary=${input.dispensaryId} merchant=${credentials.merchantId}`,
     );
     return saved;
+  }
+
+  private async validateOrWarn(
+    credentials: AeropayCredentials,
+    isSandbox: boolean,
+  ): Promise<void> {
+    if (!this.validator) {
+      this.logger.warn(
+        `No AEROPAY_CREDENTIAL_VALIDATOR registered — provisioning credentials unvalidated. ` +
+          `Wire the AeropayPaymentProcessor as a validator once sc-212 lands on main.`,
+      );
+      return;
+    }
+    try {
+      await this.validator.validate({ credentials, isSandbox });
+    } catch (err: unknown) {
+      const detail = err instanceof Error ? err.message : 'unknown error';
+      throw new ProcessorCredentialValidationError('Aeropay', detail);
+    }
   }
 
   async deprovision(
