@@ -4616,6 +4616,34 @@ export type MyOrdersQuery = {
   };
 };
 
+export type ConfirmOrderMutationVariables = Exact<{
+  orderId: Scalars['ID']['input'];
+  dispensaryId?: InputMaybe<Scalars['ID']['input']>;
+}>;
+
+export type ConfirmOrderMutation = { __typename?: 'Mutation'; confirmOrder: boolean };
+
+export type StartPreparingOrderMutationVariables = Exact<{
+  orderId: Scalars['ID']['input'];
+  dispensaryId?: InputMaybe<Scalars['ID']['input']>;
+}>;
+
+export type StartPreparingOrderMutation = { __typename?: 'Mutation'; startPreparingOrder: boolean };
+
+export type MarkOrderReadyMutationVariables = Exact<{
+  orderId: Scalars['ID']['input'];
+  dispensaryId?: InputMaybe<Scalars['ID']['input']>;
+}>;
+
+export type MarkOrderReadyMutation = { __typename?: 'Mutation'; markOrderReady: boolean };
+
+export type CompleteOrderMutationVariables = Exact<{
+  orderId: Scalars['ID']['input'];
+  dispensaryId: Scalars['ID']['input'];
+}>;
+
+export type CompleteOrderMutation = { __typename?: 'Mutation'; completeOrder: boolean };
+
 export type OrderQueryVariables = Exact<{
   orderId: Scalars['ID']['input'];
   dispensaryId?: InputMaybe<Scalars['ID']['input']>;
@@ -4637,6 +4665,29 @@ export type OrderQuery = {
     cancellationReason?: string | null;
     cancelledAt?: string | null;
   } | null;
+};
+
+export type OrdersQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+export type OrdersQuery = {
+  __typename?: 'Query';
+  orders: Array<{
+    __typename?: 'Order';
+    orderId: string;
+    dispensaryId: string;
+    customerUserId?: string | null;
+    orderType: string;
+    orderStatus: string;
+    subtotal: number;
+    taxTotal: number;
+    total: number;
+    createdAt: string;
+    updatedAt: string;
+  }>;
 };
 
 export type ProductQueryVariables = Exact<{
@@ -5281,6 +5332,82 @@ export class MyOrdersGQL extends Apollo.Query<MyOrdersQuery, MyOrdersQueryVariab
     super(apollo);
   }
 }
+export const ConfirmOrderDocument = gql`
+  mutation ConfirmOrder($orderId: ID!, $dispensaryId: ID) {
+    confirmOrder(orderId: $orderId, dispensaryId: $dispensaryId)
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class ConfirmOrderGQL extends Apollo.Mutation<
+  ConfirmOrderMutation,
+  ConfirmOrderMutationVariables
+> {
+  override document = ConfirmOrderDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const StartPreparingOrderDocument = gql`
+  mutation StartPreparingOrder($orderId: ID!, $dispensaryId: ID) {
+    startPreparingOrder(orderId: $orderId, dispensaryId: $dispensaryId)
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class StartPreparingOrderGQL extends Apollo.Mutation<
+  StartPreparingOrderMutation,
+  StartPreparingOrderMutationVariables
+> {
+  override document = StartPreparingOrderDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const MarkOrderReadyDocument = gql`
+  mutation MarkOrderReady($orderId: ID!, $dispensaryId: ID) {
+    markOrderReady(orderId: $orderId, dispensaryId: $dispensaryId)
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class MarkOrderReadyGQL extends Apollo.Mutation<
+  MarkOrderReadyMutation,
+  MarkOrderReadyMutationVariables
+> {
+  override document = MarkOrderReadyDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const CompleteOrderDocument = gql`
+  mutation CompleteOrder($orderId: ID!, $dispensaryId: ID!) {
+    completeOrder(input: { orderId: $orderId, dispensaryId: $dispensaryId })
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class CompleteOrderGQL extends Apollo.Mutation<
+  CompleteOrderMutation,
+  CompleteOrderMutationVariables
+> {
+  override document = CompleteOrderDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
 export const OrderDocument = gql`
   query Order($orderId: ID!, $dispensaryId: ID) {
     order(orderId: $orderId, dispensaryId: $dispensaryId) {
@@ -5304,6 +5431,33 @@ export const OrderDocument = gql`
 })
 export class OrderGQL extends Apollo.Query<OrderQuery, OrderQueryVariables> {
   override document = OrderDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const OrdersDocument = gql`
+  query Orders($dispensaryId: ID!, $limit: Int, $offset: Int) {
+    orders(dispensaryId: $dispensaryId, limit: $limit, offset: $offset) {
+      orderId
+      dispensaryId
+      customerUserId
+      orderType
+      orderStatus
+      subtotal
+      taxTotal
+      total
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class OrdersGQL extends Apollo.Query<OrdersQuery, OrdersQueryVariables> {
+  override document = OrdersDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);
