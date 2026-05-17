@@ -13,6 +13,11 @@ type ActiveClock {
   profileId: ID!
 }
 
+type ActiveProcessorResult {
+  activePaymentProcessor: DispensaryProcessorName
+  dispensaryId: ID!
+}
+
 input AddAddressInput {
   addressLine1: String!
   addressLine2: String
@@ -227,6 +232,11 @@ type ClockStatus {
   isClockedIn: Boolean!
   isExempt: Boolean!
   todayHours: Float!
+}
+
+input CloseRegisterSessionGqlInput {
+  closingCashCents: Int!
+  sessionId: ID!
 }
 
 type CompanyListItem {
@@ -678,6 +688,24 @@ type DispensaryListItem {
   state: String
   type: String!
   zip: String
+}
+
+type DispensaryPaymentProcessor {
+  createdAt: DateTime!
+  dispensaryId: ID!
+  id: ID!
+  isEnabled: Boolean!
+  isSandbox: Boolean!
+  merchantExternalId: String
+  processorName: DispensaryProcessorName!
+  provisionedAt: DateTime
+  updatedAt: DateTime!
+}
+
+"""Operator-selectable payment processors per dispensary."""
+enum DispensaryProcessorName {
+  AEROPAY
+  CANPAY
 }
 
 type DispensaryProductType {
@@ -1346,6 +1374,7 @@ type Mutation {
   claimShiftSwap(swapId: ID!): ShiftSwapRequest!
   clockIn(dispensaryId: ID!, notes: String): TimeEntry!
   clockOut(breakMinutes: Int = 0, dispensaryId: ID!, notes: String): TimeEntry!
+  closeRegisterSession(input: CloseRegisterSessionGqlInput!): RegisterSession!
   completeDeliveryTrip(customerRating: Int, tripId: ID!): DeliveryTrip!
   completeInventoryCount(autoAdjust: Boolean! = false, countId: ID!): InventoryCount!
   completeOrder(input: CompleteOrderInput!): Boolean!
@@ -1381,6 +1410,8 @@ type Mutation {
   deleteOrganization(organizationId: ID!): Boolean!
   deleteProduct(dispensaryId: ID!, productId: ID!): Boolean!
   deleteShift(shiftId: ID!): Boolean!
+  deprovisionAeropayForDispensary(dispensaryId: ID!): Boolean!
+  deprovisionCanPayForDispensary(dispensaryId: ID!): Boolean!
   encryptAllCredentials: EncryptionResult!
   enrichDispensaryProducts(dispensaryId: ID!): BulkEnrichResultType!
   enrichProduct(dispensaryId: ID!, productId: ID!): EnrichmentResultType!
@@ -1393,7 +1424,10 @@ type Mutation {
   login(input: LoginInput!): AuthToken!
   markOrderReady(dispensaryId: ID, orderId: ID!): Boolean!
   notifyCustomer(dispensaryId: ID!, templateCode: String!, userId: ID!): [NotificationLog!]!
+  openRegisterSession(input: OpenRegisterSessionGqlInput!): RegisterSession!
   processCashPayment(applyDiscount: Boolean = true, cashTendered: Float!, dispensaryId: ID!, orderId: ID!): Payment!
+  provisionAeropayForDispensary(input: ProvisionAeropayInput!): DispensaryPaymentProcessor!
+  provisionCanPayForDispensary(input: ProvisionCanPayInput!): DispensaryPaymentProcessor!
 
   """
   Issues a long-lived device token for a kiosk terminal. Admin-only; one device per (dispensary, label).
@@ -1420,8 +1454,10 @@ type Mutation {
   saveThemeConfig(input: SaveThemeConfigInput!): ThemeConfigType!
   sendMarketingCampaign(campaignId: ID!, dispensaryId: ID!): MarketingCampaign!
   sendTestEmail(body: String!, subject: String!, to: String!): NotificationLog!
+  setActiveDispensaryProcessor(input: SetActiveDispensaryProcessorInput!): ActiveProcessorResult!
   setCashDiscount(cashDeliveryEnabled: Boolean, dispensaryId: ID!, percent: Float!): CashDiscountConfig!
   setDesignSystem(designSystem: String!, designSystemFile: String!, dispensaryId: ID!): DesignSystemConfig!
+  setDispensaryProcessorEnabled(input: SetDispensaryProcessorEnabledInput!): DispensaryPaymentProcessor!
   setProductMetrcCategory(input: SetMetrcCategoryInput!): Product!
   setUserRole(role: String!, userId: ID!): User!
   shipTransfer(transferId: ID!): InventoryTransfer!
@@ -1518,6 +1554,11 @@ type NotificationTemplate {
   name: String!
   subject: String
   templateId: Int!
+}
+
+input OpenRegisterSessionGqlInput {
+  dispensaryId: ID!
+  openingCashCents: Int!
 }
 
 type Order {
@@ -1624,9 +1665,12 @@ type Payment {
   changeGiven: Float
   createdAt: DateTime!
   dispensaryId: String!
+  failureReason: String
   method: String!
   orderId: String!
   paymentId: ID!
+  processorName: String
+  processorTransactionId: String
   status: String!
   terminalId: String
   updatedAt: DateTime!
@@ -1931,6 +1975,20 @@ type PromotionResult {
   usesCount: Int!
 }
 
+input ProvisionAeropayInput {
+  apiKey: String!
+  dispensaryId: ID!
+  isSandbox: Boolean
+  merchantId: String!
+}
+
+input ProvisionCanPayInput {
+  apiKey: String!
+  dispensaryId: ID!
+  isSandbox: Boolean
+  merchantId: String!
+}
+
 input ProvisionKioskInput {
   dispensaryId: ID!
   label: String!
@@ -1960,6 +2018,7 @@ type PurchaseOrder {
 
 type Query {
   activeClocks(dispensaryId: ID!): [ActiveClock!]!
+  activeDispensaryProcessor(dispensaryId: ID!): ActiveProcessorResult!
   activePromotions(dispensaryId: ID!): [PromotionListItem!]!
   adjustmentReasons: [LkpAdjustmentReason!]!
   adminProducts(categoryId: Int, dispensaryId: ID, limit: Int = 50, offset: Int, productTypeId: Int, search: String): [Product!]!
@@ -2002,6 +2061,7 @@ type Query {
   dispensariesByCompany(companyId: ID!): [DispensaryListItem!]!
   dispensary(entityId: ID!): DispensaryResult
   dispensaryBySlug(slug: String!): DispensaryPublic
+  dispensaryPaymentProcessors(dispensaryId: ID!): [DispensaryPaymentProcessor!]!
   dispensaryProductTypes(dispensaryId: ID!): [DispensaryProductType!]!
   driverStats(days: Int = 30, dispensaryId: ID!): DriverStats!
   driverTrips(days: Int = 7, driverId: ID!): [DeliveryTrip!]!
@@ -2037,6 +2097,7 @@ type Query {
   metrcCredential(dispensaryId: ID): MetrcCredential
   metrcSyncOverview(dispensaryId: ID): MetrcSyncOverview!
   myAddresses: [CustomerAddress!]!
+  myCurrentRegisterSession(dispensaryId: ID!): RegisterSession
   myFavorites(dispensaryId: ID!, limit: Int = 5): [CustomerFavorite!]!
   myLastOrder(dispensaryId: ID!): CustomerOrder
   myLoyalty(dispensaryId: ID!): MyLoyalty
@@ -2172,6 +2233,18 @@ input RegisterInput {
   password: String!
 }
 
+type RegisterSession {
+  closedAt: DateTime
+  closingCashCents: Float
+  dispensaryId: ID!
+  id: ID!
+  openedAt: DateTime!
+  openedByUserId: ID!
+  openingCashCents: Float!
+  status: String!
+  updatedAt: DateTime!
+}
+
 type ReorderSuggestion {
   avgDailySales: Float!
   daysOfStockRemaining: Float!
@@ -2287,6 +2360,18 @@ type SearchResultType {
   strainType: String
   terpenes: [String!]
   thcPercent: Float
+}
+
+input SetActiveDispensaryProcessorInput {
+  dispensaryId: ID!
+  processorName: DispensaryProcessorName
+}
+
+input SetDispensaryProcessorEnabledInput {
+  dispensaryId: ID!
+  isEnabled: Boolean!
+  isSandbox: Boolean
+  processorName: DispensaryProcessorName!
 }
 
 input SetMetrcCategoryInput {

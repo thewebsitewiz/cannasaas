@@ -1,0 +1,10 @@
+mutation CloseRegisterSession($input: CloseRegisterSessionGqlInput!) {
+  closeRegisterSession(input: $input) {
+    id
+    openingCashCents
+    closingCashCents
+    status
+    openedAt
+    closedAt
+  }
+}

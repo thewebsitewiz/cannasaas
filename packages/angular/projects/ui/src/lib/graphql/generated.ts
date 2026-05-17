@@ -39,6 +39,12 @@ export type ActiveClock = {
   profileId: Scalars['ID']['output'];
 };
 
+export type ActiveProcessorResult = {
+  __typename?: 'ActiveProcessorResult';
+  activePaymentProcessor?: Maybe<DispensaryProcessorName>;
+  dispensaryId: Scalars['ID']['output'];
+};
+
 export type AddAddressInput = {
   addressLine1: Scalars['String']['input'];
   addressLine2?: InputMaybe<Scalars['String']['input']>;
@@ -277,6 +283,11 @@ export type ClockStatus = {
   isClockedIn: Scalars['Boolean']['output'];
   isExempt: Scalars['Boolean']['output'];
   todayHours: Scalars['Float']['output'];
+};
+
+export type CloseRegisterSessionGqlInput = {
+  closingCashCents: Scalars['Int']['input'];
+  sessionId: Scalars['ID']['input'];
 };
 
 export type CompanyListItem = {
@@ -750,6 +761,25 @@ export type DispensaryListItem = {
   type: Scalars['String']['output'];
   zip?: Maybe<Scalars['String']['output']>;
 };
+
+export type DispensaryPaymentProcessor = {
+  __typename?: 'DispensaryPaymentProcessor';
+  createdAt: Scalars['DateTime']['output'];
+  dispensaryId: Scalars['ID']['output'];
+  id: Scalars['ID']['output'];
+  isEnabled: Scalars['Boolean']['output'];
+  isSandbox: Scalars['Boolean']['output'];
+  merchantExternalId?: Maybe<Scalars['String']['output']>;
+  processorName: DispensaryProcessorName;
+  provisionedAt?: Maybe<Scalars['DateTime']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+/** Operator-selectable payment processors per dispensary. */
+export enum DispensaryProcessorName {
+  AEROPAY = 'AEROPAY',
+  CANPAY = 'CANPAY',
+}
 
 export type DispensaryProductType = {
   __typename?: 'DispensaryProductType';
@@ -1463,6 +1493,7 @@ export type Mutation = {
   claimShiftSwap: ShiftSwapRequest;
   clockIn: TimeEntry;
   clockOut: TimeEntry;
+  closeRegisterSession: RegisterSession;
   completeDeliveryTrip: DeliveryTrip;
   completeInventoryCount: InventoryCount;
   completeOrder: Scalars['Boolean']['output'];
@@ -1498,6 +1529,8 @@ export type Mutation = {
   deleteOrganization: Scalars['Boolean']['output'];
   deleteProduct: Scalars['Boolean']['output'];
   deleteShift: Scalars['Boolean']['output'];
+  deprovisionAeropayForDispensary: Scalars['Boolean']['output'];
+  deprovisionCanPayForDispensary: Scalars['Boolean']['output'];
   encryptAllCredentials: EncryptionResult;
   enrichDispensaryProducts: BulkEnrichResultType;
   enrichProduct: EnrichmentResultType;
@@ -1510,7 +1543,10 @@ export type Mutation = {
   login: AuthToken;
   markOrderReady: Scalars['Boolean']['output'];
   notifyCustomer: Array<NotificationLog>;
+  openRegisterSession: RegisterSession;
   processCashPayment: Payment;
+  provisionAeropayForDispensary: DispensaryPaymentProcessor;
+  provisionCanPayForDispensary: DispensaryPaymentProcessor;
   /** Issues a long-lived device token for a kiosk terminal. Admin-only; one device per (dispensary, label). */
   provisionKiosk: KioskProvisionResult;
   publishWeekSchedule: Scalars['Int']['output'];
@@ -1534,8 +1570,10 @@ export type Mutation = {
   saveThemeConfig: ThemeConfigType;
   sendMarketingCampaign: MarketingCampaign;
   sendTestEmail: NotificationLog;
+  setActiveDispensaryProcessor: ActiveProcessorResult;
   setCashDiscount: CashDiscountConfig;
   setDesignSystem: DesignSystemConfig;
+  setDispensaryProcessorEnabled: DispensaryPaymentProcessor;
   setProductMetrcCategory: Product;
   setUserRole: User;
   shipTransfer: InventoryTransfer;
@@ -1681,6 +1719,10 @@ export type MutationClockOutArgs = {
   breakMinutes?: InputMaybe<Scalars['Int']['input']>;
   dispensaryId: Scalars['ID']['input'];
   notes?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type MutationCloseRegisterSessionArgs = {
+  input: CloseRegisterSessionGqlInput;
 };
 
 export type MutationCompleteDeliveryTripArgs = {
@@ -1876,6 +1918,14 @@ export type MutationDeleteShiftArgs = {
   shiftId: Scalars['ID']['input'];
 };
 
+export type MutationDeprovisionAeropayForDispensaryArgs = {
+  dispensaryId: Scalars['ID']['input'];
+};
+
+export type MutationDeprovisionCanPayForDispensaryArgs = {
+  dispensaryId: Scalars['ID']['input'];
+};
+
 export type MutationEnrichDispensaryProductsArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
@@ -1943,11 +1993,23 @@ export type MutationNotifyCustomerArgs = {
   userId: Scalars['ID']['input'];
 };
 
+export type MutationOpenRegisterSessionArgs = {
+  input: OpenRegisterSessionGqlInput;
+};
+
 export type MutationProcessCashPaymentArgs = {
   applyDiscount?: InputMaybe<Scalars['Boolean']['input']>;
   cashTendered: Scalars['Float']['input'];
   dispensaryId: Scalars['ID']['input'];
   orderId: Scalars['ID']['input'];
+};
+
+export type MutationProvisionAeropayForDispensaryArgs = {
+  input: ProvisionAeropayInput;
+};
+
+export type MutationProvisionCanPayForDispensaryArgs = {
+  input: ProvisionCanPayInput;
 };
 
 export type MutationProvisionKioskArgs = {
@@ -2061,6 +2123,10 @@ export type MutationSendTestEmailArgs = {
   to: Scalars['String']['input'];
 };
 
+export type MutationSetActiveDispensaryProcessorArgs = {
+  input: SetActiveDispensaryProcessorInput;
+};
+
 export type MutationSetCashDiscountArgs = {
   cashDeliveryEnabled?: InputMaybe<Scalars['Boolean']['input']>;
   dispensaryId: Scalars['ID']['input'];
@@ -2071,6 +2137,10 @@ export type MutationSetDesignSystemArgs = {
   designSystem: Scalars['String']['input'];
   designSystemFile: Scalars['String']['input'];
   dispensaryId: Scalars['ID']['input'];
+};
+
+export type MutationSetDispensaryProcessorEnabledArgs = {
+  input: SetDispensaryProcessorEnabledInput;
 };
 
 export type MutationSetProductMetrcCategoryArgs = {
@@ -2364,6 +2434,11 @@ export type NotificationTemplate = {
   templateId: Scalars['Int']['output'];
 };
 
+export type OpenRegisterSessionGqlInput = {
+  dispensaryId: Scalars['ID']['input'];
+  openingCashCents: Scalars['Int']['input'];
+};
+
 export type Order = {
   __typename?: 'Order';
   cancellationReason?: Maybe<Scalars['String']['output']>;
@@ -2476,9 +2551,12 @@ export type Payment = {
   changeGiven?: Maybe<Scalars['Float']['output']>;
   createdAt: Scalars['DateTime']['output'];
   dispensaryId: Scalars['String']['output'];
+  failureReason?: Maybe<Scalars['String']['output']>;
   method: Scalars['String']['output'];
   orderId: Scalars['String']['output'];
   paymentId: Scalars['ID']['output'];
+  processorName?: Maybe<Scalars['String']['output']>;
+  processorTransactionId?: Maybe<Scalars['String']['output']>;
   status: Scalars['String']['output'];
   terminalId?: Maybe<Scalars['String']['output']>;
   updatedAt: Scalars['DateTime']['output'];
@@ -2804,6 +2882,20 @@ export type PromotionResult = {
   usesCount: Scalars['Int']['output'];
 };
 
+export type ProvisionAeropayInput = {
+  apiKey: Scalars['String']['input'];
+  dispensaryId: Scalars['ID']['input'];
+  isSandbox?: InputMaybe<Scalars['Boolean']['input']>;
+  merchantId: Scalars['String']['input'];
+};
+
+export type ProvisionCanPayInput = {
+  apiKey: Scalars['String']['input'];
+  dispensaryId: Scalars['ID']['input'];
+  isSandbox?: InputMaybe<Scalars['Boolean']['input']>;
+  merchantId: Scalars['String']['input'];
+};
+
 export type ProvisionKioskInput = {
   dispensaryId: Scalars['ID']['input'];
   label: Scalars['String']['input'];
@@ -2836,6 +2928,7 @@ export type PurchaseOrder = {
 export type Query = {
   __typename?: 'Query';
   activeClocks: Array<ActiveClock>;
+  activeDispensaryProcessor: ActiveProcessorResult;
   activePromotions: Array<PromotionListItem>;
   adjustmentReasons: Array<LkpAdjustmentReason>;
   adminProducts: Array<Product>;
@@ -2878,6 +2971,7 @@ export type Query = {
   dispensariesByCompany: Array<DispensaryListItem>;
   dispensary?: Maybe<DispensaryResult>;
   dispensaryBySlug?: Maybe<DispensaryPublic>;
+  dispensaryPaymentProcessors: Array<DispensaryPaymentProcessor>;
   dispensaryProductTypes: Array<DispensaryProductType>;
   driverStats: DriverStats;
   driverTrips: Array<DeliveryTrip>;
@@ -2913,6 +3007,7 @@ export type Query = {
   metrcCredential?: Maybe<MetrcCredential>;
   metrcSyncOverview: MetrcSyncOverview;
   myAddresses: Array<CustomerAddress>;
+  myCurrentRegisterSession?: Maybe<RegisterSession>;
   myFavorites: Array<CustomerFavorite>;
   myLastOrder?: Maybe<CustomerOrder>;
   myLoyalty?: Maybe<MyLoyalty>;
@@ -2998,6 +3093,10 @@ export type Query = {
 };
 
 export type QueryActiveClocksArgs = {
+  dispensaryId: Scalars['ID']['input'];
+};
+
+export type QueryActiveDispensaryProcessorArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
 
@@ -3186,6 +3285,10 @@ export type QueryDispensaryBySlugArgs = {
   slug: Scalars['String']['input'];
 };
 
+export type QueryDispensaryPaymentProcessorsArgs = {
+  dispensaryId: Scalars['ID']['input'];
+};
+
 export type QueryDispensaryProductTypesArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
@@ -3332,6 +3435,10 @@ export type QueryMetrcCredentialArgs = {
 
 export type QueryMetrcSyncOverviewArgs = {
   dispensaryId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type QueryMyCurrentRegisterSessionArgs = {
+  dispensaryId: Scalars['ID']['input'];
 };
 
 export type QueryMyFavoritesArgs = {
@@ -3728,6 +3835,19 @@ export type RegisterInput = {
   password: Scalars['String']['input'];
 };
 
+export type RegisterSession = {
+  __typename?: 'RegisterSession';
+  closedAt?: Maybe<Scalars['DateTime']['output']>;
+  closingCashCents?: Maybe<Scalars['Float']['output']>;
+  dispensaryId: Scalars['ID']['output'];
+  id: Scalars['ID']['output'];
+  openedAt: Scalars['DateTime']['output'];
+  openedByUserId: Scalars['ID']['output'];
+  openingCashCents: Scalars['Float']['output'];
+  status: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
 export type ReorderSuggestion = {
   __typename?: 'ReorderSuggestion';
   avgDailySales: Scalars['Float']['output'];
@@ -3851,6 +3971,18 @@ export type SearchResultType = {
   strainType?: Maybe<Scalars['String']['output']>;
   terpenes?: Maybe<Array<Scalars['String']['output']>>;
   thcPercent?: Maybe<Scalars['Float']['output']>;
+};
+
+export type SetActiveDispensaryProcessorInput = {
+  dispensaryId: Scalars['ID']['input'];
+  processorName?: InputMaybe<DispensaryProcessorName>;
+};
+
+export type SetDispensaryProcessorEnabledInput = {
+  dispensaryId: Scalars['ID']['input'];
+  isEnabled: Scalars['Boolean']['input'];
+  isSandbox?: InputMaybe<Scalars['Boolean']['input']>;
+  processorName: DispensaryProcessorName;
 };
 
 export type SetMetrcCategoryInput = {
@@ -4330,6 +4462,23 @@ export type AvailableTimeSlotsQuery = {
   }>;
 };
 
+export type CloseRegisterSessionMutationVariables = Exact<{
+  input: CloseRegisterSessionGqlInput;
+}>;
+
+export type CloseRegisterSessionMutation = {
+  __typename?: 'Mutation';
+  closeRegisterSession: {
+    __typename?: 'RegisterSession';
+    id: string;
+    openingCashCents: number;
+    closingCashCents?: number | null;
+    status: string;
+    openedAt: string;
+    closedAt?: string | null;
+  };
+};
+
 export type CreateOrderMutationVariables = Exact<{
   input: CreateOrderInput;
 }>;
@@ -4537,6 +4686,25 @@ export type MeQuery = {
   };
 };
 
+export type MyCurrentRegisterSessionQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+}>;
+
+export type MyCurrentRegisterSessionQuery = {
+  __typename?: 'Query';
+  myCurrentRegisterSession?: {
+    __typename?: 'RegisterSession';
+    id: string;
+    dispensaryId: string;
+    openedByUserId: string;
+    openingCashCents: number;
+    closingCashCents?: number | null;
+    status: string;
+    openedAt: string;
+    closedAt?: string | null;
+  } | null;
+};
+
 export type MyFavoritesQueryVariables = Exact<{
   dispensaryId: Scalars['ID']['input'];
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -4653,6 +4821,23 @@ export type MyTimeEntriesQuery = {
     notes?: string | null;
     approvedAt?: string | null;
   }>;
+};
+
+export type OpenRegisterSessionMutationVariables = Exact<{
+  input: OpenRegisterSessionGqlInput;
+}>;
+
+export type OpenRegisterSessionMutation = {
+  __typename?: 'Mutation';
+  openRegisterSession: {
+    __typename?: 'RegisterSession';
+    id: string;
+    dispensaryId: string;
+    openedByUserId: string;
+    openingCashCents: number;
+    status: string;
+    openedAt: string;
+  };
 };
 
 export type ConfirmOrderMutationVariables = Exact<{
@@ -5017,6 +5202,32 @@ export class AvailableTimeSlotsGQL extends Apollo.Query<
     super(apollo);
   }
 }
+export const CloseRegisterSessionDocument = gql`
+  mutation CloseRegisterSession($input: CloseRegisterSessionGqlInput!) {
+    closeRegisterSession(input: $input) {
+      id
+      openingCashCents
+      closingCashCents
+      status
+      openedAt
+      closedAt
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class CloseRegisterSessionGQL extends Apollo.Mutation<
+  CloseRegisterSessionMutation,
+  CloseRegisterSessionMutationVariables
+> {
+  override document = CloseRegisterSessionDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
 export const CreateOrderDocument = gql`
   mutation CreateOrder($input: CreateOrderInput!) {
     createOrder(input: $input) {
@@ -5332,6 +5543,34 @@ export class MeGQL extends Apollo.Query<MeQuery, MeQueryVariables> {
     super(apollo);
   }
 }
+export const MyCurrentRegisterSessionDocument = gql`
+  query MyCurrentRegisterSession($dispensaryId: ID!) {
+    myCurrentRegisterSession(dispensaryId: $dispensaryId) {
+      id
+      dispensaryId
+      openedByUserId
+      openingCashCents
+      closingCashCents
+      status
+      openedAt
+      closedAt
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class MyCurrentRegisterSessionGQL extends Apollo.Query<
+  MyCurrentRegisterSessionQuery,
+  MyCurrentRegisterSessionQueryVariables
+> {
+  override document = MyCurrentRegisterSessionDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
 export const MyFavoritesDocument = gql`
   query MyFavorites($dispensaryId: ID!, $limit: Int) {
     myFavorites(dispensaryId: $dispensaryId, limit: $limit) {
@@ -5474,6 +5713,32 @@ export class MyTimeEntriesGQL extends Apollo.Query<
   MyTimeEntriesQueryVariables
 > {
   override document = MyTimeEntriesDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const OpenRegisterSessionDocument = gql`
+  mutation OpenRegisterSession($input: OpenRegisterSessionGqlInput!) {
+    openRegisterSession(input: $input) {
+      id
+      dispensaryId
+      openedByUserId
+      openingCashCents
+      status
+      openedAt
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class OpenRegisterSessionGQL extends Apollo.Mutation<
+  OpenRegisterSessionMutation,
+  OpenRegisterSessionMutationVariables
+> {
+  override document = OpenRegisterSessionDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);
