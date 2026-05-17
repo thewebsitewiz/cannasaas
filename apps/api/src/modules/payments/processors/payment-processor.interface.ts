@@ -58,6 +58,7 @@ export interface ProcessorWebhookEvent {
   readonly type: ProcessorWebhookEventType;
   readonly processorTransactionId: string;
   readonly amountCents?: number;
+  readonly failureReason?: string;
   readonly raw: unknown;
 }
 

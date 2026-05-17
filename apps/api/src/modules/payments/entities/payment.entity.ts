@@ -23,6 +23,15 @@ export class Payment {
   @Column({ nullable: true, length: 100 })
   terminalId?: string;
   @Field({ nullable: true })
+  @Column({ nullable: true, length: 32 })
+  processorName?: string;
+  @Field({ nullable: true })
+  @Column({ nullable: true, length: 128 })
+  processorTransactionId?: string;
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  failureReason?: string;
+  @Field({ nullable: true })
   @Column('numeric', { precision: 10, scale: 2, nullable: true })
   cashTendered?: number;
   @Field({ nullable: true })
