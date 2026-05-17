@@ -58,6 +58,7 @@ import { IdVerificationModule } from './modules/verification/id-verification.mod
 import { CacheModule } from './common/services/cache.module';
 import { SentryModule } from './common/services/sentry.module';
 import { MetricsModule } from './common/services/metrics.module';
+import { WebhooksModule } from './modules/webhooks/webhooks.module';
 import { join } from 'path';
 
 @Module({
@@ -124,6 +125,7 @@ import { join } from 'path';
     KnowledgeModule,
     SearchModule,
     RegisterSessionsModule,
+    WebhooksModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
