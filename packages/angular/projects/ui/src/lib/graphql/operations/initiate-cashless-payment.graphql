@@ -1,0 +1,17 @@
+mutation InitiateCashlessPayment(
+  $orderId: ID!
+  $dispensaryId: ID!
+  $amount: Float!
+  $provider: String!
+) {
+  initiateCashlessPayment(
+    orderId: $orderId
+    dispensaryId: $dispensaryId
+    amount: $amount
+    provider: $provider
+  ) {
+    referenceId
+    redirectUrl
+    paymentUrl
+  }
+}

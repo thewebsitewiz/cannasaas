@@ -1,4 +1,3 @@
-/* eslint-disable */
 // AUTO-GENERATED — do not edit by hand
 
 import { gql } from 'apollo-angular';
@@ -4284,6 +4283,19 @@ export type AutocompleteProductsQuery = {
   }>;
 };
 
+export type AvailablePaymentMethodsQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+}>;
+
+export type AvailablePaymentMethodsQuery = {
+  __typename?: 'Query';
+  availablePaymentMethods: Array<{
+    __typename?: 'PaymentMethodInfo';
+    method: string;
+    enabled: boolean;
+  }>;
+};
+
 export type AvailableRewardsQueryVariables = Exact<{
   dispensaryId: Scalars['ID']['input'];
 }>;
@@ -4444,6 +4456,23 @@ export type DispensaryQuery = {
     latitude?: number | null;
     longitude?: number | null;
   } | null;
+};
+
+export type InitiateCashlessPaymentMutationVariables = Exact<{
+  orderId: Scalars['ID']['input'];
+  dispensaryId: Scalars['ID']['input'];
+  amount: Scalars['Float']['input'];
+  provider: Scalars['String']['input'];
+}>;
+
+export type InitiateCashlessPaymentMutation = {
+  __typename?: 'Mutation';
+  initiateCashlessPayment: {
+    __typename?: 'CashlessPaymentResult';
+    referenceId: string;
+    redirectUrl?: string | null;
+    paymentUrl?: string | null;
+  };
 };
 
 export type LoginMutationVariables = Exact<{
@@ -4735,6 +4764,28 @@ export class AutocompleteProductsGQL extends Apollo.Query<
     super(apollo);
   }
 }
+export const AvailablePaymentMethodsDocument = gql`
+  query AvailablePaymentMethods($dispensaryId: ID!) {
+    availablePaymentMethods(dispensaryId: $dispensaryId) {
+      method
+      enabled
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class AvailablePaymentMethodsGQL extends Apollo.Query<
+  AvailablePaymentMethodsQuery,
+  AvailablePaymentMethodsQueryVariables
+> {
+  override document = AvailablePaymentMethodsDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
 export const AvailableRewardsDocument = gql`
   query AvailableRewards($dispensaryId: ID!) {
     availableRewards(dispensaryId: $dispensaryId) {
@@ -4964,6 +5015,39 @@ export const DispensaryDocument = gql`
 })
 export class DispensaryGQL extends Apollo.Query<DispensaryQuery, DispensaryQueryVariables> {
   override document = DispensaryDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const InitiateCashlessPaymentDocument = gql`
+  mutation InitiateCashlessPayment(
+    $orderId: ID!
+    $dispensaryId: ID!
+    $amount: Float!
+    $provider: String!
+  ) {
+    initiateCashlessPayment(
+      orderId: $orderId
+      dispensaryId: $dispensaryId
+      amount: $amount
+      provider: $provider
+    ) {
+      referenceId
+      redirectUrl
+      paymentUrl
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class InitiateCashlessPaymentGQL extends Apollo.Mutation<
+  InitiateCashlessPaymentMutation,
+  InitiateCashlessPaymentMutationVariables
+> {
+  override document = InitiateCashlessPaymentDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);

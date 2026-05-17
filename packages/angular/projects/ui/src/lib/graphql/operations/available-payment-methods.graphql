@@ -1,0 +1,6 @@
+query AvailablePaymentMethods($dispensaryId: ID!) {
+  availablePaymentMethods(dispensaryId: $dispensaryId) {
+    method
+    enabled
+  }
+}

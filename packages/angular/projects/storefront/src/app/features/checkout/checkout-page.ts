@@ -12,19 +12,20 @@ import { CreateOrderGQL, CreateOrderMutationVariables } from '@cannasaas/ui-ng';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { CartService } from '../../core/cart/cart.service';
+import { DeliveryEligibility, DeliveryService } from '../../core/delivery/delivery.service';
+import { PaymentFlowService } from '../../core/payments/payment-flow.service';
 import {
-  DeliveryEligibility,
-  DeliveryService,
-} from '../../core/delivery/delivery.service';
+  PaymentMethodName,
+  PaymentMethodService,
+} from '../../core/payments/payment-method.service';
 import { DispensaryContextService } from '../../core/tenant/dispensary-context.service';
 
 type OrderType = 'pickup' | 'delivery';
-type PaymentMethod = 'cash';
+type PaymentMethod = PaymentMethodName;
 
 const TAX_RATE = 0.22;
 const DEFAULT_DELIVERY_FEE = 5;
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 @Component({
   selector: 'cs-checkout-page',
@@ -244,60 +245,44 @@ const UUID_RE =
                 [value]="scheduledForLocal()"
                 (input)="scheduledForLocal.set(asValue($event))"
               />
-              <p class="mt-2 text-xs text-stone-500">
-                Leave blank for the soonest available time.
-              </p>
+              <p class="mt-2 text-xs text-stone-500">Leave blank for the soonest available time.</p>
             </section>
 
             <section class="rounded-xl border border-stone-200 bg-white p-6">
               <h2 class="mb-4 text-lg font-semibold text-stone-900">Payment Method</h2>
-              <div class="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  class="flex items-center gap-3 rounded-xl border-2 border-emerald-700 bg-emerald-50 p-4"
-                  aria-pressed="true"
-                >
-                  <svg
-                    class="h-5 w-5 text-emerald-700"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    aria-hidden="true"
-                  >
-                    <line x1="12" y1="1" x2="12" y2="23" />
-                    <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
-                  </svg>
-                  <div class="text-left">
-                    <p class="font-medium text-stone-900">Cash</p>
-                    <p class="text-xs text-stone-500">Pay at pickup/delivery</p>
-                  </div>
-                </button>
-                <div
-                  class="flex items-center gap-3 rounded-xl border-2 border-dashed border-stone-200 p-4 opacity-60"
-                >
-                  <svg
-                    class="h-5 w-5 text-stone-400"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    aria-hidden="true"
-                  >
-                    <rect x="2" y="5" width="20" height="14" rx="2" />
-                    <path d="M2 10h20" />
-                  </svg>
-                  <div class="text-left">
-                    <p class="font-medium text-stone-500">Card</p>
-                    <p class="text-xs text-stone-400">Coming soon</p>
-                  </div>
+              @if (paymentMethods.loading()) {
+                <p class="text-sm text-stone-500">Loading payment options…</p>
+              } @else if (paymentMethods.enabledMethods().length === 0) {
+                <p class="text-sm text-rose-700">
+                  No payment methods are enabled for this dispensary.
+                </p>
+              } @else {
+                <div class="grid grid-cols-2 gap-3">
+                  @for (m of paymentMethods.enabledMethods(); track m.method) {
+                    <button
+                      type="button"
+                      class="flex items-center gap-3 rounded-xl border-2 p-4 transition-colors"
+                      [class]="paymentMethodClass(m.method)"
+                      [attr.aria-pressed]="paymentMethod() === m.method"
+                      (click)="paymentMethod.set(m.method)"
+                    >
+                      <span class="text-left">
+                        <span class="block font-medium text-stone-900">
+                          {{ paymentLabel(m.method) }}
+                        </span>
+                        <span class="block text-xs text-stone-500">
+                          {{ paymentDescription(m.method) }}
+                        </span>
+                      </span>
+                    </button>
+                  }
                 </div>
-              </div>
-              <p class="mt-3 text-xs text-stone-500">
-                Card payments are pending integration with a cannabis-friendly processor.
-              </p>
+                @if (paymentMethod() !== 'cash') {
+                  <p class="mt-3 text-xs text-stone-500">
+                    You'll be redirected to the processor to complete payment.
+                  </p>
+                }
+              }
             </section>
 
             <section class="rounded-xl border border-stone-200 bg-white p-6">
@@ -408,6 +393,8 @@ export class CheckoutPage {
   private readonly delivery = inject(DeliveryService);
   private readonly createOrderGQL = inject(CreateOrderGQL);
   private readonly router = inject(Router);
+  protected readonly paymentMethods = inject(PaymentMethodService);
+  private readonly paymentFlow = inject(PaymentFlowService);
 
   protected readonly items = this.cart.items;
   protected readonly isEmpty = this.cart.isEmpty;
@@ -482,10 +469,52 @@ export class CheckoutPage {
         this.locationError.set(null);
       }
     });
+
+    effect(() => {
+      const dispensaryId = this.dispensary.entityId();
+      if (!dispensaryId) return;
+      void this.paymentMethods.load(dispensaryId);
+    });
+
+    effect(() => {
+      const current = this.paymentMethod();
+      if (!this.paymentMethods.isEnabled(current)) {
+        const fallback = this.paymentMethods.enabledMethods()[0]?.method;
+        if (fallback) this.paymentMethod.set(fallback);
+      }
+    });
   }
 
   protected fulfillmentClass(type: OrderType): string {
     return this.orderType() === type ? 'border-emerald-700 bg-emerald-50' : 'border-stone-200';
+  }
+
+  protected paymentMethodClass(method: PaymentMethod): string {
+    return this.paymentMethod() === method
+      ? 'border-emerald-700 bg-emerald-50'
+      : 'border-stone-200';
+  }
+
+  protected paymentLabel(method: PaymentMethod): string {
+    switch (method) {
+      case 'cash':
+        return 'Cash';
+      case 'canpay':
+        return 'CanPay';
+      case 'aeropay':
+        return 'Aeropay';
+    }
+  }
+
+  protected paymentDescription(method: PaymentMethod): string {
+    switch (method) {
+      case 'cash':
+        return 'Pay at pickup/delivery';
+      case 'canpay':
+        return 'Pay with the CanPay app';
+      case 'aeropay':
+        return 'Pay-by-bank — opens Aeropay';
+    }
   }
 
   protected lineTotal(price: number, qty: number): string {
@@ -568,7 +597,29 @@ export class CheckoutPage {
       if (!order) {
         throw new Error('Failed to create order');
       }
+
+      const method = this.paymentMethod();
+      if (method === 'cash') {
+        this.cart.clear();
+        void this.router.navigate(['/orders', order.orderId]);
+        return;
+      }
+
+      // Cashless flow: create the processor transaction, then hand off to its
+      // hosted payment surface. Confirmation arrives via webhook (sc-210/211).
+      const cashless = await this.paymentFlow.initiateCashless({
+        orderId: order.orderId,
+        dispensaryId,
+        amount: order.total,
+        provider: method,
+      });
       this.cart.clear();
+      if (cashless.externalUrl) {
+        this.paymentFlow.redirectTo(cashless.externalUrl);
+        return;
+      }
+      // No redirect — adapter completed inline. Drop the customer on the
+      // order page; the webhook handler will update status when it fires.
       void this.router.navigate(['/orders', order.orderId]);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to place order';
