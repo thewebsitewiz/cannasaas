@@ -183,6 +183,80 @@
           "builder": "@angular/build:unit-test"
         }
       }
+    },
+    "staff": {
+      "projectType": "application",
+      "schematics": {},
+      "root": "projects/staff",
+      "sourceRoot": "projects/staff/src",
+      "prefix": "cs",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "projects/staff/src/main.ts",
+            "tsConfig": "projects/staff/tsconfig.app.json",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "projects/staff/public"
+              }
+            ],
+            "styles": ["projects/staff/src/styles.css"],
+            "stylePreprocessorOptions": {
+              "includePaths": ["dist/ui"]
+            }
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "600kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "projects/staff/src/environments/environment.ts",
+                  "with": "projects/staff/src/environments/environment.development.ts"
+                }
+              ]
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "configurations": {
+            "production": {
+              "buildTarget": "staff:build:production"
+            },
+            "development": {
+              "buildTarget": "staff:build:development"
+            }
+          },
+          "defaultConfiguration": "development",
+          "options": {
+            "host": "localhost",
+            "port": 5275
+          }
+        },
+        "test": {
+          "builder": "@angular/build:unit-test"
+        }
+      }
     }
   },
   "version": 1
