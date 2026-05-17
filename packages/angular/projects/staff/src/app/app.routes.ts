@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { dispensaryScopedGuard } from './core/auth/dispensary-scoped.guard';
+import { registerSessionGuard } from './core/register-session/register-session.guard';
 
 export const routes: Routes = [
   {
@@ -12,8 +13,19 @@ export const routes: Routes = [
     loadComponent: () => import('./layout/staff-shell').then((m) => m.StaffShell),
     children: [
       {
+        path: 'register/open',
+        loadComponent: () =>
+          import('./pages/register-open/register-open-page').then((m) => m.RegisterOpenPage),
+      },
+      {
+        path: 'register/close',
+        loadComponent: () =>
+          import('./pages/register-close/register-close-page').then((m) => m.RegisterClosePage),
+      },
+      {
         path: '',
         pathMatch: 'full',
+        canMatch: [registerSessionGuard],
         loadComponent: () =>
           import('./features/new-order/new-order-page').then((m) => m.NewOrderPage),
       },

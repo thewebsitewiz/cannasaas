@@ -1,0 +1,10 @@
+mutation OpenRegisterSession($input: OpenRegisterSessionGqlInput!) {
+  openRegisterSession(input: $input) {
+    id
+    dispensaryId
+    openedByUserId
+    openingCashCents
+    status
+    openedAt
+  }
+}
