@@ -1,9 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
+import { createHmac } from 'crypto';
 
 import { AeropayPaymentProcessor } from './aeropay.processor';
 import { AeropayClient } from './aeropay.client';
 import { AeropayRefund, AeropayTransaction } from './aeropay.types';
+import { AEROPAY_SIGNATURE_HEADER } from './aeropay-webhook.parser';
 
 type MockClient = {
   createTransaction: jest.Mock;
@@ -30,6 +32,7 @@ describe('AeropayPaymentProcessor', () => {
           AEROPAY_BASE_URL: 'https://sandbox.example/aeropay',
           AEROPAY_API_KEY: 'test-key',
           AEROPAY_MERCHANT_ID: 'merch-1',
+          AEROPAY_WEBHOOK_SECRET: 'webhook-secret',
         };
         return map[key];
       }) as unknown as ConfigService['get'],
@@ -193,8 +196,37 @@ describe('AeropayPaymentProcessor', () => {
     });
   });
 
-  it('verifyWebhookSignature throws — implemented in sc-213', () => {
-    expect(() => processor.verifyWebhookSignature()).toThrow(/sc-213/);
+  describe('verifyWebhookSignature', () => {
+    it('verifies a signed webhook end-to-end through the parser', () => {
+      const body = JSON.stringify({
+        type: 'transaction.completed',
+        transactionId: 'tx-9',
+        amount: 1234,
+      });
+      const sig = createHmac('sha256', 'webhook-secret')
+        .update(body)
+        .digest('hex');
+
+      const event = processor.verifyWebhookSignature(body, {
+        [AEROPAY_SIGNATURE_HEADER]: sig,
+      });
+
+      expect(event.type).toBe('payment.succeeded');
+      expect(event.processorTransactionId).toBe('tx-9');
+      expect(event.amountCents).toBe(1234);
+    });
+
+    it('throws on a bad signature', () => {
+      const body = JSON.stringify({
+        type: 'transaction.completed',
+        transactionId: 'tx-9',
+      });
+      expect(() =>
+        processor.verifyWebhookSignature(body, {
+          [AEROPAY_SIGNATURE_HEADER]: 'definitely-wrong',
+        }),
+      ).toThrow();
+    });
   });
 
   it('initiate throws a helpful error when env config is missing', async () => {

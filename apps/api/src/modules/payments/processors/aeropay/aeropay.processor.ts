@@ -13,6 +13,8 @@ import {
 } from '../payment-processor.interface';
 import { AeropayClient } from './aeropay.client';
 import { AeropayRefundStatus, AeropayTransactionStatus } from './aeropay.types';
+import { parseAeropayWebhook } from './aeropay-webhook.parser';
+import { WebhookHeaders } from '../payment-processor.interface';
 
 function mapTransactionStatus(
   s: AeropayTransactionStatus,
@@ -46,6 +48,7 @@ interface AeropayConfig {
   readonly baseUrl: string;
   readonly apiKey: string;
   readonly merchantId: string;
+  readonly webhookSecret: string | null;
 }
 
 /**
@@ -71,6 +74,8 @@ export class AeropayPaymentProcessor implements PaymentProcessor {
     const baseUrl = configService.get<string>('AEROPAY_BASE_URL');
     const apiKey = configService.get<string>('AEROPAY_API_KEY');
     const merchantId = configService.get<string>('AEROPAY_MERCHANT_ID');
+    const webhookSecret =
+      configService.get<string>('AEROPAY_WEBHOOK_SECRET') ?? null;
 
     if (!baseUrl || !apiKey || !merchantId) {
       this.logger.warn(
@@ -80,8 +85,13 @@ export class AeropayPaymentProcessor implements PaymentProcessor {
       this.client = null;
       return;
     }
+    if (!webhookSecret) {
+      this.logger.warn(
+        'AEROPAY_WEBHOOK_SECRET is not configured — webhook verification will throw on use.',
+      );
+    }
 
-    this.config = { baseUrl, apiKey, merchantId };
+    this.config = { baseUrl, apiKey, merchantId, webhookSecret };
     this.client = new AeropayClient({ baseUrl, apiKey });
   }
 
@@ -128,10 +138,17 @@ export class AeropayPaymentProcessor implements PaymentProcessor {
     };
   }
 
-  verifyWebhookSignature(): ProcessorWebhookEvent {
-    throw new Error(
-      'AeropayPaymentProcessor.verifyWebhookSignature is implemented in sc-213',
-    );
+  verifyWebhookSignature(
+    rawBody: string | Buffer,
+    headers: WebhookHeaders,
+  ): ProcessorWebhookEvent {
+    const config = this.requireConfig();
+    if (!config.webhookSecret) {
+      throw new Error(
+        'Aeropay webhook verification requires AEROPAY_WEBHOOK_SECRET',
+      );
+    }
+    return parseAeropayWebhook(rawBody, headers, config.webhookSecret);
   }
 
   /** Test seam: replace the underlying client. */
