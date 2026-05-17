@@ -28,6 +28,16 @@ export const routes: Routes = [
           import('./features/timesheets/timesheets-page').then((m) => m.TimesheetsPage),
       },
       {
+        path: 'products',
+        loadComponent: () =>
+          import('./features/product-lookup/product-lookup-page').then((m) => m.ProductLookupPage),
+      },
+      {
+        path: 'fulfillment',
+        loadComponent: () =>
+          import('./features/fulfillment/fulfillment-page').then((m) => m.FulfillmentPage),
+      },
+      {
         path: 'placeholder',
         loadComponent: () =>
           import('./pages/placeholder/placeholder-page').then((m) => m.PlaceholderPage),
