@@ -16,6 +16,7 @@ import { CanPayOnboardingService } from './onboarding/canpay-onboarding.service'
 import { CanPayOnboardingResolver } from './onboarding/canpay-onboarding.resolver';
 import { NoopPaymentProcessor } from './processors/noop.processor';
 import { AeropayPaymentProcessor } from './processors/aeropay/aeropay.processor';
+import { CanPayPaymentProcessor } from './processors/canpay/canpay.processor';
 import { PaymentProcessorRegistry } from './processors/payment-processor.registry';
 import { PAYMENT_PROCESSOR } from './processors/payment-processor.interface';
 import { PaymentLifecycleQueueService } from './queue/payment-lifecycle.queue-service';
@@ -42,13 +43,19 @@ import { PaymentWebhookListener } from './listeners/payment-webhook.listener';
     CanPayOnboardingResolver,
     NoopPaymentProcessor,
     AeropayPaymentProcessor,
+    CanPayPaymentProcessor,
     {
       provide: PAYMENT_PROCESSOR,
       useFactory: (
         noop: NoopPaymentProcessor,
         aeropay: AeropayPaymentProcessor,
-      ) => [noop, aeropay],
-      inject: [NoopPaymentProcessor, AeropayPaymentProcessor],
+        canpay: CanPayPaymentProcessor,
+      ) => [noop, aeropay, canpay],
+      inject: [
+        NoopPaymentProcessor,
+        AeropayPaymentProcessor,
+        CanPayPaymentProcessor,
+      ],
     },
     PaymentProcessorRegistry,
     PaymentLifecycleQueueService,
