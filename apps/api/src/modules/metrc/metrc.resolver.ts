@@ -19,6 +19,7 @@ import { BulkTagUidInput } from './dto/bulk-tag-uid.input';
 import { BulkTagResult } from './dto/bulk-tag-result.type';
 import { MetrcSaleResult } from './dto/metrc-sale-result.type';
 import { FailedSyncDashboard } from './dto/failed-sync.type';
+import { MetrcSyncQueueStats } from './dto/queue-stats.type';
 import { MetrcSyncQueueService } from './queue/metrc-sync.queue-service';
 import { TagPackageLabelInput } from './dto/tag-package-label.input';
 import { SetMetrcCategoryInput } from './dto/set-metrc-category.input';
@@ -223,5 +224,29 @@ export class MetrcResolver {
       throw new ForbiddenException('Access denied');
     }
     return this.metrc.getFailedSyncDashboard(dispensaryId, this.dataSource);
+  }
+
+  // ── Queue Stats ──────────────────────────────────────────────────────────
+
+  /**
+   * Live BullMQ counts for the `metrc-sync` queue. Operators use this
+   * to answer "is the queue moving?" — pair with `failedMetrcSyncs` to
+   * see which specific orders are stuck.
+   *
+   * super_admin-only because the queue is global (single queue across
+   * all tenants today). If we ever shard the queue per-dispensary,
+   * extend the access to dispensary_admin scoped to their own slice.
+   */
+  @Roles('super_admin')
+  @Query(() => MetrcSyncQueueStats, { name: 'metrcSyncQueueStats' })
+  async queueStats(): Promise<MetrcSyncQueueStats> {
+    const stats = await this.syncQueue.getQueueStats();
+    return {
+      waiting: stats.waiting ?? 0,
+      active: stats.active ?? 0,
+      failed: stats.failed ?? 0,
+      completed: stats.completed ?? 0,
+      delayed: stats.delayed ?? 0,
+    };
   }
 }
