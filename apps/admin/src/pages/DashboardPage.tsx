@@ -1,6 +1,7 @@
 import { useDashboard } from '../hooks/useDashboard';
+import { LowStockWidget } from '../components/inventory/LowStockWidget';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { DollarSign, ShoppingCart, TrendingUp, Package, AlertTriangle, ShieldCheck, RefreshCw } from 'lucide-react';
+import { DollarSign, ShoppingCart, TrendingUp, ShieldCheck, RefreshCw } from 'lucide-react';
 
 const COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
@@ -148,23 +149,11 @@ export function DashboardPage() {
             </div>
           </div>
 
-          {lowStockItems.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-border">
-              <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
-                <AlertTriangle size={14} className="text-amber-500" /> Low Stock
-              </h3>
-              <ul className="space-y-1">
-                {lowStockItems.slice(0, 5).map((item: any) => (
-                  <li key={item.variantId} className="flex justify-between text-xs">
-                    <span className="text-gray-600">{item.productName}</span>
-                    <span className="font-medium text-amber-600">{item.quantityAvailable} left</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </div>
       </div>
+
+      {/* ── Low Stock (live) ────────────────────────────────────────────── */}
+      <LowStockWidget seed={lowStockItems} />
 
       {/* ── Metrc Sync + Compliance ────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
