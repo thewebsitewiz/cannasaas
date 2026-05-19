@@ -156,7 +156,8 @@ export class OrderSocketService {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000,
-      reconnectionAttempts: 10,
+      reconnectionDelayMax: 10_000,
+      reconnectionAttempts: Number.POSITIVE_INFINITY,
     });
 
     socket.on('connect', () => this._connected.set(true));
