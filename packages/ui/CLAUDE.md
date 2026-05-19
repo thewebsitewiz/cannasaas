@@ -133,7 +133,6 @@ Each app's Tailwind config maps tokens to utilities (`bg-bg`, `text-fg`, etc.) s
 ## Tech debt to be aware of
 
 - **Two parallel theme mechanisms** (theme-presets + design-systems) coexist in the React storefront era. Angular rewrite uses **one model only** — `data-theme` attribute switching with token-based theme files. Don't reintroduce the design-system whitelist injection pattern.
-- **`src/theme-vars.css`** appears orphaned (only self-referenced). Verify and remove.
 - **Tailwind preset extraction** (mentioned above) is post-launch.
 - **`src/themes/inject.ts`** has `setThemePreset()` duplicated inline in the React `ThemeProvider`. Angular rewrite should consolidate the helper here and have apps consume it.
 

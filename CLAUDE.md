@@ -376,18 +376,9 @@ ng generate guard features/foo --functional
 
 ## Gotchas that cost time to rediscover
 
-- **API starts BullMQ before verifying DB connectivity** — you'll see 20+ Redis connection errors before TypeORM even begins. `docker info` should succeed before `pde`.
 - **`docs/package.json` and `docs/package-lock.json` keep reappearing** and trigger Next.js "multiple lockfiles" warnings. They shouldn't exist. Delete on sight.
 - **Tailwind v4 in monorepos:** missing `@source` directives produce silently bloated builds. Check each app's `styles.css`.
 - **Apollo cache after schema changes:** if queries return stale shape, run `pnpm graphql:codegen` and clear Apollo's in-memory cache (`client.resetStore()`).
-
----
-
-## Known tech debt — flagged, not blocking
-
-- **`packages/ui/src/theme-vars.css`** appears orphaned. Verify and remove.
-- **API startup retries** DB/Redis 9 times with stack traces. Add a preflight TCP probe.
-- **`STRIPE_*` env vars** still live in `apps/api/.env.example`. Stripe is forbidden — purge alongside any remaining processor placeholders when wiring the cannabis-friendly processor.
 
 ---
 

@@ -11,13 +11,81 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import * as net from 'net';
 import * as path from 'path';
 import { json, urlencoded } from 'express';
 import * as compression from 'compression';
 import * as cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 
+/**
+ * TCP-probe Postgres + Redis before NestFactory wires anything up. Without
+ * this, BullMQ + TypeORM each spin retry loops with 20+ stack traces before
+ * the developer sees a useful error. Fail fast with one clear line instead.
+ */
+async function preflightDeps(): Promise<void> {
+  const logger = new Logger('Preflight');
+  const checks: Array<{ name: string; host: string; port: number }> = [
+    {
+      name: 'redis',
+      host: process.env['REDIS_HOST'] ?? 'localhost',
+      port: Number.parseInt(process.env['REDIS_PORT'] ?? '6379', 10),
+    },
+  ];
+
+  const dbUrl = process.env['DATABASE_URL'];
+  if (dbUrl) {
+    try {
+      const u = new URL(dbUrl);
+      checks.push({
+        name: 'postgres',
+        host: u.hostname,
+        port: u.port ? Number.parseInt(u.port, 10) : 5432,
+      });
+    } catch {
+      // bad URL — let TypeORM surface the parse error with full context
+    }
+  }
+
+  const failed: string[] = [];
+  for (const c of checks) {
+    const reachable = await canConnect(c.host, c.port, 2000);
+    if (!reachable) failed.push(`${c.name} @ ${c.host}:${c.port}`);
+  }
+
+  if (failed.length > 0) {
+    logger.error(
+      `Cannot reach: ${failed.join(', ')}. Is Docker up? (run \`dockup\`)`,
+    );
+    process.exit(1);
+  }
+}
+
+function canConnect(
+  host: string,
+  port: number,
+  timeoutMs: number,
+): Promise<boolean> {
+  return new Promise((resolve) => {
+    const socket = new net.Socket();
+    let done = false;
+    const finish = (ok: boolean): void => {
+      if (done) return;
+      done = true;
+      socket.destroy();
+      resolve(ok);
+    };
+    socket.setTimeout(timeoutMs);
+    socket.once('connect', () => finish(true));
+    socket.once('error', () => finish(false));
+    socket.once('timeout', () => finish(false));
+    socket.connect(port, host);
+  });
+}
+
 async function bootstrap(): Promise<void> {
+  await preflightDeps();
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bufferLogs: true,
     rawBody: true,
