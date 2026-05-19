@@ -3,6 +3,8 @@ import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { ThemeService } from '@cannasaas/ui-ng';
 import { AuthService } from '../core/auth/auth.service';
 import { CurrentSessionService } from '../core/register-session/current-session.service';
+import { StockAlertsService } from '../core/stock-alerts/stock-alerts.service';
+import { StockAlertToasts } from './stock-alert-toasts';
 
 type ToggleableTheme = 'modern' | 'dark';
 
@@ -11,7 +13,7 @@ const STORAGE_KEY = 'cs.staff.theme';
 @Component({
   selector: 'cs-staff-shell',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink],
+  imports: [RouterOutlet, RouterLink, StockAlertToasts],
   template: `
     <div class="flex min-h-screen flex-col bg-(--color-bg) text-(--color-text)">
       <header
@@ -38,6 +40,15 @@ const STORAGE_KEY = 'cs.staff.theme';
           <button
             type="button"
             class="rounded-md border border-(--color-border) px-3 py-1.5 text-sm hover:bg-(--color-surface-hover)"
+            (click)="onToggleMute()"
+            [attr.aria-label]="muted() ? 'Unmute stock alerts' : 'Mute stock alerts'"
+            [attr.title]="muted() ? 'Unmute stock alerts' : 'Mute stock alerts'"
+          >
+            {{ muted() ? '🔇' : '🔔' }}
+          </button>
+          <button
+            type="button"
+            class="rounded-md border border-(--color-border) px-3 py-1.5 text-sm hover:bg-(--color-surface-hover)"
             (click)="onToggleTheme()"
             [attr.aria-label]="
               currentTheme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'
@@ -60,6 +71,7 @@ const STORAGE_KEY = 'cs.staff.theme';
       <main class="flex-1 p-4">
         <router-outlet />
       </main>
+      <cs-stock-alert-toasts />
     </div>
   `,
 })
@@ -68,9 +80,11 @@ export class StaffShell {
   private readonly theme = inject(ThemeService);
   private readonly router = inject(Router);
   private readonly session = inject(CurrentSessionService);
+  private readonly stockAlerts = inject(StockAlertsService);
 
   protected readonly userEmail = computed(() => this.auth.user()?.email ?? null);
   protected readonly currentTheme = this.theme.current;
+  protected readonly muted = this.stockAlerts.muted;
 
   protected readonly sessionPill = computed(() => {
     const s = this.session.activeSession();
@@ -87,6 +101,10 @@ export class StaffShell {
   constructor() {
     const stored = readStoredTheme();
     if (stored) this.theme.setTheme(stored);
+  }
+
+  protected onToggleMute(): void {
+    this.stockAlerts.toggleMute();
   }
 
   protected onToggleTheme(): void {
