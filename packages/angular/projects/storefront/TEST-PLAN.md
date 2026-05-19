@@ -210,7 +210,7 @@ Failure of any SMK → release blocked.
 | TC-CART-004 | Qty stepper caps | Try to set qty past `maxQuantity`. | Capped silently. |
 | TC-CART-005 | Quantity to zero removes | Decrement to zero. | Line removed. |
 | TC-CART-006 | localStorage persists | Refresh page. | Cart contents intact. |
-| TC-CART-007 | Cross-tenant cart pollution (documented) | Add items on `acme`, switch path to `omega`. | Cart contents persist (single-key by design). QA must verify the experience is acceptable; if not, raise as design feedback. |
+| TC-CART-007 | Cart is isolated per tenant (sc-605) | Add items on `acme`, switch path to `omega`. | Cart on `omega` is empty. Switch back to `acme` — original items restored. localStorage has separate `cs.storefront.cart:<dispensaryId>` keys per tenant. |
 | TC-CART-008 | OOS eviction toast | With items in cart, trigger a WS `stock:changed` `out_of_stock` event for one of them. | Item removed from cart; bottom-right toast: "Sold out — removed from cart" with product + variant name. |
 | TC-CART-009 | Toast dismiss button | After TC-CART-008. | Tap X — toast disappears; item stays removed. |
 | TC-CART-010 | Multiple evictions stacked | Trigger OOS on 3 items in cart. | Up to 5 toasts visible; FIFO cap enforced. |
@@ -387,7 +387,7 @@ These cannot be triggered from the storefront alone — eng on call walks them a
 
 ## 11. Open risks
 
-- **Cart is single-key, not per-tenant.** A customer switching from `acme` to `omega` carries the cart over. Documented in the cart service header; confirm with product. If they want per-tenant carts, §6.7 grows.
+- ~~Cart is single-key, not per-tenant.~~ **Fixed sc-605.** Cart is namespaced by `cs.storefront.cart:<dispensaryId>`; tenant switch swaps the active key. Pre-sc-605 single-key carts are cleared on first app boot.
 - **`AgeGateService` uses sessionStorage, not localStorage.** A new tab re-prompts. Compliance has not yet asked for the 24-hour persistence model the kiosk uses; this is an open product question.
 - **CSR-only.** Bots and crawlers see no product content. SEO relies on meta-injection + structured data. If a customer reports ranking issues, revisit SSR (root CLAUDE.md flags this).
 - **Express checkout is barely-scoped here.** §6.13 needs a follow-up audit of the component.

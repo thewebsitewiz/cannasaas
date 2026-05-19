@@ -1,6 +1,8 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal } from '@angular/core';
 
-const CART_KEY = 'cs.storefront.cart';
+import { DispensaryContextService } from '../tenant/dispensary-context.service';
+
+const LEGACY_KEY = 'cs.storefront.cart';
 
 export interface CartItem {
   readonly productId: string;
@@ -17,31 +19,47 @@ export interface CartItem {
 export type NewCartItem = Omit<CartItem, 'quantity'>;
 
 /**
- * Anonymous, device-scoped cart. Belongs to the browser, not the user.
+ * Per-tenant, device-scoped cart.
  *
- * - Identity is `variantId`. Two variants of the same product are separate
- *   line items; adding the same variantId again increments quantity.
- * - The React store keyed `updateQuantity`/`removeItem` on productId — that
- *   would collapse multiple variants of one product. Treated as a React-side
- *   bug; not ported.
- * - Persists to localStorage under `cs.storefront.cart`. Single key — does
- *   not split per-tenant; storefront serves one dispensary per request.
- * - Not cleared on logout. The checkout flow calls `clear()` after a
- *   successful order placement.
- * - No client-side stock validation. The server enforces stock at order
- *   creation via `ProductVariantResolver.stockStatus` + `FOR UPDATE` locks.
- *   `addItem` does cap optimistically against `maxQuantity` for UX.
+ * Identity is `variantId`. Persists to localStorage under
+ * `cs.storefront.cart:{dispensaryId}` — keyed by the dispensary the
+ * customer is currently browsing. Switching tenants (e.g. acme →
+ * omega via subdomain or path-prefix) swaps the active key and loads
+ * the cart bound to the new tenant. No merge — see sc-605 closeout.
+ *
+ * Pre-sc-605 carts under the legacy `cs.storefront.cart` key are
+ * deleted once on first run to avoid leaving stale state.
  */
 @Injectable({ providedIn: 'root' })
 export class CartService {
-  private readonly _items = signal<readonly CartItem[]>(readItems(CART_KEY));
+  private readonly dispensary = inject(DispensaryContextService);
+
+  private readonly _items = signal<readonly CartItem[]>([]);
 
   readonly items = this._items.asReadonly();
-  readonly itemCount = computed(() => this._items().reduce((sum, i) => sum + i.quantity, 0));
+  readonly itemCount = computed(() =>
+    this._items().reduce((sum, i) => sum + i.quantity, 0),
+  );
   readonly subtotal = computed(() =>
     this._items().reduce((sum, i) => sum + i.price * i.quantity, 0),
   );
   readonly isEmpty = computed(() => this._items().length === 0);
+
+  constructor() {
+    // One-time cleanup of any pre-sc-605 single-key cart.
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.removeItem(LEGACY_KEY);
+      } catch {
+        // SecurityError in private browsing on some Safari versions — ignore.
+      }
+    }
+    // Swap the active cart whenever the tenant changes.
+    effect(() => {
+      const id = this.dispensary.entityId();
+      this._items.set(id ? readItems(cartKey(id)) : []);
+    });
+  }
 
   addItem(item: NewCartItem): void {
     this._items.update((items) => {
@@ -84,8 +102,14 @@ export class CartService {
   }
 
   private persist(): void {
-    writeItems(CART_KEY, this._items());
+    const id = this.dispensary.entityId();
+    if (!id) return;
+    writeItems(cartKey(id), this._items());
   }
+}
+
+function cartKey(dispensaryId: string): string {
+  return `cs.storefront.cart:${dispensaryId}`;
 }
 
 function readItems(key: string): readonly CartItem[] {

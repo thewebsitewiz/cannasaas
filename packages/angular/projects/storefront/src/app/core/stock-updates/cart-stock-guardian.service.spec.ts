@@ -5,6 +5,16 @@ import { describe, it, expect } from 'vitest';
 import { CartService } from '../cart/cart.service';
 import { CartStockGuardianService } from './cart-stock-guardian.service';
 import { StockUpdate, StockUpdatesService } from './stock-updates.service';
+import { DispensaryContextService } from '../tenant/dispensary-context.service';
+
+function dispensaryStub(): DispensaryContextService {
+  // CartService now injects DispensaryContextService (sc-605).
+  // We just need entityId() to return a stable id so per-tenant
+  // persistence works in tests.
+  return {
+    entityId: signal('test-disp').asReadonly(),
+  } as unknown as DispensaryContextService;
+}
 
 type LiveMap = ReadonlyMap<string, StockUpdate>;
 
@@ -41,6 +51,7 @@ describe('CartStockGuardianService', () => {
 
     TestBed.configureTestingModule({
       providers: [
+        { provide: DispensaryContextService, useFactory: dispensaryStub },
         CartService,
         { provide: StockUpdatesService, useValue: stockStub },
         CartStockGuardianService,
@@ -80,6 +91,7 @@ describe('CartStockGuardianService', () => {
 
     TestBed.configureTestingModule({
       providers: [
+        { provide: DispensaryContextService, useFactory: dispensaryStub },
         CartService,
         { provide: StockUpdatesService, useValue: stockStub },
         CartStockGuardianService,
@@ -109,6 +121,7 @@ describe('CartStockGuardianService', () => {
 
     TestBed.configureTestingModule({
       providers: [
+        { provide: DispensaryContextService, useFactory: dispensaryStub },
         CartService,
         { provide: StockUpdatesService, useValue: stockStub },
         CartStockGuardianService,
