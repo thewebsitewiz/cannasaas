@@ -1,35 +1,22 @@
-/* eslint-disable */
-// AUTO-GENERATED — do not edit by hand
-
-import { gql } from 'apollo-angular';
-import { Injectable } from '@angular/core';
-import * as Apollo from 'apollo-angular';
 export type Maybe<T> = T | null;
-export type InputMaybe<T> = Maybe<T>;
+export type InputMaybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
-export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = {
-  [_ in K]?: never;
-};
-export type Incremental<T> =
-  | T
-  | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
+export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
+export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: { input: string; output: string };
-  String: { input: string; output: string };
-  Boolean: { input: boolean; output: boolean };
-  Int: { input: number; output: number };
-  Float: { input: number; output: number };
-  /** A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format. */
-  DateTime: { input: string; output: string };
-  /** The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf). */
-  JSON: { input: Record<string, unknown>; output: Record<string, unknown> };
+  ID: { input: string; output: string; }
+  String: { input: string; output: string; }
+  Boolean: { input: boolean; output: boolean; }
+  Int: { input: number; output: number; }
+  Float: { input: number; output: number; }
+  DateTime: { input: string; output: string; }
+  JSON: { input: Record<string, unknown>; output: Record<string, unknown>; }
 };
 
 export type ActiveClock = {
-  __typename?: 'ActiveClock';
   clockIn: Scalars['DateTime']['output'];
   email: Scalars['String']['output'];
   entryId: Scalars['ID']['output'];
@@ -38,12 +25,6 @@ export type ActiveClock = {
   lastName: Scalars['String']['output'];
   positionName?: Maybe<Scalars['String']['output']>;
   profileId: Scalars['ID']['output'];
-};
-
-export type ActiveProcessorResult = {
-  __typename?: 'ActiveProcessorResult';
-  activePaymentProcessor?: Maybe<DispensaryProcessorName>;
-  dispensaryId: Scalars['ID']['output'];
 };
 
 export type AddAddressInput = {
@@ -70,13 +51,11 @@ export type AddCertificationInput = {
 };
 
 export type AdjustResult = {
-  __typename?: 'AdjustResult';
   inventory: InventoryResult;
   transaction: InventoryTransactionResult;
 };
 
 export type AgeVerification = {
-  __typename?: 'AgeVerification';
   calculatedAge?: Maybe<Scalars['Int']['output']>;
   created_at: Scalars['DateTime']['output'];
   dateOfBirth?: Maybe<Scalars['String']['output']>;
@@ -90,14 +69,12 @@ export type AgeVerification = {
 };
 
 export type AgeVerifyResult = {
-  __typename?: 'AgeVerifyResult';
   age: Scalars['Int']['output'];
   reason?: Maybe<Scalars['String']['output']>;
   verified: Scalars['Boolean']['output'];
 };
 
 export type AuditLog = {
-  __typename?: 'AuditLog';
   action: Scalars['String']['output'];
   auditId: Scalars['ID']['output'];
   changes?: Maybe<Scalars['JSON']['output']>;
@@ -113,13 +90,11 @@ export type AuditLog = {
 };
 
 export type AuthToken = {
-  __typename?: 'AuthToken';
   accessToken: Scalars['String']['output'];
   expiresIn: Scalars['Int']['output'];
 };
 
 export type AutocompleteResult = {
-  __typename?: 'AutocompleteResult';
   id: Scalars['String']['output'];
   name: Scalars['String']['output'];
   productType?: Maybe<Scalars['String']['output']>;
@@ -128,7 +103,6 @@ export type AutocompleteResult = {
 };
 
 export type AvailableSlotResult = {
-  __typename?: 'AvailableSlotResult';
   endTime: Scalars['String']['output'];
   slotId: Scalars['String']['output'];
   spotsRemaining: Scalars['Int']['output'];
@@ -136,7 +110,6 @@ export type AvailableSlotResult = {
 };
 
 export type BillingInvoice = {
-  __typename?: 'BillingInvoice';
   amount: Scalars['Float']['output'];
   created_at: Scalars['DateTime']['output'];
   invoice_id: Scalars['ID']['output'];
@@ -146,7 +119,6 @@ export type BillingInvoice = {
 };
 
 export type BiotrackCredential = {
-  __typename?: 'BiotrackCredential';
   apiKey: Scalars['String']['output'];
   apiSecret?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
@@ -161,20 +133,17 @@ export type BiotrackCredential = {
 };
 
 export type BiotrackSyncResult = {
-  __typename?: 'BiotrackSyncResult';
   itemCount?: Maybe<Scalars['Int']['output']>;
   message: Scalars['String']['output'];
   success: Scalars['Boolean']['output'];
 };
 
 export type BiotrackValidationResult = {
-  __typename?: 'BiotrackValidationResult';
   message: Scalars['String']['output'];
   valid: Scalars['Boolean']['output'];
 };
 
 export type BirthdayCheck = {
-  __typename?: 'BirthdayCheck';
   bonusPoints?: Maybe<Scalars['Int']['output']>;
   discountPercent?: Maybe<Scalars['Float']['output']>;
   eligible: Scalars['Boolean']['output'];
@@ -182,7 +151,6 @@ export type BirthdayCheck = {
 };
 
 export type BrandListItem = {
-  __typename?: 'BrandListItem';
   brandId: Scalars['ID']['output'];
   createdAt: Scalars['DateTime']['output'];
   isActive: Scalars['Boolean']['output'];
@@ -193,7 +161,6 @@ export type BrandListItem = {
 };
 
 export type BrandResult = {
-  __typename?: 'BrandResult';
   brandId: Scalars['ID']['output'];
   createdAt: Scalars['DateTime']['output'];
   description?: Maybe<Scalars['String']['output']>;
@@ -207,21 +174,18 @@ export type BrandResult = {
 };
 
 export type BulkEnrichResultType = {
-  __typename?: 'BulkEnrichResultType';
   enriched: Scalars['Int']['output'];
   failed: Scalars['Int']['output'];
   total: Scalars['Int']['output'];
 };
 
 export type BulkImportResultType = {
-  __typename?: 'BulkImportResultType';
   imported: Scalars['Int']['output'];
   skipped: Scalars['Int']['output'];
   total: Scalars['Int']['output'];
 };
 
 export type BulkTagResult = {
-  __typename?: 'BulkTagResult';
   failed: Scalars['Int']['output'];
   results: Array<BulkTagResultItem>;
   succeeded: Scalars['Int']['output'];
@@ -229,7 +193,6 @@ export type BulkTagResult = {
 };
 
 export type BulkTagResultItem = {
-  __typename?: 'BulkTagResultItem';
   error?: Maybe<Scalars['String']['output']>;
   productId: Scalars['ID']['output'];
   productName: Scalars['String']['output'];
@@ -242,7 +205,6 @@ export type BulkTagUidInput = {
 };
 
 export type CampaignStats = {
-  __typename?: 'CampaignStats';
   campaignId: Scalars['ID']['output'];
   clickRate: Scalars['Float']['output'];
   openRate: Scalars['Float']['output'];
@@ -250,28 +212,24 @@ export type CampaignStats = {
 };
 
 export type CashDiscountConfig = {
-  __typename?: 'CashDiscountConfig';
   cashDeliveryEnabled: Scalars['Boolean']['output'];
   cashDiscountPercent: Scalars['Float']['output'];
   isCashEnabled: Scalars['Boolean']['output'];
 };
 
 export type CashDiscountPreview = {
-  __typename?: 'CashDiscountPreview';
   adjustedSubtotal: Scalars['Float']['output'];
   discountAmount: Scalars['Float']['output'];
   discountPercent: Scalars['Float']['output'];
 };
 
 export type CashlessPaymentResult = {
-  __typename?: 'CashlessPaymentResult';
   paymentUrl?: Maybe<Scalars['String']['output']>;
   redirectUrl?: Maybe<Scalars['String']['output']>;
   referenceId: Scalars['String']['output'];
 };
 
 export type CategoryBreakdown = {
-  __typename?: 'CategoryBreakdown';
   category: Scalars['String']['output'];
   productCount: Scalars['Int']['output'];
   revenue: Scalars['Float']['output'];
@@ -279,20 +237,13 @@ export type CategoryBreakdown = {
 };
 
 export type ClockStatus = {
-  __typename?: 'ClockStatus';
   currentEntry?: Maybe<TimeEntry>;
   isClockedIn: Scalars['Boolean']['output'];
   isExempt: Scalars['Boolean']['output'];
   todayHours: Scalars['Float']['output'];
 };
 
-export type CloseRegisterSessionGqlInput = {
-  closingCashCents: Scalars['Int']['input'];
-  sessionId: Scalars['ID']['input'];
-};
-
 export type CompanyListItem = {
-  __typename?: 'CompanyListItem';
   city?: Maybe<Scalars['String']['output']>;
   companyId: Scalars['ID']['output'];
   contactEmail?: Maybe<Scalars['String']['output']>;
@@ -306,7 +257,6 @@ export type CompanyListItem = {
 };
 
 export type CompanyResult = {
-  __typename?: 'CompanyResult';
   addressLine1?: Maybe<Scalars['String']['output']>;
   city?: Maybe<Scalars['String']['output']>;
   companyId: Scalars['ID']['output'];
@@ -336,7 +286,6 @@ export type CompleteOrderInput = {
 };
 
 export type ComplianceAlert = {
-  __typename?: 'ComplianceAlert';
   alertType: Scalars['String']['output'];
   daysRemaining?: Maybe<Scalars['Int']['output']>;
   entityId?: Maybe<Scalars['ID']['output']>;
@@ -352,7 +301,6 @@ export type ComplianceAlert = {
 };
 
 export type ComplianceAlertsResult = {
-  __typename?: 'ComplianceAlertsResult';
   alerts: Array<ComplianceAlert>;
   criticalCount: Scalars['Int']['output'];
   infoCount: Scalars['Int']['output'];
@@ -361,14 +309,12 @@ export type ComplianceAlertsResult = {
 };
 
 export type ComplianceIssue = {
-  __typename?: 'ComplianceIssue';
   issues: Array<Scalars['String']['output']>;
   productId: Scalars['ID']['output'];
   productName: Scalars['String']['output'];
 };
 
 export type ComplianceOverview = {
-  __typename?: 'ComplianceOverview';
   activeCerts: Scalars['Int']['output'];
   activeEmployees: Scalars['Int']['output'];
   expiredCerts: Scalars['Int']['output'];
@@ -379,7 +325,6 @@ export type ComplianceOverview = {
 };
 
 export type ComplianceReport = {
-  __typename?: 'ComplianceReport';
   compliancePercent: Scalars['Int']['output'];
   compliantProducts: Scalars['Float']['output'];
   dispensaryId: Scalars['ID']['output'];
@@ -390,7 +335,6 @@ export type ComplianceReport = {
 };
 
 export type ComplianceSummary = {
-  __typename?: 'ComplianceSummary';
   compliancePercent: Scalars['Float']['output'];
   compliantProducts: Scalars['Int']['output'];
   missingCategory: Scalars['Int']['output'];
@@ -535,7 +479,6 @@ export type CreateWalkInCustomerInput = {
 };
 
 export type CredentialValidationResult = {
-  __typename?: 'CredentialValidationResult';
   licenseNumber?: Maybe<Scalars['String']['output']>;
   licenseType?: Maybe<Scalars['String']['output']>;
   message?: Maybe<Scalars['String']['output']>;
@@ -544,7 +487,6 @@ export type CredentialValidationResult = {
 };
 
 export type CustomerAddress = {
-  __typename?: 'CustomerAddress';
   addressId: Scalars['ID']['output'];
   addressLine1: Scalars['String']['output'];
   addressLine2?: Maybe<Scalars['String']['output']>;
@@ -561,7 +503,6 @@ export type CustomerAddress = {
 };
 
 export type CustomerFavorite = {
-  __typename?: 'CustomerFavorite';
   orderCount: Scalars['Int']['output'];
   price: Scalars['Float']['output'];
   productId: Scalars['ID']['output'];
@@ -571,7 +512,6 @@ export type CustomerFavorite = {
 };
 
 export type CustomerOrder = {
-  __typename?: 'CustomerOrder';
   createdAt: Scalars['DateTime']['output'];
   lineItems: Array<CustomerOrderLineItem>;
   orderId: Scalars['ID']['output'];
@@ -584,7 +524,6 @@ export type CustomerOrder = {
 };
 
 export type CustomerOrderLineItem = {
-  __typename?: 'CustomerOrderLineItem';
   price: Scalars['Float']['output'];
   productId: Scalars['ID']['output'];
   productName?: Maybe<Scalars['String']['output']>;
@@ -594,7 +533,6 @@ export type CustomerOrderLineItem = {
 };
 
 export type CustomerOrderSummary = {
-  __typename?: 'CustomerOrderSummary';
   createdAt: Scalars['DateTime']['output'];
   dispensaryName?: Maybe<Scalars['String']['output']>;
   itemCount?: Maybe<Scalars['Int']['output']>;
@@ -606,7 +544,6 @@ export type CustomerOrderSummary = {
 };
 
 export type CustomerProfile = {
-  __typename?: 'CustomerProfile';
   ageVerificationMethod?: Maybe<Scalars['String']['output']>;
   ageVerified: Scalars['Boolean']['output'];
   ageVerifiedAt?: Maybe<Scalars['DateTime']['output']>;
@@ -629,7 +566,6 @@ export type CustomerProfile = {
 };
 
 export type CustomerSearchResult = {
-  __typename?: 'CustomerSearchResult';
   ageVerified: Scalars['Boolean']['output'];
   email: Scalars['String']['output'];
   firstName?: Maybe<Scalars['String']['output']>;
@@ -640,7 +576,6 @@ export type CustomerSearchResult = {
 };
 
 export type DailySales = {
-  __typename?: 'DailySales';
   date: Scalars['String']['output'];
   discounts: Scalars['Float']['output'];
   gross: Scalars['Float']['output'];
@@ -650,7 +585,6 @@ export type DailySales = {
 };
 
 export type DashboardData = {
-  __typename?: 'DashboardData';
   categoryBreakdown: Array<CategoryBreakdown>;
   compliance: ComplianceSummary;
   inventory: InventoryOverview;
@@ -674,7 +608,6 @@ export type DeliveryAddressInput = {
 };
 
 export type DeliveryEligibilityResult = {
-  __typename?: 'DeliveryEligibilityResult';
   distance?: Maybe<Scalars['Float']['output']>;
   eligible: Scalars['Boolean']['output'];
   reason?: Maybe<Scalars['String']['output']>;
@@ -682,7 +615,6 @@ export type DeliveryEligibilityResult = {
 };
 
 export type DeliveryTrip = {
-  __typename?: 'DeliveryTrip';
   actualMinutes?: Maybe<Scalars['Int']['output']>;
   created_at: Scalars['DateTime']['output'];
   customerRating?: Maybe<Scalars['Int']['output']>;
@@ -699,7 +631,6 @@ export type DeliveryTrip = {
 };
 
 export type DeliveryZone = {
-  __typename?: 'DeliveryZone';
   createdAt: Scalars['DateTime']['output'];
   deliveryFee: Scalars['Float']['output'];
   dispensaryId: Scalars['ID']['output'];
@@ -716,7 +647,6 @@ export type DeliveryZone = {
 };
 
 export type DeliveryZoneMatch = {
-  __typename?: 'DeliveryZoneMatch';
   deliveryFee: Scalars['Float']['output'];
   estimatedMinutesMax: Scalars['Int']['output'];
   estimatedMinutesMin: Scalars['Int']['output'];
@@ -725,13 +655,11 @@ export type DeliveryZoneMatch = {
 };
 
 export type DesignSystemConfig = {
-  __typename?: 'DesignSystemConfig';
   designSystem: Scalars['String']['output'];
   designSystemFile: Scalars['String']['output'];
 };
 
 export type DiscountResult = {
-  __typename?: 'DiscountResult';
   discountAmount: Scalars['Float']['output'];
   newTotal: Scalars['Float']['output'];
   promoId: Scalars['ID']['output'];
@@ -740,14 +668,12 @@ export type DiscountResult = {
 };
 
 export type DispStats = {
-  __typename?: 'DispStats';
   active: Scalars['Int']['output'];
   states: Scalars['Int']['output'];
   total: Scalars['Int']['output'];
 };
 
 export type DispensaryListItem = {
-  __typename?: 'DispensaryListItem';
   city?: Maybe<Scalars['String']['output']>;
   companyId: Scalars['ID']['output'];
   createdAt: Scalars['DateTime']['output'];
@@ -763,27 +689,7 @@ export type DispensaryListItem = {
   zip?: Maybe<Scalars['String']['output']>;
 };
 
-export type DispensaryPaymentProcessor = {
-  __typename?: 'DispensaryPaymentProcessor';
-  createdAt: Scalars['DateTime']['output'];
-  dispensaryId: Scalars['ID']['output'];
-  id: Scalars['ID']['output'];
-  isEnabled: Scalars['Boolean']['output'];
-  isSandbox: Scalars['Boolean']['output'];
-  merchantExternalId?: Maybe<Scalars['String']['output']>;
-  processorName: DispensaryProcessorName;
-  provisionedAt?: Maybe<Scalars['DateTime']['output']>;
-  updatedAt: Scalars['DateTime']['output'];
-};
-
-/** Operator-selectable payment processors per dispensary. */
-export enum DispensaryProcessorName {
-  AEROPAY = 'AEROPAY',
-  CANPAY = 'CANPAY',
-}
-
 export type DispensaryProductType = {
-  __typename?: 'DispensaryProductType';
   code: Scalars['String']['output'];
   isEnabled: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
@@ -798,7 +704,6 @@ export type DispensaryProductTypeInput = {
 };
 
 export type DispensaryPublic = {
-  __typename?: 'DispensaryPublic';
   city?: Maybe<Scalars['String']['output']>;
   entityId: Scalars['ID']['output'];
   isActive: Scalars['Boolean']['output'];
@@ -810,7 +715,6 @@ export type DispensaryPublic = {
 };
 
 export type DispensaryResult = {
-  __typename?: 'DispensaryResult';
   addressLine1?: Maybe<Scalars['String']['output']>;
   cashDeliveryEnabled?: Maybe<Scalars['Boolean']['output']>;
   cashDiscountPercent?: Maybe<Scalars['Float']['output']>;
@@ -842,7 +746,6 @@ export type DispensaryResult = {
 };
 
 export type DriverProfile = {
-  __typename?: 'DriverProfile';
   created_at: Scalars['DateTime']['output'];
   currentLatitude?: Maybe<Scalars['Float']['output']>;
   currentLongitude?: Maybe<Scalars['Float']['output']>;
@@ -863,7 +766,6 @@ export type DriverProfile = {
 };
 
 export type DriverStats = {
-  __typename?: 'DriverStats';
   avgDeliveryMinutes: Scalars['Float']['output'];
   avgDistance: Scalars['Float']['output'];
   avgRating: Scalars['Float']['output'];
@@ -874,14 +776,12 @@ export type DriverStats = {
 };
 
 export type EligibilityResult = {
-  __typename?: 'EligibilityResult';
   eligible: Scalars['Boolean']['output'];
   promotion?: Maybe<PromotionResult>;
   reason?: Maybe<Scalars['String']['output']>;
 };
 
 export type EmployeeCertification = {
-  __typename?: 'EmployeeCertification';
   certTypeId: Scalars['Int']['output'];
   certificateNumber?: Maybe<Scalars['String']['output']>;
   certificationId: Scalars['ID']['output'];
@@ -898,7 +798,6 @@ export type EmployeeCertification = {
 };
 
 export type EmployeeListItem = {
-  __typename?: 'EmployeeListItem';
   activeCerts: Scalars['Int']['output'];
   department?: Maybe<Scalars['String']['output']>;
   email: Scalars['String']['output'];
@@ -920,7 +819,6 @@ export type EmployeeListItem = {
 };
 
 export type EmployeeProfile = {
-  __typename?: 'EmployeeProfile';
   createdAt: Scalars['DateTime']['output'];
   department?: Maybe<Scalars['String']['output']>;
   dispensaryId: Scalars['ID']['output'];
@@ -948,12 +846,10 @@ export type EmployeeProfile = {
 };
 
 export type EncryptionResult = {
-  __typename?: 'EncryptionResult';
   credentialsEncrypted: Scalars['Int']['output'];
 };
 
 export type EnrichmentResultType = {
-  __typename?: 'EnrichmentResultType';
   fieldsUpdated: Array<Scalars['String']['output']>;
   productId: Scalars['String']['output'];
   strainMatched: Scalars['Boolean']['output'];
@@ -961,14 +857,12 @@ export type EnrichmentResultType = {
 };
 
 export type FacetCount = {
-  __typename?: 'FacetCount';
   count: Scalars['Int']['output'];
   label: Scalars['String']['output'];
   value: Scalars['String']['output'];
 };
 
 export type FailedSyncDashboard = {
-  __typename?: 'FailedSyncDashboard';
   dispensaryId: Scalars['String']['output'];
   items: Array<FailedSyncItem>;
   oldestFailedAt: Scalars['String']['output'];
@@ -976,7 +870,6 @@ export type FailedSyncDashboard = {
 };
 
 export type FailedSyncItem = {
-  __typename?: 'FailedSyncItem';
   attemptCount: Scalars['Float']['output'];
   createdAt: Scalars['String']['output'];
   lastSyncAttempt?: Maybe<Scalars['String']['output']>;
@@ -990,14 +883,12 @@ export type FailedSyncItem = {
 };
 
 export type HourlySales = {
-  __typename?: 'HourlySales';
   hour: Scalars['Int']['output'];
   orders: Scalars['Int']['output'];
   revenue: Scalars['Float']['output'];
 };
 
 export type IdVerificationResult = {
-  __typename?: 'IdVerificationResult';
   age?: Maybe<Scalars['Int']['output']>;
   createdAt: Scalars['DateTime']['output'];
   customerId?: Maybe<Scalars['String']['output']>;
@@ -1014,7 +905,6 @@ export type IdVerificationResult = {
 };
 
 export type InventoryAdjustment = {
-  __typename?: 'InventoryAdjustment';
   adjustmentId: Scalars['ID']['output'];
   approvedAt?: Maybe<Scalars['DateTime']['output']>;
   approvedByUserId?: Maybe<Scalars['ID']['output']>;
@@ -1033,7 +923,6 @@ export type InventoryAdjustment = {
 };
 
 export type InventoryCount = {
-  __typename?: 'InventoryCount';
   completedAt?: Maybe<Scalars['DateTime']['output']>;
   completedByUserId?: Maybe<Scalars['ID']['output']>;
   countId: Scalars['ID']['output'];
@@ -1051,7 +940,6 @@ export type InventoryCount = {
 };
 
 export type InventoryCountItem = {
-  __typename?: 'InventoryCountItem';
   countId: Scalars['ID']['output'];
   countItemId: Scalars['ID']['output'];
   countedAt?: Maybe<Scalars['DateTime']['output']>;
@@ -1066,7 +954,6 @@ export type InventoryCountItem = {
 };
 
 export type InventoryHealth = {
-  __typename?: 'InventoryHealth';
   deadStock: Scalars['Int']['output'];
   expired: Scalars['Int']['output'];
   expiring30d: Scalars['Int']['output'];
@@ -1079,7 +966,6 @@ export type InventoryHealth = {
 };
 
 export type InventoryListItem = {
-  __typename?: 'InventoryListItem';
   createdAt: Scalars['DateTime']['output'];
   dispensaryId: Scalars['ID']['output'];
   inventoryId: Scalars['ID']['output'];
@@ -1093,7 +979,6 @@ export type InventoryListItem = {
 };
 
 export type InventoryLowStockItem = {
-  __typename?: 'InventoryLowStockItem';
   inventoryId: Scalars['ID']['output'];
   locationInStore?: Maybe<Scalars['String']['output']>;
   quantityAvailable: Scalars['Float']['output'];
@@ -1104,7 +989,6 @@ export type InventoryLowStockItem = {
 };
 
 export type InventoryOverview = {
-  __typename?: 'InventoryOverview';
   estimatedInventoryValue: Scalars['Float']['output'];
   lowStockCount: Scalars['Int']['output'];
   outOfStockCount: Scalars['Int']['output'];
@@ -1115,7 +999,6 @@ export type InventoryOverview = {
 };
 
 export type InventoryResult = {
-  __typename?: 'InventoryResult';
   createdAt: Scalars['DateTime']['output'];
   dispensaryId: Scalars['ID']['output'];
   inventoryId: Scalars['ID']['output'];
@@ -1134,7 +1017,6 @@ export type InventoryResult = {
 };
 
 export type InventoryTransactionResult = {
-  __typename?: 'InventoryTransactionResult';
   createdAt: Scalars['DateTime']['output'];
   dispensaryId: Scalars['ID']['output'];
   inventoryId: Scalars['ID']['output'];
@@ -1149,7 +1031,6 @@ export type InventoryTransactionResult = {
 };
 
 export type InventoryTransfer = {
-  __typename?: 'InventoryTransfer';
   approvedAt?: Maybe<Scalars['DateTime']['output']>;
   approvedByUserId?: Maybe<Scalars['ID']['output']>;
   created_at: Scalars['DateTime']['output'];
@@ -1168,7 +1049,6 @@ export type InventoryTransfer = {
 };
 
 export type InventoryTransferItem = {
-  __typename?: 'InventoryTransferItem';
   itemId: Scalars['ID']['output'];
   metrcPackageTag?: Maybe<Scalars['String']['output']>;
   notes?: Maybe<Scalars['String']['output']>;
@@ -1182,7 +1062,6 @@ export type InventoryTransferItem = {
 };
 
 export type InventoryValueResult = {
-  __typename?: 'InventoryValueResult';
   totalAvailable: Scalars['Float']['output'];
   totalItems: Scalars['Int']['output'];
   totalOnHand: Scalars['Float']['output'];
@@ -1190,7 +1069,6 @@ export type InventoryValueResult = {
 };
 
 export type KioskCustomerLookup = {
-  __typename?: 'KioskCustomerLookup';
   customerId: Scalars['ID']['output'];
   firstName?: Maybe<Scalars['String']['output']>;
   lastName?: Maybe<Scalars['String']['output']>;
@@ -1198,7 +1076,6 @@ export type KioskCustomerLookup = {
 };
 
 export type KioskProvisionResult = {
-  __typename?: 'KioskProvisionResult';
   deviceId: Scalars['ID']['output'];
   deviceToken: Scalars['String']['output'];
   dispensaryId: Scalars['ID']['output'];
@@ -1208,7 +1085,6 @@ export type KioskProvisionResult = {
 };
 
 export type KnowledgeProduct = {
-  __typename?: 'KnowledgeProduct';
   categoryName?: Maybe<Scalars['String']['output']>;
   cbdContent?: Maybe<Scalars['Float']['output']>;
   description?: Maybe<Scalars['String']['output']>;
@@ -1223,7 +1099,6 @@ export type KnowledgeProduct = {
 };
 
 export type LaborCostSummary = {
-  __typename?: 'LaborCostSummary';
   employeeCount: Scalars['Int']['output'];
   laborCostPercent: Scalars['Float']['output'];
   totalHours: Scalars['Float']['output'];
@@ -1232,7 +1107,6 @@ export type LaborCostSummary = {
 };
 
 export type LkpAdjustmentReason = {
-  __typename?: 'LkpAdjustmentReason';
   code: Scalars['String']['output'];
   direction: Scalars['String']['output'];
   isActive: Scalars['Boolean']['output'];
@@ -1242,7 +1116,6 @@ export type LkpAdjustmentReason = {
 };
 
 export type LkpCertificationType = {
-  __typename?: 'LkpCertificationType';
   certTypeId: Scalars['Int']['output'];
   code: Scalars['String']['output'];
   description?: Maybe<Scalars['String']['output']>;
@@ -1254,7 +1127,6 @@ export type LkpCertificationType = {
 };
 
 export type LkpPosition = {
-  __typename?: 'LkpPosition';
   code: Scalars['String']['output'];
   department: Scalars['String']['output'];
   isActive: Scalars['Boolean']['output'];
@@ -1265,7 +1137,6 @@ export type LkpPosition = {
 };
 
 export type LkpProductCategory = {
-  __typename?: 'LkpProductCategory';
   category_id: Scalars['Int']['output'];
   code: Scalars['String']['output'];
   depth: Scalars['Int']['output'];
@@ -1277,7 +1148,6 @@ export type LkpProductCategory = {
 };
 
 export type LkpProductType = {
-  __typename?: 'LkpProductType';
   code: Scalars['String']['output'];
   hemp_eligible: Scalars['Boolean']['output'];
   is_active: Scalars['Boolean']['output'];
@@ -1299,7 +1169,6 @@ export type LoginInput = {
 };
 
 export type LowStockItem = {
-  __typename?: 'LowStockItem';
   productName: Scalars['String']['output'];
   quantityAvailable: Scalars['Float']['output'];
   quantityOnHand: Scalars['Float']['output'];
@@ -1309,7 +1178,6 @@ export type LowStockItem = {
 };
 
 export type LoyaltyReward = {
-  __typename?: 'LoyaltyReward';
   description?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
   pointsCost: Scalars['Int']['output'];
@@ -1319,7 +1187,6 @@ export type LoyaltyReward = {
 };
 
 export type LoyaltyStats = {
-  __typename?: 'LoyaltyStats';
   activeMembers: Scalars['Int']['output'];
   birthdayClaims: Scalars['Int']['output'];
   redemptionCount: Scalars['Int']['output'];
@@ -1329,7 +1196,6 @@ export type LoyaltyStats = {
 };
 
 export type LoyaltyTierInfo = {
-  __typename?: 'LoyaltyTierInfo';
   code: Scalars['String']['output'];
   color?: Maybe<Scalars['String']['output']>;
   minPoints: Scalars['Int']['output'];
@@ -1339,7 +1205,6 @@ export type LoyaltyTierInfo = {
 };
 
 export type ManufacturerListItem = {
-  __typename?: 'ManufacturerListItem';
   brandId?: Maybe<Scalars['ID']['output']>;
   city?: Maybe<Scalars['String']['output']>;
   contactEmail?: Maybe<Scalars['String']['output']>;
@@ -1354,7 +1219,6 @@ export type ManufacturerListItem = {
 };
 
 export type ManufacturerResult = {
-  __typename?: 'ManufacturerResult';
   addressLine1?: Maybe<Scalars['String']['output']>;
   brandId?: Maybe<Scalars['ID']['output']>;
   city?: Maybe<Scalars['String']['output']>;
@@ -1375,7 +1239,6 @@ export type ManufacturerResult = {
 };
 
 export type MarketingAutomation = {
-  __typename?: 'MarketingAutomation';
   automationId: Scalars['ID']['output'];
   channel: Scalars['String']['output'];
   createdAt: Scalars['DateTime']['output'];
@@ -1387,7 +1250,6 @@ export type MarketingAutomation = {
 };
 
 export type MarketingCampaign = {
-  __typename?: 'MarketingCampaign';
   audienceFilter?: Maybe<Scalars['JSON']['output']>;
   body?: Maybe<Scalars['String']['output']>;
   campaignId: Scalars['ID']['output'];
@@ -1405,7 +1267,6 @@ export type MarketingCampaign = {
 };
 
 export type MetrcCredential = {
-  __typename?: 'MetrcCredential';
   createdAt: Scalars['DateTime']['output'];
   credentialId: Scalars['ID']['output'];
   dispensaryId: Scalars['String']['output'];
@@ -1420,7 +1281,6 @@ export type MetrcCredential = {
 };
 
 export type MetrcManifest = {
-  __typename?: 'MetrcManifest';
   created_at: Scalars['DateTime']['output'];
   dispensaryId: Scalars['ID']['output'];
   driverName?: Maybe<Scalars['String']['output']>;
@@ -1442,7 +1302,6 @@ export type MetrcManifest = {
 };
 
 export type MetrcManifestItem = {
-  __typename?: 'MetrcManifestItem';
   itemId: Scalars['ID']['output'];
   manifestId: Scalars['ID']['output'];
   metrcPackageTag?: Maybe<Scalars['String']['output']>;
@@ -1454,7 +1313,6 @@ export type MetrcManifestItem = {
 };
 
 export type MetrcSaleResult = {
-  __typename?: 'MetrcSaleResult';
   message?: Maybe<Scalars['String']['output']>;
   metrcReceiptId?: Maybe<Scalars['String']['output']>;
   success: Scalars['Boolean']['output'];
@@ -1462,7 +1320,6 @@ export type MetrcSaleResult = {
 };
 
 export type MetrcSyncOverview = {
-  __typename?: 'MetrcSyncOverview';
   failedCount: Scalars['Int']['output'];
   lastSyncAt?: Maybe<Scalars['String']['output']>;
   ordersAwaitingSync: Scalars['Int']['output'];
@@ -1473,7 +1330,6 @@ export type MetrcSyncOverview = {
 };
 
 export type Mutation = {
-  __typename?: 'Mutation';
   activatePromotion: PromotionResult;
   addAddress: CustomerAddress;
   addCertification: EmployeeCertification;
@@ -1487,8 +1343,6 @@ export type Mutation = {
   approveTransfer: InventoryTransfer;
   approveWaste: WasteDestructionLog;
   assignDelivery: DeliveryTrip;
-  /** Binds an ECDSA P-256 public key (SPKI PEM) to the calling kiosk device. */
-  attestKioskDevice: Scalars['Boolean']['output'];
   autoGenerateSchedule: Scalars['Int']['output'];
   bulkTagProductUids: BulkTagResult;
   cancelOrder: Scalars['Boolean']['output'];
@@ -1496,7 +1350,6 @@ export type Mutation = {
   claimShiftSwap: ShiftSwapRequest;
   clockIn: TimeEntry;
   clockOut: TimeEntry;
-  closeRegisterSession: RegisterSession;
   completeDeliveryTrip: DeliveryTrip;
   completeInventoryCount: InventoryCount;
   completeOrder: Scalars['Boolean']['output'];
@@ -1532,8 +1385,6 @@ export type Mutation = {
   deleteOrganization: Scalars['Boolean']['output'];
   deleteProduct: Scalars['Boolean']['output'];
   deleteShift: Scalars['Boolean']['output'];
-  deprovisionAeropayForDispensary: Scalars['Boolean']['output'];
-  deprovisionCanPayForDispensary: Scalars['Boolean']['output'];
   encryptAllCredentials: EncryptionResult;
   enrichDispensaryProducts: BulkEnrichResultType;
   enrichProduct: EnrichmentResultType;
@@ -1546,10 +1397,7 @@ export type Mutation = {
   login: AuthToken;
   markOrderReady: Scalars['Boolean']['output'];
   notifyCustomer: Array<NotificationLog>;
-  openRegisterSession: RegisterSession;
   processCashPayment: Payment;
-  provisionAeropayForDispensary: DispensaryPaymentProcessor;
-  provisionCanPayForDispensary: DispensaryPaymentProcessor;
   /** Issues a long-lived device token for a kiosk terminal. Admin-only; one device per (dispensary, label). */
   provisionKiosk: KioskProvisionResult;
   publishWeekSchedule: Scalars['Int']['output'];
@@ -1573,10 +1421,8 @@ export type Mutation = {
   saveThemeConfig: ThemeConfigType;
   sendMarketingCampaign: MarketingCampaign;
   sendTestEmail: NotificationLog;
-  setActiveDispensaryProcessor: ActiveProcessorResult;
   setCashDiscount: CashDiscountConfig;
   setDesignSystem: DesignSystemConfig;
-  setDispensaryProcessorEnabled: DispensaryPaymentProcessor;
   setProductMetrcCategory: Product;
   setUserRole: User;
   shipTransfer: InventoryTransfer;
@@ -1622,17 +1468,21 @@ export type Mutation = {
   verifyIdentification: IdVerificationResult;
 };
 
+
 export type MutationActivatePromotionArgs = {
   promoId: Scalars['ID']['input'];
 };
+
 
 export type MutationAddAddressArgs = {
   input: AddAddressInput;
 };
 
+
 export type MutationAddCertificationArgs = {
   input: AddCertificationInput;
 };
+
 
 export type MutationAddTaxRuleArgs = {
   code: Scalars['String']['input'];
@@ -1643,6 +1493,7 @@ export type MutationAddTaxRuleArgs = {
   taxBasis: Scalars['String']['input'];
 };
 
+
 export type MutationAdjustInventoryArgs = {
   delta: Scalars['Float']['input'];
   inventoryId: Scalars['ID']['input'];
@@ -1651,35 +1502,43 @@ export type MutationAdjustInventoryArgs = {
   transactionType: Scalars['String']['input'];
 };
 
+
 export type MutationApplyPromoDiscountArgs = {
   orderTotal: Scalars['Float']['input'];
   promoId: Scalars['ID']['input'];
 };
 
+
 export type MutationApproveAdjustmentArgs = {
   adjustmentId: Scalars['ID']['input'];
 };
+
 
 export type MutationApproveProductArgs = {
   dispensaryId: Scalars['ID']['input'];
   productId: Scalars['ID']['input'];
 };
 
+
 export type MutationApproveShiftSwapArgs = {
   swapId: Scalars['ID']['input'];
 };
+
 
 export type MutationApproveTimeEntryArgs = {
   entryId: Scalars['ID']['input'];
 };
 
+
 export type MutationApproveTransferArgs = {
   transferId: Scalars['ID']['input'];
 };
 
+
 export type MutationApproveWasteArgs = {
   logId: Scalars['ID']['input'];
 };
+
 
 export type MutationAssignDeliveryArgs = {
   deliveryAddress: Scalars['String']['input'];
@@ -1690,18 +1549,17 @@ export type MutationAssignDeliveryArgs = {
   orderId?: InputMaybe<Scalars['ID']['input']>;
 };
 
-export type MutationAttestKioskDeviceArgs = {
-  publicKey: Scalars['String']['input'];
-};
 
 export type MutationAutoGenerateScheduleArgs = {
   dispensaryId: Scalars['ID']['input'];
   weekStart: Scalars['String']['input'];
 };
 
+
 export type MutationBulkTagProductUidsArgs = {
   input: BulkTagUidInput;
 };
+
 
 export type MutationCancelOrderArgs = {
   dispensaryId?: InputMaybe<Scalars['ID']['input']>;
@@ -1709,18 +1567,22 @@ export type MutationCancelOrderArgs = {
   reason: Scalars['String']['input'];
 };
 
+
 export type MutationClaimBirthdayBonusArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
+
 
 export type MutationClaimShiftSwapArgs = {
   swapId: Scalars['ID']['input'];
 };
 
+
 export type MutationClockInArgs = {
   dispensaryId: Scalars['ID']['input'];
   notes?: InputMaybe<Scalars['String']['input']>;
 };
+
 
 export type MutationClockOutArgs = {
   breakMinutes?: InputMaybe<Scalars['Int']['input']>;
@@ -1728,28 +1590,29 @@ export type MutationClockOutArgs = {
   notes?: InputMaybe<Scalars['String']['input']>;
 };
 
-export type MutationCloseRegisterSessionArgs = {
-  input: CloseRegisterSessionGqlInput;
-};
 
 export type MutationCompleteDeliveryTripArgs = {
   customerRating?: InputMaybe<Scalars['Int']['input']>;
   tripId: Scalars['ID']['input'];
 };
 
+
 export type MutationCompleteInventoryCountArgs = {
   autoAdjust?: Scalars['Boolean']['input'];
   countId: Scalars['ID']['input'];
 };
 
+
 export type MutationCompleteOrderArgs = {
   input: CompleteOrderInput;
 };
+
 
 export type MutationConfirmOrderArgs = {
   dispensaryId?: InputMaybe<Scalars['ID']['input']>;
   orderId: Scalars['ID']['input'];
 };
+
 
 export type MutationCreateAdjustmentArgs = {
   dispensaryId: Scalars['ID']['input'];
@@ -1759,13 +1622,16 @@ export type MutationCreateAdjustmentArgs = {
   variantId: Scalars['ID']['input'];
 };
 
+
 export type MutationCreateBrandArgs = {
   input: CreateBrandInput;
 };
 
+
 export type MutationCreateCompanyArgs = {
   input: CreateCompanyInput;
 };
+
 
 export type MutationCreateCustomerProfileArgs = {
   dateOfBirth?: InputMaybe<Scalars['String']['input']>;
@@ -1775,13 +1641,16 @@ export type MutationCreateCustomerProfileArgs = {
   smsOptIn?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
+
 export type MutationCreateDispensaryArgs = {
   input: CreateDispensaryInput;
 };
 
+
 export type MutationCreateManufacturerArgs = {
   input: CreateManufacturerInput;
 };
+
 
 export type MutationCreateMarketingAutomationArgs = {
   channel?: Scalars['String']['input'];
@@ -1790,6 +1659,7 @@ export type MutationCreateMarketingAutomationArgs = {
   templateId?: InputMaybe<Scalars['String']['input']>;
   triggerEvent: Scalars['String']['input'];
 };
+
 
 export type MutationCreateMarketingCampaignArgs = {
   audienceFilter?: InputMaybe<Scalars['String']['input']>;
@@ -1802,26 +1672,32 @@ export type MutationCreateMarketingCampaignArgs = {
   subject?: InputMaybe<Scalars['String']['input']>;
 };
 
+
 export type MutationCreateOrderArgs = {
   input: CreateOrderInput;
 };
+
 
 export type MutationCreateOrganizationArgs = {
   input: CreateOrganizationInput;
 };
 
+
 export type MutationCreatePerformanceReviewArgs = {
   input: CreateReviewInput;
 };
+
 
 export type MutationCreateProductArgs = {
   input: CreateProductInput;
 };
 
+
 export type MutationCreatePromotionArgs = {
   dispensaryId: Scalars['ID']['input'];
   input: CreatePromotionInput;
 };
+
 
 export type MutationCreatePurchaseOrderArgs = {
   dispensaryId: Scalars['ID']['input'];
@@ -1829,6 +1705,7 @@ export type MutationCreatePurchaseOrderArgs = {
   notes?: InputMaybe<Scalars['String']['input']>;
   vendorId: Scalars['ID']['input'];
 };
+
 
 export type MutationCreateRewardArgs = {
   description?: InputMaybe<Scalars['String']['input']>;
@@ -1839,6 +1716,7 @@ export type MutationCreateRewardArgs = {
   rewardValue: Scalars['Float']['input'];
 };
 
+
 export type MutationCreateShiftArgs = {
   dispensaryId: Scalars['ID']['input'];
   endTime: Scalars['String']['input'];
@@ -1848,6 +1726,7 @@ export type MutationCreateShiftArgs = {
   startTime: Scalars['String']['input'];
 };
 
+
 export type MutationCreateTenantArgs = {
   billingEmail: Scalars['String']['input'];
   name: Scalars['String']['input'];
@@ -1855,12 +1734,14 @@ export type MutationCreateTenantArgs = {
   subscriptionTier?: Scalars['String']['input'];
 };
 
+
 export type MutationCreateTransferArgs = {
   fromDispensaryId: Scalars['ID']['input'];
   items: Array<TransferItemInput>;
   notes?: InputMaybe<Scalars['String']['input']>;
   toDispensaryId: Scalars['ID']['input'];
 };
+
 
 export type MutationCreateVendorArgs = {
   city?: InputMaybe<Scalars['String']['input']>;
@@ -1876,75 +1757,83 @@ export type MutationCreateVendorArgs = {
   vendorType?: Scalars['String']['input'];
 };
 
+
 export type MutationCreateWalkInCustomerArgs = {
   input: CreateWalkInCustomerInput;
 };
+
 
 export type MutationDeactivateMetrcCredentialArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
 
+
 export type MutationDeactivatePromotionArgs = {
   promoId: Scalars['ID']['input'];
 };
+
 
 export type MutationDeactivateUserArgs = {
   userId: Scalars['ID']['input'];
 };
 
+
 export type MutationDeleteAddressArgs = {
   addressId: Scalars['ID']['input'];
 };
+
 
 export type MutationDeleteBrandArgs = {
   brandId: Scalars['ID']['input'];
 };
 
+
 export type MutationDeleteCompanyArgs = {
   companyId: Scalars['ID']['input'];
 };
+
 
 export type MutationDeleteDispensaryArgs = {
   entityId: Scalars['ID']['input'];
 };
 
+
 export type MutationDeleteManufacturerArgs = {
   manufacturerId: Scalars['ID']['input'];
 };
 
+
 export type MutationDeleteOrganizationArgs = {
   organizationId: Scalars['ID']['input'];
 };
+
 
 export type MutationDeleteProductArgs = {
   dispensaryId: Scalars['ID']['input'];
   productId: Scalars['ID']['input'];
 };
 
+
 export type MutationDeleteShiftArgs = {
   shiftId: Scalars['ID']['input'];
 };
 
-export type MutationDeprovisionAeropayForDispensaryArgs = {
-  dispensaryId: Scalars['ID']['input'];
-};
-
-export type MutationDeprovisionCanPayForDispensaryArgs = {
-  dispensaryId: Scalars['ID']['input'];
-};
 
 export type MutationEnrichDispensaryProductsArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
+
 
 export type MutationEnrichProductArgs = {
   dispensaryId: Scalars['ID']['input'];
   productId: Scalars['ID']['input'];
 };
 
+
 export type MutationGenerateManifestArgs = {
   transferId: Scalars['ID']['input'];
 };
+
 
 export type MutationGivePointsArgs = {
   dispensaryId: Scalars['ID']['input'];
@@ -1953,15 +1842,18 @@ export type MutationGivePointsArgs = {
   userId: Scalars['ID']['input'];
 };
 
+
 export type MutationImportOtreebaStrainsArgs = {
   count?: InputMaybe<Scalars['Int']['input']>;
   page?: InputMaybe<Scalars['Int']['input']>;
   type?: InputMaybe<Scalars['String']['input']>;
 };
 
+
 export type MutationIndexProductsArgs = {
   dispensaryId: Scalars['String']['input'];
 };
+
 
 export type MutationInitiateCashlessPaymentArgs = {
   amount: Scalars['Float']['input'];
@@ -1969,6 +1861,7 @@ export type MutationInitiateCashlessPaymentArgs = {
   orderId: Scalars['ID']['input'];
   provider: Scalars['String']['input'];
 };
+
 
 export type MutationLogWasteArgs = {
   destructionMethod?: InputMaybe<Scalars['String']['input']>;
@@ -1985,14 +1878,17 @@ export type MutationLogWasteArgs = {
   witness2Name?: InputMaybe<Scalars['String']['input']>;
 };
 
+
 export type MutationLoginArgs = {
   input: LoginInput;
 };
+
 
 export type MutationMarkOrderReadyArgs = {
   dispensaryId?: InputMaybe<Scalars['ID']['input']>;
   orderId: Scalars['ID']['input'];
 };
+
 
 export type MutationNotifyCustomerArgs = {
   dispensaryId: Scalars['ID']['input'];
@@ -2000,9 +1896,6 @@ export type MutationNotifyCustomerArgs = {
   userId: Scalars['ID']['input'];
 };
 
-export type MutationOpenRegisterSessionArgs = {
-  input: OpenRegisterSessionGqlInput;
-};
 
 export type MutationProcessCashPaymentArgs = {
   applyDiscount?: InputMaybe<Scalars['Boolean']['input']>;
@@ -2011,32 +1904,29 @@ export type MutationProcessCashPaymentArgs = {
   orderId: Scalars['ID']['input'];
 };
 
-export type MutationProvisionAeropayForDispensaryArgs = {
-  input: ProvisionAeropayInput;
-};
-
-export type MutationProvisionCanPayForDispensaryArgs = {
-  input: ProvisionCanPayInput;
-};
 
 export type MutationProvisionKioskArgs = {
   input: ProvisionKioskInput;
 };
+
 
 export type MutationPublishWeekScheduleArgs = {
   dispensaryId: Scalars['ID']['input'];
   weekStart: Scalars['String']['input'];
 };
 
+
 export type MutationPushOrderToPosArgs = {
   dispensaryId: Scalars['ID']['input'];
   orderId: Scalars['ID']['input'];
 };
 
+
 export type MutationReceiveTransferArgs = {
   items: Array<ReceiveItemInput>;
   transferId: Scalars['ID']['input'];
 };
+
 
 export type MutationRecordCountItemArgs = {
   countItemId: Scalars['ID']['input'];
@@ -2044,20 +1934,24 @@ export type MutationRecordCountItemArgs = {
   notes?: InputMaybe<Scalars['String']['input']>;
 };
 
+
 export type MutationRedeemRewardArgs = {
   dispensaryId: Scalars['ID']['input'];
   orderId?: InputMaybe<Scalars['ID']['input']>;
   rewardId: Scalars['ID']['input'];
 };
 
+
 export type MutationRegisterArgs = {
   input: RegisterInput;
 };
+
 
 export type MutationRejectTransferArgs = {
   reason: Scalars['String']['input'];
   transferId: Scalars['ID']['input'];
 };
+
 
 export type MutationReleaseReserveArgs = {
   inventoryId: Scalars['ID']['input'];
@@ -2065,15 +1959,18 @@ export type MutationReleaseReserveArgs = {
   referenceOrderId?: InputMaybe<Scalars['ID']['input']>;
 };
 
+
 export type MutationReportSaleToBiotrackArgs = {
   dispensaryId: Scalars['ID']['input'];
   orderId: Scalars['ID']['input'];
 };
 
+
 export type MutationRequestShiftSwapArgs = {
   reason?: InputMaybe<Scalars['String']['input']>;
   shiftId: Scalars['ID']['input'];
 };
+
 
 export type MutationRequestTimeOffArgs = {
   endDate: Scalars['String']['input'];
@@ -2082,47 +1979,57 @@ export type MutationRequestTimeOffArgs = {
   startDate: Scalars['String']['input'];
 };
 
+
 export type MutationReserveStockArgs = {
   inventoryId: Scalars['ID']['input'];
   quantity: Scalars['Float']['input'];
   referenceOrderId?: InputMaybe<Scalars['ID']['input']>;
 };
 
+
 export type MutationResetThemeConfigArgs = {
   dispensaryId: Scalars['String']['input'];
 };
 
+
 export type MutationRetryFailedMetrcSyncsArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
+
 
 export type MutationReviewTimeOffArgs = {
   approved: Scalars['Boolean']['input'];
   requestId: Scalars['ID']['input'];
 };
 
+
 export type MutationRevokeCertificationArgs = {
   certificationId: Scalars['ID']['input'];
   reason?: InputMaybe<Scalars['String']['input']>;
 };
 
+
 export type MutationRunReconciliationArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
+
 
 export type MutationSaveDispensaryProductTypesArgs = {
   dispensaryId: Scalars['ID']['input'];
   types: Array<DispensaryProductTypeInput>;
 };
 
+
 export type MutationSaveThemeConfigArgs = {
   input: SaveThemeConfigInput;
 };
+
 
 export type MutationSendMarketingCampaignArgs = {
   campaignId: Scalars['ID']['input'];
   dispensaryId: Scalars['ID']['input'];
 };
+
 
 export type MutationSendTestEmailArgs = {
   body: Scalars['String']['input'];
@@ -2130,9 +2037,6 @@ export type MutationSendTestEmailArgs = {
   to: Scalars['String']['input'];
 };
 
-export type MutationSetActiveDispensaryProcessorArgs = {
-  input: SetActiveDispensaryProcessorInput;
-};
 
 export type MutationSetCashDiscountArgs = {
   cashDeliveryEnabled?: InputMaybe<Scalars['Boolean']['input']>;
@@ -2140,28 +2044,29 @@ export type MutationSetCashDiscountArgs = {
   percent: Scalars['Float']['input'];
 };
 
+
 export type MutationSetDesignSystemArgs = {
   designSystem: Scalars['String']['input'];
   designSystemFile: Scalars['String']['input'];
   dispensaryId: Scalars['ID']['input'];
 };
 
-export type MutationSetDispensaryProcessorEnabledArgs = {
-  input: SetDispensaryProcessorEnabledInput;
-};
 
 export type MutationSetProductMetrcCategoryArgs = {
   input: SetMetrcCategoryInput;
 };
+
 
 export type MutationSetUserRoleArgs = {
   role: Scalars['String']['input'];
   userId: Scalars['ID']['input'];
 };
 
+
 export type MutationShipTransferArgs = {
   transferId: Scalars['ID']['input'];
 };
+
 
 export type MutationStartInventoryCountArgs = {
   countType?: Scalars['String']['input'];
@@ -2169,64 +2074,78 @@ export type MutationStartInventoryCountArgs = {
   notes?: InputMaybe<Scalars['String']['input']>;
 };
 
+
 export type MutationStartPreparingOrderArgs = {
   dispensaryId?: InputMaybe<Scalars['ID']['input']>;
   orderId: Scalars['ID']['input'];
 };
+
 
 export type MutationSuspendTenantArgs = {
   orgId: Scalars['ID']['input'];
   reason: Scalars['String']['input'];
 };
 
+
 export type MutationSyncBiotrackInventoryArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
+
 
 export type MutationSyncOrderToMetrcArgs = {
   dispensaryId: Scalars['ID']['input'];
   orderId: Scalars['ID']['input'];
 };
 
+
 export type MutationSyncPosInventoryArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
+
 
 export type MutationSyncPosProductsArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
 
+
 export type MutationTagProductMetrcUidArgs = {
   input: TagProductUidInput;
 };
+
 
 export type MutationTagVariantPackageLabelArgs = {
   input: TagPackageLabelInput;
 };
 
+
 export type MutationTestPosConnectionArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
+
 
 export type MutationTogglePosSyncArgs = {
   dispensaryId: Scalars['ID']['input'];
   enabled: Scalars['Boolean']['input'];
 };
 
+
 export type MutationUpdateAddressArgs = {
   addressId: Scalars['ID']['input'];
   input: AddAddressInput;
 };
+
 
 export type MutationUpdateBrandArgs = {
   brandId: Scalars['ID']['input'];
   input: UpdateBrandInput;
 };
 
+
 export type MutationUpdateCompanyArgs = {
   companyId: Scalars['ID']['input'];
   input: UpdateCompanyInput;
 };
+
 
 export type MutationUpdateCustomerProfileArgs = {
   firstName?: InputMaybe<Scalars['String']['input']>;
@@ -2237,6 +2156,7 @@ export type MutationUpdateCustomerProfileArgs = {
   smsOptIn?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
+
 export type MutationUpdateDeliverySettingsArgs = {
   cashDeliveryEnabled?: InputMaybe<Scalars['Boolean']['input']>;
   cashDiscountPercent?: InputMaybe<Scalars['Float']['input']>;
@@ -2244,10 +2164,12 @@ export type MutationUpdateDeliverySettingsArgs = {
   isDeliveryEnabled?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
+
 export type MutationUpdateDispensaryArgs = {
   entityId: Scalars['ID']['input'];
   input: UpdateDispensaryInput;
 };
+
 
 export type MutationUpdateDriverStatusArgs = {
   driverId: Scalars['ID']['input'];
@@ -2256,10 +2178,12 @@ export type MutationUpdateDriverStatusArgs = {
   status: Scalars['String']['input'];
 };
 
+
 export type MutationUpdateEmployeeArgs = {
   input: UpdateEmployeeInput;
   profileId: Scalars['ID']['input'];
 };
+
 
 export type MutationUpdateFulfillmentStatusArgs = {
   dispensaryId: Scalars['ID']['input'];
@@ -2268,44 +2192,53 @@ export type MutationUpdateFulfillmentStatusArgs = {
   status: Scalars['String']['input'];
 };
 
+
 export type MutationUpdateManifestStatusArgs = {
   manifestId: Scalars['ID']['input'];
   status: Scalars['String']['input'];
 };
+
 
 export type MutationUpdateManufacturerArgs = {
   input: UpdateManufacturerInput;
   manufacturerId: Scalars['ID']['input'];
 };
 
+
 export type MutationUpdateOperatingHoursArgs = {
   entityId: Scalars['ID']['input'];
   hours: Scalars['JSON']['input'];
 };
+
 
 export type MutationUpdateOrganizationArgs = {
   input: UpdateOrganizationInput;
   organizationId: Scalars['ID']['input'];
 };
 
+
 export type MutationUpdatePoStatusArgs = {
   poId: Scalars['ID']['input'];
   status: Scalars['String']['input'];
 };
 
+
 export type MutationUpdateProductArgs = {
   input: UpdateProductInput;
 };
+
 
 export type MutationUpdatePromotionArgs = {
   input: UpdatePromotionInput;
   promoId: Scalars['ID']['input'];
 };
 
+
 export type MutationUpdateSubscriptionArgs = {
   input: UpdateSubscriptionInput;
   organizationId: Scalars['ID']['input'];
 };
+
 
 export type MutationUpdateTaxRuleArgs = {
   isActive?: InputMaybe<Scalars['Boolean']['input']>;
@@ -2313,6 +2246,7 @@ export type MutationUpdateTaxRuleArgs = {
   rate?: InputMaybe<Scalars['Float']['input']>;
   taxCategoryId: Scalars['Int']['input'];
 };
+
 
 export type MutationUpdateTenantArgs = {
   billingEmail?: InputMaybe<Scalars['String']['input']>;
@@ -2322,9 +2256,11 @@ export type MutationUpdateTenantArgs = {
   subscriptionTier?: InputMaybe<Scalars['String']['input']>;
 };
 
+
 export type MutationUpdateVariantPriceArgs = {
   input: UpdateVariantPriceInput;
 };
+
 
 export type MutationUpdateVendorArgs = {
   email?: InputMaybe<Scalars['String']['input']>;
@@ -2336,6 +2272,7 @@ export type MutationUpdateVendorArgs = {
   vendorId: Scalars['ID']['input'];
 };
 
+
 export type MutationUpsertBiotrackCredentialArgs = {
   apiKey: Scalars['String']['input'];
   apiSecret?: InputMaybe<Scalars['String']['input']>;
@@ -2344,9 +2281,11 @@ export type MutationUpsertBiotrackCredentialArgs = {
   state: Scalars['String']['input'];
 };
 
+
 export type MutationUpsertMetrcCredentialArgs = {
   input: UpsertCredentialInput;
 };
+
 
 export type MutationUpsertPosIntegrationArgs = {
   credentials: Scalars['JSON']['input'];
@@ -2355,13 +2294,16 @@ export type MutationUpsertPosIntegrationArgs = {
   provider: Scalars['String']['input'];
 };
 
+
 export type MutationValidateBiotrackCredentialArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
 
+
 export type MutationValidateMetrcCredentialArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
+
 
 export type MutationVerifyAgeArgs = {
   dateOfBirth: Scalars['String']['input'];
@@ -2373,9 +2315,11 @@ export type MutationVerifyAgeArgs = {
   method?: InputMaybe<Scalars['String']['input']>;
 };
 
+
 export type MutationVerifyCertificationArgs = {
   certificationId: Scalars['ID']['input'];
 };
+
 
 export type MutationVerifyIdentificationArgs = {
   customerId?: InputMaybe<Scalars['ID']['input']>;
@@ -2384,7 +2328,6 @@ export type MutationVerifyIdentificationArgs = {
 };
 
 export type MyLoyalty = {
-  __typename?: 'MyLoyalty';
   allTiers: Array<LoyaltyTierInfo>;
   lifetimePoints: Scalars['Int']['output'];
   multiplier: Scalars['Float']['output'];
@@ -2398,13 +2341,11 @@ export type MyLoyalty = {
 };
 
 export type NextTierInfo = {
-  __typename?: 'NextTierInfo';
   name: Scalars['String']['output'];
   pointsNeeded: Scalars['Int']['output'];
 };
 
 export type NotificationLog = {
-  __typename?: 'NotificationLog';
   body?: Maybe<Scalars['String']['output']>;
   channel: Scalars['String']['output'];
   created_at: Scalars['DateTime']['output'];
@@ -2421,7 +2362,6 @@ export type NotificationLog = {
 };
 
 export type NotificationStats = {
-  __typename?: 'NotificationStats';
   emails: Scalars['Int']['output'];
   failed: Scalars['Int']['output'];
   sent: Scalars['Int']['output'];
@@ -2431,7 +2371,6 @@ export type NotificationStats = {
 };
 
 export type NotificationTemplate = {
-  __typename?: 'NotificationTemplate';
   bodyTemplate: Scalars['String']['output'];
   channel: Scalars['String']['output'];
   code: Scalars['String']['output'];
@@ -2441,13 +2380,7 @@ export type NotificationTemplate = {
   templateId: Scalars['Int']['output'];
 };
 
-export type OpenRegisterSessionGqlInput = {
-  dispensaryId: Scalars['ID']['input'];
-  openingCashCents: Scalars['Int']['input'];
-};
-
 export type Order = {
-  __typename?: 'Order';
   cancellationReason?: Maybe<Scalars['String']['output']>;
   cancelledAt?: Maybe<Scalars['DateTime']['output']>;
   cashDiscountApplied: Scalars['Float']['output'];
@@ -2473,7 +2406,6 @@ export type Order = {
 };
 
 export type OrderHistoryResult = {
-  __typename?: 'OrderHistoryResult';
   orders: Array<CustomerOrderSummary>;
   total: Scalars['Int']['output'];
 };
@@ -2485,7 +2417,6 @@ export type OrderLineItemInput = {
 };
 
 export type OrderStats = {
-  __typename?: 'OrderStats';
   gmv30d: Scalars['Float']['output'];
   gmvTotal: Scalars['Float']['output'];
   last30d: Scalars['Int']['output'];
@@ -2493,7 +2424,6 @@ export type OrderStats = {
 };
 
 export type OrderSummary = {
-  __typename?: 'OrderSummary';
   createdAt: Scalars['DateTime']['output'];
   discountTotal: Scalars['Float']['output'];
   dispensaryId: Scalars['ID']['output'];
@@ -2508,7 +2438,6 @@ export type OrderSummary = {
 };
 
 export type OrderTracking = {
-  __typename?: 'OrderTracking';
   createdAt: Scalars['DateTime']['output'];
   latitude?: Maybe<Scalars['Float']['output']>;
   longitude?: Maybe<Scalars['Float']['output']>;
@@ -2520,7 +2449,6 @@ export type OrderTracking = {
 };
 
 export type OrganizationListItem = {
-  __typename?: 'OrganizationListItem';
   billingEmail?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
   name: Scalars['String']['output'];
@@ -2531,7 +2459,6 @@ export type OrganizationListItem = {
 };
 
 export type OrganizationResult = {
-  __typename?: 'OrganizationResult';
   billingAddress?: Maybe<Scalars['String']['output']>;
   billingEmail?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
@@ -2552,31 +2479,25 @@ export type PoLineItemInput = {
 };
 
 export type Payment = {
-  __typename?: 'Payment';
   amount: Scalars['Float']['output'];
   cashTendered?: Maybe<Scalars['Float']['output']>;
   changeGiven?: Maybe<Scalars['Float']['output']>;
   createdAt: Scalars['DateTime']['output'];
   dispensaryId: Scalars['String']['output'];
-  failureReason?: Maybe<Scalars['String']['output']>;
   method: Scalars['String']['output'];
   orderId: Scalars['String']['output'];
   paymentId: Scalars['ID']['output'];
-  processorName?: Maybe<Scalars['String']['output']>;
-  processorTransactionId?: Maybe<Scalars['String']['output']>;
   status: Scalars['String']['output'];
   terminalId?: Maybe<Scalars['String']['output']>;
   updatedAt: Scalars['DateTime']['output'];
 };
 
 export type PaymentMethodInfo = {
-  __typename?: 'PaymentMethodInfo';
   enabled: Scalars['Boolean']['output'];
   method: Scalars['String']['output'];
 };
 
 export type PayrollRow = {
-  __typename?: 'PayrollRow';
   email: Scalars['String']['output'];
   employeeNumber?: Maybe<Scalars['String']['output']>;
   firstName: Scalars['String']['output'];
@@ -2596,7 +2517,6 @@ export type PayrollRow = {
 };
 
 export type PerformanceReview = {
-  __typename?: 'PerformanceReview';
   acknowledgedAt?: Maybe<Scalars['DateTime']['output']>;
   areasForImprovement?: Maybe<Scalars['String']['output']>;
   complianceRating?: Maybe<Scalars['Int']['output']>;
@@ -2619,7 +2539,6 @@ export type PerformanceReview = {
 };
 
 export type PlatformActivity = {
-  __typename?: 'PlatformActivity';
   activity_id: Scalars['ID']['output'];
   activity_type: Scalars['String']['output'];
   created_at: Scalars['DateTime']['output'];
@@ -2628,7 +2547,6 @@ export type PlatformActivity = {
 };
 
 export type PlatformDashboard = {
-  __typename?: 'PlatformDashboard';
   dispensaries: DispStats;
   orders: OrderStats;
   revenue: RevenueStats;
@@ -2639,7 +2557,6 @@ export type PlatformDashboard = {
 };
 
 export type PlatformReport = {
-  __typename?: 'PlatformReport';
   churnRate: Scalars['Float']['output'];
   churned: Scalars['Int']['output'];
   tenantHealth: Scalars['JSON']['output'];
@@ -2647,7 +2564,6 @@ export type PlatformReport = {
 };
 
 export type PlatformTenant = {
-  __typename?: 'PlatformTenant';
   billingEmail?: Maybe<Scalars['String']['output']>;
   billingStatus?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
@@ -2666,7 +2582,6 @@ export type PlatformTenant = {
 };
 
 export type PointTransaction = {
-  __typename?: 'PointTransaction';
   balanceAfter: Scalars['Int']['output'];
   createdAt: Scalars['DateTime']['output'];
   description?: Maybe<Scalars['String']['output']>;
@@ -2676,13 +2591,11 @@ export type PointTransaction = {
 };
 
 export type PosConnectionResult = {
-  __typename?: 'PosConnectionResult';
   message: Scalars['String']['output'];
   success: Scalars['Boolean']['output'];
 };
 
 export type PosIntegration = {
-  __typename?: 'PosIntegration';
   createdAt: Scalars['DateTime']['output'];
   dispensaryExternalId?: Maybe<Scalars['String']['output']>;
   dispensaryId: Scalars['ID']['output'];
@@ -2697,14 +2610,12 @@ export type PosIntegration = {
 };
 
 export type PosOrderPushResult = {
-  __typename?: 'PosOrderPushResult';
   error?: Maybe<Scalars['String']['output']>;
   externalOrderId?: Maybe<Scalars['String']['output']>;
   success: Scalars['Boolean']['output'];
 };
 
 export type PosProductMapping = {
-  __typename?: 'PosProductMapping';
   createdAt: Scalars['DateTime']['output'];
   dispensaryId: Scalars['ID']['output'];
   externalProductId: Scalars['String']['output'];
@@ -2720,7 +2631,6 @@ export type PosProductMapping = {
 };
 
 export type PosSyncLog = {
-  __typename?: 'PosSyncLog';
   createdAt: Scalars['DateTime']['output'];
   dispensaryId: Scalars['ID']['output'];
   durationMs?: Maybe<Scalars['Int']['output']>;
@@ -2736,7 +2646,6 @@ export type PosSyncLog = {
 };
 
 export type Product = {
-  __typename?: 'Product';
   approvedAt?: Maybe<Scalars['DateTime']['output']>;
   approvedByUserId?: Maybe<Scalars['ID']['output']>;
   brandId?: Maybe<Scalars['ID']['output']>;
@@ -2783,7 +2692,6 @@ export type Product = {
 };
 
 export type ProductSales = {
-  __typename?: 'ProductSales';
   orders: Scalars['Int']['output'];
   productName: Scalars['String']['output'];
   revenue: Scalars['Float']['output'];
@@ -2793,7 +2701,6 @@ export type ProductSales = {
 };
 
 export type ProductSearchResult = {
-  __typename?: 'ProductSearchResult';
   facets: SearchFacets;
   limit: Scalars['Int']['output'];
   offset: Scalars['Int']['output'];
@@ -2807,7 +2714,6 @@ export type ProductUidPair = {
 };
 
 export type ProductVariant = {
-  __typename?: 'ProductVariant';
   barcode?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
   deletedAt?: Maybe<Scalars['DateTime']['output']>;
@@ -2828,7 +2734,6 @@ export type ProductVariant = {
 };
 
 export type PromotionCategoryResult = {
-  __typename?: 'PromotionCategoryResult';
   categoryId: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
   isEligible: Scalars['Boolean']['output'];
@@ -2836,7 +2741,6 @@ export type PromotionCategoryResult = {
 };
 
 export type PromotionListItem = {
-  __typename?: 'PromotionListItem';
   code?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
   description?: Maybe<Scalars['String']['output']>;
@@ -2854,7 +2758,6 @@ export type PromotionListItem = {
 };
 
 export type PromotionProductResult = {
-  __typename?: 'PromotionProductResult';
   id: Scalars['ID']['output'];
   isEligible: Scalars['Boolean']['output'];
   productId?: Maybe<Scalars['ID']['output']>;
@@ -2863,7 +2766,6 @@ export type PromotionProductResult = {
 };
 
 export type PromotionResult = {
-  __typename?: 'PromotionResult';
   appliesTo?: Maybe<Scalars['String']['output']>;
   appliesToBrandId?: Maybe<Scalars['ID']['output']>;
   appliesToProductTypeId?: Maybe<Scalars['Float']['output']>;
@@ -2889,27 +2791,12 @@ export type PromotionResult = {
   usesCount: Scalars['Int']['output'];
 };
 
-export type ProvisionAeropayInput = {
-  apiKey: Scalars['String']['input'];
-  dispensaryId: Scalars['ID']['input'];
-  isSandbox?: InputMaybe<Scalars['Boolean']['input']>;
-  merchantId: Scalars['String']['input'];
-};
-
-export type ProvisionCanPayInput = {
-  apiKey: Scalars['String']['input'];
-  dispensaryId: Scalars['ID']['input'];
-  isSandbox?: InputMaybe<Scalars['Boolean']['input']>;
-  merchantId: Scalars['String']['input'];
-};
-
 export type ProvisionKioskInput = {
   dispensaryId: Scalars['ID']['input'];
   label: Scalars['String']['input'];
 };
 
 export type PurchaseLimitResult = {
-  __typename?: 'PurchaseLimitResult';
   allowed: Scalars['Boolean']['output'];
   limit?: Maybe<Scalars['Float']['output']>;
   reason?: Maybe<Scalars['String']['output']>;
@@ -2917,7 +2804,6 @@ export type PurchaseLimitResult = {
 };
 
 export type PurchaseOrder = {
-  __typename?: 'PurchaseOrder';
   expected_delivery?: Maybe<Scalars['String']['output']>;
   items?: Maybe<Scalars['JSON']['output']>;
   line_items?: Maybe<Scalars['Int']['output']>;
@@ -2933,9 +2819,7 @@ export type PurchaseOrder = {
 };
 
 export type Query = {
-  __typename?: 'Query';
   activeClocks: Array<ActiveClock>;
-  activeDispensaryProcessor: ActiveProcessorResult;
   activePromotions: Array<PromotionListItem>;
   adjustmentReasons: Array<LkpAdjustmentReason>;
   adminProducts: Array<Product>;
@@ -2978,7 +2862,6 @@ export type Query = {
   dispensariesByCompany: Array<DispensaryListItem>;
   dispensary?: Maybe<DispensaryResult>;
   dispensaryBySlug?: Maybe<DispensaryPublic>;
-  dispensaryPaymentProcessors: Array<DispensaryPaymentProcessor>;
   dispensaryProductTypes: Array<DispensaryProductType>;
   driverStats: DriverStats;
   driverTrips: Array<DeliveryTrip>;
@@ -3014,7 +2897,6 @@ export type Query = {
   metrcCredential?: Maybe<MetrcCredential>;
   metrcSyncOverview: MetrcSyncOverview;
   myAddresses: Array<CustomerAddress>;
-  myCurrentRegisterSession?: Maybe<RegisterSession>;
   myFavorites: Array<CustomerFavorite>;
   myLastOrder?: Maybe<CustomerOrder>;
   myLoyalty?: Maybe<MyLoyalty>;
@@ -3099,17 +2981,16 @@ export type Query = {
   weekSchedule: Array<ScheduledShift>;
 };
 
+
 export type QueryActiveClocksArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
 
-export type QueryActiveDispensaryProcessorArgs = {
-  dispensaryId: Scalars['ID']['input'];
-};
 
 export type QueryActivePromotionsArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
+
 
 export type QueryAdminProductsArgs = {
   categoryId?: InputMaybe<Scalars['Int']['input']>;
@@ -3120,10 +3001,12 @@ export type QueryAdminProductsArgs = {
   search?: InputMaybe<Scalars['String']['input']>;
 };
 
+
 export type QueryAudienceCountArgs = {
   dispensaryId: Scalars['ID']['input'];
   filter?: Scalars['String']['input'];
 };
+
 
 export type QueryAuditLogArgs = {
   action?: InputMaybe<Scalars['String']['input']>;
@@ -3132,19 +3015,23 @@ export type QueryAuditLogArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
+
 export type QueryAutocompleteProductsArgs = {
   dispensaryId: Scalars['ID']['input'];
   limit?: InputMaybe<Scalars['Int']['input']>;
   query: Scalars['String']['input'];
 };
 
+
 export type QueryAvailablePaymentMethodsArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
 
+
 export type QueryAvailableRewardsArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
+
 
 export type QueryAvailableTimeSlotsArgs = {
   date: Scalars['String']['input'];
@@ -3152,38 +3039,47 @@ export type QueryAvailableTimeSlotsArgs = {
   slotType: Scalars['String']['input'];
 };
 
+
 export type QueryBiotrackCredentialArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
+
 
 export type QueryBirthdayBonusCheckArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
 
+
 export type QueryBrandArgs = {
   brandId: Scalars['ID']['input'];
 };
+
 
 export type QueryBrandsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
 };
 
+
 export type QueryBrandsByOrganizationArgs = {
   organizationId: Scalars['ID']['input'];
 };
+
 
 export type QueryCachedStrainsArgs = {
   type?: InputMaybe<Scalars['String']['input']>;
 };
 
+
 export type QueryCampaignStatsArgs = {
   campaignId: Scalars['ID']['input'];
 };
 
+
 export type QueryCashDiscountConfigArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
+
 
 export type QueryCheckDeliveryEligibilityArgs = {
   dispensaryId: Scalars['ID']['input'];
@@ -3192,11 +3088,13 @@ export type QueryCheckDeliveryEligibilityArgs = {
   orderSubtotal?: InputMaybe<Scalars['Float']['input']>;
 };
 
+
 export type QueryCheckPromoEligibilityArgs = {
   customerId?: InputMaybe<Scalars['ID']['input']>;
   orderTotal: Scalars['Float']['input'];
   promoId: Scalars['ID']['input'];
 };
+
 
 export type QueryCheckPurchaseLimitArgs = {
   dispensaryId: Scalars['ID']['input'];
@@ -3204,52 +3102,64 @@ export type QueryCheckPurchaseLimitArgs = {
   quantityGrams: Scalars['Float']['input'];
 };
 
+
 export type QueryClockStatusArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
+
 
 export type QueryCompaniesArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
 };
 
+
 export type QueryCompaniesByOrganizationArgs = {
   organizationId: Scalars['ID']['input'];
 };
+
 
 export type QueryCompanyArgs = {
   companyId: Scalars['ID']['input'];
 };
 
+
 export type QueryCompareProductsArgs = {
   productIds: Array<Scalars['ID']['input']>;
 };
+
 
 export type QueryComplianceAlertsArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
 
+
 export type QueryComplianceSummaryArgs = {
   dispensaryId?: InputMaybe<Scalars['ID']['input']>;
 };
+
 
 export type QueryComplianceSystemArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
 
+
 export type QueryCountItemsArgs = {
   countId: Scalars['ID']['input'];
 };
+
 
 export type QueryCoverageGapsArgs = {
   dispensaryId: Scalars['ID']['input'];
   weekStart: Scalars['String']['input'];
 };
 
+
 export type QueryCustomerByPhoneArgs = {
   dispensaryId: Scalars['ID']['input'];
   phone: Scalars['String']['input'];
 };
+
 
 export type QueryCustomersArgs = {
   dispensaryId: Scalars['ID']['input'];
@@ -3257,99 +3167,116 @@ export type QueryCustomersArgs = {
   offset?: InputMaybe<Scalars['Int']['input']>;
 };
 
+
 export type QueryDashboardArgs = {
   days?: InputMaybe<Scalars['Int']['input']>;
   dispensaryId?: InputMaybe<Scalars['ID']['input']>;
 };
+
 
 export type QueryDeadStockArgs = {
   daysSinceMovement?: InputMaybe<Scalars['Int']['input']>;
   dispensaryId: Scalars['ID']['input'];
 };
 
+
 export type QueryDeliveryZonesArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
 
+
 export type QueryDesignSystemConfigArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
+
 
 export type QueryDispensariesArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
 };
 
+
 export type QueryDispensariesByCompanyArgs = {
   companyId: Scalars['ID']['input'];
 };
+
 
 export type QueryDispensaryArgs = {
   entityId: Scalars['ID']['input'];
 };
 
+
 export type QueryDispensaryBySlugArgs = {
   slug: Scalars['String']['input'];
 };
 
-export type QueryDispensaryPaymentProcessorsArgs = {
-  dispensaryId: Scalars['ID']['input'];
-};
 
 export type QueryDispensaryProductTypesArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
+
 
 export type QueryDriverStatsArgs = {
   days?: InputMaybe<Scalars['Int']['input']>;
   dispensaryId: Scalars['ID']['input'];
 };
 
+
 export type QueryDriverTripsArgs = {
   days?: InputMaybe<Scalars['Int']['input']>;
   driverId: Scalars['ID']['input'];
 };
 
+
 export type QueryDriversArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
+
 
 export type QueryEmployeeArgs = {
   profileId: Scalars['ID']['input'];
 };
 
+
 export type QueryEmployeeCertificationsArgs = {
   profileId: Scalars['ID']['input'];
 };
+
 
 export type QueryEmployeesArgs = {
   dispensaryId: Scalars['ID']['input'];
   status?: InputMaybe<Scalars['String']['input']>;
 };
 
+
 export type QueryEntityAuditTrailArgs = {
   entityId: Scalars['String']['input'];
   entityType: Scalars['String']['input'];
 };
+
 
 export type QueryExpiringCertificationsArgs = {
   daysAhead?: InputMaybe<Scalars['Int']['input']>;
   dispensaryId: Scalars['ID']['input'];
 };
 
+
 export type QueryExpiringInventoryArgs = {
   daysAhead?: InputMaybe<Scalars['Int']['input']>;
   dispensaryId: Scalars['ID']['input'];
 };
 
+
 export type QueryFailedMetrcSyncsArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
+
 
 export type QueryInventoryAdjustmentsArgs = {
   dispensaryId: Scalars['ID']['input'];
   limit?: InputMaybe<Scalars['Int']['input']>;
 };
+
 
 export type QueryInventoryByDispensaryArgs = {
   dispensaryId: Scalars['ID']['input'];
@@ -3357,36 +3284,44 @@ export type QueryInventoryByDispensaryArgs = {
   offset?: InputMaybe<Scalars['Int']['input']>;
 };
 
+
 export type QueryInventoryByVariantArgs = {
   dispensaryId: Scalars['ID']['input'];
   variantId: Scalars['ID']['input'];
 };
 
+
 export type QueryInventoryHealthArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
+
 
 export type QueryInventoryItemArgs = {
   inventoryId: Scalars['ID']['input'];
 };
 
+
 export type QueryInventoryOverviewArgs = {
   dispensaryId?: InputMaybe<Scalars['ID']['input']>;
 };
+
 
 export type QueryInventoryTransactionsArgs = {
   inventoryId: Scalars['ID']['input'];
   limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
+
 export type QueryInventoryTransfersArgs = {
   direction?: InputMaybe<Scalars['String']['input']>;
   dispensaryId: Scalars['ID']['input'];
 };
 
+
 export type QueryInventoryValueArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
+
 
 export type QueryLaborCostReportArgs = {
   dispensaryId: Scalars['ID']['input'];
@@ -3394,90 +3329,106 @@ export type QueryLaborCostReportArgs = {
   startDate: Scalars['String']['input'];
 };
 
+
 export type QueryLowStockItemsArgs = {
   dispensaryId?: InputMaybe<Scalars['ID']['input']>;
 };
+
 
 export type QueryLoyaltyStatsArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
 
+
 export type QueryManifestItemsArgs = {
   manifestId: Scalars['ID']['input'];
 };
+
 
 export type QueryManifestsArgs = {
   dispensaryId: Scalars['ID']['input'];
   status?: InputMaybe<Scalars['String']['input']>;
 };
 
+
 export type QueryManufacturerArgs = {
   manufacturerId: Scalars['ID']['input'];
 };
+
 
 export type QueryManufacturersArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
 };
 
+
 export type QueryManufacturersByBrandArgs = {
   brandId: Scalars['ID']['input'];
 };
+
 
 export type QueryMarketingAutomationsArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
 
+
 export type QueryMarketingCampaignsArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
+
 
 export type QueryMetrcComplianceReportArgs = {
   dispensaryId?: InputMaybe<Scalars['ID']['input']>;
 };
 
+
 export type QueryMetrcCredentialArgs = {
   dispensaryId?: InputMaybe<Scalars['ID']['input']>;
 };
+
 
 export type QueryMetrcSyncOverviewArgs = {
   dispensaryId?: InputMaybe<Scalars['ID']['input']>;
 };
 
-export type QueryMyCurrentRegisterSessionArgs = {
-  dispensaryId: Scalars['ID']['input'];
-};
 
 export type QueryMyFavoritesArgs = {
   dispensaryId: Scalars['ID']['input'];
   limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
+
 export type QueryMyLastOrderArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
+
 
 export type QueryMyLoyaltyArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
 
+
 export type QueryMyNotificationsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
 };
+
 
 export type QueryMyOrdersArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
 };
 
+
 export type QueryMyPointHistoryArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
 };
+
 
 export type QueryMyShiftsArgs = {
   endDate: Scalars['String']['input'];
   startDate: Scalars['String']['input'];
 };
+
 
 export type QueryMyTimeEntriesArgs = {
   dispensaryId: Scalars['ID']['input'];
@@ -3485,23 +3436,28 @@ export type QueryMyTimeEntriesArgs = {
   startDate: Scalars['String']['input'];
 };
 
+
 export type QueryNotificationStatsArgs = {
   days?: InputMaybe<Scalars['Int']['input']>;
   dispensaryId: Scalars['ID']['input'];
 };
+
 
 export type QueryOrderArgs = {
   dispensaryId?: InputMaybe<Scalars['ID']['input']>;
   orderId: Scalars['ID']['input'];
 };
 
+
 export type QueryOrderPaymentArgs = {
   orderId: Scalars['ID']['input'];
 };
 
+
 export type QueryOrderTrackingArgs = {
   orderId: Scalars['ID']['input'];
 };
+
 
 export type QueryOrdersArgs = {
   dispensaryId?: InputMaybe<Scalars['ID']['input']>;
@@ -3509,14 +3465,17 @@ export type QueryOrdersArgs = {
   offset?: InputMaybe<Scalars['Int']['input']>;
 };
 
+
 export type QueryOrganizationArgs = {
   organizationId: Scalars['ID']['input'];
 };
+
 
 export type QueryOrganizationsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
 };
+
 
 export type QueryPayrollReportArgs = {
   dispensaryId: Scalars['ID']['input'];
@@ -3524,26 +3483,32 @@ export type QueryPayrollReportArgs = {
   startDate: Scalars['String']['input'];
 };
 
+
 export type QueryPerformanceReviewsArgs = {
   profileId: Scalars['ID']['input'];
 };
+
 
 export type QueryPersonalizedForMeArgs = {
   dispensaryId?: InputMaybe<Scalars['ID']['input']>;
   limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
+
 export type QueryPlatformActivityArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
 };
+
 
 export type QueryPlatformInvoicesArgs = {
   orgId?: InputMaybe<Scalars['ID']['input']>;
 };
 
+
 export type QueryPlatformTenantArgs = {
   orgId: Scalars['ID']['input'];
 };
+
 
 export type QueryPopularInCategoryArgs = {
   categoryId: Scalars['ID']['input'];
@@ -3551,32 +3516,39 @@ export type QueryPopularInCategoryArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
+
 export type QueryPosIntegrationArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
 
+
 export type QueryPosProductMappingsArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
+
 
 export type QueryPosSyncLogsArgs = {
   dispensaryId: Scalars['ID']['input'];
   limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
+
 export type QueryPreviewCashDiscountArgs = {
   dispensaryId: Scalars['ID']['input'];
   subtotal: Scalars['Float']['input'];
 };
+
 
 export type QueryProductArgs = {
   dispensaryId: Scalars['ID']['input'];
   id: Scalars['ID']['input'];
 };
 
+
 export type QueryProductCountArgs = {
   dispensaryId?: InputMaybe<Scalars['ID']['input']>;
 };
+
 
 export type QueryProductsArgs = {
   categoryId?: InputMaybe<Scalars['Int']['input']>;
@@ -3587,27 +3559,33 @@ export type QueryProductsArgs = {
   search?: InputMaybe<Scalars['String']['input']>;
 };
 
+
 export type QueryProductsByConditionArgs = {
   condition: Scalars['String']['input'];
   dispensaryId?: InputMaybe<Scalars['ID']['input']>;
 };
+
 
 export type QueryProductsByEffectArgs = {
   dispensaryId?: InputMaybe<Scalars['ID']['input']>;
   effect: Scalars['String']['input'];
 };
 
+
 export type QueryPromotionArgs = {
   promoId: Scalars['ID']['input'];
 };
+
 
 export type QueryPromotionCategoriesArgs = {
   promoId: Scalars['ID']['input'];
 };
 
+
 export type QueryPromotionProductsArgs = {
   promoId: Scalars['ID']['input'];
 };
+
 
 export type QueryPromotionsByDispensaryArgs = {
   dispensaryId: Scalars['ID']['input'];
@@ -3615,19 +3593,23 @@ export type QueryPromotionsByDispensaryArgs = {
   offset?: InputMaybe<Scalars['Int']['input']>;
 };
 
+
 export type QueryPurchaseLimitAlertsArgs = {
   customerId: Scalars['ID']['input'];
   dispensaryId: Scalars['ID']['input'];
 };
 
+
 export type QueryPurchaseOrderArgs = {
   poId: Scalars['ID']['input'];
 };
+
 
 export type QueryPurchaseOrdersArgs = {
   dispensaryId: Scalars['ID']['input'];
   status?: InputMaybe<Scalars['String']['input']>;
 };
+
 
 export type QueryRecommendationsArgs = {
   dispensaryId?: InputMaybe<Scalars['ID']['input']>;
@@ -3635,23 +3617,28 @@ export type QueryRecommendationsArgs = {
   productId: Scalars['ID']['input'];
 };
 
+
 export type QueryReconciliationItemsArgs = {
   reportId: Scalars['ID']['input'];
   status?: InputMaybe<Scalars['String']['input']>;
 };
+
 
 export type QueryReconciliationReportsArgs = {
   dispensaryId: Scalars['ID']['input'];
   limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
+
 export type QueryReorderAlertsArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
 
+
 export type QueryReorderSuggestionsArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
+
 
 export type QuerySalesByDayArgs = {
   dispensaryId: Scalars['ID']['input'];
@@ -3659,11 +3646,13 @@ export type QuerySalesByDayArgs = {
   startDate: Scalars['String']['input'];
 };
 
+
 export type QuerySalesByHourArgs = {
   dispensaryId: Scalars['ID']['input'];
   endDate: Scalars['String']['input'];
   startDate: Scalars['String']['input'];
 };
+
 
 export type QuerySalesByProductArgs = {
   dispensaryId: Scalars['ID']['input'];
@@ -3671,10 +3660,12 @@ export type QuerySalesByProductArgs = {
   startDate: Scalars['String']['input'];
 };
 
+
 export type QuerySalesOverviewArgs = {
   days?: InputMaybe<Scalars['Int']['input']>;
   dispensaryId?: InputMaybe<Scalars['ID']['input']>;
 };
+
 
 export type QuerySalesReportArgs = {
   dispensaryId: Scalars['ID']['input'];
@@ -3682,16 +3673,19 @@ export type QuerySalesReportArgs = {
   startDate: Scalars['String']['input'];
 };
 
+
 export type QuerySalesTrendArgs = {
   days?: InputMaybe<Scalars['Int']['input']>;
   dispensaryId?: InputMaybe<Scalars['ID']['input']>;
 };
+
 
 export type QuerySearchCustomersArgs = {
   dispensaryId: Scalars['ID']['input'];
   limit?: InputMaybe<Scalars['Int']['input']>;
   query: Scalars['String']['input'];
 };
+
 
 export type QuerySearchProductsArgs = {
   dispensaryId: Scalars['String']['input'];
@@ -3700,9 +3694,11 @@ export type QuerySearchProductsArgs = {
   query: Scalars['String']['input'];
 };
 
+
 export type QuerySearchStrainsArgs = {
   name: Scalars['String']['input'];
 };
+
 
 export type QueryShrinkageReportArgs = {
   dispensaryId: Scalars['ID']['input'];
@@ -3710,9 +3706,11 @@ export type QueryShrinkageReportArgs = {
   startDate: Scalars['String']['input'];
 };
 
+
 export type QueryStaffComplianceOverviewArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
+
 
 export type QueryTaxReportArgs = {
   dispensaryId: Scalars['ID']['input'];
@@ -3720,9 +3718,11 @@ export type QueryTaxReportArgs = {
   startDate: Scalars['String']['input'];
 };
 
+
 export type QueryThemeConfigArgs = {
   dispensaryId: Scalars['String']['input'];
 };
+
 
 export type QueryTimeEntriesArgs = {
   endDate: Scalars['String']['input'];
@@ -3730,10 +3730,12 @@ export type QueryTimeEntriesArgs = {
   startDate: Scalars['String']['input'];
 };
 
+
 export type QueryTimeOffRequestsArgs = {
   dispensaryId: Scalars['ID']['input'];
   status?: InputMaybe<Scalars['String']['input']>;
 };
+
 
 export type QueryTopProductsArgs = {
   days?: InputMaybe<Scalars['Int']['input']>;
@@ -3741,9 +3743,11 @@ export type QueryTopProductsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
+
 export type QueryTransferItemsArgs = {
   transferId: Scalars['ID']['input'];
 };
+
 
 export type QueryTrendingArgs = {
   days?: InputMaybe<Scalars['Int']['input']>;
@@ -3751,25 +3755,31 @@ export type QueryTrendingArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
+
 export type QueryUserArgs = {
   id: Scalars['ID']['input'];
 };
+
 
 export type QueryUsersByDispensaryArgs = {
   dispensaryId: Scalars['ID']['input'];
 };
 
+
 export type QueryVarianceReportArgs = {
   countId: Scalars['ID']['input'];
 };
+
 
 export type QueryVendorArgs = {
   vendorId: Scalars['ID']['input'];
 };
 
+
 export type QueryVerificationHistoryArgs = {
   customerId: Scalars['ID']['input'];
 };
+
 
 export type QueryVibeSearchArgs = {
   dispensaryId: Scalars['String']['input'];
@@ -3777,10 +3787,12 @@ export type QueryVibeSearchArgs = {
   vibe: Scalars['String']['input'];
 };
 
+
 export type QueryWasteLogsArgs = {
   dispensaryId: Scalars['ID']['input'];
   limit?: InputMaybe<Scalars['Int']['input']>;
 };
+
 
 export type QueryWeekScheduleArgs = {
   dispensaryId: Scalars['ID']['input'];
@@ -3794,7 +3806,6 @@ export type ReceiveItemInput = {
 };
 
 export type RecommendedProduct = {
-  __typename?: 'RecommendedProduct';
   coCount?: Maybe<Scalars['Int']['output']>;
   effects?: Maybe<Array<Scalars['String']['output']>>;
   matchScore?: Maybe<Scalars['Int']['output']>;
@@ -3806,7 +3817,6 @@ export type RecommendedProduct = {
 };
 
 export type ReconciliationItem = {
-  __typename?: 'ReconciliationItem';
   itemId: Scalars['ID']['output'];
   localQuantity?: Maybe<Scalars['Int']['output']>;
   metrcPackageTag?: Maybe<Scalars['String']['output']>;
@@ -3818,7 +3828,6 @@ export type ReconciliationItem = {
 };
 
 export type ReconciliationReport = {
-  __typename?: 'ReconciliationReport';
   created_at: Scalars['DateTime']['output'];
   discrepancyCount: Scalars['Int']['output'];
   dispensaryId: Scalars['ID']['output'];
@@ -3832,7 +3841,6 @@ export type ReconciliationReport = {
 };
 
 export type RedeemResult = {
-  __typename?: 'RedeemResult';
   newBalance: Scalars['Int']['output'];
   rewardName: Scalars['String']['output'];
 };
@@ -3842,21 +3850,7 @@ export type RegisterInput = {
   password: Scalars['String']['input'];
 };
 
-export type RegisterSession = {
-  __typename?: 'RegisterSession';
-  closedAt?: Maybe<Scalars['DateTime']['output']>;
-  closingCashCents?: Maybe<Scalars['Float']['output']>;
-  dispensaryId: Scalars['ID']['output'];
-  id: Scalars['ID']['output'];
-  openedAt: Scalars['DateTime']['output'];
-  openedByUserId: Scalars['ID']['output'];
-  openingCashCents: Scalars['Float']['output'];
-  status: Scalars['String']['output'];
-  updatedAt: Scalars['DateTime']['output'];
-};
-
 export type ReorderSuggestion = {
-  __typename?: 'ReorderSuggestion';
   avgDailySales: Scalars['Float']['output'];
   daysOfStockRemaining: Scalars['Float']['output'];
   inventoryId: Scalars['ID']['output'];
@@ -3870,13 +3864,11 @@ export type ReorderSuggestion = {
 };
 
 export type RevenueStats = {
-  __typename?: 'RevenueStats';
   arr: Scalars['Float']['output'];
   mrr: Scalars['Float']['output'];
 };
 
 export type SalesOverview = {
-  __typename?: 'SalesOverview';
   averageOrderValue: Scalars['Float']['output'];
   cancelledOrders: Scalars['Int']['output'];
   completedOrders: Scalars['Int']['output'];
@@ -3888,7 +3880,6 @@ export type SalesOverview = {
 };
 
 export type SalesSummary = {
-  __typename?: 'SalesSummary';
   avgOrderValue: Scalars['Float']['output'];
   cancelledOrders: Scalars['Int']['output'];
   cardOrders: Scalars['Int']['output'];
@@ -3905,7 +3896,6 @@ export type SalesSummary = {
 };
 
 export type SalesTrend = {
-  __typename?: 'SalesTrend';
   averageOrderValue: Scalars['Float']['output'];
   orders: Scalars['Int']['output'];
   period: Scalars['String']['output'];
@@ -3933,7 +3923,6 @@ export type SaveThemeConfigInput = {
 };
 
 export type ScheduledShift = {
-  __typename?: 'ScheduledShift';
   created_at: Scalars['DateTime']['output'];
   dispensaryId: Scalars['ID']['output'];
   endTime: Scalars['String']['output'];
@@ -3949,7 +3938,6 @@ export type ScheduledShift = {
 };
 
 export type SearchFacets = {
-  __typename?: 'SearchFacets';
   effects: Array<FacetCount>;
   flavors: Array<FacetCount>;
   maxPrice: Scalars['Float']['output'];
@@ -3968,7 +3956,6 @@ export type SearchFiltersInput = {
 };
 
 export type SearchResultType = {
-  __typename?: 'SearchResultType';
   cbdPercent?: Maybe<Scalars['Float']['output']>;
   effects?: Maybe<Array<Scalars['String']['output']>>;
   flavors?: Maybe<Array<Scalars['String']['output']>>;
@@ -3980,18 +3967,6 @@ export type SearchResultType = {
   thcPercent?: Maybe<Scalars['Float']['output']>;
 };
 
-export type SetActiveDispensaryProcessorInput = {
-  dispensaryId: Scalars['ID']['input'];
-  processorName?: InputMaybe<DispensaryProcessorName>;
-};
-
-export type SetDispensaryProcessorEnabledInput = {
-  dispensaryId: Scalars['ID']['input'];
-  isEnabled: Scalars['Boolean']['input'];
-  isSandbox?: InputMaybe<Scalars['Boolean']['input']>;
-  processorName: DispensaryProcessorName;
-};
-
 export type SetMetrcCategoryInput = {
   dispensaryId: Scalars['ID']['input'];
   metrcItemCategoryId: Scalars['Int']['input'];
@@ -3999,7 +3974,6 @@ export type SetMetrcCategoryInput = {
 };
 
 export type ShiftSwapRequest = {
-  __typename?: 'ShiftSwapRequest';
   coveringProfileId?: Maybe<Scalars['ID']['output']>;
   created_at: Scalars['DateTime']['output'];
   originalShiftId: Scalars['ID']['output'];
@@ -4010,7 +3984,6 @@ export type ShiftSwapRequest = {
 };
 
 export type ShrinkageByReason = {
-  __typename?: 'ShrinkageByReason';
   count: Scalars['Int']['output'];
   estimatedValue: Scalars['Float']['output'];
   reason: Scalars['String']['output'];
@@ -4019,7 +3992,6 @@ export type ShrinkageByReason = {
 };
 
 export type ShrinkageReport = {
-  __typename?: 'ShrinkageReport';
   byReason: Array<ShrinkageByReason>;
   estimatedValueLost: Scalars['Float']['output'];
   totalAdjustments: Scalars['Int']['output'];
@@ -4027,7 +3999,6 @@ export type ShrinkageReport = {
 };
 
 export type StrainData = {
-  __typename?: 'StrainData';
   cbdAvg?: Maybe<Scalars['Float']['output']>;
   createdAt: Scalars['DateTime']['output'];
   description?: Maybe<Scalars['String']['output']>;
@@ -4060,7 +4031,6 @@ export type TagProductUidInput = {
 };
 
 export type TaxBreakdownItem = {
-  __typename?: 'TaxBreakdownItem';
   estimatedTax: Scalars['Float']['output'];
   rate: Scalars['Float']['output'];
   statutoryReference?: Maybe<Scalars['String']['output']>;
@@ -4070,14 +4040,12 @@ export type TaxBreakdownItem = {
 };
 
 export type TaxLineItem = {
-  __typename?: 'TaxLineItem';
   amount: Scalars['Float']['output'];
   label: Scalars['String']['output'];
   ratePercent: Scalars['Float']['output'];
 };
 
 export type TaxReport = {
-  __typename?: 'TaxReport';
   dispensaryName?: Maybe<Scalars['String']['output']>;
   licenseNumber?: Maybe<Scalars['String']['output']>;
   netTaxable: Scalars['Float']['output'];
@@ -4090,7 +4058,6 @@ export type TaxReport = {
 };
 
 export type TaxRule = {
-  __typename?: 'TaxRule';
   code: Scalars['String']['output'];
   is_active: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
@@ -4102,7 +4069,6 @@ export type TaxRule = {
 };
 
 export type TenantStats = {
-  __typename?: 'TenantStats';
   active: Scalars['Int']['output'];
   suspended: Scalars['Int']['output'];
   total: Scalars['Int']['output'];
@@ -4110,7 +4076,6 @@ export type TenantStats = {
 };
 
 export type ThemeConfigType = {
-  __typename?: 'ThemeConfigType';
   accent: Scalars['String']['output'];
   bgCard: Scalars['String']['output'];
   bgPrimary: Scalars['String']['output'];
@@ -4134,20 +4099,17 @@ export type ThemeConfigType = {
 };
 
 export type TierBreakdown = {
-  __typename?: 'TierBreakdown';
   count: Scalars['Int']['output'];
   revenue: Scalars['Float']['output'];
   tier: Scalars['String']['output'];
 };
 
 export type TierCount = {
-  __typename?: 'TierCount';
   count: Scalars['Int']['output'];
   tier: Scalars['String']['output'];
 };
 
 export type TimeEntry = {
-  __typename?: 'TimeEntry';
   approvedAt?: Maybe<Scalars['DateTime']['output']>;
   approvedByUserId?: Maybe<Scalars['ID']['output']>;
   breakMinutes: Scalars['Int']['output'];
@@ -4165,7 +4127,6 @@ export type TimeEntry = {
 };
 
 export type TimeOffRequest = {
-  __typename?: 'TimeOffRequest';
   created_at: Scalars['DateTime']['output'];
   dispensaryId: Scalars['ID']['output'];
   endDate: Scalars['String']['output'];
@@ -4178,7 +4139,6 @@ export type TimeOffRequest = {
 };
 
 export type TopProduct = {
-  __typename?: 'TopProduct';
   productId: Scalars['String']['output'];
   productName: Scalars['String']['output'];
   revenue: Scalars['Float']['output'];
@@ -4329,7 +4289,6 @@ export type UpsertCredentialInput = {
 };
 
 export type User = {
-  __typename?: 'User';
   createdAt: Scalars['DateTime']['output'];
   dispensaryId?: Maybe<Scalars['String']['output']>;
   email: Scalars['String']['output'];
@@ -4346,7 +4305,6 @@ export type User = {
 };
 
 export type UserStats = {
-  __typename?: 'UserStats';
   active7d: Scalars['Int']['output'];
   active24h: Scalars['Int']['output'];
   customers: Scalars['Int']['output'];
@@ -4355,7 +4313,6 @@ export type UserStats = {
 };
 
 export type Vendor = {
-  __typename?: 'Vendor';
   city?: Maybe<Scalars['String']['output']>;
   contacts?: Maybe<Scalars['JSON']['output']>;
   email?: Maybe<Scalars['String']['output']>;
@@ -4374,7 +4331,6 @@ export type Vendor = {
 };
 
 export type VendorStats = {
-  __typename?: 'VendorStats';
   activeVendors: Scalars['Int']['output'];
   openPOs: Scalars['Int']['output'];
   outstanding: Scalars['Float']['output'];
@@ -4383,7 +4339,6 @@ export type VendorStats = {
 };
 
 export type WasteDestructionLog = {
-  __typename?: 'WasteDestructionLog';
   created_at: Scalars['DateTime']['output'];
   destroyedAt: Scalars['DateTime']['output'];
   destructionMethod?: Maybe<Scalars['String']['output']>;
@@ -4404,1774 +4359,3 @@ export type WasteDestructionLog = {
   witness2Name?: Maybe<Scalars['String']['output']>;
   witness2Title?: Maybe<Scalars['String']['output']>;
 };
-
-export type AttestKioskDeviceMutationVariables = Exact<{
-  publicKey: Scalars['String']['input'];
-}>;
-
-export type AttestKioskDeviceMutation = { __typename?: 'Mutation'; attestKioskDevice: boolean };
-
-export type AutocompleteProductsQueryVariables = Exact<{
-  dispensaryId: Scalars['ID']['input'];
-  query: Scalars['String']['input'];
-  limit?: InputMaybe<Scalars['Int']['input']>;
-}>;
-
-export type AutocompleteProductsQuery = {
-  __typename?: 'Query';
-  autocompleteProducts: Array<{
-    __typename?: 'AutocompleteResult';
-    id: string;
-    name: string;
-    productType?: string | null;
-    strainType?: string | null;
-  }>;
-};
-
-export type AvailablePaymentMethodsQueryVariables = Exact<{
-  dispensaryId: Scalars['ID']['input'];
-}>;
-
-export type AvailablePaymentMethodsQuery = {
-  __typename?: 'Query';
-  availablePaymentMethods: Array<{
-    __typename?: 'PaymentMethodInfo';
-    method: string;
-    enabled: boolean;
-  }>;
-};
-
-export type AvailableRewardsQueryVariables = Exact<{
-  dispensaryId: Scalars['ID']['input'];
-}>;
-
-export type AvailableRewardsQuery = {
-  __typename?: 'Query';
-  availableRewards: Array<{
-    __typename?: 'LoyaltyReward';
-    rewardId: string;
-    name: string;
-    description?: string | null;
-    pointsCost: number;
-    rewardType: string;
-    rewardValue: number;
-  }>;
-};
-
-export type AvailableTimeSlotsQueryVariables = Exact<{
-  dispensaryId: Scalars['ID']['input'];
-  slotType: Scalars['String']['input'];
-  date: Scalars['String']['input'];
-}>;
-
-export type AvailableTimeSlotsQuery = {
-  __typename?: 'Query';
-  availableTimeSlots: Array<{
-    __typename?: 'AvailableSlotResult';
-    slotId: string;
-    startTime: string;
-    endTime: string;
-    spotsRemaining: number;
-  }>;
-};
-
-export type CloseRegisterSessionMutationVariables = Exact<{
-  input: CloseRegisterSessionGqlInput;
-}>;
-
-export type CloseRegisterSessionMutation = {
-  __typename?: 'Mutation';
-  closeRegisterSession: {
-    __typename?: 'RegisterSession';
-    id: string;
-    openingCashCents: number;
-    closingCashCents?: number | null;
-    status: string;
-    openedAt: string;
-    closedAt?: string | null;
-  };
-};
-
-export type CreateOrderMutationVariables = Exact<{
-  input: CreateOrderInput;
-}>;
-
-export type CreateOrderMutation = {
-  __typename?: 'Mutation';
-  createOrder: {
-    __typename?: 'OrderSummary';
-    orderId: string;
-    dispensaryId: string;
-    orderStatus: string;
-    orderType: string;
-    subtotal: number;
-    taxTotal: number;
-    discountTotal: number;
-    total: number;
-    lineItemCount: number;
-    createdAt: string;
-  };
-};
-
-export type CreateWalkInCustomerMutationVariables = Exact<{
-  input: CreateWalkInCustomerInput;
-}>;
-
-export type CreateWalkInCustomerMutation = {
-  __typename?: 'Mutation';
-  createWalkInCustomer: {
-    __typename?: 'CustomerSearchResult';
-    userId: string;
-    email: string;
-    firstName?: string | null;
-    lastName?: string | null;
-    phone?: string | null;
-    ageVerified: boolean;
-    totalOrders: number;
-  };
-};
-
-export type CustomerByPhoneQueryVariables = Exact<{
-  dispensaryId: Scalars['ID']['input'];
-  phone: Scalars['String']['input'];
-}>;
-
-export type CustomerByPhoneQuery = {
-  __typename?: 'Query';
-  customerByPhone?: {
-    __typename?: 'KioskCustomerLookup';
-    customerId: string;
-    firstName?: string | null;
-    lastName?: string | null;
-    loyaltyPoints: number;
-  } | null;
-};
-
-export type DeliveryZonesForFulfillmentQueryVariables = Exact<{
-  dispensaryId: Scalars['ID']['input'];
-}>;
-
-export type DeliveryZonesForFulfillmentQuery = {
-  __typename?: 'Query';
-  deliveryZones: Array<{
-    __typename?: 'DeliveryZone';
-    zoneId: string;
-    name: string;
-    radiusMiles: number;
-    deliveryFee: number;
-    minOrderAmount?: number | null;
-    freeDeliveryThreshold?: number | null;
-  }>;
-};
-
-export type CheckDeliveryEligibilityQueryVariables = Exact<{
-  dispensaryId: Scalars['ID']['input'];
-  latitude: Scalars['Float']['input'];
-  longitude: Scalars['Float']['input'];
-  orderSubtotal?: InputMaybe<Scalars['Float']['input']>;
-}>;
-
-export type CheckDeliveryEligibilityQuery = {
-  __typename?: 'Query';
-  checkDeliveryEligibility: {
-    __typename?: 'DeliveryEligibilityResult';
-    eligible: boolean;
-    distance?: number | null;
-    reason?: string | null;
-    zone?: {
-      __typename?: 'DeliveryZoneMatch';
-      zoneId: string;
-      name: string;
-      deliveryFee: number;
-      estimatedMinutesMin: number;
-      estimatedMinutesMax: number;
-    } | null;
-  };
-};
-
-export type DeliveryZonesQueryVariables = Exact<{
-  dispensaryId: Scalars['ID']['input'];
-}>;
-
-export type DeliveryZonesQuery = {
-  __typename?: 'Query';
-  deliveryZones: Array<{
-    __typename?: 'DeliveryZone';
-    zoneId: string;
-    name: string;
-    radiusMiles: number;
-    deliveryFee: number;
-    minOrderAmount?: number | null;
-    freeDeliveryThreshold?: number | null;
-    estimatedMinutesMin?: number | null;
-    estimatedMinutesMax?: number | null;
-  }>;
-};
-
-export type DispensaryBySlugQueryVariables = Exact<{
-  slug: Scalars['String']['input'];
-}>;
-
-export type DispensaryBySlugQuery = {
-  __typename?: 'Query';
-  dispensaryBySlug?: {
-    __typename?: 'DispensaryPublic';
-    entityId: string;
-    slug: string;
-    name: string;
-    city?: string | null;
-    state?: string | null;
-    isActive: boolean;
-    isPickupEnabled: boolean;
-    isDeliveryEnabled: boolean;
-  } | null;
-};
-
-export type DispensaryQueryVariables = Exact<{
-  entityId: Scalars['ID']['input'];
-}>;
-
-export type DispensaryQuery = {
-  __typename?: 'Query';
-  dispensary?: {
-    __typename?: 'DispensaryResult';
-    entityId: string;
-    name: string;
-    addressLine1?: string | null;
-    city?: string | null;
-    county?: string | null;
-    municipality?: string | null;
-    isActive: boolean;
-    isPickupEnabled: boolean;
-    isDeliveryEnabled: boolean;
-    isCashEnabled?: boolean | null;
-    cashDiscountPercent?: number | null;
-    licenseNumber?: string | null;
-    licenseType?: string | null;
-    metrcLicenseNumber?: string | null;
-    email?: string | null;
-    latitude?: number | null;
-    longitude?: number | null;
-  } | null;
-};
-
-export type InitiateCashlessPaymentMutationVariables = Exact<{
-  orderId: Scalars['ID']['input'];
-  dispensaryId: Scalars['ID']['input'];
-  amount: Scalars['Float']['input'];
-  provider: Scalars['String']['input'];
-}>;
-
-export type InitiateCashlessPaymentMutation = {
-  __typename?: 'Mutation';
-  initiateCashlessPayment: {
-    __typename?: 'CashlessPaymentResult';
-    referenceId: string;
-    redirectUrl?: string | null;
-    paymentUrl?: string | null;
-  };
-};
-
-export type LoginMutationVariables = Exact<{
-  input: LoginInput;
-}>;
-
-export type LoginMutation = {
-  __typename?: 'Mutation';
-  login: { __typename?: 'AuthToken'; accessToken: string; expiresIn: number };
-};
-
-export type MeQueryVariables = Exact<{ [key: string]: never }>;
-
-export type MeQuery = {
-  __typename?: 'Query';
-  me: {
-    __typename?: 'User';
-    id: string;
-    email: string;
-    role: string;
-    firstName?: string | null;
-    lastName?: string | null;
-    isActive: boolean;
-    emailVerified: boolean;
-    dispensaryId?: string | null;
-    organizationId?: string | null;
-  };
-};
-
-export type MyCurrentRegisterSessionQueryVariables = Exact<{
-  dispensaryId: Scalars['ID']['input'];
-}>;
-
-export type MyCurrentRegisterSessionQuery = {
-  __typename?: 'Query';
-  myCurrentRegisterSession?: {
-    __typename?: 'RegisterSession';
-    id: string;
-    dispensaryId: string;
-    openedByUserId: string;
-    openingCashCents: number;
-    closingCashCents?: number | null;
-    status: string;
-    openedAt: string;
-    closedAt?: string | null;
-  } | null;
-};
-
-export type MyFavoritesQueryVariables = Exact<{
-  dispensaryId: Scalars['ID']['input'];
-  limit?: InputMaybe<Scalars['Int']['input']>;
-}>;
-
-export type MyFavoritesQuery = {
-  __typename?: 'Query';
-  myFavorites: Array<{
-    __typename?: 'CustomerFavorite';
-    productId: string;
-    variantId?: string | null;
-    productName?: string | null;
-    variantName?: string | null;
-    price: number;
-    orderCount: number;
-  }>;
-};
-
-export type MyLastOrderQueryVariables = Exact<{
-  dispensaryId: Scalars['ID']['input'];
-}>;
-
-export type MyLastOrderQuery = {
-  __typename?: 'Query';
-  myLastOrder?: {
-    __typename?: 'CustomerOrder';
-    orderId: string;
-    orderType: string;
-    orderStatus: string;
-    subtotal: number;
-    taxTotal: number;
-    total: number;
-    paymentMethod?: string | null;
-    createdAt: string;
-    lineItems: Array<{
-      __typename?: 'CustomerOrderLineItem';
-      productId: string;
-      variantId?: string | null;
-      productName?: string | null;
-      variantName?: string | null;
-      quantity: number;
-      price: number;
-    }>;
-  } | null;
-};
-
-export type MyLoyaltyQueryVariables = Exact<{
-  dispensaryId: Scalars['ID']['input'];
-}>;
-
-export type MyLoyaltyQuery = {
-  __typename?: 'Query';
-  myLoyalty?: {
-    __typename?: 'MyLoyalty';
-    points: number;
-    lifetimePoints: number;
-    tier: string;
-    tierName: string;
-    tierColor?: string | null;
-    multiplier: number;
-    pointValue: number;
-    nextTier?: { __typename?: 'NextTierInfo'; name: string; pointsNeeded: number } | null;
-    allTiers: Array<{
-      __typename?: 'LoyaltyTierInfo';
-      code: string;
-      name: string;
-      minPoints: number;
-      color?: string | null;
-    }>;
-  } | null;
-};
-
-export type MyOrdersQueryVariables = Exact<{
-  limit?: InputMaybe<Scalars['Int']['input']>;
-  offset?: InputMaybe<Scalars['Int']['input']>;
-}>;
-
-export type MyOrdersQuery = {
-  __typename?: 'Query';
-  myOrders: {
-    __typename?: 'OrderHistoryResult';
-    total: number;
-    orders: Array<{
-      __typename?: 'CustomerOrderSummary';
-      orderId: string;
-      orderStatus: string;
-      orderType: string;
-      subtotal: number;
-      total: number;
-      itemCount?: number | null;
-      dispensaryName?: string | null;
-      createdAt: string;
-    }>;
-  };
-};
-
-export type MyTimeEntriesQueryVariables = Exact<{
-  dispensaryId: Scalars['ID']['input'];
-  startDate: Scalars['String']['input'];
-  endDate: Scalars['String']['input'];
-}>;
-
-export type MyTimeEntriesQuery = {
-  __typename?: 'Query';
-  myTimeEntries: Array<{
-    __typename?: 'TimeEntry';
-    entryId: string;
-    clockIn: string;
-    clockOut?: string | null;
-    breakMinutes: number;
-    totalHours?: number | null;
-    overtimeHours?: number | null;
-    status: string;
-    notes?: string | null;
-    approvedAt?: string | null;
-  }>;
-};
-
-export type OpenRegisterSessionMutationVariables = Exact<{
-  input: OpenRegisterSessionGqlInput;
-}>;
-
-export type OpenRegisterSessionMutation = {
-  __typename?: 'Mutation';
-  openRegisterSession: {
-    __typename?: 'RegisterSession';
-    id: string;
-    dispensaryId: string;
-    openedByUserId: string;
-    openingCashCents: number;
-    status: string;
-    openedAt: string;
-  };
-};
-
-export type ConfirmOrderMutationVariables = Exact<{
-  orderId: Scalars['ID']['input'];
-  dispensaryId?: InputMaybe<Scalars['ID']['input']>;
-}>;
-
-export type ConfirmOrderMutation = { __typename?: 'Mutation'; confirmOrder: boolean };
-
-export type StartPreparingOrderMutationVariables = Exact<{
-  orderId: Scalars['ID']['input'];
-  dispensaryId?: InputMaybe<Scalars['ID']['input']>;
-}>;
-
-export type StartPreparingOrderMutation = { __typename?: 'Mutation'; startPreparingOrder: boolean };
-
-export type MarkOrderReadyMutationVariables = Exact<{
-  orderId: Scalars['ID']['input'];
-  dispensaryId?: InputMaybe<Scalars['ID']['input']>;
-}>;
-
-export type MarkOrderReadyMutation = { __typename?: 'Mutation'; markOrderReady: boolean };
-
-export type CompleteOrderMutationVariables = Exact<{
-  orderId: Scalars['ID']['input'];
-  dispensaryId: Scalars['ID']['input'];
-}>;
-
-export type CompleteOrderMutation = { __typename?: 'Mutation'; completeOrder: boolean };
-
-export type OrderQueryVariables = Exact<{
-  orderId: Scalars['ID']['input'];
-  dispensaryId?: InputMaybe<Scalars['ID']['input']>;
-}>;
-
-export type OrderQuery = {
-  __typename?: 'Query';
-  order?: {
-    __typename?: 'Order';
-    orderId: string;
-    orderStatus: string;
-    orderType: string;
-    subtotal: number;
-    taxTotal: number;
-    discountTotal: number;
-    total: number;
-    createdAt: string;
-    updatedAt: string;
-    cancellationReason?: string | null;
-    cancelledAt?: string | null;
-  } | null;
-};
-
-export type OrdersQueryVariables = Exact<{
-  dispensaryId: Scalars['ID']['input'];
-  limit?: InputMaybe<Scalars['Int']['input']>;
-  offset?: InputMaybe<Scalars['Int']['input']>;
-}>;
-
-export type OrdersQuery = {
-  __typename?: 'Query';
-  orders: Array<{
-    __typename?: 'Order';
-    orderId: string;
-    dispensaryId: string;
-    customerUserId?: string | null;
-    orderType: string;
-    orderStatus: string;
-    subtotal: number;
-    taxTotal: number;
-    total: number;
-    createdAt: string;
-    updatedAt: string;
-  }>;
-};
-
-export type ProductQueryVariables = Exact<{
-  dispensaryId: Scalars['ID']['input'];
-  id: Scalars['ID']['input'];
-}>;
-
-export type ProductQuery = {
-  __typename?: 'Query';
-  product?: {
-    __typename?: 'Product';
-    id: string;
-    name: string;
-    sku?: string | null;
-    description?: string | null;
-    shortDescription?: string | null;
-    strainName?: string | null;
-    strainType?: string | null;
-    thcPercent?: number | null;
-    cbdPercent?: number | null;
-    effects?: Record<string, unknown> | null;
-    flavors?: Record<string, unknown> | null;
-    primaryCategoryId?: number | null;
-    productTypeId?: number | null;
-    brandId?: string | null;
-    isActive: boolean;
-    isApproved: boolean;
-    variants: Array<{
-      __typename?: 'ProductVariant';
-      variantId: string;
-      name: string;
-      sku?: string | null;
-      quantityPerUnit?: number | null;
-      retailPrice?: number | null;
-      stockQuantity?: number | null;
-      stockStatus?: string | null;
-      sortOrder?: number | null;
-      isActive: boolean;
-    }>;
-  } | null;
-};
-
-export type ProductsQueryVariables = Exact<{
-  dispensaryId: Scalars['ID']['input'];
-  categoryId?: InputMaybe<Scalars['Int']['input']>;
-  productTypeId?: InputMaybe<Scalars['Int']['input']>;
-  search?: InputMaybe<Scalars['String']['input']>;
-  limit?: InputMaybe<Scalars['Int']['input']>;
-  offset?: InputMaybe<Scalars['Int']['input']>;
-}>;
-
-export type ProductsQuery = {
-  __typename?: 'Query';
-  products: Array<{
-    __typename?: 'Product';
-    id: string;
-    name: string;
-    sku?: string | null;
-    description?: string | null;
-    shortDescription?: string | null;
-    strainName?: string | null;
-    strainType?: string | null;
-    thcPercent?: number | null;
-    cbdPercent?: number | null;
-    effects?: Record<string, unknown> | null;
-    flavors?: Record<string, unknown> | null;
-    primaryCategoryId?: number | null;
-    productTypeId?: number | null;
-    brandId?: string | null;
-    isActive: boolean;
-    isApproved: boolean;
-    variants: Array<{
-      __typename?: 'ProductVariant';
-      variantId: string;
-      name: string;
-      sku?: string | null;
-      retailPrice?: number | null;
-      stockQuantity?: number | null;
-      stockStatus?: string | null;
-      sortOrder?: number | null;
-      isActive: boolean;
-    }>;
-  }>;
-};
-
-export type RegisterMutationVariables = Exact<{
-  input: RegisterInput;
-}>;
-
-export type RegisterMutation = {
-  __typename?: 'Mutation';
-  register: { __typename?: 'AuthToken'; accessToken: string; expiresIn: number };
-};
-
-export type SearchCustomersQueryVariables = Exact<{
-  dispensaryId: Scalars['ID']['input'];
-  query: Scalars['String']['input'];
-  limit?: InputMaybe<Scalars['Int']['input']>;
-}>;
-
-export type SearchCustomersQuery = {
-  __typename?: 'Query';
-  searchCustomers: Array<{
-    __typename?: 'CustomerSearchResult';
-    userId: string;
-    email: string;
-    firstName?: string | null;
-    lastName?: string | null;
-    phone?: string | null;
-    ageVerified: boolean;
-    totalOrders: number;
-  }>;
-};
-
-export type SearchProductsLookupQueryVariables = Exact<{
-  dispensaryId: Scalars['String']['input'];
-  query: Scalars['String']['input'];
-  limit?: InputMaybe<Scalars['Int']['input']>;
-}>;
-
-export type SearchProductsLookupQuery = {
-  __typename?: 'Query';
-  searchProducts: Array<{
-    __typename?: 'SearchResultType';
-    productId: string;
-    name: string;
-    strainType?: string | null;
-    thcPercent?: number | null;
-    cbdPercent?: number | null;
-    effects?: Array<string> | null;
-    flavors?: Array<string> | null;
-  }>;
-};
-
-export type StaffInventoryProductsQueryVariables = Exact<{
-  dispensaryId: Scalars['ID']['input'];
-  limit?: InputMaybe<Scalars['Int']['input']>;
-  offset?: InputMaybe<Scalars['Int']['input']>;
-  search?: InputMaybe<Scalars['String']['input']>;
-}>;
-
-export type StaffInventoryProductsQuery = {
-  __typename?: 'Query';
-  products: Array<{
-    __typename?: 'Product';
-    id: string;
-    name: string;
-    sku?: string | null;
-    strainName?: string | null;
-    strainType?: string | null;
-    thcPercent?: number | null;
-    cbdPercent?: number | null;
-    isActive: boolean;
-    variants: Array<{
-      __typename?: 'ProductVariant';
-      variantId: string;
-      name: string;
-      sku?: string | null;
-      barcode?: string | null;
-      retailPrice?: number | null;
-      stockQuantity?: number | null;
-      stockStatus?: string | null;
-      isActive: boolean;
-    }>;
-  }>;
-};
-
-export type ThemeConfigQueryVariables = Exact<{
-  dispensaryId: Scalars['String']['input'];
-}>;
-
-export type ThemeConfigQuery = {
-  __typename?: 'Query';
-  themeConfig: { __typename?: 'ThemeConfigType'; preset: string; isDark: boolean };
-};
-
-export type VerifyAgeMutationVariables = Exact<{
-  dateOfBirth: Scalars['String']['input'];
-  idType: Scalars['String']['input'];
-  idState?: InputMaybe<Scalars['String']['input']>;
-  dispensaryId?: InputMaybe<Scalars['ID']['input']>;
-  method?: InputMaybe<Scalars['String']['input']>;
-}>;
-
-export type VerifyAgeMutation = {
-  __typename?: 'Mutation';
-  verifyAge: {
-    __typename?: 'AgeVerifyResult';
-    verified: boolean;
-    age: number;
-    reason?: string | null;
-  };
-};
-
-export const AttestKioskDeviceDocument = gql`
-  mutation AttestKioskDevice($publicKey: String!) {
-    attestKioskDevice(publicKey: $publicKey)
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class AttestKioskDeviceGQL extends Apollo.Mutation<
-  AttestKioskDeviceMutation,
-  AttestKioskDeviceMutationVariables
-> {
-  override document = AttestKioskDeviceDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const AutocompleteProductsDocument = gql`
-  query AutocompleteProducts($dispensaryId: ID!, $query: String!, $limit: Int) {
-    autocompleteProducts(dispensaryId: $dispensaryId, query: $query, limit: $limit) {
-      id
-      name
-      productType
-      strainType
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class AutocompleteProductsGQL extends Apollo.Query<
-  AutocompleteProductsQuery,
-  AutocompleteProductsQueryVariables
-> {
-  override document = AutocompleteProductsDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const AvailablePaymentMethodsDocument = gql`
-  query AvailablePaymentMethods($dispensaryId: ID!) {
-    availablePaymentMethods(dispensaryId: $dispensaryId) {
-      method
-      enabled
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class AvailablePaymentMethodsGQL extends Apollo.Query<
-  AvailablePaymentMethodsQuery,
-  AvailablePaymentMethodsQueryVariables
-> {
-  override document = AvailablePaymentMethodsDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const AvailableRewardsDocument = gql`
-  query AvailableRewards($dispensaryId: ID!) {
-    availableRewards(dispensaryId: $dispensaryId) {
-      rewardId
-      name
-      description
-      pointsCost
-      rewardType
-      rewardValue
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class AvailableRewardsGQL extends Apollo.Query<
-  AvailableRewardsQuery,
-  AvailableRewardsQueryVariables
-> {
-  override document = AvailableRewardsDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const AvailableTimeSlotsDocument = gql`
-  query AvailableTimeSlots($dispensaryId: ID!, $slotType: String!, $date: String!) {
-    availableTimeSlots(dispensaryId: $dispensaryId, slotType: $slotType, date: $date) {
-      slotId
-      startTime
-      endTime
-      spotsRemaining
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class AvailableTimeSlotsGQL extends Apollo.Query<
-  AvailableTimeSlotsQuery,
-  AvailableTimeSlotsQueryVariables
-> {
-  override document = AvailableTimeSlotsDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const CloseRegisterSessionDocument = gql`
-  mutation CloseRegisterSession($input: CloseRegisterSessionGqlInput!) {
-    closeRegisterSession(input: $input) {
-      id
-      openingCashCents
-      closingCashCents
-      status
-      openedAt
-      closedAt
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class CloseRegisterSessionGQL extends Apollo.Mutation<
-  CloseRegisterSessionMutation,
-  CloseRegisterSessionMutationVariables
-> {
-  override document = CloseRegisterSessionDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const CreateOrderDocument = gql`
-  mutation CreateOrder($input: CreateOrderInput!) {
-    createOrder(input: $input) {
-      orderId
-      dispensaryId
-      orderStatus
-      orderType
-      subtotal
-      taxTotal
-      discountTotal
-      total
-      lineItemCount
-      createdAt
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class CreateOrderGQL extends Apollo.Mutation<
-  CreateOrderMutation,
-  CreateOrderMutationVariables
-> {
-  override document = CreateOrderDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const CreateWalkInCustomerDocument = gql`
-  mutation CreateWalkInCustomer($input: CreateWalkInCustomerInput!) {
-    createWalkInCustomer(input: $input) {
-      userId
-      email
-      firstName
-      lastName
-      phone
-      ageVerified
-      totalOrders
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class CreateWalkInCustomerGQL extends Apollo.Mutation<
-  CreateWalkInCustomerMutation,
-  CreateWalkInCustomerMutationVariables
-> {
-  override document = CreateWalkInCustomerDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const CustomerByPhoneDocument = gql`
-  query CustomerByPhone($dispensaryId: ID!, $phone: String!) {
-    customerByPhone(dispensaryId: $dispensaryId, phone: $phone) {
-      customerId
-      firstName
-      lastName
-      loyaltyPoints
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class CustomerByPhoneGQL extends Apollo.Query<
-  CustomerByPhoneQuery,
-  CustomerByPhoneQueryVariables
-> {
-  override document = CustomerByPhoneDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const DeliveryZonesForFulfillmentDocument = gql`
-  query DeliveryZonesForFulfillment($dispensaryId: ID!) {
-    deliveryZones(dispensaryId: $dispensaryId) {
-      zoneId
-      name
-      radiusMiles
-      deliveryFee
-      minOrderAmount
-      freeDeliveryThreshold
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class DeliveryZonesForFulfillmentGQL extends Apollo.Query<
-  DeliveryZonesForFulfillmentQuery,
-  DeliveryZonesForFulfillmentQueryVariables
-> {
-  override document = DeliveryZonesForFulfillmentDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const CheckDeliveryEligibilityDocument = gql`
-  query CheckDeliveryEligibility(
-    $dispensaryId: ID!
-    $latitude: Float!
-    $longitude: Float!
-    $orderSubtotal: Float
-  ) {
-    checkDeliveryEligibility(
-      dispensaryId: $dispensaryId
-      latitude: $latitude
-      longitude: $longitude
-      orderSubtotal: $orderSubtotal
-    ) {
-      eligible
-      distance
-      reason
-      zone {
-        zoneId
-        name
-        deliveryFee
-        estimatedMinutesMin
-        estimatedMinutesMax
-      }
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class CheckDeliveryEligibilityGQL extends Apollo.Query<
-  CheckDeliveryEligibilityQuery,
-  CheckDeliveryEligibilityQueryVariables
-> {
-  override document = CheckDeliveryEligibilityDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const DeliveryZonesDocument = gql`
-  query DeliveryZones($dispensaryId: ID!) {
-    deliveryZones(dispensaryId: $dispensaryId) {
-      zoneId
-      name
-      radiusMiles
-      deliveryFee
-      minOrderAmount
-      freeDeliveryThreshold
-      estimatedMinutesMin
-      estimatedMinutesMax
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class DeliveryZonesGQL extends Apollo.Query<
-  DeliveryZonesQuery,
-  DeliveryZonesQueryVariables
-> {
-  override document = DeliveryZonesDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const DispensaryBySlugDocument = gql`
-  query DispensaryBySlug($slug: String!) {
-    dispensaryBySlug(slug: $slug) {
-      entityId
-      slug
-      name
-      city
-      state
-      isActive
-      isPickupEnabled
-      isDeliveryEnabled
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class DispensaryBySlugGQL extends Apollo.Query<
-  DispensaryBySlugQuery,
-  DispensaryBySlugQueryVariables
-> {
-  override document = DispensaryBySlugDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const DispensaryDocument = gql`
-  query Dispensary($entityId: ID!) {
-    dispensary(entityId: $entityId) {
-      entityId
-      name
-      addressLine1
-      city
-      county
-      municipality
-      isActive
-      isPickupEnabled
-      isDeliveryEnabled
-      isCashEnabled
-      cashDiscountPercent
-      licenseNumber
-      licenseType
-      metrcLicenseNumber
-      email
-      latitude
-      longitude
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class DispensaryGQL extends Apollo.Query<DispensaryQuery, DispensaryQueryVariables> {
-  override document = DispensaryDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const InitiateCashlessPaymentDocument = gql`
-  mutation InitiateCashlessPayment(
-    $orderId: ID!
-    $dispensaryId: ID!
-    $amount: Float!
-    $provider: String!
-  ) {
-    initiateCashlessPayment(
-      orderId: $orderId
-      dispensaryId: $dispensaryId
-      amount: $amount
-      provider: $provider
-    ) {
-      referenceId
-      redirectUrl
-      paymentUrl
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class InitiateCashlessPaymentGQL extends Apollo.Mutation<
-  InitiateCashlessPaymentMutation,
-  InitiateCashlessPaymentMutationVariables
-> {
-  override document = InitiateCashlessPaymentDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const LoginDocument = gql`
-  mutation Login($input: LoginInput!) {
-    login(input: $input) {
-      accessToken
-      expiresIn
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class LoginGQL extends Apollo.Mutation<LoginMutation, LoginMutationVariables> {
-  override document = LoginDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const MeDocument = gql`
-  query Me {
-    me {
-      id
-      email
-      role
-      firstName
-      lastName
-      isActive
-      emailVerified
-      dispensaryId
-      organizationId
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class MeGQL extends Apollo.Query<MeQuery, MeQueryVariables> {
-  override document = MeDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const MyCurrentRegisterSessionDocument = gql`
-  query MyCurrentRegisterSession($dispensaryId: ID!) {
-    myCurrentRegisterSession(dispensaryId: $dispensaryId) {
-      id
-      dispensaryId
-      openedByUserId
-      openingCashCents
-      closingCashCents
-      status
-      openedAt
-      closedAt
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class MyCurrentRegisterSessionGQL extends Apollo.Query<
-  MyCurrentRegisterSessionQuery,
-  MyCurrentRegisterSessionQueryVariables
-> {
-  override document = MyCurrentRegisterSessionDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const MyFavoritesDocument = gql`
-  query MyFavorites($dispensaryId: ID!, $limit: Int) {
-    myFavorites(dispensaryId: $dispensaryId, limit: $limit) {
-      productId
-      variantId
-      productName
-      variantName
-      price
-      orderCount
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class MyFavoritesGQL extends Apollo.Query<MyFavoritesQuery, MyFavoritesQueryVariables> {
-  override document = MyFavoritesDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const MyLastOrderDocument = gql`
-  query MyLastOrder($dispensaryId: ID!) {
-    myLastOrder(dispensaryId: $dispensaryId) {
-      orderId
-      orderType
-      orderStatus
-      subtotal
-      taxTotal
-      total
-      paymentMethod
-      createdAt
-      lineItems {
-        productId
-        variantId
-        productName
-        variantName
-        quantity
-        price
-      }
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class MyLastOrderGQL extends Apollo.Query<MyLastOrderQuery, MyLastOrderQueryVariables> {
-  override document = MyLastOrderDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const MyLoyaltyDocument = gql`
-  query MyLoyalty($dispensaryId: ID!) {
-    myLoyalty(dispensaryId: $dispensaryId) {
-      points
-      lifetimePoints
-      tier
-      tierName
-      tierColor
-      multiplier
-      pointValue
-      nextTier {
-        name
-        pointsNeeded
-      }
-      allTiers {
-        code
-        name
-        minPoints
-        color
-      }
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class MyLoyaltyGQL extends Apollo.Query<MyLoyaltyQuery, MyLoyaltyQueryVariables> {
-  override document = MyLoyaltyDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const MyOrdersDocument = gql`
-  query MyOrders($limit: Int, $offset: Int) {
-    myOrders(limit: $limit, offset: $offset) {
-      total
-      orders {
-        orderId
-        orderStatus
-        orderType
-        subtotal
-        total
-        itemCount
-        dispensaryName
-        createdAt
-      }
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class MyOrdersGQL extends Apollo.Query<MyOrdersQuery, MyOrdersQueryVariables> {
-  override document = MyOrdersDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const MyTimeEntriesDocument = gql`
-  query MyTimeEntries($dispensaryId: ID!, $startDate: String!, $endDate: String!) {
-    myTimeEntries(dispensaryId: $dispensaryId, startDate: $startDate, endDate: $endDate) {
-      entryId
-      clockIn
-      clockOut
-      breakMinutes
-      totalHours
-      overtimeHours
-      status
-      notes
-      approvedAt
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class MyTimeEntriesGQL extends Apollo.Query<
-  MyTimeEntriesQuery,
-  MyTimeEntriesQueryVariables
-> {
-  override document = MyTimeEntriesDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const OpenRegisterSessionDocument = gql`
-  mutation OpenRegisterSession($input: OpenRegisterSessionGqlInput!) {
-    openRegisterSession(input: $input) {
-      id
-      dispensaryId
-      openedByUserId
-      openingCashCents
-      status
-      openedAt
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class OpenRegisterSessionGQL extends Apollo.Mutation<
-  OpenRegisterSessionMutation,
-  OpenRegisterSessionMutationVariables
-> {
-  override document = OpenRegisterSessionDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const ConfirmOrderDocument = gql`
-  mutation ConfirmOrder($orderId: ID!, $dispensaryId: ID) {
-    confirmOrder(orderId: $orderId, dispensaryId: $dispensaryId)
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class ConfirmOrderGQL extends Apollo.Mutation<
-  ConfirmOrderMutation,
-  ConfirmOrderMutationVariables
-> {
-  override document = ConfirmOrderDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const StartPreparingOrderDocument = gql`
-  mutation StartPreparingOrder($orderId: ID!, $dispensaryId: ID) {
-    startPreparingOrder(orderId: $orderId, dispensaryId: $dispensaryId)
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class StartPreparingOrderGQL extends Apollo.Mutation<
-  StartPreparingOrderMutation,
-  StartPreparingOrderMutationVariables
-> {
-  override document = StartPreparingOrderDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const MarkOrderReadyDocument = gql`
-  mutation MarkOrderReady($orderId: ID!, $dispensaryId: ID) {
-    markOrderReady(orderId: $orderId, dispensaryId: $dispensaryId)
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class MarkOrderReadyGQL extends Apollo.Mutation<
-  MarkOrderReadyMutation,
-  MarkOrderReadyMutationVariables
-> {
-  override document = MarkOrderReadyDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const CompleteOrderDocument = gql`
-  mutation CompleteOrder($orderId: ID!, $dispensaryId: ID!) {
-    completeOrder(input: { orderId: $orderId, dispensaryId: $dispensaryId })
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class CompleteOrderGQL extends Apollo.Mutation<
-  CompleteOrderMutation,
-  CompleteOrderMutationVariables
-> {
-  override document = CompleteOrderDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const OrderDocument = gql`
-  query Order($orderId: ID!, $dispensaryId: ID) {
-    order(orderId: $orderId, dispensaryId: $dispensaryId) {
-      orderId
-      orderStatus
-      orderType
-      subtotal
-      taxTotal
-      discountTotal
-      total
-      createdAt
-      updatedAt
-      cancellationReason
-      cancelledAt
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class OrderGQL extends Apollo.Query<OrderQuery, OrderQueryVariables> {
-  override document = OrderDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const OrdersDocument = gql`
-  query Orders($dispensaryId: ID!, $limit: Int, $offset: Int) {
-    orders(dispensaryId: $dispensaryId, limit: $limit, offset: $offset) {
-      orderId
-      dispensaryId
-      customerUserId
-      orderType
-      orderStatus
-      subtotal
-      taxTotal
-      total
-      createdAt
-      updatedAt
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class OrdersGQL extends Apollo.Query<OrdersQuery, OrdersQueryVariables> {
-  override document = OrdersDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const ProductDocument = gql`
-  query Product($dispensaryId: ID!, $id: ID!) {
-    product(dispensaryId: $dispensaryId, id: $id) {
-      id
-      name
-      sku
-      description
-      shortDescription
-      strainName
-      strainType
-      thcPercent
-      cbdPercent
-      effects
-      flavors
-      primaryCategoryId
-      productTypeId
-      brandId
-      isActive
-      isApproved
-      variants {
-        variantId
-        name
-        sku
-        quantityPerUnit
-        retailPrice
-        stockQuantity
-        stockStatus
-        sortOrder
-        isActive
-      }
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class ProductGQL extends Apollo.Query<ProductQuery, ProductQueryVariables> {
-  override document = ProductDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const ProductsDocument = gql`
-  query Products(
-    $dispensaryId: ID!
-    $categoryId: Int
-    $productTypeId: Int
-    $search: String
-    $limit: Int = 50
-    $offset: Int
-  ) {
-    products(
-      dispensaryId: $dispensaryId
-      categoryId: $categoryId
-      productTypeId: $productTypeId
-      search: $search
-      limit: $limit
-      offset: $offset
-    ) {
-      id
-      name
-      sku
-      description
-      shortDescription
-      strainName
-      strainType
-      thcPercent
-      cbdPercent
-      effects
-      flavors
-      primaryCategoryId
-      productTypeId
-      brandId
-      isActive
-      isApproved
-      variants {
-        variantId
-        name
-        sku
-        retailPrice
-        stockQuantity
-        stockStatus
-        sortOrder
-        isActive
-      }
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class ProductsGQL extends Apollo.Query<ProductsQuery, ProductsQueryVariables> {
-  override document = ProductsDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const RegisterDocument = gql`
-  mutation Register($input: RegisterInput!) {
-    register(input: $input) {
-      accessToken
-      expiresIn
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class RegisterGQL extends Apollo.Mutation<RegisterMutation, RegisterMutationVariables> {
-  override document = RegisterDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const SearchCustomersDocument = gql`
-  query SearchCustomers($dispensaryId: ID!, $query: String!, $limit: Int) {
-    searchCustomers(dispensaryId: $dispensaryId, query: $query, limit: $limit) {
-      userId
-      email
-      firstName
-      lastName
-      phone
-      ageVerified
-      totalOrders
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class SearchCustomersGQL extends Apollo.Query<
-  SearchCustomersQuery,
-  SearchCustomersQueryVariables
-> {
-  override document = SearchCustomersDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const SearchProductsLookupDocument = gql`
-  query SearchProductsLookup($dispensaryId: String!, $query: String!, $limit: Int = 20) {
-    searchProducts(dispensaryId: $dispensaryId, query: $query, limit: $limit) {
-      productId
-      name
-      strainType
-      thcPercent
-      cbdPercent
-      effects
-      flavors
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class SearchProductsLookupGQL extends Apollo.Query<
-  SearchProductsLookupQuery,
-  SearchProductsLookupQueryVariables
-> {
-  override document = SearchProductsLookupDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const StaffInventoryProductsDocument = gql`
-  query StaffInventoryProducts(
-    $dispensaryId: ID!
-    $limit: Int = 200
-    $offset: Int
-    $search: String
-  ) {
-    products(dispensaryId: $dispensaryId, limit: $limit, offset: $offset, search: $search) {
-      id
-      name
-      sku
-      strainName
-      strainType
-      thcPercent
-      cbdPercent
-      isActive
-      variants {
-        variantId
-        name
-        sku
-        barcode
-        retailPrice
-        stockQuantity
-        stockStatus
-        isActive
-      }
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class StaffInventoryProductsGQL extends Apollo.Query<
-  StaffInventoryProductsQuery,
-  StaffInventoryProductsQueryVariables
-> {
-  override document = StaffInventoryProductsDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const ThemeConfigDocument = gql`
-  query ThemeConfig($dispensaryId: String!) {
-    themeConfig(dispensaryId: $dispensaryId) {
-      preset
-      isDark
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class ThemeConfigGQL extends Apollo.Query<ThemeConfigQuery, ThemeConfigQueryVariables> {
-  override document = ThemeConfigDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}
-export const VerifyAgeDocument = gql`
-  mutation VerifyAge(
-    $dateOfBirth: String!
-    $idType: String!
-    $idState: String
-    $dispensaryId: ID
-    $method: String
-  ) {
-    verifyAge(
-      dateOfBirth: $dateOfBirth
-      idType: $idType
-      idState: $idState
-      dispensaryId: $dispensaryId
-      method: $method
-    ) {
-      verified
-      age
-      reason
-    }
-  }
-`;
-
-@Injectable({
-  providedIn: 'root',
-})
-export class VerifyAgeGQL extends Apollo.Mutation<VerifyAgeMutation, VerifyAgeMutationVariables> {
-  override document = VerifyAgeDocument;
-
-  constructor(apollo: Apollo.Apollo) {
-    super(apollo);
-  }
-}

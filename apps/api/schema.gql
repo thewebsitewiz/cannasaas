@@ -1427,6 +1427,10 @@ type Mutation {
   openRegisterSession(input: OpenRegisterSessionGqlInput!): RegisterSession!
   processCashPayment(applyDiscount: Boolean = true, cashTendered: Float!, dispensaryId: ID!, orderId: ID!): Payment!
   provisionAeropayForDispensary(input: ProvisionAeropayInput!): DispensaryPaymentProcessor!
+  """
+  Binds an ECDSA P-256 public key (SPKI PEM) to the calling kiosk device.
+  """
+  attestKioskDevice(publicKey: String!): Boolean!
   provisionCanPayForDispensary(input: ProvisionCanPayInput!): DispensaryPaymentProcessor!
 
   """

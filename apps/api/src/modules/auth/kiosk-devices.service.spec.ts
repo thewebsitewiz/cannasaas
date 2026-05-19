@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { ConflictException } from '@nestjs/common';
 
 import { KioskDevice } from './entities/kiosk-device.entity';
 import { KioskDevicesService } from './kiosk-devices.service';
@@ -115,6 +116,64 @@ describe('KioskDevicesService', () => {
     it('returns null when no row exists (legacy kiosk path)', async () => {
       repo.findOne.mockResolvedValue(null);
       await expect(service.findByUser('u-1')).resolves.toBeNull();
+    });
+  });
+
+  describe('attestPublicKey', () => {
+    it('writes the public key to a freshly-rotated row', async () => {
+      repo.findOne.mockResolvedValue({
+        id: 'kd-1',
+        userId: 'u-1',
+        publicKey: null,
+      });
+      await service.attestPublicKey('u-1', '-----BEGIN PUBLIC KEY-----...');
+      expect(repo.update).toHaveBeenCalledWith(
+        'kd-1',
+        expect.objectContaining({
+          publicKey: expect.stringContaining('BEGIN PUBLIC KEY') as unknown,
+        }),
+      );
+    });
+
+    it('rejects when the device already has a key (must re-provision)', async () => {
+      repo.findOne.mockResolvedValue({
+        id: 'kd-1',
+        userId: 'u-1',
+        publicKey: '-----BEGIN PUBLIC KEY-----existing',
+      });
+      await expect(
+        service.attestPublicKey('u-1', '-----BEGIN PUBLIC KEY-----new'),
+      ).rejects.toThrow(ConflictException);
+      expect(repo.update).not.toHaveBeenCalled();
+    });
+
+    it('rejects when no device exists for this user', async () => {
+      repo.findOne.mockResolvedValue(null);
+      await expect(
+        service.attestPublicKey('u-1', '-----BEGIN PUBLIC KEY-----'),
+      ).rejects.toThrow(ConflictException);
+    });
+  });
+
+  describe('rotate clears publicKey', () => {
+    it('null-outs publicKey on re-provision (forces re-attestation)', async () => {
+      repo.findOne.mockResolvedValue({
+        id: 'kd-1',
+        userId: 'u-1',
+        dispensaryId: 'd-1',
+        label: 'pos-1',
+        currentTokenId: 'previous',
+        publicKey: '-----BEGIN PUBLIC KEY-----old',
+      });
+      await service.rotate({
+        userId: 'u-1',
+        dispensaryId: 'd-1',
+        label: 'pos-1',
+      });
+      expect(repo.update).toHaveBeenCalledWith(
+        'kd-1',
+        expect.objectContaining({ publicKey: null }),
+      );
     });
   });
 });

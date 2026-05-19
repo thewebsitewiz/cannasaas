@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as crypto from 'crypto';
@@ -37,10 +37,13 @@ export class KioskDevicesService {
       where: { userId: args.userId },
     });
     if (existing) {
+      // Re-provisioning invalidates the prior attestation — the kiosk
+      // must call `attestKioskDevice` again on its next /setup pass.
       await this.repo.update(existing.id, {
         currentTokenId: tokenId,
         label: args.label,
         dispensaryId: args.dispensaryId,
+        publicKey: null,
       });
     } else {
       const row = this.repo.create({
@@ -48,6 +51,7 @@ export class KioskDevicesService {
         dispensaryId: args.dispensaryId,
         label: args.label,
         currentTokenId: tokenId,
+        publicKey: null,
       });
       await this.repo.save(row);
     }
@@ -56,5 +60,23 @@ export class KioskDevicesService {
 
   findByUser(userId: string): Promise<KioskDevice | null> {
     return this.repo.findOne({ where: { userId } });
+  }
+
+  /**
+   * Stores the SPKI public key against the kiosk device. Fails if the
+   * device already has a key — the only legitimate way to swap keys is
+   * to re-provision (which clears `publicKey` back to null via `rotate`).
+   */
+  async attestPublicKey(userId: string, publicKeyPem: string): Promise<void> {
+    const device = await this.repo.findOne({ where: { userId } });
+    if (!device) {
+      throw new ConflictException('No kiosk device for this user');
+    }
+    if (device.publicKey) {
+      throw new ConflictException(
+        'Device is already attested; re-provision to rotate the key',
+      );
+    }
+    await this.repo.update(device.id, { publicKey: publicKeyPem });
   }
 }

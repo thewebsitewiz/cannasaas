@@ -37,6 +37,15 @@ export class KioskDevice {
   @Column({ type: 'uuid' })
   currentTokenId!: string;
 
+  /**
+   * SPKI-encoded ECDSA P-256 public key (PEM). Set once via
+   * `attestKioskDevice` after the kiosk generates a non-extractable
+   * CryptoKey during /setup. Null on legacy devices provisioned before
+   * sc-474 — those bypass signature verification.
+   */
+  @Column({ type: 'text', nullable: true })
+  publicKey!: string | null;
+
   @CreateDateColumn()
   createdAt!: Date;
 

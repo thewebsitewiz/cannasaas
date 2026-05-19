@@ -8,6 +8,8 @@ import { AuthResolver } from './auth.resolver';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { KioskDevicesService } from './kiosk-devices.service';
+import { KioskNonceService } from './kiosk-nonce.service';
+import { KioskAttestationGuard } from './guards/kiosk-attestation.guard';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { KioskDevice } from './entities/kiosk-device.entity';
 import { User } from '../users/entities/user.entity';
@@ -25,7 +27,14 @@ import { User } from '../users/entities/user.entity';
     JwtStrategy,
     JwtRefreshStrategy,
     KioskDevicesService,
+    KioskNonceService,
+    KioskAttestationGuard,
   ],
-  exports: [AuthService],
+  exports: [
+    AuthService,
+    KioskDevicesService,
+    KioskNonceService,
+    KioskAttestationGuard,
+  ],
 })
 export class AuthModule {}
