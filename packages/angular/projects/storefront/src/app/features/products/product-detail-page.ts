@@ -13,6 +13,7 @@ import { Router, RouterLink } from '@angular/router';
 import { ProductGQL, ProductQuery } from '@cannasaas/ui-ng';
 import { firstValueFrom } from 'rxjs';
 import { CartService } from '../../core/cart/cart.service';
+import { StockUpdatesService } from '../../core/stock-updates/stock-updates.service';
 import { DispensaryContextService } from '../../core/tenant/dispensary-context.service';
 
 type ProductDetail = NonNullable<ProductQuery['product']>;
@@ -278,6 +279,7 @@ export class ProductDetailPage {
 
   private readonly productGQL = inject(ProductGQL);
   private readonly cart = inject(CartService);
+  private readonly stockUpdates = inject(StockUpdatesService);
   private readonly dispensary = inject(DispensaryContextService);
   private readonly router = inject(Router);
   private readonly location = inject(Location);
@@ -311,10 +313,20 @@ export class ProductDetailPage {
     return id ? (list.find((v) => v.variantId === id) ?? list[0]) : list[0];
   });
 
+  private readonly liveStock = computed(() => {
+    const variant = this.active();
+    if (!variant) return null;
+    return this.stockUpdates.updates().get(variant.variantId) ?? null;
+  });
+
   protected readonly price = computed(() => Number(this.active()?.retailPrice ?? 0));
   protected readonly priceLabel = computed(() => this.price().toFixed(2));
-  protected readonly stockStatus = computed(() => this.active()?.stockStatus ?? 'in_stock');
+  protected readonly stockStatus = computed(
+    () => this.liveStock()?.status ?? this.active()?.stockStatus ?? 'in_stock',
+  );
   protected readonly stockQty = computed(() => {
+    const live = this.liveStock();
+    if (live != null) return live.available;
     const q = this.active()?.stockQuantity;
     return q != null ? Number(q) : null;
   });

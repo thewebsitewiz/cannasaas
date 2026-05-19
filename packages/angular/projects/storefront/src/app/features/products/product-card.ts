@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 import { RouterLink } from '@angular/router';
 import { ProductsQuery } from '@cannasaas/ui-ng';
 import { CartService } from '../../core/cart/cart.service';
+import { StockUpdatesService } from '../../core/stock-updates/stock-updates.service';
 
 export type ProductListItem = ProductsQuery['products'][number];
 
@@ -113,12 +114,20 @@ export class ProductCard {
   readonly product = input.required<ProductListItem>();
 
   private readonly cart = inject(CartService);
+  private readonly stockUpdates = inject(StockUpdatesService);
 
   private readonly firstVariant = computed(() => this.product().variants[0] ?? null);
+  private readonly liveStock = computed(() => {
+    const variant = this.firstVariant();
+    if (!variant) return null;
+    return this.stockUpdates.updates().get(variant.variantId) ?? null;
+  });
 
   readonly price = computed(() => Number(this.firstVariant()?.retailPrice ?? 0));
   readonly priceLabel = computed(() => this.price().toFixed(2));
-  readonly stockStatus = computed(() => this.firstVariant()?.stockStatus ?? 'in_stock');
+  readonly stockStatus = computed(
+    () => this.liveStock()?.status ?? this.firstVariant()?.stockStatus ?? 'in_stock',
+  );
   readonly isOutOfStock = computed(() => this.stockStatus() === 'out_of_stock');
   readonly stockLabel = computed(() => STOCK_LABEL[this.stockStatus()] ?? STOCK_LABEL['in_stock']);
   readonly stockClass = computed(() => STOCK_CLASS[this.stockStatus()] ?? STOCK_CLASS['in_stock']);
@@ -129,10 +138,12 @@ export class ProductCard {
 
   readonly atMax = computed(() => {
     const variant = this.firstVariant();
-    if (!variant?.stockQuantity) return false;
-    const variantId = variant.variantId;
-    const inCart = this.cart.items().find((i) => i.variantId === variantId);
-    return inCart != null && inCart.quantity >= variant.stockQuantity;
+    if (!variant) return false;
+    const live = this.liveStock();
+    const maxQty = live?.available ?? variant.stockQuantity;
+    if (maxQty == null) return false;
+    const inCart = this.cart.items().find((i) => i.variantId === variant.variantId);
+    return inCart != null && inCart.quantity >= maxQty;
   });
 
   readonly addButtonClass = computed(() =>
