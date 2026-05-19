@@ -46,8 +46,10 @@ interface StockChangedPayload {
 export class StockUpdatesService {
   private readonly dispensary = inject(DispensaryContextService);
   private readonly _updates = signal<ReadonlyMap<string, StockUpdate>>(new Map());
+  private readonly _connected = signal(false);
 
   readonly updates: Signal<ReadonlyMap<string, StockUpdate>> = this._updates.asReadonly();
+  readonly connected: Signal<boolean> = this._connected.asReadonly();
 
   private socket: Socket | null = null;
   private connectedDispensaryId: string | null = null;
@@ -71,7 +73,8 @@ export class StockUpdatesService {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000,
-      reconnectionAttempts: 10,
+      reconnectionDelayMax: 10_000,
+      reconnectionAttempts: Number.POSITIVE_INFINITY,
     });
 
     socket.on('stock:changed', (payload: StockChangedPayload) => {
@@ -89,9 +92,12 @@ export class StockUpdatesService {
       });
     });
 
-    socket.on('connect_error', (err: Error) =>
-      console.warn('[StockUpdatesService] connect_error', err.message),
-    );
+    socket.on('connect', () => this._connected.set(true));
+    socket.on('disconnect', () => this._connected.set(false));
+    socket.on('connect_error', (err: Error) => {
+      this._connected.set(false);
+      console.warn('[StockUpdatesService] connect_error', err.message);
+    });
 
     this.socket = socket;
     this.connectedDispensaryId = dispensaryId;
@@ -103,6 +109,7 @@ export class StockUpdatesService {
     this.socket.disconnect();
     this.socket = null;
     this.connectedDispensaryId = null;
+    this._connected.set(false);
     this._updates.set(new Map());
   }
 }

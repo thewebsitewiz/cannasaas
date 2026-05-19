@@ -312,7 +312,10 @@ Failure of any SMK → release blocked.
 | --- | --- | --- | --- |
 | TC-STK-001 | Connection established anonymously | Open the app; in DevTools Network → WS, inspect the handshake. | `auth.storefrontDispensaryId` present; no JWT. |
 | TC-STK-002 | Public projection only | Inspect a `stock:changed` event payload. | Only `variantId`, `available`, `status`, `timestamp` (+ `type`). No `productName` or threshold. |
-| TC-STK-003 | Reconnect after API blip | Stop API for 30 s, restart. | Client reconnects within reconnection-attempts budget; no toast spam. |
+| TC-STK-003 | Reconnect after API blip | Stop API for 30 s, restart. | Client reconnects without manual refresh; no toast spam. |
+| TC-STK-006 | Connection banner appears during outage (sc-606) | After the storefront has connected once, stop API for 30 s. | "Reconnecting — live updates paused" pill renders within ~5 s. Banner clears once the socket reconnects. |
+| TC-STK-007 | Cold-boot does not flash the banner (sc-606) | Reload with API up. | Banner never renders during the initial connect handshake. |
+| TC-STK-008 | Reconnects indefinitely (sc-606) | Stop API for 5 min, then restart. | Storefront still reconnects without page refresh. (Pre-sc-606 the 10-attempt budget left the client stranded after ~10 s.) |
 | TC-STK-004 | Tenant change resets map | Path-switch tenants. | Old `StockUpdate` map cleared; new socket opens against the new tenant. |
 | TC-STK-005 | Last-event-wins per variant | Send rapid `low_stock` then `in_stock` for the same variant. | UI ends at `in_stock`. |
 
@@ -391,7 +394,7 @@ These cannot be triggered from the storefront alone — eng on call walks them a
 - **`AgeGateService` uses sessionStorage, not localStorage.** A new tab re-prompts. Compliance has not yet asked for the 24-hour persistence model the kiosk uses; this is an open product question.
 - **CSR-only.** Bots and crawlers see no product content. SEO relies on meta-injection + structured data. If a customer reports ranking issues, revisit SSR (root CLAUDE.md flags this).
 - **Express checkout is barely-scoped here.** §6.13 needs a follow-up audit of the component.
-- **WS auto-reconnect budget is 10 attempts × 1 s delay.** A 15-second API outage will leave the client disconnected until manual refresh — fine for now, but flag if support sees complaints.
+- ~~WS auto-reconnect budget is 10 attempts × 1 s delay.~~ **Fixed sc-606.** Both sockets now reconnect indefinitely (`reconnectionAttempts: Infinity`, `reconnectionDelayMax: 10 s`). A `<cs-connection-banner>` renders a thin amber pill while disconnected after the first successful connection.
 
 ---
 

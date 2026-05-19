@@ -5,6 +5,7 @@ import { AppThemeService } from './core/theme/app-theme.service';
 import { CartStockGuardianService } from './core/stock-updates/cart-stock-guardian.service';
 import { DispensaryContextService } from './core/tenant/dispensary-context.service';
 import { AgeGateOverlay } from './layout/age-gate-overlay';
+import { ConnectionBanner } from './layout/connection-banner';
 import { Footer } from './layout/footer';
 import { Header } from './layout/header';
 import { StockEvictionToasts } from './layout/stock-eviction-toasts';
@@ -12,7 +13,14 @@ import { StockEvictionToasts } from './layout/stock-eviction-toasts';
 @Component({
   selector: 'cs-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, Footer, Header, AgeGateOverlay, StockEvictionToasts],
+  imports: [
+    RouterOutlet,
+    Footer,
+    Header,
+    AgeGateOverlay,
+    ConnectionBanner,
+    StockEvictionToasts,
+  ],
   host: { class: 'flex min-h-screen flex-col' },
   template: `
     @if (gateConfirmed()) {
@@ -22,6 +30,7 @@ import { StockEvictionToasts } from './layout/stock-eviction-toasts';
       </main>
       <cs-footer />
       <cs-stock-eviction-toasts />
+      <cs-connection-banner />
     } @else {
       <cs-age-gate-overlay />
     }
