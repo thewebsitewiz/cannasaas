@@ -108,7 +108,9 @@ export class TimeClockResolver {
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @CurrentUser() user: JwtPayload,
   ): Promise<ActiveClock[]> {
-    void user;
+    if (user.role !== 'super_admin' && user.dispensaryId !== dispensaryId) {
+      throw new ForbiddenException('Cross-dispensary access denied');
+    }
     const rows: ActiveClockRow[] =
       await this.timeClock.getActiveClocks(dispensaryId);
     return rows.map((r) => ({

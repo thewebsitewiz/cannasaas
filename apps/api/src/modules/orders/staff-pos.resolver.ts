@@ -11,8 +11,10 @@ import {
 import { Field } from '@nestjs/graphql';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, QueryRunner } from 'typeorm';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { JwtPayload } from '../auth/strategies/jwt.strategy';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 
@@ -99,17 +101,25 @@ export class StaffPosResolver {
     @Args('query') query: string,
     @Args('limit', { type: () => Int, nullable: true, defaultValue: 10 })
     rawLimit = 10,
+    @CurrentUser() user?: JwtPayload,
   ): Promise<CustomerSearchResult[]> {
-    void dispensaryId;
+    if (user && user.role !== 'super_admin' && user.dispensaryId !== dispensaryId) {
+      throw new ForbiddenException('Cross-dispensary search not allowed');
+    }
     const q = query.trim();
     if (q.length < 2) return [];
 
     const limit = Math.min(rawLimit, 50);
     const pattern = `%${q}%`;
 
+    // Scope results to customers tied to this dispensary: either by
+    // preferred_dispensary_id OR by having placed an order at this
+    // dispensary at some point. Pre-sc-609 this query returned
+    // customers across ALL tenants — a budtender at tenant A could
+    // enumerate every customer in the system.
     const rows = await rawQuery<CustomerSearchRow>(
       this.ds,
-      `SELECT
+      `SELECT DISTINCT
          u.id AS "userId",
          u.email,
          u."firstName",
@@ -122,6 +132,13 @@ export class StaffPosResolver {
        WHERE u.role = 'customer'
          AND u."isActive" = true
          AND (
+           cp.preferred_dispensary_id = $3
+           OR EXISTS (
+             SELECT 1 FROM orders o
+             WHERE o."customerUserId" = u.id AND o.dispensary_id = $3
+           )
+         )
+         AND (
            u.email ILIKE $1
            OR u."firstName" ILIKE $1
            OR u."lastName" ILIKE $1
@@ -132,7 +149,7 @@ export class StaffPosResolver {
          CASE WHEN u.email ILIKE $1 THEN 0 WHEN cp.phone ILIKE $1 THEN 1 ELSE 2 END,
          u."lastName" ASC
        LIMIT $2`,
-      [pattern, limit],
+      [pattern, limit, dispensaryId],
     );
 
     return rows.map((r) => ({

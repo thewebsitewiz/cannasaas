@@ -11,8 +11,11 @@ import {
 import { Field } from '@nestjs/graphql';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
+import { ForbiddenException } from '@nestjs/common';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Public } from '../../common/decorators/public.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { JwtPayload } from '../auth/strategies/jwt.strategy';
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -78,7 +81,11 @@ export class DispensaryProductTypesResolver {
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
     @Args('types', { type: () => [DispensaryProductTypeInput] })
     types: DispensaryProductTypeInput[],
+    @CurrentUser() user: JwtPayload,
   ): Promise<DispensaryProductType[]> {
+    if (user.role !== 'super_admin' && user.dispensaryId !== dispensaryId) {
+      throw new ForbiddenException('Cross-dispensary access denied');
+    }
     const qr = this.ds.createQueryRunner();
     await qr.connect();
     await qr.startTransaction();
