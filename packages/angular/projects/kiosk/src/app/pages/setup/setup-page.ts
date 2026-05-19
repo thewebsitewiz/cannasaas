@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { AttestKioskDeviceGQL } from '@cannasaas/ui-ng';
 import { AuthService } from '../../core/auth/auth.service';
-import { DeviceAttestationService } from '../../core/attestation/device-attestation.service';
+import { attestDeviceIfNeeded } from './attest-device';
 
 @Component({
   selector: 'cs-setup-page',
@@ -74,7 +75,7 @@ import { DeviceAttestationService } from '../../core/attestation/device-attestat
 })
 export class SetupPage implements OnInit {
   private readonly auth = inject(AuthService);
-  private readonly attestation = inject(DeviceAttestationService);
+  private readonly attestGQL = inject(AttestKioskDeviceGQL);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
@@ -109,8 +110,9 @@ export class SetupPage implements OnInit {
     try {
       // Bind a fresh non-extractable signing key to this device.
       // Required before any other GraphQL operation will be accepted by
-      // the API for this kiosk (sc-474).
-      await this.attestation.attestIfNeeded();
+      // the API for this kiosk (sc-474). The heavy WebCrypto + GQL
+      // import lives in this lazy chunk only.
+      await attestDeviceIfNeeded(this.attestGQL);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       this.error.set(`Device attestation failed: ${message}`);

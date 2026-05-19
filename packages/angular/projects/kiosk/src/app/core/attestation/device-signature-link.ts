@@ -2,7 +2,7 @@ import { HttpHeaders } from '@angular/common/http';
 import { ApolloLink, type Operation } from '@apollo/client';
 import { Observable } from 'rxjs';
 
-import { DeviceAttestationService } from './device-attestation.service';
+import { DeviceSignerService } from './device-signer.service';
 
 /**
  * Apollo link that signs every outgoing GraphQL operation with the
@@ -13,14 +13,14 @@ import { DeviceAttestationService } from './device-attestation.service';
  * Signing string (newline-joined):
  *   <upper-method>\n<path>\n<sha256-hex-of-body>\n<iat-ms>\n<nonce>
  *
- * The link queries `DeviceAttestationService.sign` per request, which
+ * The link queries `DeviceSignerService.sign` per request, which
  * resolves the IDB key lazily. If no key is present (legacy device or
  * post-wipe state) the request goes out unsigned — the server's
  * `KioskAttestationGuard` accepts that for devices whose
  * `kiosk_devices.public_key` is still null, and rejects it once the
  * device has been attested.
  */
-export function createDeviceSignatureLink(attestation: DeviceAttestationService): ApolloLink {
+export function createDeviceSignatureLink(attestation: DeviceSignerService): ApolloLink {
   return new ApolloLink((operation, forward) => {
     return new Observable((subscriber) => {
       void buildAndAttach(operation, attestation).then(
@@ -39,7 +39,7 @@ export function createDeviceSignatureLink(attestation: DeviceAttestationService)
 
 async function buildAndAttach(
   operation: Operation,
-  attestation: DeviceAttestationService,
+  attestation: DeviceSignerService,
 ): Promise<void> {
   const body: unknown = {
     operationName: operation.operationName,
