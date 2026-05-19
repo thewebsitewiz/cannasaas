@@ -5,6 +5,7 @@ import { CreateOrderGQL } from '@cannasaas/ui-ng';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { CartService } from '../../core/cart/cart.service';
+import { KIOSK_ORDER_DEFAULTS } from '../../core/order/kiosk-order-defaults';
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -127,8 +128,7 @@ export class CheckoutPage {
           variables: {
             input: {
               dispensaryId: environment.dispensaryId,
-              orderType: 'pickup',
-              notes: 'Kiosk pre-order',
+              ...KIOSK_ORDER_DEFAULTS,
               lineItems,
               ...(customer ? { customerUserId: customer.customerId } : {}),
             },
