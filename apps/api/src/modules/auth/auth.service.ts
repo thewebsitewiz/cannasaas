@@ -16,6 +16,7 @@ import { RegisterInput } from './dto/register.input';
 import { ProvisionKioskInput } from './dto/provision-kiosk.input';
 import { KioskProvisionResult } from './dto/kiosk-provision-result.type';
 import { Role } from './enums/role.enum';
+import { KioskDevicesService } from './kiosk-devices.service';
 
 const ONE_YEAR_SECONDS = 365 * 24 * 60 * 60;
 
@@ -26,6 +27,7 @@ export class AuthService {
     @InjectRepository(RefreshToken) private tokenRepo: Repository<RefreshToken>,
     private jwt: JwtService,
     private config: ConfigService,
+    private kioskDevices: KioskDevicesService,
   ) {}
 
   async register(
@@ -156,6 +158,14 @@ export class AuthService {
     const issuedAt = new Date();
     const expiresAt = new Date(issuedAt.getTime() + ttlSeconds * 1000);
 
+    // Rotate the device's current tokenId. Every prior-issued token for
+    // this kiosk is implicitly revoked the moment we update the row.
+    const tokenId = await this.kioskDevices.rotate({
+      userId: user.id,
+      dispensaryId: user.dispensaryId ?? input.dispensaryId,
+      label: trimmedLabel,
+    });
+
     const accessToken = this.jwt.sign(
       {
         sub: user.id,
@@ -165,6 +175,7 @@ export class AuthService {
         organizationId: user.organizationId,
         deviceLabel: trimmedLabel,
         provisionedBy: issuedByUserId,
+        tokenId,
       },
       {
         secret: this.config.get('jwt.secret'),
