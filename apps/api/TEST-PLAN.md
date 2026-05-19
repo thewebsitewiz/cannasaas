@@ -105,8 +105,34 @@ Same as the kiosk/storefront plans:
 
 ---
 
-## 8. Open follow-ups
+## 8. Verified limits + open follow-ups
 
-- BullMQ DLQ inspection — what happens when a queue worker crashes mid-job?
-- TenantMiddleware coverage for cross-tenant data leakage.
-- GraphQL depth/complexity limits enforced (already plugged in via `depthLimitPlugin` / `complexityLimitPlugin` — verify limits hold under load).
+### GraphQL query limits (sc-610 verified)
+
+Both plugins reject malformed queries during Apollo's
+`didResolveOperation` phase, before any resolver runs.
+
+| Limit | Value | Plugin | Error code |
+| --- | --- | --- | --- |
+| Max query depth | 10 | [`depth-limit.plugin.ts`](src/common/plugins/depth-limit.plugin.ts) | `QUERY_TOO_DEEP` |
+| Max complexity (field count) | 1000 | [`complexity-limit.plugin.ts`](src/common/plugins/complexity-limit.plugin.ts) | `QUERY_TOO_COMPLEX` |
+
+Both are exercised by [`depth-limit.plugin.spec.ts`](src/common/plugins/depth-limit.plugin.spec.ts) and [`complexity-limit.plugin.spec.ts`](src/common/plugins/complexity-limit.plugin.spec.ts) — 4 cases each, including boundary (depth 10 / 1000 fields pass) and well-over (depth 50 / 2000 fields reject with the right extension code).
+
+If the limits ever feel too tight for a legitimate frontend query, the right move is to:
+1. Confirm the rejection isn't actually masking a query that fans out unboundedly.
+2. Tune the constant in the plugin file; no other config knobs.
+3. Re-run the plugin specs to confirm the boundary still rejects the next-larger query.
+
+### sc-225/sc-226 worker-crash recovery (sc-608 documented)
+
+See [`docs/metrc-sync-runbook.md`](docs/metrc-sync-runbook.md) for the full Metrc sync queue story (architecture, worker-crash recovery semantics, operator commands, common failure modes).
+
+### Tenant isolation (sc-609 audited + 3 leaks fixed)
+
+See [`docs/tenant-isolation-audit.md`](docs/tenant-isolation-audit.md). 151 dispensary-scoped endpoints inventoried; 0 missing post-fix.
+
+### Open follow-ups
+
+- TenantMiddleware coverage for cross-tenant data leakage in non-GraphQL surfaces (webhooks, REST controllers).
+- Service-layer leaks across the 114 "delegated" endpoints from the tenant-isolation audit — these would need a runtime test rig against a seeded test DB.
