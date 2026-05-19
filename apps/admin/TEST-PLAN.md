@@ -48,6 +48,9 @@ Out of scope: deep cases for every page (TaxManagement, Theme designer, Payment 
 | TC-AUTH-003 | Protected route redirect | Navigate to `/orders` while logged out. | Redirect to `/login`. |
 | TC-AUTH-004 | Tax Rules link gated by role | View AdminLayout nav as a `dispensary_admin`. | "Tax Rules" link NOT visible. View as `super_admin` → visible. |
 | TC-AUTH-005 | Logout clears organization context | Logout. | `useOrganizationStore` reset (no org / dispensary id in localStorage). |
+| TC-AUTH-006 | Direct URL to `/tax-management` as super_admin | Sign in as `super_admin`; navigate directly to `/tax-management`. | TaxManagementPage renders. |
+| TC-AUTH-007 | Direct URL to `/tax-management` as dispensary_admin | Sign in as `dispensary_admin`; navigate directly to `/tax-management`. | `RoleRoute` redirects to `/`. Page does not render. |
+| TC-AUTH-008 | Direct URL to `/tax-management` as org_admin | Sign in as `org_admin`; navigate directly. | Same as TC-AUTH-007: redirect to `/`. |
 
 ### 6.2 Dashboard — low-stock widget (sc-227)
 
@@ -93,4 +96,4 @@ Out of scope: deep cases for every page (TaxManagement, Theme designer, Payment 
 ## 8. Open follow-ups
 
 - Per-page deep cases for TaxManagement, ThemePage, PaymentProcessorsPage, MenuCategoriesPage.
-- RBAC route guards aren't currently enforced beyond `ProtectedRoute` (token-only). Per the admin CLAUDE.md they should also gate by role at the route level — track as a separate hardening story.
+- RBAC currently only gates `/tax-management` (super_admin). Other routes that should be role-gated per the admin CLAUDE.md hierarchy (e.g. `/settings/payments` for dispensary_admin+, `/onboarding` for org_admin+) still rely on `ProtectedRoute` token-only. File deeper hardening stories before any prod tenant has multiple operator roles using the same login.

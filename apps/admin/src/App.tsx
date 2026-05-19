@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 
 import { AdminLayout } from './layouts/AdminLayout';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { RoleRoute } from './components/RoleRoute';
 import { CompliancePage } from './pages/CompliancePage';
 import { DashboardPage } from './pages/DashboardPage';
 import { InventoryControlPage } from './pages/InventoryControlPage';
@@ -64,7 +65,14 @@ export function App() {
           <Route path="reports" element={<ReportsPage />} />
           <Route path="menu-board" element={<MenuBoardPage />} />
           <Route path="menu-categories" element={<MenuCategoriesPage />} />
-          <Route path="tax-management" element={<TaxManagementPage />} />
+          <Route
+            path="tax-management"
+            element={
+              <RoleRoute allowedRoles={['super_admin']}>
+                <TaxManagementPage />
+              </RoleRoute>
+            }
+          />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
