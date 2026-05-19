@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from '../../src/modules/auth/auth.service';
+import { KioskDevicesService } from '../../src/modules/auth/kiosk-devices.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -58,6 +59,13 @@ describe('AuthService', () => {
         { provide: getRepositoryToken(RefreshToken), useValue: mockTokenRepo },
         { provide: JwtService, useValue: mockJwt },
         { provide: ConfigService, useValue: mockConfig },
+        {
+          provide: KioskDevicesService,
+          useValue: {
+            rotate: jest.fn().mockResolvedValue('test-token-id'),
+            findByUser: jest.fn().mockResolvedValue(null),
+          },
+        },
       ],
     }).compile();
 
