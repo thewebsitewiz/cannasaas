@@ -1,7 +1,18 @@
 import { Navigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/auth.store';
 
-type AdminRole = 'super_admin' | 'org_admin' | 'dispensary_admin' | 'budtender';
+export type AdminRole = 'super_admin' | 'org_admin' | 'dispensary_admin' | 'budtender';
+
+/**
+ * Baseline: anyone with one of these roles can enter the admin app.
+ * Budtender is intentionally excluded — that role belongs in `/staff`,
+ * not `/admin`.
+ */
+export const ADMIN_BASELINE_ROLES: readonly AdminRole[] = [
+  'super_admin',
+  'org_admin',
+  'dispensary_admin',
+] as const;
 
 interface RoleRouteProps {
   allowedRoles: readonly AdminRole[];

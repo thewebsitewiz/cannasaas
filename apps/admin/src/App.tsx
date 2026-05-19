@@ -2,7 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 
 import { AdminLayout } from './layouts/AdminLayout';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { RoleRoute } from './components/RoleRoute';
+import { ADMIN_BASELINE_ROLES, RoleRoute } from './components/RoleRoute';
 import { CompliancePage } from './pages/CompliancePage';
 import { DashboardPage } from './pages/DashboardPage';
 import { InventoryControlPage } from './pages/InventoryControlPage';
@@ -38,7 +38,12 @@ export function App() {
           path="/onboarding"
           element={
             <ProtectedRoute>
-              <OnboardingPage />
+              <RoleRoute
+                allowedRoles={['super_admin', 'org_admin']}
+                redirectTo="/login"
+              >
+                <OnboardingPage />
+              </RoleRoute>
             </ProtectedRoute>
           }
         />
@@ -46,7 +51,12 @@ export function App() {
           path="/"
           element={
             <ProtectedRoute>
-              <AdminLayout />
+              <RoleRoute
+                allowedRoles={ADMIN_BASELINE_ROLES}
+                redirectTo="/login"
+              >
+                <AdminLayout />
+              </RoleRoute>
             </ProtectedRoute>
           }
         >
