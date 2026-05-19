@@ -1,6 +1,7 @@
 import { ForbiddenException } from '@nestjs/common';
 import { Mutation, Resolver, Args } from '@nestjs/graphql';
 import { AuthService } from './auth.service';
+import { KioskDevicesService } from './kiosk-devices.service';
 import { LoginInput } from './dto/login.input';
 import { RegisterInput } from './dto/register.input';
 import { ProvisionKioskInput } from './dto/provision-kiosk.input';
@@ -13,7 +14,10 @@ import { JwtPayload } from './strategies/jwt.strategy';
 
 @Resolver()
 export class AuthResolver {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly kioskDevices: KioskDevicesService,
+  ) {}
 
   @Public()
   @Mutation(() => AuthToken)
@@ -45,5 +49,28 @@ export class AuthResolver {
       );
     }
     return this.authService.provisionKiosk(input, user.sub);
+  }
+
+  /**
+   * Binds a non-extractable ECDSA P-256 public key (SPKI/PEM) to the
+   * calling kiosk device. Called once per provisioning cycle from the
+   * kiosk's /setup page after key generation. Subsequent requests from
+   * the device must carry an `X-Device-Signature` header signed with
+   * the matching private key — see `KioskAttestationGuard`.
+   *
+   * Re-provisioning the kiosk (via `provisionKiosk`) clears `publicKey`
+   * back to null, forcing a fresh attestation on the next /setup.
+   */
+  @Roles('kiosk')
+  @Mutation(() => Boolean, {
+    description:
+      'Binds an ECDSA P-256 public key (SPKI PEM) to the calling kiosk device.',
+  })
+  async attestKioskDevice(
+    @Args('publicKey') publicKey: string,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<boolean> {
+    await this.kioskDevices.attestPublicKey(user.sub, publicKey);
+    return true;
   }
 }

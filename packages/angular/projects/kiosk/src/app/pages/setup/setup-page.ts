@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
+import { DeviceAttestationService } from '../../core/attestation/device-attestation.service';
 
 @Component({
   selector: 'cs-setup-page',
@@ -73,6 +74,7 @@ import { AuthService } from '../../core/auth/auth.service';
 })
 export class SetupPage implements OnInit {
   private readonly auth = inject(AuthService);
+  private readonly attestation = inject(DeviceAttestationService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
@@ -82,7 +84,7 @@ export class SetupPage implements OnInit {
   ngOnInit(): void {
     const fromQuery = this.route.snapshot.queryParamMap.get('token');
     if (fromQuery && fromQuery.trim().length > 0) {
-      this.activate(fromQuery.trim());
+      void this.activate(fromQuery.trim());
     }
   }
 
@@ -95,15 +97,25 @@ export class SetupPage implements OnInit {
     event.preventDefault();
     const token = this.pasted().trim();
     if (!token) return;
-    this.activate(token);
+    void this.activate(token);
   }
 
-  private activate(token: string): void {
+  private async activate(token: string): Promise<void> {
     if (!looksLikeJwt(token)) {
       this.error.set('That doesn’t look like a JWT (expected three dot-separated segments).');
       return;
     }
     this.auth.setDeviceToken(token);
+    try {
+      // Bind a fresh non-extractable signing key to this device.
+      // Required before any other GraphQL operation will be accepted by
+      // the API for this kiosk (sc-474).
+      await this.attestation.attestIfNeeded();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.error.set(`Device attestation failed: ${message}`);
+      return;
+    }
     void this.router.navigateByUrl('/');
   }
 }

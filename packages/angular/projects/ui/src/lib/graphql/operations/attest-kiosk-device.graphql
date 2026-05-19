@@ -1,0 +1,3 @@
+mutation AttestKioskDevice($publicKey: String!) {
+  attestKioskDevice(publicKey: $publicKey)
+}

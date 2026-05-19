@@ -33,6 +33,20 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
     await this.redis.set(key, JSON.stringify(value), 'EX', ttlSeconds);
   }
 
+  /**
+   * Atomic SET-if-not-exists with TTL. Returns true if the key was set
+   * (first writer), false if it already existed. Used for replay
+   * protection and other "first-wins" semantics.
+   */
+  async setNxEx(
+    key: string,
+    value: string,
+    ttlSeconds: number,
+  ): Promise<boolean> {
+    const result = await this.redis.set(key, value, 'EX', ttlSeconds, 'NX');
+    return result === 'OK';
+  }
+
   async del(key: string): Promise<void> {
     await this.redis.del(key);
   }

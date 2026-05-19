@@ -14,6 +14,7 @@ import { depthLimitPlugin } from './common/plugins/depth-limit.plugin';
 import { complexityLimitPlugin } from './common/plugins/complexity-limit.plugin';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
+import { KioskAttestationGuard } from './modules/auth/guards/kiosk-attestation.guard';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
@@ -130,6 +131,7 @@ import { join } from 'path';
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_GUARD, useClass: KioskAttestationGuard },
   ],
 })
 export class AppModule implements NestModule {

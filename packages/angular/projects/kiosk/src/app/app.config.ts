@@ -14,6 +14,8 @@ import { routes } from './app.routes';
 import { environment } from '../environments/environment';
 import { createAuthRetryLink } from './core/auth/auth-retry-link';
 import { AuthService } from './core/auth/auth.service';
+import { DeviceAttestationService } from './core/attestation/device-attestation.service';
+import { createDeviceSignatureLink } from './core/attestation/device-signature-link';
 import { GlobalErrorHandler } from './core/error/global-error-handler';
 
 export const appConfig: ApplicationConfig = {
@@ -24,6 +26,7 @@ export const appConfig: ApplicationConfig = {
     provideApollo((): ApolloClient.Options => {
       const httpLink = inject(HttpLink);
       const auth = inject(AuthService);
+      const attestation = inject(DeviceAttestationService);
 
       const authMiddleware = new ApolloLink((operation, forward) => {
         const token = auth.accessToken();
@@ -39,6 +42,7 @@ export const appConfig: ApplicationConfig = {
         cache: new InMemoryCache(),
         link: ApolloLink.from([
           authMiddleware,
+          createDeviceSignatureLink(attestation),
           createAuthRetryLink(auth),
           httpLink.create({ uri: environment.graphqlUrl }),
         ]),
