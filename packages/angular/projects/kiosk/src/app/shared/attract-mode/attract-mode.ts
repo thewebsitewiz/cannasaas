@@ -38,9 +38,9 @@ const SLIDE_INTERVAL_MS = 5000;
   selector: 'cs-attract-mode',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    'class': 'fixed inset-0 z-100',
-    'role': 'button',
-    'tabindex': '0',
+    class: 'fixed inset-0 z-100',
+    role: 'button',
+    tabindex: '0',
     '(click)': 'exit.emit()',
     '(touchstart)': 'exit.emit()',
     'aria-label': 'Tap to wake kiosk',
@@ -66,9 +66,7 @@ const SLIDE_INTERVAL_MS = 5000;
         </p>
       </div>
 
-      <div
-        class="absolute right-0 bottom-12 left-0 flex flex-col items-center gap-6"
-      >
+      <div class="absolute right-0 bottom-12 left-0 flex flex-col items-center gap-6">
         <div class="flex gap-3">
           @for (s of slides; track $index; let i = $index) {
             <span
@@ -91,7 +89,7 @@ export class AttractMode {
   protected readonly slides = SLIDES;
   protected readonly index = signal(0);
   protected readonly currentSlide = computed<Slide>(
-    () => SLIDES[this.index() % SLIDES.length] ?? SLIDES[0]!,
+    () => SLIDES[this.index() % SLIDES.length] ?? SLIDES[0],
   );
 
   constructor() {

@@ -75,7 +75,7 @@ function variantInStock(variant: ApiVariant | undefined): boolean {
 function hashCode(str: string): number {
   let hash = 0;
   for (let i = 0; i < str.length; i += 1) {
-    hash = (((hash << 5) - hash) + str.charCodeAt(i)) | 0;
+    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
   }
   return Math.abs(hash);
 }
@@ -288,7 +288,7 @@ export class MenuPage {
   private readonly router = inject(Router);
 
   protected readonly filters = FILTERS;
-  protected readonly filter = signal<CategoryFilter>(FILTERS[0]!);
+  protected readonly filter = signal<CategoryFilter>(FILTERS[0]);
   protected readonly addedId = signal<string | null>(null);
 
   private readonly resource = rxResource({
@@ -301,18 +301,14 @@ export class MenuPage {
             productTypeId: params.productTypeId ?? null,
           },
         })
-        .pipe(
-          map((r) => (r.data?.products ?? []) as readonly ApiProduct[]),
-        ),
+        .pipe(map((r) => (r.data?.products ?? []) as readonly ApiProduct[])),
   });
 
   protected readonly loading = this.resource.isLoading;
-  protected readonly filtered = computed<readonly ApiProduct[]>(
-    () => this.resource.value() ?? [],
-  );
+  protected readonly filtered = computed<readonly ApiProduct[]>(() => this.resource.value() ?? []);
 
   protected goToProduct(id: string): void {
-    this.router.navigateByUrl(`/product/${id}`);
+    void this.router.navigateByUrl(`/product/${id}`);
   }
 
   protected onAddClick(event: Event, product: ApiProduct): void {
@@ -359,7 +355,8 @@ export class MenuPage {
   }
 
   protected addControlClasses(inStock: boolean, isAdded: boolean): string {
-    const base = 'flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition-all';
+    const base =
+      'flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition-all';
     if (!inStock) {
       return `${base} cursor-not-allowed bg-gray-200 text-gray-500`;
     }

@@ -121,6 +121,7 @@ export class CheckoutPage {
         variantId: i.variantId,
         quantity: i.quantity,
       }));
+      const customer = this.cart.customer();
       const result = await firstValueFrom(
         this.createOrderGQL.mutate({
           variables: {
@@ -129,6 +130,7 @@ export class CheckoutPage {
               orderType: 'pickup',
               notes: 'Kiosk pre-order',
               lineItems,
+              ...(customer ? { customerUserId: customer.customerId } : {}),
             },
           },
         }),
