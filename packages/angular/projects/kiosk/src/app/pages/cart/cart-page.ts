@@ -42,18 +42,14 @@ import { CartService, type CartItem } from '../../core/cart/cart.service';
 
         <div class="space-y-3">
           @for (item of cart.items(); track item.variantId) {
-            <div
-              class="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-4"
-            >
+            <div class="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-4">
               <div class="flex-1">
                 <p class="text-lg font-semibold text-gray-900">{{ item.name }}</p>
                 <p class="text-sm text-gray-500">
                   {{ item.variantName }} · {{ item.price | currency }} each
                 </p>
               </div>
-              <div
-                class="flex items-center gap-2 rounded-full border border-gray-200"
-              >
+              <div class="flex items-center gap-2 rounded-full border border-gray-200">
                 <button
                   type="button"
                   (click)="dec(item)"
@@ -179,6 +175,6 @@ export class CartPage {
   }
 
   protected checkout(): void {
-    this.router.navigateByUrl('/checkout');
+    void this.router.navigateByUrl('/checkout');
   }
 }

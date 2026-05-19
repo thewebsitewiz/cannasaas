@@ -62,13 +62,15 @@ function variantInStock(variant: ApiVariant | undefined): boolean {
 }
 
 function variantStockQty(variant: ApiVariant | undefined): number {
-  return typeof variant?.stockQuantity === 'number' ? Math.max(0, Math.floor(variant.stockQuantity)) : 0;
+  return typeof variant?.stockQuantity === 'number'
+    ? Math.max(0, Math.floor(variant.stockQuantity))
+    : 0;
 }
 
 function hashCode(str: string): number {
   let hash = 0;
   for (let i = 0; i < str.length; i += 1) {
-    hash = (((hash << 5) - hash) + str.charCodeAt(i)) | 0;
+    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
   }
   return Math.abs(hash);
 }
@@ -119,31 +121,15 @@ function hashCode(str: string): number {
             }
             <div class="absolute bottom-5 left-5 flex gap-2">
               @if (p.thcPercent !== null && p.thcPercent !== undefined) {
-                <div
-                  class="rounded-xl bg-white/90 px-4 py-2 shadow-sm backdrop-blur-sm"
-                >
-                  <span
-                    class="text-[10px] tracking-wider text-gray-500 uppercase"
-                  >
-                    THC
-                  </span>
-                  <p class="text-lg font-bold text-gray-900">
-                    {{ p.thcPercent }}%
-                  </p>
+                <div class="rounded-xl bg-white/90 px-4 py-2 shadow-sm backdrop-blur-sm">
+                  <span class="text-[10px] tracking-wider text-gray-500 uppercase"> THC </span>
+                  <p class="text-lg font-bold text-gray-900">{{ p.thcPercent }}%</p>
                 </div>
               }
               @if (p.cbdPercent !== null && p.cbdPercent !== undefined && p.cbdPercent > 0) {
-                <div
-                  class="rounded-xl bg-white/90 px-4 py-2 shadow-sm backdrop-blur-sm"
-                >
-                  <span
-                    class="text-[10px] tracking-wider text-gray-500 uppercase"
-                  >
-                    CBD
-                  </span>
-                  <p class="text-lg font-bold text-gray-900">
-                    {{ p.cbdPercent }}%
-                  </p>
+                <div class="rounded-xl bg-white/90 px-4 py-2 shadow-sm backdrop-blur-sm">
+                  <span class="text-[10px] tracking-wider text-gray-500 uppercase"> CBD </span>
+                  <p class="text-lg font-bold text-gray-900">{{ p.cbdPercent }}%</p>
                 </div>
               }
             </div>
@@ -165,9 +151,7 @@ function hashCode(str: string): number {
 
             @if (effs.length > 0) {
               <div class="mt-6">
-                <p
-                  class="mb-2 text-xs font-medium tracking-wider text-gray-400 uppercase"
-                >
+                <p class="mb-2 text-xs font-medium tracking-wider text-gray-400 uppercase">
                   Effects
                 </p>
                 <div class="flex flex-wrap gap-2">
@@ -184,9 +168,7 @@ function hashCode(str: string): number {
 
             @if (flavs.length > 0) {
               <div class="mt-4">
-                <p
-                  class="mb-2 text-xs font-medium tracking-wider text-gray-400 uppercase"
-                >
+                <p class="mb-2 text-xs font-medium tracking-wider text-gray-400 uppercase">
                   Flavors
                 </p>
                 <div class="flex flex-wrap gap-2">
@@ -203,9 +185,7 @@ function hashCode(str: string): number {
 
             @if (p.variants.length > 1) {
               <div class="mt-6">
-                <p
-                  class="mb-2 text-xs font-medium tracking-wider text-gray-400 uppercase"
-                >
+                <p class="mb-2 text-xs font-medium tracking-wider text-gray-400 uppercase">
                   Options
                 </p>
                 <div class="flex flex-wrap gap-2">
@@ -223,7 +203,8 @@ function hashCode(str: string): number {
                       [class.border-gray-200]="active?.variantId !== v.variantId || !vInStock"
                       [class.text-gray-500]="active?.variantId !== v.variantId || !vInStock"
                     >
-                      {{ v.name }}@if (!vInStock) {
+                      {{ v.name }}
+                      @if (!vInStock) {
                         <span class="ml-1 text-xs">(Sold out)</span>
                       }
                     </button>
@@ -253,9 +234,7 @@ function hashCode(str: string): number {
               }
 
               <div class="flex items-center gap-4">
-                <div
-                  class="flex items-center rounded-full border border-gray-200 bg-white"
-                >
+                <div class="flex items-center rounded-full border border-gray-200 bg-white">
                   <button
                     type="button"
                     (click)="dec()"
@@ -372,10 +351,9 @@ export class ProductPage {
   protected readonly added = signal(false);
   private readonly selectedVariantId = signal<string | null>(null);
 
-  private readonly id = toSignal(
-    this.route.paramMap.pipe(map((p) => p.get('id'))),
-    { initialValue: null },
-  );
+  private readonly id = toSignal(this.route.paramMap.pipe(map((p) => p.get('id'))), {
+    initialValue: null,
+  });
 
   private readonly resource = rxResource({
     params: () => this.id(),
@@ -383,14 +361,12 @@ export class ProductPage {
       id
         ? this.productGQL
             .fetch({ variables: { dispensaryId: environment.dispensaryId, id } })
-            .pipe(map((r) => (r.data?.product ?? null) as ApiProduct | null))
+            .pipe(map((r) => r.data?.product ?? null))
         : of(null),
   });
 
   protected readonly loading = this.resource.isLoading;
-  protected readonly product = computed<ApiProduct | null>(
-    () => this.resource.value() ?? null,
-  );
+  protected readonly product = computed<ApiProduct | null>(() => this.resource.value() ?? null);
 
   protected readonly activeVariant = computed<ApiVariant | undefined>(() => {
     const p = this.product();
@@ -483,7 +459,7 @@ export class ProductPage {
     this.added.set(true);
     setTimeout(() => {
       this.added.set(false);
-      this.router.navigateByUrl('/');
+      void this.router.navigateByUrl('/');
     }, ADDED_RESET_MS);
   }
 }

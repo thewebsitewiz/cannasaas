@@ -54,6 +54,49 @@ import { ErrorDisplay } from '../../shared/error-display/error-display';
         </div>
 
         <div class="flex items-center gap-3">
+          @if (customer(); as c) {
+            <a
+              routerLink="/checkin"
+              class="flex items-center gap-2 rounded-full bg-white/15 px-5 py-3.5 text-base font-semibold text-white active:scale-95"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              {{ c.firstName ?? 'Account' }} · {{ c.loyaltyPoints }} pts
+            </a>
+          } @else {
+            <a
+              routerLink="/checkin"
+              class="flex items-center gap-2 rounded-full bg-white/10 px-5 py-3.5 text-base font-semibold text-white/80 active:scale-95"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              Check In
+            </a>
+          }
           <a
             routerLink="/cart"
             class="relative flex items-center gap-2 rounded-full bg-emerald-500 px-7 py-3.5 text-lg font-semibold text-white active:scale-95"
@@ -124,6 +167,7 @@ export class KioskLayout {
   private readonly cart = inject(CartService);
 
   protected readonly itemCount = this.cart.itemCount;
+  protected readonly customer = this.cart.customer;
   private readonly url = toSignal(
     this.router.events.pipe(
       filter((e): e is NavigationEnd => e instanceof NavigationEnd),
