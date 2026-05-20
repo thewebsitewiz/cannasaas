@@ -5,6 +5,84 @@
   },
   "newProjectRoot": "projects",
   "projects": {
+    "admin": {
+      "projectType": "application",
+      "schematics": {},
+      "root": "projects/admin",
+      "sourceRoot": "projects/admin/src",
+      "prefix": "cs",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "projects/admin/src/main.ts",
+            "tsConfig": "projects/admin/tsconfig.app.json",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "projects/admin/public"
+              }
+            ],
+            "styles": [
+              "projects/admin/src/styles.css"
+            ],
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "dist/ui"
+              ]
+            }
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "600kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "projects/admin/src/environments/environment.ts",
+                  "with": "projects/admin/src/environments/environment.development.ts"
+                }
+              ]
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "configurations": {
+            "production": {
+              "buildTarget": "admin:build:production"
+            },
+            "development": {
+              "buildTarget": "admin:build:development"
+            }
+          },
+          "defaultConfiguration": "development",
+          "options": {
+            "host": "localhost",
+            "port": 5274
+          }
+        },
+        "test": {
+          "builder": "@angular/build:unit-test"
+        }
+      }
+    },
     "kiosk": {
       "architect": {
         "build": {
@@ -47,9 +125,13 @@
             ],
             "browser": "projects/kiosk/src/main.ts",
             "stylePreprocessorOptions": {
-              "includePaths": ["dist/ui"]
+              "includePaths": [
+                "dist/ui"
+              ]
             },
-            "styles": ["projects/kiosk/src/styles.css"],
+            "styles": [
+              "projects/kiosk/src/styles.css"
+            ],
             "tsConfig": "projects/kiosk/tsconfig.app.json"
           }
         },
@@ -79,31 +161,83 @@
       "schematics": {},
       "sourceRoot": "projects/kiosk/src"
     },
-    "ui": {
+    "staff": {
+      "projectType": "application",
+      "schematics": {},
+      "root": "projects/staff",
+      "sourceRoot": "projects/staff/src",
+      "prefix": "cs",
       "architect": {
         "build": {
-          "builder": "@angular/build:ng-packagr",
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "projects/staff/src/main.ts",
+            "tsConfig": "projects/staff/tsconfig.app.json",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "projects/staff/public"
+              }
+            ],
+            "styles": [
+              "projects/staff/src/styles.css"
+            ],
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "dist/ui"
+              ]
+            }
+          },
           "configurations": {
-            "development": {
-              "tsConfig": "projects/ui/tsconfig.lib.json"
-            },
             "production": {
-              "tsConfig": "projects/ui/tsconfig.lib.prod.json"
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "600kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "projects/staff/src/environments/environment.ts",
+                  "with": "projects/staff/src/environments/environment.development.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
         },
-        "test": {
-          "builder": "@angular/build:unit-test",
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "configurations": {
+            "production": {
+              "buildTarget": "staff:build:production"
+            },
+            "development": {
+              "buildTarget": "staff:build:development"
+            }
+          },
+          "defaultConfiguration": "development",
           "options": {
-            "tsConfig": "projects/ui/tsconfig.spec.json"
+            "host": "localhost",
+            "port": 5275
           }
+        },
+        "test": {
+          "builder": "@angular/build:unit-test"
         }
-      },
-      "prefix": "cs",
-      "projectType": "library",
-      "root": "projects/ui",
-      "sourceRoot": "projects/ui/src"
+      }
     },
     "storefront": {
       "projectType": "application",
@@ -128,9 +262,13 @@
                 "output": "/themes"
               }
             ],
-            "styles": ["projects/storefront/src/styles.css"],
+            "styles": [
+              "projects/storefront/src/styles.css"
+            ],
             "stylePreprocessorOptions": {
-              "includePaths": ["dist/ui"]
+              "includePaths": [
+                "dist/ui"
+              ]
             }
           },
           "configurations": {
@@ -184,79 +322,31 @@
         }
       }
     },
-    "staff": {
-      "projectType": "application",
-      "schematics": {},
-      "root": "projects/staff",
-      "sourceRoot": "projects/staff/src",
-      "prefix": "cs",
+    "ui": {
       "architect": {
         "build": {
-          "builder": "@angular/build:application",
-          "options": {
-            "browser": "projects/staff/src/main.ts",
-            "tsConfig": "projects/staff/tsconfig.app.json",
-            "assets": [
-              {
-                "glob": "**/*",
-                "input": "projects/staff/public"
-              }
-            ],
-            "styles": ["projects/staff/src/styles.css"],
-            "stylePreprocessorOptions": {
-              "includePaths": ["dist/ui"]
-            }
-          },
+          "builder": "@angular/build:ng-packagr",
           "configurations": {
-            "production": {
-              "budgets": [
-                {
-                  "type": "initial",
-                  "maximumWarning": "600kB",
-                  "maximumError": "1MB"
-                },
-                {
-                  "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
-                }
-              ],
-              "outputHashing": "all"
-            },
             "development": {
-              "optimization": false,
-              "extractLicenses": false,
-              "sourceMap": true,
-              "fileReplacements": [
-                {
-                  "replace": "projects/staff/src/environments/environment.ts",
-                  "with": "projects/staff/src/environments/environment.development.ts"
-                }
-              ]
+              "tsConfig": "projects/ui/tsconfig.lib.json"
+            },
+            "production": {
+              "tsConfig": "projects/ui/tsconfig.lib.prod.json"
             }
           },
           "defaultConfiguration": "production"
         },
-        "serve": {
-          "builder": "@angular/build:dev-server",
-          "configurations": {
-            "production": {
-              "buildTarget": "staff:build:production"
-            },
-            "development": {
-              "buildTarget": "staff:build:development"
-            }
-          },
-          "defaultConfiguration": "development",
-          "options": {
-            "host": "localhost",
-            "port": 5275
-          }
-        },
         "test": {
-          "builder": "@angular/build:unit-test"
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "tsConfig": "projects/ui/tsconfig.spec.json"
+          }
         }
-      }
+      },
+      "prefix": "cs",
+      "projectType": "library",
+      "root": "projects/ui",
+      "sourceRoot": "projects/ui/src"
     }
   },
   "version": 1
