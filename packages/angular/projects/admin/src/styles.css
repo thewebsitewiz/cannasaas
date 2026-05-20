@@ -1,0 +1,22 @@
+@import 'tailwindcss';
+
+/*
+ * Tailwind v4 in this monorepo: scan only this app + the @cannasaas/ui-ng lib.
+ * Without these, Tailwind scans from workspace root and bloats CSS by 10×+.
+ */
+@source './**/*.{ts,html}';
+@source '../../ui/src/**/*.{ts,html,css}';
+
+/*
+ * Theme wiring lives in sc-621. The admin uses a single fixed theme
+ * (`dark` per apps/admin/CLAUDE.md) — no per-tenant injection.
+ */
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family: var(--font-body, system-ui, sans-serif);
+  background: var(--color-bg, #0a1a0f);
+  color: var(--color-text, #e6edf3);
+}
