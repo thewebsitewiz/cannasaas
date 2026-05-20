@@ -6,13 +6,12 @@ import {
   UploadedFile,
   Param,
   Req,
-  UseGuards,
+  ForbiddenException,
+  NotFoundException,
   HttpCode,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Request } from 'express';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import {
   ImageService,
@@ -22,7 +21,7 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 
 interface AuthedRequest extends Request {
-  user?: { sub: string; dispensaryId?: string };
+  user?: { sub: string; role: string; dispensaryId?: string };
 }
 
 interface ProductImageRow {
@@ -30,8 +29,11 @@ interface ProductImageRow {
   thumbnail_url: string | null;
 }
 
+interface ProductDispensaryRow {
+  dispensary_id: string | null;
+}
+
 @Controller('images')
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class ImageController {
   constructor(
     private readonly images: ImageService,
@@ -48,11 +50,10 @@ export class ImageController {
     @Param('productId') productId: string,
     @Req() req: AuthedRequest,
   ) {
-    const headerVal = req.headers['x-dispensary-id'];
-    const headerDispensaryId = Array.isArray(headerVal)
-      ? headerVal[0]
-      : headerVal;
-    const dispensaryId = req.user?.dispensaryId ?? headerDispensaryId ?? '';
+    const dispensaryId = await this.assertProductInCallerTenant(
+      productId,
+      req,
+    );
     const result = await this.images.uploadProductImage(
       file,
       dispensaryId,
@@ -77,11 +78,10 @@ export class ImageController {
     @Param('productId') productId: string,
     @Req() req: AuthedRequest,
   ) {
-    const headerVal = req.headers['x-dispensary-id'];
-    const headerDispensaryId = Array.isArray(headerVal)
-      ? headerVal[0]
-      : headerVal;
-    const dispensaryId = req.user?.dispensaryId ?? headerDispensaryId ?? '';
+    const dispensaryId = await this.assertProductInCallerTenant(
+      productId,
+      req,
+    );
     const result = await this.images.uploadProductImage(
       file,
       dispensaryId,
@@ -99,7 +99,11 @@ export class ImageController {
   @Delete('product/:productId')
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
   @HttpCode(200)
-  async deleteProductImage(@Param('productId') productId: string) {
+  async deleteProductImage(
+    @Param('productId') productId: string,
+    @Req() req: AuthedRequest,
+  ) {
+    await this.assertProductInCallerTenant(productId, req);
     const rows = (await this.ds.query(
       'SELECT image_url, thumbnail_url FROM products WHERE id = $1',
       [productId],
@@ -131,8 +135,37 @@ export class ImageController {
     @Req() req: AuthedRequest,
   ) {
     const userId = req.user?.sub;
-    if (!userId) throw new Error('Not authenticated');
+    if (!userId) throw new ForbiddenException('Not authenticated');
     const result = await this.images.uploadAvatar(file, userId);
     return { success: true, ...result };
+  }
+
+  /**
+   * Resolves the product's owning dispensary and verifies the caller
+   * is authorized for it (super_admin bypasses). Pre-sc-609-followup
+   * the image endpoints used the caller's own `dispensaryId` blindly
+   * — a dispensary_admin of tenant A could mutate any product's image
+   * in the database, including tenant B's products.
+   */
+  private async assertProductInCallerTenant(
+    productId: string,
+    req: AuthedRequest,
+  ): Promise<string> {
+    const rows = (await this.ds.query(
+      'SELECT dispensary_id FROM products WHERE id = $1',
+      [productId],
+    )) as unknown as ProductDispensaryRow[];
+    const owner = rows[0]?.dispensary_id;
+    if (!owner) {
+      throw new NotFoundException(`Product ${productId} not found`);
+    }
+    const user = req.user;
+    if (!user) throw new ForbiddenException('Not authenticated');
+    if (user.role !== 'super_admin' && user.dispensaryId !== owner) {
+      throw new ForbiddenException(
+        'Product belongs to a different dispensary',
+      );
+    }
+    return owner;
   }
 }
