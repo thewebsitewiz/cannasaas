@@ -4,10 +4,9 @@ import { adminBaselineGuard, authGuard } from './core/auth/auth.guard';
 
 /**
  * Login is public. Everything else passes through `authGuard` +
- * `adminBaselineGuard` (super_admin / org_admin / dispensary_admin).
- * AdminLayout + the per-page lazy-loads land in sc-623 onward; for
- * now the protected branch shows a tiny "signed in" placeholder so
- * the auth flow is testable end-to-end.
+ * `adminBaselineGuard` (super_admin / org_admin / dispensary_admin)
+ * and renders inside `AdminLayout`. Per-page lazy-loads attach as
+ * children of the layout route as they ship (sc-624 onward).
  */
 export const routes: Routes = [
   {
@@ -17,7 +16,16 @@ export const routes: Routes = [
   {
     path: '',
     canMatch: [authGuard, adminBaselineGuard],
-    loadComponent: () => import('./pages/signed-in-placeholder').then((m) => m.SignedInPlaceholder),
+    loadComponent: () => import('./layout/admin-layout').then((m) => m.AdminLayout),
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        loadComponent: () =>
+          import('./pages/dashboard-placeholder').then((m) => m.DashboardPlaceholder),
+      },
+      { path: '**', redirectTo: '' },
+    ],
   },
   { path: '**', redirectTo: '' },
 ];
