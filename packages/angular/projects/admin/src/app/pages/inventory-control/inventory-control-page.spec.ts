@@ -89,7 +89,7 @@ describe('InventoryControlPage', () => {
     expect(panel?.querySelector('cs-inventory-transfers-panel')).not.toBeNull();
   });
 
-  it('switches to the Receiving placeholder when clicked', () => {
+  it('switches to the Receiving panel when clicked (receiving panel has its own spec)', () => {
     const { fixture } = configure({});
     const root = fixture.nativeElement as HTMLElement;
     const receivingTab = Array.from(root.querySelectorAll('[role="tab"]')).find(
@@ -98,7 +98,8 @@ describe('InventoryControlPage', () => {
     receivingTab.click();
     fixture.detectChanges();
     const panel = root.querySelector('#tab-receiving');
-    expect(panel?.textContent).toContain('sc-650');
+    expect(panel).not.toBeNull();
+    expect(panel?.querySelector('cs-inventory-receiving-panel')).not.toBeNull();
   });
 
   it('renders loading state when isLoading is true', () => {
