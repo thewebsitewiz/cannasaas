@@ -1,4 +1,3 @@
-/* eslint-disable */
 // AUTO-GENERATED — do not edit by hand
 
 import { gql } from 'apollo-angular';
@@ -4547,6 +4546,86 @@ export type CustomerByPhoneQuery = {
   } | null;
 };
 
+export type DashboardQueryVariables = Exact<{
+  dispensaryId?: InputMaybe<Scalars['ID']['input']>;
+  days?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+export type DashboardQuery = {
+  __typename?: 'Query';
+  dashboard: {
+    __typename?: 'DashboardData';
+    sales: {
+      __typename?: 'SalesOverview';
+      totalRevenue: number;
+      totalOrders: number;
+      averageOrderValue: number;
+      totalTax: number;
+      completedOrders: number;
+      pendingOrders: number;
+      cancelledOrders: number;
+    };
+    salesTrend: Array<{
+      __typename?: 'SalesTrend';
+      period: string;
+      revenue: number;
+      orders: number;
+      averageOrderValue: number;
+    }>;
+    topProducts: Array<{
+      __typename?: 'TopProduct';
+      productId: string;
+      productName: string;
+      strainType?: string | null;
+      unitsSold: number;
+      revenue: number;
+    }>;
+    categoryBreakdown: Array<{
+      __typename?: 'CategoryBreakdown';
+      category: string;
+      productCount: number;
+      unitsSold: number;
+      revenue: number;
+    }>;
+    inventory: {
+      __typename?: 'InventoryOverview';
+      totalVariants: number;
+      totalUnitsOnHand: number;
+      totalUnitsAvailable: number;
+      estimatedInventoryValue: number;
+      lowStockCount: number;
+      outOfStockCount: number;
+    };
+    lowStockItems: Array<{
+      __typename?: 'LowStockItem';
+      variantId: string;
+      productName: string;
+      variantName: string;
+      quantityOnHand: number;
+      quantityAvailable: number;
+    }>;
+    metrcSync: {
+      __typename?: 'MetrcSyncOverview';
+      totalSyncs: number;
+      successCount: number;
+      failedCount: number;
+      pendingCount: number;
+      successRate: number;
+      ordersAwaitingSync: number;
+      lastSyncAt?: string | null;
+    };
+    compliance: {
+      __typename?: 'ComplianceSummary';
+      totalProducts: number;
+      compliantProducts: number;
+      missingUid: number;
+      missingCategory: number;
+      missingPackageLabel: number;
+      compliancePercent: number;
+    };
+  };
+};
+
 export type DeliveryZonesForFulfillmentQueryVariables = Exact<{
   dispensaryId: Scalars['ID']['input'];
 }>;
@@ -5336,6 +5415,83 @@ export class CustomerByPhoneGQL extends Apollo.Query<
   CustomerByPhoneQueryVariables
 > {
   override document = CustomerByPhoneDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const DashboardDocument = gql`
+  query Dashboard($dispensaryId: ID, $days: Int) {
+    dashboard(dispensaryId: $dispensaryId, days: $days) {
+      sales {
+        totalRevenue
+        totalOrders
+        averageOrderValue
+        totalTax
+        completedOrders
+        pendingOrders
+        cancelledOrders
+      }
+      salesTrend {
+        period
+        revenue
+        orders
+        averageOrderValue
+      }
+      topProducts {
+        productId
+        productName
+        strainType
+        unitsSold
+        revenue
+      }
+      categoryBreakdown {
+        category
+        productCount
+        unitsSold
+        revenue
+      }
+      inventory {
+        totalVariants
+        totalUnitsOnHand
+        totalUnitsAvailable
+        estimatedInventoryValue
+        lowStockCount
+        outOfStockCount
+      }
+      lowStockItems {
+        variantId
+        productName
+        variantName
+        quantityOnHand
+        quantityAvailable
+      }
+      metrcSync {
+        totalSyncs
+        successCount
+        failedCount
+        pendingCount
+        successRate
+        ordersAwaitingSync
+        lastSyncAt
+      }
+      compliance {
+        totalProducts
+        compliantProducts
+        missingUid
+        missingCategory
+        missingPackageLabel
+        compliancePercent
+      }
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class DashboardGQL extends Apollo.Query<DashboardQuery, DashboardQueryVariables> {
+  override document = DashboardDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);

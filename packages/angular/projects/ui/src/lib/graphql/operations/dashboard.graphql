@@ -1,0 +1,64 @@
+query Dashboard($dispensaryId: ID, $days: Int) {
+  dashboard(dispensaryId: $dispensaryId, days: $days) {
+    sales {
+      totalRevenue
+      totalOrders
+      averageOrderValue
+      totalTax
+      completedOrders
+      pendingOrders
+      cancelledOrders
+    }
+    salesTrend {
+      period
+      revenue
+      orders
+      averageOrderValue
+    }
+    topProducts {
+      productId
+      productName
+      strainType
+      unitsSold
+      revenue
+    }
+    categoryBreakdown {
+      category
+      productCount
+      unitsSold
+      revenue
+    }
+    inventory {
+      totalVariants
+      totalUnitsOnHand
+      totalUnitsAvailable
+      estimatedInventoryValue
+      lowStockCount
+      outOfStockCount
+    }
+    lowStockItems {
+      variantId
+      productName
+      variantName
+      quantityOnHand
+      quantityAvailable
+    }
+    metrcSync {
+      totalSyncs
+      successCount
+      failedCount
+      pendingCount
+      successRate
+      ordersAwaitingSync
+      lastSyncAt
+    }
+    compliance {
+      totalProducts
+      compliantProducts
+      missingUid
+      missingCategory
+      missingPackageLabel
+      compliancePercent
+    }
+  }
+}
