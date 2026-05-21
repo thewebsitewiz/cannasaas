@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 
 import { InventoryAdjustmentsService } from './inventory-adjustments.service';
+import { InventoryTransfersPanel } from './inventory-transfers-panel';
 
 type Tab = 'adjustments' | 'transfers' | 'receiving';
 
@@ -30,6 +31,7 @@ const TABS: readonly TabSpec[] = [
 @Component({
   selector: 'cs-inventory-control-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [InventoryTransfersPanel],
   template: `
     <section class="space-y-6">
       <h1 class="text-2xl font-bold text-(--color-text)">Inventory Control</h1>
@@ -178,12 +180,8 @@ const TABS: readonly TabSpec[] = [
           </div>
         }
         @case ('transfers') {
-          <div
-            id="tab-transfers"
-            role="tabpanel"
-            class="rounded-xl border border-(--color-border) bg-(--color-surface) p-8 text-center text-sm text-(--color-text-muted)"
-          >
-            Inter-dispensary transfers land in sc-649.
+          <div id="tab-transfers" role="tabpanel">
+            <cs-inventory-transfers-panel />
           </div>
         }
         @case ('receiving') {

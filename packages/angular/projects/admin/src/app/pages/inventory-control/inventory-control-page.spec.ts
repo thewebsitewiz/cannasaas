@@ -76,7 +76,7 @@ describe('InventoryControlPage', () => {
     expect(selected?.textContent?.trim()).toBe('Adjustments');
   });
 
-  it('switches to the Transfers placeholder when clicked', () => {
+  it('switches to the Transfers panel when clicked (transfers panel has its own spec)', () => {
     const { fixture } = configure({});
     const root = fixture.nativeElement as HTMLElement;
     const transfersTab = Array.from(root.querySelectorAll('[role="tab"]')).find(
@@ -85,7 +85,8 @@ describe('InventoryControlPage', () => {
     transfersTab.click();
     fixture.detectChanges();
     const panel = root.querySelector('#tab-transfers');
-    expect(panel?.textContent).toContain('sc-649');
+    expect(panel).not.toBeNull();
+    expect(panel?.querySelector('cs-inventory-transfers-panel')).not.toBeNull();
   });
 
   it('switches to the Receiving placeholder when clicked', () => {

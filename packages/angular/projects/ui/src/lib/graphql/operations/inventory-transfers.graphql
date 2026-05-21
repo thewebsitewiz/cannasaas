@@ -1,0 +1,45 @@
+query InventoryTransfers($dispensaryId: ID!, $direction: String) {
+  inventoryTransfers(dispensaryId: $dispensaryId, direction: $direction) {
+    transferId
+    fromDispensaryId
+    toDispensaryId
+    status
+    notes
+    metrcManifestId
+    requestedByUserId
+    approvedByUserId
+    approvedAt
+    shippedAt
+    receivedAt
+    rejectionReason
+    created_at
+  }
+}
+
+query TransferItems($transferId: ID!) {
+  transferItems(transferId: $transferId) {
+    itemId
+    variantId
+    productName
+    variantName
+    quantityRequested
+    quantityShipped
+    quantityReceived
+  }
+}
+
+mutation ApproveTransfer($transferId: ID!) {
+  approveTransfer(transferId: $transferId) {
+    transferId
+    status
+    approvedAt
+  }
+}
+
+mutation ShipTransfer($transferId: ID!) {
+  shipTransfer(transferId: $transferId) {
+    transferId
+    status
+    shippedAt
+  }
+}

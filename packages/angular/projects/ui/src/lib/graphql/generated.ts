@@ -4788,6 +4788,77 @@ export type ApproveAdjustmentMutation = {
   };
 };
 
+export type InventoryTransfersQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+  direction?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+export type InventoryTransfersQuery = {
+  __typename?: 'Query';
+  inventoryTransfers: Array<{
+    __typename?: 'InventoryTransfer';
+    transferId: string;
+    fromDispensaryId: string;
+    toDispensaryId: string;
+    status: string;
+    notes?: string | null;
+    metrcManifestId?: string | null;
+    requestedByUserId: string;
+    approvedByUserId?: string | null;
+    approvedAt?: string | null;
+    shippedAt?: string | null;
+    receivedAt?: string | null;
+    rejectionReason?: string | null;
+    created_at: string;
+  }>;
+};
+
+export type TransferItemsQueryVariables = Exact<{
+  transferId: Scalars['ID']['input'];
+}>;
+
+export type TransferItemsQuery = {
+  __typename?: 'Query';
+  transferItems: Array<{
+    __typename?: 'InventoryTransferItem';
+    itemId: string;
+    variantId: string;
+    productName: string;
+    variantName?: string | null;
+    quantityRequested: number;
+    quantityShipped?: number | null;
+    quantityReceived?: number | null;
+  }>;
+};
+
+export type ApproveTransferMutationVariables = Exact<{
+  transferId: Scalars['ID']['input'];
+}>;
+
+export type ApproveTransferMutation = {
+  __typename?: 'Mutation';
+  approveTransfer: {
+    __typename?: 'InventoryTransfer';
+    transferId: string;
+    status: string;
+    approvedAt?: string | null;
+  };
+};
+
+export type ShipTransferMutationVariables = Exact<{
+  transferId: Scalars['ID']['input'];
+}>;
+
+export type ShipTransferMutation = {
+  __typename?: 'Mutation';
+  shipTransfer: {
+    __typename?: 'InventoryTransfer';
+    transferId: string;
+    status: string;
+    shippedAt?: string | null;
+  };
+};
+
 export type LoginMutationVariables = Exact<{
   input: LoginInput;
 }>;
@@ -5772,6 +5843,112 @@ export class ApproveAdjustmentGQL extends Apollo.Mutation<
   ApproveAdjustmentMutationVariables
 > {
   override document = ApproveAdjustmentDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const InventoryTransfersDocument = gql`
+  query InventoryTransfers($dispensaryId: ID!, $direction: String) {
+    inventoryTransfers(dispensaryId: $dispensaryId, direction: $direction) {
+      transferId
+      fromDispensaryId
+      toDispensaryId
+      status
+      notes
+      metrcManifestId
+      requestedByUserId
+      approvedByUserId
+      approvedAt
+      shippedAt
+      receivedAt
+      rejectionReason
+      created_at
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class InventoryTransfersGQL extends Apollo.Query<
+  InventoryTransfersQuery,
+  InventoryTransfersQueryVariables
+> {
+  override document = InventoryTransfersDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const TransferItemsDocument = gql`
+  query TransferItems($transferId: ID!) {
+    transferItems(transferId: $transferId) {
+      itemId
+      variantId
+      productName
+      variantName
+      quantityRequested
+      quantityShipped
+      quantityReceived
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class TransferItemsGQL extends Apollo.Query<
+  TransferItemsQuery,
+  TransferItemsQueryVariables
+> {
+  override document = TransferItemsDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const ApproveTransferDocument = gql`
+  mutation ApproveTransfer($transferId: ID!) {
+    approveTransfer(transferId: $transferId) {
+      transferId
+      status
+      approvedAt
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class ApproveTransferGQL extends Apollo.Mutation<
+  ApproveTransferMutation,
+  ApproveTransferMutationVariables
+> {
+  override document = ApproveTransferDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const ShipTransferDocument = gql`
+  mutation ShipTransfer($transferId: ID!) {
+    shipTransfer(transferId: $transferId) {
+      transferId
+      status
+      shippedAt
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class ShipTransferGQL extends Apollo.Mutation<
+  ShipTransferMutation,
+  ShipTransferMutationVariables
+> {
+  override document = ShipTransferDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);
