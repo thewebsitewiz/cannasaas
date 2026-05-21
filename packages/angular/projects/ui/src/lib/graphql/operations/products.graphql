@@ -34,6 +34,7 @@ query Products(
       variantId
       name
       sku
+      quantityPerUnit
       retailPrice
       stockQuantity
       stockStatus

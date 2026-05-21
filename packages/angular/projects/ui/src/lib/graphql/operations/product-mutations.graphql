@@ -1,0 +1,21 @@
+mutation CreateProduct($input: CreateProductInput!) {
+  createProduct(input: $input) {
+    id
+    name
+  }
+}
+
+mutation UpdateProduct($input: UpdateProductInput!) {
+  updateProduct(input: $input) {
+    id
+    name
+  }
+}
+
+mutation UpdateVariantPrice($input: UpdateVariantPriceInput!) {
+  updateVariantPrice(input: $input)
+}
+
+mutation DeleteProduct($productId: ID!, $dispensaryId: ID!) {
+  deleteProduct(productId: $productId, dispensaryId: $dispensaryId)
+}
