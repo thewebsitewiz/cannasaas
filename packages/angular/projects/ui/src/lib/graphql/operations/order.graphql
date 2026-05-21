@@ -1,15 +1,21 @@
 query Order($orderId: ID!, $dispensaryId: ID) {
   order(orderId: $orderId, dispensaryId: $dispensaryId) {
     orderId
-    orderStatus
+    dispensaryId
+    customerUserId
     orderType
+    orderStatus
     subtotal
-    taxTotal
     discountTotal
+    taxTotal
     total
-    createdAt
-    updatedAt
+    paymentMethod
+    metrcReceiptId
+    metrcSyncStatus
+    notes
     cancellationReason
     cancelledAt
+    createdAt
+    updatedAt
   }
 }

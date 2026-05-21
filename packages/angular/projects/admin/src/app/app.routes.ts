@@ -31,6 +31,10 @@ export const routes: Routes = [
             (m) => m.InventoryControlPage,
           ),
       },
+      {
+        path: 'orders',
+        loadComponent: () => import('./pages/orders/orders-page').then((m) => m.OrdersPage),
+      },
       { path: '**', redirectTo: '' },
     ],
   },
