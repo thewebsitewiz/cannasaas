@@ -22,7 +22,7 @@ export const routes: Routes = [
         path: '',
         pathMatch: 'full',
         loadComponent: () =>
-          import('./pages/dashboard-placeholder').then((m) => m.DashboardPlaceholder),
+          import('./pages/dashboard/dashboard-page').then((m) => m.DashboardPage),
       },
       { path: '**', redirectTo: '' },
     ],
