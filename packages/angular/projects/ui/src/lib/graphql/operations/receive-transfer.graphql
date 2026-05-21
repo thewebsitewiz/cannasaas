@@ -1,0 +1,7 @@
+mutation ReceiveTransfer($transferId: ID!, $items: [ReceiveItemInput!]!) {
+  receiveTransfer(transferId: $transferId, items: $items) {
+    transferId
+    status
+    receivedAt
+  }
+}

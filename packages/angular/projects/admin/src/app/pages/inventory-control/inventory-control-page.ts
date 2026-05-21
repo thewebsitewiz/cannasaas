@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 
 import { InventoryAdjustmentsService } from './inventory-adjustments.service';
+import { InventoryReceivingPanel } from './inventory-receiving-panel';
 import { InventoryTransfersPanel } from './inventory-transfers-panel';
 
 type Tab = 'adjustments' | 'transfers' | 'receiving';
@@ -31,7 +32,7 @@ const TABS: readonly TabSpec[] = [
 @Component({
   selector: 'cs-inventory-control-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [InventoryTransfersPanel],
+  imports: [InventoryTransfersPanel, InventoryReceivingPanel],
   template: `
     <section class="space-y-6">
       <h1 class="text-2xl font-bold text-(--color-text)">Inventory Control</h1>
@@ -185,12 +186,8 @@ const TABS: readonly TabSpec[] = [
           </div>
         }
         @case ('receiving') {
-          <div
-            id="tab-receiving"
-            role="tabpanel"
-            class="rounded-xl border border-(--color-border) bg-(--color-surface) p-8 text-center text-sm text-(--color-text-muted)"
-          >
-            Receiving + variance reconciliation lands in sc-650.
+          <div id="tab-receiving" role="tabpanel">
+            <cs-inventory-receiving-panel />
           </div>
         }
       }

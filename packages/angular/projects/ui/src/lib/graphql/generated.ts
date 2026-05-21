@@ -5197,6 +5197,21 @@ export type ProductsQuery = {
   }>;
 };
 
+export type ReceiveTransferMutationVariables = Exact<{
+  transferId: Scalars['ID']['input'];
+  items: Array<ReceiveItemInput> | ReceiveItemInput;
+}>;
+
+export type ReceiveTransferMutation = {
+  __typename?: 'Mutation';
+  receiveTransfer: {
+    __typename?: 'InventoryTransfer';
+    transferId: string;
+    status: string;
+    receivedAt?: string | null;
+  };
+};
+
 export type RegisterMutationVariables = Exact<{
   input: RegisterInput;
 }>;
@@ -6427,6 +6442,29 @@ export const ProductsDocument = gql`
 })
 export class ProductsGQL extends Apollo.Query<ProductsQuery, ProductsQueryVariables> {
   override document = ProductsDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const ReceiveTransferDocument = gql`
+  mutation ReceiveTransfer($transferId: ID!, $items: [ReceiveItemInput!]!) {
+    receiveTransfer(transferId: $transferId, items: $items) {
+      transferId
+      status
+      receivedAt
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class ReceiveTransferGQL extends Apollo.Mutation<
+  ReceiveTransferMutation,
+  ReceiveTransferMutationVariables
+> {
+  override document = ReceiveTransferDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);
