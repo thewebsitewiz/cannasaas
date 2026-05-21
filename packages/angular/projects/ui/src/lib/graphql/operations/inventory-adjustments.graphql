@@ -1,0 +1,23 @@
+query InventoryAdjustments($dispensaryId: ID!, $limit: Int = 50) {
+  inventoryAdjustments(dispensaryId: $dispensaryId, limit: $limit) {
+    adjustmentId
+    productName
+    quantityChange
+    quantityBefore
+    quantityAfter
+    status
+    notes
+    created_at
+    approvedAt
+    approvedByUserId
+    reasonId
+  }
+}
+
+mutation ApproveAdjustment($adjustmentId: ID!) {
+  approveAdjustment(adjustmentId: $adjustmentId) {
+    adjustmentId
+    status
+    approvedAt
+  }
+}
