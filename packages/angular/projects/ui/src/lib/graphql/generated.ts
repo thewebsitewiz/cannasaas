@@ -5128,6 +5128,37 @@ export type OrdersQuery = {
   }>;
 };
 
+export type CreateProductMutationVariables = Exact<{
+  input: CreateProductInput;
+}>;
+
+export type CreateProductMutation = {
+  __typename?: 'Mutation';
+  createProduct: { __typename?: 'Product'; id: string; name: string };
+};
+
+export type UpdateProductMutationVariables = Exact<{
+  input: UpdateProductInput;
+}>;
+
+export type UpdateProductMutation = {
+  __typename?: 'Mutation';
+  updateProduct: { __typename?: 'Product'; id: string; name: string };
+};
+
+export type UpdateVariantPriceMutationVariables = Exact<{
+  input: UpdateVariantPriceInput;
+}>;
+
+export type UpdateVariantPriceMutation = { __typename?: 'Mutation'; updateVariantPrice: boolean };
+
+export type DeleteProductMutationVariables = Exact<{
+  productId: Scalars['ID']['input'];
+  dispensaryId: Scalars['ID']['input'];
+}>;
+
+export type DeleteProductMutation = { __typename?: 'Mutation'; deleteProduct: boolean };
+
 export type ProductQueryVariables = Exact<{
   dispensaryId: Scalars['ID']['input'];
   id: Scalars['ID']['input'];
@@ -5202,6 +5233,7 @@ export type ProductsQuery = {
       variantId: string;
       name: string;
       sku?: string | null;
+      quantityPerUnit?: number | null;
       retailPrice?: number | null;
       stockQuantity?: number | null;
       stockStatus?: string | null;
@@ -6385,6 +6417,88 @@ export class OrdersGQL extends Apollo.Query<OrdersQuery, OrdersQueryVariables> {
     super(apollo);
   }
 }
+export const CreateProductDocument = gql`
+  mutation CreateProduct($input: CreateProductInput!) {
+    createProduct(input: $input) {
+      id
+      name
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class CreateProductGQL extends Apollo.Mutation<
+  CreateProductMutation,
+  CreateProductMutationVariables
+> {
+  override document = CreateProductDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const UpdateProductDocument = gql`
+  mutation UpdateProduct($input: UpdateProductInput!) {
+    updateProduct(input: $input) {
+      id
+      name
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class UpdateProductGQL extends Apollo.Mutation<
+  UpdateProductMutation,
+  UpdateProductMutationVariables
+> {
+  override document = UpdateProductDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const UpdateVariantPriceDocument = gql`
+  mutation UpdateVariantPrice($input: UpdateVariantPriceInput!) {
+    updateVariantPrice(input: $input)
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class UpdateVariantPriceGQL extends Apollo.Mutation<
+  UpdateVariantPriceMutation,
+  UpdateVariantPriceMutationVariables
+> {
+  override document = UpdateVariantPriceDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const DeleteProductDocument = gql`
+  mutation DeleteProduct($productId: ID!, $dispensaryId: ID!) {
+    deleteProduct(productId: $productId, dispensaryId: $dispensaryId)
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class DeleteProductGQL extends Apollo.Mutation<
+  DeleteProductMutation,
+  DeleteProductMutationVariables
+> {
+  override document = DeleteProductDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
 export const ProductDocument = gql`
   query Product($dispensaryId: ID!, $id: ID!) {
     product(dispensaryId: $dispensaryId, id: $id) {
@@ -6466,6 +6580,7 @@ export const ProductsDocument = gql`
         variantId
         name
         sku
+        quantityPerUnit
         retailPrice
         stockQuantity
         stockStatus
