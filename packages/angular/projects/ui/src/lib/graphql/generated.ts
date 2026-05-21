@@ -4751,6 +4751,43 @@ export type InitiateCashlessPaymentMutation = {
   };
 };
 
+export type InventoryAdjustmentsQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+export type InventoryAdjustmentsQuery = {
+  __typename?: 'Query';
+  inventoryAdjustments: Array<{
+    __typename?: 'InventoryAdjustment';
+    adjustmentId: string;
+    productName: string;
+    quantityChange: number;
+    quantityBefore: number;
+    quantityAfter: number;
+    status: string;
+    notes?: string | null;
+    created_at: string;
+    approvedAt?: string | null;
+    approvedByUserId?: string | null;
+    reasonId: number;
+  }>;
+};
+
+export type ApproveAdjustmentMutationVariables = Exact<{
+  adjustmentId: Scalars['ID']['input'];
+}>;
+
+export type ApproveAdjustmentMutation = {
+  __typename?: 'Mutation';
+  approveAdjustment: {
+    __typename?: 'InventoryAdjustment';
+    adjustmentId: string;
+    status: string;
+    approvedAt?: string | null;
+  };
+};
+
 export type LoginMutationVariables = Exact<{
   input: LoginInput;
 }>;
@@ -5681,6 +5718,60 @@ export class InitiateCashlessPaymentGQL extends Apollo.Mutation<
   InitiateCashlessPaymentMutationVariables
 > {
   override document = InitiateCashlessPaymentDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const InventoryAdjustmentsDocument = gql`
+  query InventoryAdjustments($dispensaryId: ID!, $limit: Int = 50) {
+    inventoryAdjustments(dispensaryId: $dispensaryId, limit: $limit) {
+      adjustmentId
+      productName
+      quantityChange
+      quantityBefore
+      quantityAfter
+      status
+      notes
+      created_at
+      approvedAt
+      approvedByUserId
+      reasonId
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class InventoryAdjustmentsGQL extends Apollo.Query<
+  InventoryAdjustmentsQuery,
+  InventoryAdjustmentsQueryVariables
+> {
+  override document = InventoryAdjustmentsDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const ApproveAdjustmentDocument = gql`
+  mutation ApproveAdjustment($adjustmentId: ID!) {
+    approveAdjustment(adjustmentId: $adjustmentId) {
+      adjustmentId
+      status
+      approvedAt
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class ApproveAdjustmentGQL extends Apollo.Mutation<
+  ApproveAdjustmentMutation,
+  ApproveAdjustmentMutationVariables
+> {
+  override document = ApproveAdjustmentDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);

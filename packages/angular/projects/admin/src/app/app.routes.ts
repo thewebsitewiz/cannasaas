@@ -24,6 +24,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/dashboard/dashboard-page').then((m) => m.DashboardPage),
       },
+      {
+        path: 'inventory-control',
+        loadComponent: () =>
+          import('./pages/inventory-control/inventory-control-page').then(
+            (m) => m.InventoryControlPage,
+          ),
+      },
       { path: '**', redirectTo: '' },
     ],
   },
