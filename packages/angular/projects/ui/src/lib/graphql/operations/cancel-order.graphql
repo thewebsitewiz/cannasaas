@@ -1,0 +1,3 @@
+mutation CancelOrder($orderId: ID!, $reason: String!, $dispensaryId: ID) {
+  cancelOrder(orderId: $orderId, reason: $reason, dispensaryId: $dispensaryId)
+}

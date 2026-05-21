@@ -4474,6 +4474,14 @@ export type AvailableTimeSlotsQuery = {
   }>;
 };
 
+export type CancelOrderMutationVariables = Exact<{
+  orderId: Scalars['ID']['input'];
+  reason: Scalars['String']['input'];
+  dispensaryId?: InputMaybe<Scalars['ID']['input']>;
+}>;
+
+export type CancelOrderMutation = { __typename?: 'Mutation'; cancelOrder: boolean };
+
 export type CloseRegisterSessionMutationVariables = Exact<{
   input: CloseRegisterSessionGqlInput;
 }>;
@@ -5078,16 +5086,22 @@ export type OrderQuery = {
   order?: {
     __typename?: 'Order';
     orderId: string;
-    orderStatus: string;
+    dispensaryId: string;
+    customerUserId?: string | null;
     orderType: string;
+    orderStatus: string;
     subtotal: number;
-    taxTotal: number;
     discountTotal: number;
+    taxTotal: number;
     total: number;
-    createdAt: string;
-    updatedAt: string;
+    paymentMethod?: string | null;
+    metrcReceiptId?: string | null;
+    metrcSyncStatus?: string | null;
+    notes?: string | null;
     cancellationReason?: string | null;
     cancelledAt?: string | null;
+    createdAt: string;
+    updatedAt: string;
   } | null;
 };
 
@@ -5431,6 +5445,25 @@ export class AvailableTimeSlotsGQL extends Apollo.Query<
   AvailableTimeSlotsQueryVariables
 > {
   override document = AvailableTimeSlotsDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const CancelOrderDocument = gql`
+  mutation CancelOrder($orderId: ID!, $reason: String!, $dispensaryId: ID) {
+    cancelOrder(orderId: $orderId, reason: $reason, dispensaryId: $dispensaryId)
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class CancelOrderGQL extends Apollo.Mutation<
+  CancelOrderMutation,
+  CancelOrderMutationVariables
+> {
+  override document = CancelOrderDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);
@@ -6295,16 +6328,22 @@ export const OrderDocument = gql`
   query Order($orderId: ID!, $dispensaryId: ID) {
     order(orderId: $orderId, dispensaryId: $dispensaryId) {
       orderId
-      orderStatus
+      dispensaryId
+      customerUserId
       orderType
+      orderStatus
       subtotal
-      taxTotal
       discountTotal
+      taxTotal
       total
-      createdAt
-      updatedAt
+      paymentMethod
+      metrcReceiptId
+      metrcSyncStatus
+      notes
       cancellationReason
       cancelledAt
+      createdAt
+      updatedAt
     }
   }
 `;
