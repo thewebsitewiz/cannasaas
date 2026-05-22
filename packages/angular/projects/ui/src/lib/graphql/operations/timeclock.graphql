@@ -1,0 +1,31 @@
+query ActiveClocks($dispensaryId: ID!) {
+  activeClocks(dispensaryId: $dispensaryId) {
+    entryId
+    profileId
+    firstName
+    lastName
+    positionName
+    clockIn
+    hoursSoFar
+  }
+}
+
+query PayrollReport($dispensaryId: ID!, $startDate: String!, $endDate: String!) {
+  payrollReport(
+    dispensaryId: $dispensaryId
+    startDate: $startDate
+    endDate: $endDate
+  ) {
+    employeeNumber
+    firstName
+    lastName
+    positionName
+    hourlyRate
+    isExempt
+    totalHours
+    overtimeHours
+    shiftsWorked
+    regularPay
+    grossPayWithOt
+  }
+}

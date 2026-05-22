@@ -5519,6 +5519,48 @@ export type ThemeConfigQuery = {
   themeConfig: { __typename?: 'ThemeConfigType'; preset: string; isDark: boolean };
 };
 
+export type ActiveClocksQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+}>;
+
+export type ActiveClocksQuery = {
+  __typename?: 'Query';
+  activeClocks: Array<{
+    __typename?: 'ActiveClock';
+    entryId: string;
+    profileId: string;
+    firstName: string;
+    lastName: string;
+    positionName?: string | null;
+    clockIn: string;
+    hoursSoFar: number;
+  }>;
+};
+
+export type PayrollReportQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+  startDate: Scalars['String']['input'];
+  endDate: Scalars['String']['input'];
+}>;
+
+export type PayrollReportQuery = {
+  __typename?: 'Query';
+  payrollReport: Array<{
+    __typename?: 'PayrollRow';
+    employeeNumber?: string | null;
+    firstName: string;
+    lastName: string;
+    positionName?: string | null;
+    hourlyRate?: number | null;
+    isExempt: boolean;
+    totalHours: number;
+    overtimeHours: number;
+    shiftsWorked: number;
+    regularPay?: number | null;
+    grossPayWithOt?: number | null;
+  }>;
+};
+
 export type VerifyAgeMutationVariables = Exact<{
   dateOfBirth: Scalars['String']['input'];
   idType: Scalars['String']['input'];
@@ -7180,6 +7222,61 @@ export const ThemeConfigDocument = gql`
 })
 export class ThemeConfigGQL extends Apollo.Query<ThemeConfigQuery, ThemeConfigQueryVariables> {
   override document = ThemeConfigDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const ActiveClocksDocument = gql`
+  query ActiveClocks($dispensaryId: ID!) {
+    activeClocks(dispensaryId: $dispensaryId) {
+      entryId
+      profileId
+      firstName
+      lastName
+      positionName
+      clockIn
+      hoursSoFar
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class ActiveClocksGQL extends Apollo.Query<ActiveClocksQuery, ActiveClocksQueryVariables> {
+  override document = ActiveClocksDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const PayrollReportDocument = gql`
+  query PayrollReport($dispensaryId: ID!, $startDate: String!, $endDate: String!) {
+    payrollReport(dispensaryId: $dispensaryId, startDate: $startDate, endDate: $endDate) {
+      employeeNumber
+      firstName
+      lastName
+      positionName
+      hourlyRate
+      isExempt
+      totalHours
+      overtimeHours
+      shiftsWorked
+      regularPay
+      grossPayWithOt
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class PayrollReportGQL extends Apollo.Query<
+  PayrollReportQuery,
+  PayrollReportQueryVariables
+> {
+  override document = PayrollReportDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);
