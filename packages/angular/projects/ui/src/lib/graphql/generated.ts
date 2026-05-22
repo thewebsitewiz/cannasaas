@@ -5400,6 +5400,104 @@ export type RegisterMutation = {
   register: { __typename?: 'AuthToken'; accessToken: string; expiresIn: number };
 };
 
+export type SalesReportQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+  startDate: Scalars['String']['input'];
+  endDate: Scalars['String']['input'];
+}>;
+
+export type SalesReportQuery = {
+  __typename?: 'Query';
+  salesReport: {
+    __typename?: 'SalesSummary';
+    totalOrders: number;
+    completedOrders: number;
+    cancelledOrders: number;
+    grossSales: number;
+    totalDiscounts: number;
+    totalTax: number;
+    netRevenue: number;
+    avgOrderValue: number;
+    deliveryOrders: number;
+    pickupOrders: number;
+    cashOrders: number;
+    cardOrders: number;
+    totalCashDiscounts: number;
+  };
+};
+
+export type TaxReportQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+  startDate: Scalars['String']['input'];
+  endDate: Scalars['String']['input'];
+}>;
+
+export type TaxReportQuery = {
+  __typename?: 'Query';
+  taxReport: {
+    __typename?: 'TaxReport';
+    dispensaryName?: string | null;
+    state?: string | null;
+    licenseNumber?: string | null;
+    taxableSales: number;
+    totalDiscounts: number;
+    netTaxable: number;
+    totalTaxCollected: number;
+    transactionCount: number;
+    taxBreakdown: Array<{
+      __typename?: 'TaxBreakdownItem';
+      taxName: string;
+      taxCode: string;
+      rate: number;
+      taxBasis: string;
+      statutoryReference?: string | null;
+      estimatedTax: number;
+    }>;
+  };
+};
+
+export type LaborCostReportQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+  startDate: Scalars['String']['input'];
+  endDate: Scalars['String']['input'];
+}>;
+
+export type LaborCostReportQuery = {
+  __typename?: 'Query';
+  laborCostReport: {
+    __typename?: 'LaborCostSummary';
+    employeeCount: number;
+    totalHours: number;
+    totalLaborCost: number;
+    totalRevenue: number;
+    laborCostPercent: number;
+  };
+};
+
+export type ShrinkageReportQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+  startDate: Scalars['String']['input'];
+  endDate: Scalars['String']['input'];
+}>;
+
+export type ShrinkageReportQuery = {
+  __typename?: 'Query';
+  shrinkageReport: {
+    __typename?: 'ShrinkageReport';
+    totalAdjustments: number;
+    totalUnitsLost: number;
+    estimatedValueLost: number;
+    byReason: Array<{
+      __typename?: 'ShrinkageByReason';
+      reason: string;
+      reasonCode: string;
+      count: number;
+      units: number;
+      estimatedValue: number;
+    }>;
+  };
+};
+
 export type WeekScheduleQueryVariables = Exact<{
   dispensaryId: Scalars['ID']['input'];
   weekStart: Scalars['String']['input'];
@@ -7282,6 +7380,124 @@ export const RegisterDocument = gql`
 })
 export class RegisterGQL extends Apollo.Mutation<RegisterMutation, RegisterMutationVariables> {
   override document = RegisterDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const SalesReportDocument = gql`
+  query SalesReport($dispensaryId: ID!, $startDate: String!, $endDate: String!) {
+    salesReport(dispensaryId: $dispensaryId, startDate: $startDate, endDate: $endDate) {
+      totalOrders
+      completedOrders
+      cancelledOrders
+      grossSales
+      totalDiscounts
+      totalTax
+      netRevenue
+      avgOrderValue
+      deliveryOrders
+      pickupOrders
+      cashOrders
+      cardOrders
+      totalCashDiscounts
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class SalesReportGQL extends Apollo.Query<SalesReportQuery, SalesReportQueryVariables> {
+  override document = SalesReportDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const TaxReportDocument = gql`
+  query TaxReport($dispensaryId: ID!, $startDate: String!, $endDate: String!) {
+    taxReport(dispensaryId: $dispensaryId, startDate: $startDate, endDate: $endDate) {
+      dispensaryName
+      state
+      licenseNumber
+      taxableSales
+      totalDiscounts
+      netTaxable
+      totalTaxCollected
+      transactionCount
+      taxBreakdown {
+        taxName
+        taxCode
+        rate
+        taxBasis
+        statutoryReference
+        estimatedTax
+      }
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class TaxReportGQL extends Apollo.Query<TaxReportQuery, TaxReportQueryVariables> {
+  override document = TaxReportDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const LaborCostReportDocument = gql`
+  query LaborCostReport($dispensaryId: ID!, $startDate: String!, $endDate: String!) {
+    laborCostReport(dispensaryId: $dispensaryId, startDate: $startDate, endDate: $endDate) {
+      employeeCount
+      totalHours
+      totalLaborCost
+      totalRevenue
+      laborCostPercent
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class LaborCostReportGQL extends Apollo.Query<
+  LaborCostReportQuery,
+  LaborCostReportQueryVariables
+> {
+  override document = LaborCostReportDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const ShrinkageReportDocument = gql`
+  query ShrinkageReport($dispensaryId: ID!, $startDate: String!, $endDate: String!) {
+    shrinkageReport(dispensaryId: $dispensaryId, startDate: $startDate, endDate: $endDate) {
+      totalAdjustments
+      totalUnitsLost
+      estimatedValueLost
+      byReason {
+        reason
+        reasonCode
+        count
+        units
+        estimatedValue
+      }
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class ShrinkageReportGQL extends Apollo.Query<
+  ShrinkageReportQuery,
+  ShrinkageReportQueryVariables
+> {
+  override document = ShrinkageReportDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);
