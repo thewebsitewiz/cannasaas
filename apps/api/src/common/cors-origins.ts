@@ -8,13 +8,12 @@
  * of silently dropping handshakes / CSRF-rejecting POSTs.
  */
 const DEFAULT_DEV_ORIGINS = [
-  // React apps (51xx)
-  'http://localhost:5174', // admin
-  'http://localhost:5175', // staff
+  // React apps (51xx) — only platform remains post-cutover (sc-626)
   'http://localhost:5177', // platform
-  'http://localhost:5178',
   // Angular apps (52xx — same last digit as their React predecessor where applicable)
   'http://localhost:5273', // storefront
+  'http://localhost:5274', // admin
+  'http://localhost:5275', // staff
   'http://localhost:5276', // kiosk
 ].join(',');
 

@@ -1353,6 +1353,14 @@ type MetrcSyncOverview {
   totalSyncs: Int!
 }
 
+type MetrcSyncQueueStats {
+  active: Int!
+  completed: Int!
+  delayed: Int!
+  failed: Int!
+  waiting: Int!
+}
+
 type Mutation {
   activatePromotion(promoId: ID!): PromotionResult!
   addAddress(input: AddAddressInput!): CustomerAddress!
@@ -1367,6 +1375,11 @@ type Mutation {
   approveTransfer(transferId: ID!): InventoryTransfer!
   approveWaste(logId: ID!): WasteDestructionLog!
   assignDelivery(deliveryAddress: String!, dispensaryId: ID!, distanceMiles: Float, driverId: ID!, estimatedMinutes: Int, orderId: ID): DeliveryTrip!
+
+  """
+  Binds an ECDSA P-256 public key (SPKI PEM) to the calling kiosk device.
+  """
+  attestKioskDevice(publicKey: String!): Boolean!
   autoGenerateSchedule(dispensaryId: ID!, weekStart: String!): Int!
   bulkTagProductUids(input: BulkTagUidInput!): BulkTagResult!
   cancelOrder(dispensaryId: ID, orderId: ID!, reason: String!): Boolean!
@@ -1427,10 +1440,6 @@ type Mutation {
   openRegisterSession(input: OpenRegisterSessionGqlInput!): RegisterSession!
   processCashPayment(applyDiscount: Boolean = true, cashTendered: Float!, dispensaryId: ID!, orderId: ID!): Payment!
   provisionAeropayForDispensary(input: ProvisionAeropayInput!): DispensaryPaymentProcessor!
-  """
-  Binds an ECDSA P-256 public key (SPKI PEM) to the calling kiosk device.
-  """
-  attestKioskDevice(publicKey: String!): Boolean!
   provisionCanPayForDispensary(input: ProvisionCanPayInput!): DispensaryPaymentProcessor!
 
   """
@@ -2100,6 +2109,7 @@ type Query {
   metrcComplianceReport(dispensaryId: ID): ComplianceReport!
   metrcCredential(dispensaryId: ID): MetrcCredential
   metrcSyncOverview(dispensaryId: ID): MetrcSyncOverview!
+  metrcSyncQueueStats: MetrcSyncQueueStats!
   myAddresses: [CustomerAddress!]!
   myCurrentRegisterSession(dispensaryId: ID!): RegisterSession
   myFavorites(dispensaryId: ID!, limit: Int = 5): [CustomerFavorite!]!
