@@ -87,6 +87,11 @@ export const routes: Routes = [
         path: 'vendors',
         loadComponent: () => import('./pages/vendors/vendors-page').then((m) => m.VendorsPage),
       },
+      {
+        path: 'menu-board',
+        loadComponent: () =>
+          import('./pages/menu-board/menu-board-page').then((m) => m.MenuBoardPage),
+      },
       { path: '**', redirectTo: '' },
     ],
   },

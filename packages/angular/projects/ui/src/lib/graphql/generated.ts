@@ -4957,6 +4957,45 @@ export type MeQuery = {
   };
 };
 
+export type MenuBoardProductsQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+}>;
+
+export type MenuBoardProductsQuery = {
+  __typename?: 'Query';
+  adminProducts: Array<{
+    __typename?: 'Product';
+    id: string;
+    name: string;
+    strainType?: string | null;
+    thcPercent?: number | null;
+    cbdPercent?: number | null;
+    variants: Array<{
+      __typename?: 'ProductVariant';
+      variantId: string;
+      name: string;
+      retailPrice?: number | null;
+    }>;
+  }>;
+};
+
+export type ActivePromotionsQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+}>;
+
+export type ActivePromotionsQuery = {
+  __typename?: 'Query';
+  activePromotions: Array<{
+    __typename?: 'PromotionListItem';
+    promoId: string;
+    name: string;
+    description?: string | null;
+    discountValue: number;
+    type: string;
+    isActive: boolean;
+  }>;
+};
+
 export type MyCurrentRegisterSessionQueryVariables = Exact<{
   dispensaryId: Scalars['ID']['input'];
 }>;
@@ -6457,6 +6496,62 @@ export const MeDocument = gql`
 })
 export class MeGQL extends Apollo.Query<MeQuery, MeQueryVariables> {
   override document = MeDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const MenuBoardProductsDocument = gql`
+  query MenuBoardProducts($dispensaryId: ID!) {
+    adminProducts(dispensaryId: $dispensaryId) {
+      id
+      name
+      strainType
+      thcPercent
+      cbdPercent
+      variants {
+        variantId
+        name
+        retailPrice
+      }
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class MenuBoardProductsGQL extends Apollo.Query<
+  MenuBoardProductsQuery,
+  MenuBoardProductsQueryVariables
+> {
+  override document = MenuBoardProductsDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const ActivePromotionsDocument = gql`
+  query ActivePromotions($dispensaryId: ID!) {
+    activePromotions(dispensaryId: $dispensaryId) {
+      promoId
+      name
+      description
+      discountValue
+      type
+      isActive
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class ActivePromotionsGQL extends Apollo.Query<
+  ActivePromotionsQuery,
+  ActivePromotionsQueryVariables
+> {
+  override document = ActivePromotionsDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);

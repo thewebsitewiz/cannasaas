@@ -1,0 +1,25 @@
+query MenuBoardProducts($dispensaryId: ID!) {
+  adminProducts(dispensaryId: $dispensaryId) {
+    id
+    name
+    strainType
+    thcPercent
+    cbdPercent
+    variants {
+      variantId
+      name
+      retailPrice
+    }
+  }
+}
+
+query ActivePromotions($dispensaryId: ID!) {
+  activePromotions(dispensaryId: $dispensaryId) {
+    promoId
+    name
+    description
+    discountValue
+    type
+    isActive
+  }
+}
