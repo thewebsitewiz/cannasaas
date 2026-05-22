@@ -1,0 +1,63 @@
+query DispensaryPaymentProcessors($dispensaryId: ID!) {
+  dispensaryPaymentProcessors(dispensaryId: $dispensaryId) {
+    id
+    dispensaryId
+    processorName
+    isEnabled
+    isSandbox
+    merchantExternalId
+    provisionedAt
+    createdAt
+    updatedAt
+  }
+  activeDispensaryProcessor(dispensaryId: $dispensaryId) {
+    dispensaryId
+    activePaymentProcessor
+  }
+}
+
+mutation SetDispensaryProcessorEnabled($input: SetDispensaryProcessorEnabledInput!) {
+  setDispensaryProcessorEnabled(input: $input) {
+    id
+    processorName
+    isEnabled
+    isSandbox
+  }
+}
+
+mutation SetActiveDispensaryProcessor($input: SetActiveDispensaryProcessorInput!) {
+  setActiveDispensaryProcessor(input: $input) {
+    dispensaryId
+    activePaymentProcessor
+  }
+}
+
+mutation ProvisionAeropayForDispensary($input: ProvisionAeropayInput!) {
+  provisionAeropayForDispensary(input: $input) {
+    id
+    processorName
+    isEnabled
+    isSandbox
+    merchantExternalId
+    provisionedAt
+  }
+}
+
+mutation ProvisionCanPayForDispensary($input: ProvisionCanPayInput!) {
+  provisionCanPayForDispensary(input: $input) {
+    id
+    processorName
+    isEnabled
+    isSandbox
+    merchantExternalId
+    provisionedAt
+  }
+}
+
+mutation DeprovisionAeropayForDispensary($dispensaryId: ID!) {
+  deprovisionAeropayForDispensary(dispensaryId: $dispensaryId)
+}
+
+mutation DeprovisionCanPayForDispensary($dispensaryId: ID!) {
+  deprovisionCanPayForDispensary(dispensaryId: $dispensaryId)
+}

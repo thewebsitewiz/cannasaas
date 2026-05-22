@@ -60,7 +60,7 @@ export const routes: Routes = [
       {
         path: 'settings/payments',
         loadComponent: () =>
-          import('./pages/settings/payments-placeholder').then((m) => m.PaymentsPlaceholder),
+          import('./pages/settings/payments/payments-page').then((m) => m.PaymentsPage),
       },
       {
         path: 'tax-management',
