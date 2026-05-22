@@ -69,6 +69,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/tax-management/tax-management-page').then((m) => m.TaxManagementPage),
       },
+      {
+        path: 'menu-categories',
+        loadComponent: () =>
+          import('./pages/menu-categories/menu-categories-page').then((m) => m.MenuCategoriesPage),
+      },
       { path: '**', redirectTo: '' },
     ],
   },

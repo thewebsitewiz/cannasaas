@@ -4744,6 +4744,39 @@ export type DispensaryBySlugQuery = {
   } | null;
 };
 
+export type DispensaryProductTypesQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+}>;
+
+export type DispensaryProductTypesQuery = {
+  __typename?: 'Query';
+  dispensaryProductTypes: Array<{
+    __typename?: 'DispensaryProductType';
+    productTypeId: number;
+    code: string;
+    name: string;
+    isEnabled: boolean;
+    sortOrder: number;
+  }>;
+};
+
+export type SaveDispensaryProductTypesMutationVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+  types: Array<DispensaryProductTypeInput> | DispensaryProductTypeInput;
+}>;
+
+export type SaveDispensaryProductTypesMutation = {
+  __typename?: 'Mutation';
+  saveDispensaryProductTypes: Array<{
+    __typename?: 'DispensaryProductType';
+    productTypeId: number;
+    code: string;
+    name: string;
+    isEnabled: boolean;
+    sortOrder: number;
+  }>;
+};
+
 export type DispensaryQueryVariables = Exact<{
   entityId: Scalars['ID']['input'];
 }>;
@@ -5945,6 +5978,56 @@ export class DispensaryBySlugGQL extends Apollo.Query<
   DispensaryBySlugQueryVariables
 > {
   override document = DispensaryBySlugDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const DispensaryProductTypesDocument = gql`
+  query DispensaryProductTypes($dispensaryId: ID!) {
+    dispensaryProductTypes(dispensaryId: $dispensaryId) {
+      productTypeId
+      code
+      name
+      isEnabled
+      sortOrder
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class DispensaryProductTypesGQL extends Apollo.Query<
+  DispensaryProductTypesQuery,
+  DispensaryProductTypesQueryVariables
+> {
+  override document = DispensaryProductTypesDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const SaveDispensaryProductTypesDocument = gql`
+  mutation SaveDispensaryProductTypes($dispensaryId: ID!, $types: [DispensaryProductTypeInput!]!) {
+    saveDispensaryProductTypes(dispensaryId: $dispensaryId, types: $types) {
+      productTypeId
+      code
+      name
+      isEnabled
+      sortOrder
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class SaveDispensaryProductTypesGQL extends Apollo.Mutation<
+  SaveDispensaryProductTypesMutation,
+  SaveDispensaryProductTypesMutationVariables
+> {
+  override document = SaveDispensaryProductTypesDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);
