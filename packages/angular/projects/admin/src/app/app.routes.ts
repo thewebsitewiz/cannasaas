@@ -96,6 +96,11 @@ export const routes: Routes = [
         path: 'loyalty',
         loadComponent: () => import('./pages/loyalty/loyalty-page').then((m) => m.LoyaltyPage),
       },
+      {
+        path: 'scheduling',
+        loadComponent: () =>
+          import('./pages/scheduling/scheduling-page').then((m) => m.SchedulingPage),
+      },
       { path: '**', redirectTo: '' },
     ],
   },

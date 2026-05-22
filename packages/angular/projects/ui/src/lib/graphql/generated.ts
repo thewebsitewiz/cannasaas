@@ -5400,6 +5400,82 @@ export type RegisterMutation = {
   register: { __typename?: 'AuthToken'; accessToken: string; expiresIn: number };
 };
 
+export type WeekScheduleQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+  weekStart: Scalars['String']['input'];
+}>;
+
+export type WeekScheduleQuery = {
+  __typename?: 'Query';
+  weekSchedule: Array<{
+    __typename?: 'ScheduledShift';
+    shiftId: string;
+    shiftDate: string;
+    startTime: string;
+    endTime: string;
+    status: string;
+    published: boolean;
+  }>;
+};
+
+export type DriversQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+}>;
+
+export type DriversQuery = {
+  __typename?: 'Query';
+  drivers: Array<{
+    __typename?: 'DriverProfile';
+    driverId: string;
+    vehicleMake?: string | null;
+    vehicleModel?: string | null;
+    vehicleYear?: number | null;
+    vehicleColor?: string | null;
+    licensePlate?: string | null;
+    status: string;
+  }>;
+};
+
+export type DriverStatsQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+}>;
+
+export type DriverStatsQuery = {
+  __typename?: 'Query';
+  driverStats: {
+    __typename?: 'DriverStats';
+    totalTrips: number;
+    completed: number;
+    avgDeliveryMinutes: number;
+    avgRating: number;
+    totalMiles: number;
+  };
+};
+
+export type TimeOffRequestsQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+}>;
+
+export type TimeOffRequestsQuery = {
+  __typename?: 'Query';
+  timeOffRequests: Array<{
+    __typename?: 'TimeOffRequest';
+    requestId: string;
+    startDate: string;
+    endDate: string;
+    requestType: string;
+    reason?: string | null;
+    status: string;
+  }>;
+};
+
+export type PublishWeekScheduleMutationVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+  weekStart: Scalars['String']['input'];
+}>;
+
+export type PublishWeekScheduleMutation = { __typename?: 'Mutation'; publishWeekSchedule: number };
+
 export type SearchCustomersQueryVariables = Exact<{
   dispensaryId: Scalars['ID']['input'];
   query: Scalars['String']['input'];
@@ -7206,6 +7282,120 @@ export const RegisterDocument = gql`
 })
 export class RegisterGQL extends Apollo.Mutation<RegisterMutation, RegisterMutationVariables> {
   override document = RegisterDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const WeekScheduleDocument = gql`
+  query WeekSchedule($dispensaryId: ID!, $weekStart: String!) {
+    weekSchedule(dispensaryId: $dispensaryId, weekStart: $weekStart) {
+      shiftId
+      shiftDate
+      startTime
+      endTime
+      status
+      published
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class WeekScheduleGQL extends Apollo.Query<WeekScheduleQuery, WeekScheduleQueryVariables> {
+  override document = WeekScheduleDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const DriversDocument = gql`
+  query Drivers($dispensaryId: ID!) {
+    drivers(dispensaryId: $dispensaryId) {
+      driverId
+      vehicleMake
+      vehicleModel
+      vehicleYear
+      vehicleColor
+      licensePlate
+      status
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class DriversGQL extends Apollo.Query<DriversQuery, DriversQueryVariables> {
+  override document = DriversDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const DriverStatsDocument = gql`
+  query DriverStats($dispensaryId: ID!) {
+    driverStats(dispensaryId: $dispensaryId) {
+      totalTrips
+      completed
+      avgDeliveryMinutes
+      avgRating
+      totalMiles
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class DriverStatsGQL extends Apollo.Query<DriverStatsQuery, DriverStatsQueryVariables> {
+  override document = DriverStatsDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const TimeOffRequestsDocument = gql`
+  query TimeOffRequests($dispensaryId: ID!) {
+    timeOffRequests(dispensaryId: $dispensaryId) {
+      requestId
+      startDate
+      endDate
+      requestType
+      reason
+      status
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class TimeOffRequestsGQL extends Apollo.Query<
+  TimeOffRequestsQuery,
+  TimeOffRequestsQueryVariables
+> {
+  override document = TimeOffRequestsDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const PublishWeekScheduleDocument = gql`
+  mutation PublishWeekSchedule($dispensaryId: ID!, $weekStart: String!) {
+    publishWeekSchedule(dispensaryId: $dispensaryId, weekStart: $weekStart)
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class PublishWeekScheduleGQL extends Apollo.Mutation<
+  PublishWeekScheduleMutation,
+  PublishWeekScheduleMutationVariables
+> {
+  override document = PublishWeekScheduleDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);
