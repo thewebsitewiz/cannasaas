@@ -1,0 +1,47 @@
+query WeekSchedule($dispensaryId: ID!, $weekStart: String!) {
+  weekSchedule(dispensaryId: $dispensaryId, weekStart: $weekStart) {
+    shiftId
+    shiftDate
+    startTime
+    endTime
+    status
+    published
+  }
+}
+
+query Drivers($dispensaryId: ID!) {
+  drivers(dispensaryId: $dispensaryId) {
+    driverId
+    vehicleMake
+    vehicleModel
+    vehicleYear
+    vehicleColor
+    licensePlate
+    status
+  }
+}
+
+query DriverStats($dispensaryId: ID!) {
+  driverStats(dispensaryId: $dispensaryId) {
+    totalTrips
+    completed
+    avgDeliveryMinutes
+    avgRating
+    totalMiles
+  }
+}
+
+query TimeOffRequests($dispensaryId: ID!) {
+  timeOffRequests(dispensaryId: $dispensaryId) {
+    requestId
+    startDate
+    endDate
+    requestType
+    reason
+    status
+  }
+}
+
+mutation PublishWeekSchedule($dispensaryId: ID!, $weekStart: String!) {
+  publishWeekSchedule(dispensaryId: $dispensaryId, weekStart: $weekStart)
+}
