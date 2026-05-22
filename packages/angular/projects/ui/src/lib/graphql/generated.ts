@@ -4482,6 +4482,36 @@ export type CancelOrderMutationVariables = Exact<{
 
 export type CancelOrderMutation = { __typename?: 'Mutation'; cancelOrder: boolean };
 
+export type CashDiscountConfigQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+}>;
+
+export type CashDiscountConfigQuery = {
+  __typename?: 'Query';
+  cashDiscountConfig: {
+    __typename?: 'CashDiscountConfig';
+    cashDiscountPercent: number;
+    isCashEnabled: boolean;
+    cashDeliveryEnabled: boolean;
+  };
+};
+
+export type SetCashDiscountMutationVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+  percent: Scalars['Float']['input'];
+  cashDeliveryEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+}>;
+
+export type SetCashDiscountMutation = {
+  __typename?: 'Mutation';
+  setCashDiscount: {
+    __typename?: 'CashDiscountConfig';
+    cashDiscountPercent: number;
+    isCashEnabled: boolean;
+    cashDeliveryEnabled: boolean;
+  };
+};
+
 export type CloseRegisterSessionMutationVariables = Exact<{
   input: CloseRegisterSessionGqlInput;
 }>;
@@ -5496,6 +5526,56 @@ export class CancelOrderGQL extends Apollo.Mutation<
   CancelOrderMutationVariables
 > {
   override document = CancelOrderDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const CashDiscountConfigDocument = gql`
+  query CashDiscountConfig($dispensaryId: ID!) {
+    cashDiscountConfig(dispensaryId: $dispensaryId) {
+      cashDiscountPercent
+      isCashEnabled
+      cashDeliveryEnabled
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class CashDiscountConfigGQL extends Apollo.Query<
+  CashDiscountConfigQuery,
+  CashDiscountConfigQueryVariables
+> {
+  override document = CashDiscountConfigDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const SetCashDiscountDocument = gql`
+  mutation SetCashDiscount($dispensaryId: ID!, $percent: Float!, $cashDeliveryEnabled: Boolean) {
+    setCashDiscount(
+      dispensaryId: $dispensaryId
+      percent: $percent
+      cashDeliveryEnabled: $cashDeliveryEnabled
+    ) {
+      cashDiscountPercent
+      isCashEnabled
+      cashDeliveryEnabled
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class SetCashDiscountGQL extends Apollo.Mutation<
+  SetCashDiscountMutation,
+  SetCashDiscountMutationVariables
+> {
+  override document = SetCashDiscountDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);
