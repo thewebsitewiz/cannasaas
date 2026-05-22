@@ -144,9 +144,9 @@ pda               # Shell alias → cd to root, start API
 
 # Individual apps
 pnpm dev:storefront              # port 5273 (Angular, packages/angular/projects/storefront)
-pnpm dev:kiosk                   # port 5276 (Angular, packages/angular/projects/kiosk)
-cd apps/admin && pnpm dev        # port 5174
 pnpm dev:staff                   # port 5275 (Angular, packages/angular/projects/staff)
+pnpm dev:kiosk                   # port 5276 (Angular, packages/angular/projects/kiosk)
+pnpm dev:admin                   # port 5274 (Angular, packages/angular/projects/admin)
 cd apps/platform && pnpm dev     # port 5177
 ```
 
