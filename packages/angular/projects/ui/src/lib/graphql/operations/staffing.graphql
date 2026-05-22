@@ -1,0 +1,30 @@
+query Employees($dispensaryId: ID!, $status: String) {
+  employees(dispensaryId: $dispensaryId, status: $status) {
+    profileId
+    userId
+    firstName
+    lastName
+    email
+    positionName
+    department
+    employeeNumber
+    hourlyRate
+    employmentType
+    employmentStatus
+    payType
+    activeCerts
+    expiringCerts
+  }
+}
+
+query StaffComplianceOverview($dispensaryId: ID!) {
+  staffComplianceOverview(dispensaryId: $dispensaryId) {
+    totalEmployees
+    activeEmployees
+    totalCerts
+    activeCerts
+    expiredCerts
+    expiringSoon
+    pendingCerts
+  }
+}

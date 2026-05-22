@@ -5403,6 +5403,50 @@ export type StaffInventoryProductsQuery = {
   }>;
 };
 
+export type EmployeesQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+  status?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+export type EmployeesQuery = {
+  __typename?: 'Query';
+  employees: Array<{
+    __typename?: 'EmployeeListItem';
+    profileId: string;
+    userId: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    email: string;
+    positionName?: string | null;
+    department?: string | null;
+    employeeNumber?: string | null;
+    hourlyRate?: number | null;
+    employmentType: string;
+    employmentStatus: string;
+    payType: string;
+    activeCerts: number;
+    expiringCerts: number;
+  }>;
+};
+
+export type StaffComplianceOverviewQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+}>;
+
+export type StaffComplianceOverviewQuery = {
+  __typename?: 'Query';
+  staffComplianceOverview: {
+    __typename?: 'ComplianceOverview';
+    totalEmployees: number;
+    activeEmployees: number;
+    totalCerts: number;
+    activeCerts: number;
+    expiredCerts: number;
+    expiringSoon: number;
+    pendingCerts: number;
+  };
+};
+
 export type PlatformTaxRulesQueryVariables = Exact<{ [key: string]: never }>;
 
 export type PlatformTaxRulesQuery = {
@@ -6961,6 +7005,64 @@ export class StaffInventoryProductsGQL extends Apollo.Query<
   StaffInventoryProductsQueryVariables
 > {
   override document = StaffInventoryProductsDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const EmployeesDocument = gql`
+  query Employees($dispensaryId: ID!, $status: String) {
+    employees(dispensaryId: $dispensaryId, status: $status) {
+      profileId
+      userId
+      firstName
+      lastName
+      email
+      positionName
+      department
+      employeeNumber
+      hourlyRate
+      employmentType
+      employmentStatus
+      payType
+      activeCerts
+      expiringCerts
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class EmployeesGQL extends Apollo.Query<EmployeesQuery, EmployeesQueryVariables> {
+  override document = EmployeesDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const StaffComplianceOverviewDocument = gql`
+  query StaffComplianceOverview($dispensaryId: ID!) {
+    staffComplianceOverview(dispensaryId: $dispensaryId) {
+      totalEmployees
+      activeEmployees
+      totalCerts
+      activeCerts
+      expiredCerts
+      expiringSoon
+      pendingCerts
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class StaffComplianceOverviewGQL extends Apollo.Query<
+  StaffComplianceOverviewQuery,
+  StaffComplianceOverviewQueryVariables
+> {
+  override document = StaffComplianceOverviewDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);
