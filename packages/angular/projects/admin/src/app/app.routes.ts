@@ -44,6 +44,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/inventory/inventory-page').then((m) => m.InventoryPage),
       },
+      {
+        path: 'compliance',
+        loadComponent: () =>
+          import('./pages/compliance/compliance-page').then((m) => m.CompliancePage),
+      },
       { path: '**', redirectTo: '' },
     ],
   },
