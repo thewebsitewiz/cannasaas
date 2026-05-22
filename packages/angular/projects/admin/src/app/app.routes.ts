@@ -104,6 +104,11 @@ export const routes: Routes = [
         path: 'reports',
         loadComponent: () => import('./pages/reports/reports-page').then((m) => m.ReportsPage),
       },
+      {
+        path: 'onboarding',
+        loadComponent: () =>
+          import('./pages/onboarding/onboarding-page').then((m) => m.OnboardingPage),
+      },
       { path: '**', redirectTo: '' },
     ],
   },
