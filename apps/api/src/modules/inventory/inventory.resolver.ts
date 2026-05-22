@@ -205,6 +205,16 @@ export class InventoryResolver {
     );
   }
 
+  @Roles('dispensary_admin', 'org_admin', 'super_admin')
+  @Mutation(() => InventoryResult, { name: 'setReorderThreshold' })
+  async setReorderThreshold(
+    @Args('inventoryId', { type: () => ID }) inventoryId: string,
+    @Args('value', { type: () => Float, nullable: true })
+    value: number | null,
+  ): Promise<InventoryRow> {
+    return this.inventory.setReorderThreshold(inventoryId, value);
+  }
+
   @Roles('dispensary_admin', 'org_admin', 'super_admin', 'budtender')
   @Mutation(() => AdjustResult, { name: 'reserveStock' })
   async reserveStock(

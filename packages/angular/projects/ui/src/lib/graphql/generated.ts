@@ -1,4 +1,3 @@
-/* eslint-disable */
 // AUTO-GENERATED — do not edit by hand
 
 import { gql } from 'apollo-angular';
@@ -1300,6 +1299,7 @@ export type LoginInput = {
 
 export type LowStockItem = {
   __typename?: 'LowStockItem';
+  inventoryId: Scalars['String']['output'];
   productName: Scalars['String']['output'];
   quantityAvailable: Scalars['Float']['output'];
   quantityOnHand: Scalars['Float']['output'];
@@ -1587,6 +1587,7 @@ export type Mutation = {
   setDesignSystem: DesignSystemConfig;
   setDispensaryProcessorEnabled: DispensaryPaymentProcessor;
   setProductMetrcCategory: Product;
+  setReorderThreshold: InventoryResult;
   setUserRole: User;
   shipTransfer: InventoryTransfer;
   startInventoryCount: InventoryCount;
@@ -2161,6 +2162,11 @@ export type MutationSetDispensaryProcessorEnabledArgs = {
 
 export type MutationSetProductMetrcCategoryArgs = {
   input: SetMetrcCategoryInput;
+};
+
+export type MutationSetReorderThresholdArgs = {
+  inventoryId: Scalars['ID']['input'];
+  value?: InputMaybe<Scalars['Float']['input']>;
 };
 
 export type MutationSetUserRoleArgs = {
@@ -4647,11 +4653,13 @@ export type DashboardQuery = {
     };
     lowStockItems: Array<{
       __typename?: 'LowStockItem';
+      inventoryId: string;
       variantId: string;
       productName: string;
       variantName: string;
       quantityOnHand: number;
       quantityAvailable: number;
+      reorderThreshold?: number | null;
     }>;
     metrcSync: {
       __typename?: 'MetrcSyncOverview';
@@ -5730,6 +5738,22 @@ export type SearchProductsLookupQuery = {
   }>;
 };
 
+export type SetReorderThresholdMutationVariables = Exact<{
+  inventoryId: Scalars['ID']['input'];
+  value?: InputMaybe<Scalars['Float']['input']>;
+}>;
+
+export type SetReorderThresholdMutation = {
+  __typename?: 'Mutation';
+  setReorderThreshold: {
+    __typename?: 'InventoryResult';
+    inventoryId: string;
+    variantId: string;
+    reorderThreshold?: number | null;
+    quantityAvailable: number;
+  };
+};
+
 export type StaffInventoryProductsQueryVariables = Exact<{
   dispensaryId: Scalars['ID']['input'];
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -6389,11 +6413,13 @@ export const DashboardDocument = gql`
         outOfStockCount
       }
       lowStockItems {
+        inventoryId
         variantId
         productName
         variantName
         quantityOnHand
         quantityAvailable
+        reorderThreshold
       }
       metrcSync {
         totalSyncs
@@ -7999,6 +8025,30 @@ export class SearchProductsLookupGQL extends Apollo.Query<
   SearchProductsLookupQueryVariables
 > {
   override document = SearchProductsLookupDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const SetReorderThresholdDocument = gql`
+  mutation SetReorderThreshold($inventoryId: ID!, $value: Float) {
+    setReorderThreshold(inventoryId: $inventoryId, value: $value) {
+      inventoryId
+      variantId
+      reorderThreshold
+      quantityAvailable
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class SetReorderThresholdGQL extends Apollo.Mutation<
+  SetReorderThresholdMutation,
+  SetReorderThresholdMutationVariables
+> {
+  override document = SetReorderThresholdDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);

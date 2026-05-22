@@ -1,20 +1,20 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 
-import { DashboardService } from '../dashboard/dashboard.service';
+import { type Dashboard, DashboardService } from '../dashboard/dashboard.service';
+
+type LowStockItem = Dashboard['lowStockItems'][number];
 
 /**
- * Admin Inventory page — KPI summary + low-stock table.
- *
- * Mirrors React parity: a read-only view of inventory health sourced
- * from the existing `dashboard` query (sc-624). Per-variant inventory
- * table, in/low/out filter, inline threshold edit, and live alert
- * highlighting were in the filed scope but not in the React admin —
- * deferred until a specific need surfaces. The dashboard's
- * `LowStockWidget` already covers the live-alert UX.
+ * Admin Inventory page — KPI summary + low-stock table with inline
+ * per-variant reorder-threshold editing (sc-674). The page sources
+ * its KPIs from the `dashboard` query and writes back through
+ * `DashboardService.setReorderThreshold` which refetches on success.
  */
 @Component({
   selector: 'cs-inventory-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [FormsModule],
   template: `
     <section class="space-y-6">
       <h1 class="text-2xl font-bold text-(--color-text)">Inventory</h1>
@@ -79,6 +79,9 @@ import { DashboardService } from '../dashboard/dashboard.service';
               <h2 class="flex items-center gap-2 text-lg font-semibold text-(--color-text)">
                 <span class="text-amber-500" aria-hidden="true">⚠</span> Low stock items
               </h2>
+              <p class="mt-1 text-xs text-(--color-text-muted)">
+                Click a threshold to change it. Drops below the new threshold trigger an alert.
+              </p>
             </header>
             <table class="w-full text-sm">
               <thead class="border-b border-(--color-border) bg-(--color-bg)">
@@ -95,10 +98,13 @@ import { DashboardService } from '../dashboard/dashboard.service';
                   <th class="px-4 py-2 text-right font-medium text-(--color-text-secondary)">
                     Available
                   </th>
+                  <th class="px-4 py-2 text-right font-medium text-(--color-text-secondary)">
+                    Reorder at
+                  </th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-(--color-border)">
-                @for (item of d.lowStockItems; track item.variantId) {
+                @for (item of d.lowStockItems; track item.inventoryId) {
                   <tr>
                     <td class="px-4 py-3 text-(--color-text)">{{ item.productName }}</td>
                     <td class="px-4 py-3 text-(--color-text-secondary)">
@@ -112,6 +118,18 @@ import { DashboardService } from '../dashboard/dashboard.service';
                       [class]="item.quantityAvailable <= 0 ? 'text-rose-500' : 'text-amber-500'"
                     >
                       {{ item.quantityAvailable }}
+                    </td>
+                    <td class="px-4 py-3 text-right">
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        [attr.aria-label]="'Reorder threshold for ' + item.variantName"
+                        [value]="thresholdDisplay(item)"
+                        [disabled]="savingFor() === item.inventoryId"
+                        (change)="onThresholdChange(item, $event)"
+                        class="w-20 rounded-md border border-(--color-border) bg-(--color-bg) px-2 py-1 text-right text-sm text-(--color-text) tabular-nums"
+                      />
                     </td>
                   </tr>
                 }
@@ -135,6 +153,7 @@ export class InventoryPage {
   protected readonly data = this.dashboard.data;
   protected readonly loading = this.dashboard.isLoading;
   protected readonly error = this.dashboard.error;
+  protected readonly savingFor = this.dashboard.savingThresholdFor;
 
   protected readonly errorMessage = computed(() => {
     const err = this.error();
@@ -149,5 +168,27 @@ export class InventoryPage {
         maximumFractionDigits: 2,
       })
     );
+  }
+
+  protected thresholdDisplay(item: LowStockItem): number | '' {
+    return item.reorderThreshold == null ? '' : item.reorderThreshold;
+  }
+
+  protected async onThresholdChange(item: LowStockItem, event: Event): Promise<void> {
+    const target = event.target as HTMLInputElement;
+    const raw = target.value.trim();
+    let next: number | null;
+    if (raw === '') {
+      next = null;
+    } else {
+      const parsed = Number(raw);
+      if (!Number.isFinite(parsed) || parsed < 0) {
+        target.value = this.thresholdDisplay(item).toString();
+        return;
+      }
+      next = parsed;
+    }
+    if (next === item.reorderThreshold) return;
+    await this.dashboard.setReorderThreshold(item.inventoryId, next);
   }
 }

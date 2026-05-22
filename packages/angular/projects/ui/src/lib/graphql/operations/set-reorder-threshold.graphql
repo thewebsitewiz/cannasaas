@@ -1,0 +1,8 @@
+mutation SetReorderThreshold($inventoryId: ID!, $value: Float) {
+  setReorderThreshold(inventoryId: $inventoryId, value: $value) {
+    inventoryId
+    variantId
+    reorderThreshold
+    quantityAvailable
+  }
+}

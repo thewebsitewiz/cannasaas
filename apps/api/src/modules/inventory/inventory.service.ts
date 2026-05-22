@@ -441,6 +441,23 @@ export class InventoryService {
     };
   }
 
+  async setReorderThreshold(
+    inventoryId: string,
+    value: number | null,
+  ): Promise<InventoryRow> {
+    if (value != null && (!Number.isFinite(value) || value < 0)) {
+      throw new BadRequestException(
+        'Reorder threshold must be a non-negative number or null',
+      );
+    }
+    await this.findById(inventoryId); // throws NotFound if missing
+    await this.ds.query(
+      `UPDATE inventory SET reorder_threshold = $1, updated_at = NOW() WHERE inventory_id = $2`,
+      [value, inventoryId],
+    );
+    return this.findById(inventoryId);
+  }
+
   async getTransactions(
     inventoryId: string,
     limit = 50,

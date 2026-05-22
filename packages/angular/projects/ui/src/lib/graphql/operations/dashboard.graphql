@@ -37,11 +37,13 @@ query Dashboard($dispensaryId: ID, $days: Int) {
       outOfStockCount
     }
     lowStockItems {
+      inventoryId
       variantId
       productName
       variantName
       quantityOnHand
       quantityAvailable
+      reorderThreshold
     }
     metrcSync {
       totalSyncs
