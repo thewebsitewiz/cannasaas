@@ -1,0 +1,22 @@
+query DispensaryProductTypes($dispensaryId: ID!) {
+  dispensaryProductTypes(dispensaryId: $dispensaryId) {
+    productTypeId
+    code
+    name
+    isEnabled
+    sortOrder
+  }
+}
+
+mutation SaveDispensaryProductTypes(
+  $dispensaryId: ID!
+  $types: [DispensaryProductTypeInput!]!
+) {
+  saveDispensaryProductTypes(dispensaryId: $dispensaryId, types: $types) {
+    productTypeId
+    code
+    name
+    isEnabled
+    sortOrder
+  }
+}
