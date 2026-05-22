@@ -4939,6 +4939,37 @@ export type LoginMutation = {
   login: { __typename?: 'AuthToken'; accessToken: string; expiresIn: number };
 };
 
+export type LoyaltyStatsQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+}>;
+
+export type LoyaltyStatsQuery = {
+  __typename?: 'Query';
+  loyaltyStats: {
+    __typename?: 'LoyaltyStats';
+    activeMembers: number;
+    totalEarned: number;
+    totalRedeemed: number;
+    redemptionCount: number;
+    birthdayClaims: number;
+    tierBreakdown: Array<{ __typename?: 'TierCount'; tier: string; count: number }>;
+  };
+};
+
+export type CreateRewardMutationVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+  name: Scalars['String']['input'];
+  pointsCost: Scalars['Int']['input'];
+  rewardType: Scalars['String']['input'];
+  rewardValue: Scalars['Float']['input'];
+  description?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+export type CreateRewardMutation = {
+  __typename?: 'Mutation';
+  createReward: Record<string, unknown>;
+};
+
 export type MeQueryVariables = Exact<{ [key: string]: never }>;
 
 export type MeQuery = {
@@ -6470,6 +6501,65 @@ export const LoginDocument = gql`
 })
 export class LoginGQL extends Apollo.Mutation<LoginMutation, LoginMutationVariables> {
   override document = LoginDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const LoyaltyStatsDocument = gql`
+  query LoyaltyStats($dispensaryId: ID!) {
+    loyaltyStats(dispensaryId: $dispensaryId) {
+      activeMembers
+      totalEarned
+      totalRedeemed
+      redemptionCount
+      birthdayClaims
+      tierBreakdown {
+        tier
+        count
+      }
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class LoyaltyStatsGQL extends Apollo.Query<LoyaltyStatsQuery, LoyaltyStatsQueryVariables> {
+  override document = LoyaltyStatsDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const CreateRewardDocument = gql`
+  mutation CreateReward(
+    $dispensaryId: ID!
+    $name: String!
+    $pointsCost: Int!
+    $rewardType: String!
+    $rewardValue: Float!
+    $description: String
+  ) {
+    createReward(
+      dispensaryId: $dispensaryId
+      name: $name
+      pointsCost: $pointsCost
+      rewardType: $rewardType
+      rewardValue: $rewardValue
+      description: $description
+    )
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class CreateRewardGQL extends Apollo.Mutation<
+  CreateRewardMutation,
+  CreateRewardMutationVariables
+> {
+  override document = CreateRewardDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);
