@@ -37,7 +37,7 @@ export class RegisterSession {
   @Column({ type: 'integer', nullable: true })
   closingCashCents?: number;
 
-  @Field()
+  @Field(() => String)
   @Column({ type: 'text', default: 'open' })
   status!: RegisterSessionStatus;
 
