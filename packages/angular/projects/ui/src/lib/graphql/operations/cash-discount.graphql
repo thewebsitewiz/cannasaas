@@ -1,0 +1,23 @@
+query CashDiscountConfig($dispensaryId: ID!) {
+  cashDiscountConfig(dispensaryId: $dispensaryId) {
+    cashDiscountPercent
+    isCashEnabled
+    cashDeliveryEnabled
+  }
+}
+
+mutation SetCashDiscount(
+  $dispensaryId: ID!
+  $percent: Float!
+  $cashDeliveryEnabled: Boolean
+) {
+  setCashDiscount(
+    dispensaryId: $dispensaryId
+    percent: $percent
+    cashDeliveryEnabled: $cashDeliveryEnabled
+  ) {
+    cashDiscountPercent
+    isCashEnabled
+    cashDeliveryEnabled
+  }
+}

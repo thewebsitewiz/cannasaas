@@ -49,6 +49,20 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/compliance/compliance-page').then((m) => m.CompliancePage),
       },
+      {
+        path: 'settings',
+        loadComponent: () => import('./pages/settings/settings-page').then((m) => m.SettingsPage),
+      },
+      {
+        path: 'settings/theme',
+        loadComponent: () =>
+          import('./pages/settings/theme-placeholder').then((m) => m.ThemePlaceholder),
+      },
+      {
+        path: 'settings/payments',
+        loadComponent: () =>
+          import('./pages/settings/payments-placeholder').then((m) => m.PaymentsPlaceholder),
+      },
       { path: '**', redirectTo: '' },
     ],
   },
