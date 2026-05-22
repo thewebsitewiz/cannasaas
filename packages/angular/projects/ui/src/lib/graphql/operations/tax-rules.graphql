@@ -1,0 +1,62 @@
+query PlatformTaxRules {
+  platformTaxRules {
+    tax_category_id
+    state
+    code
+    name
+    rate
+    tax_basis
+    statutory_reference
+    is_active
+  }
+}
+
+mutation AddTaxRule(
+  $state: String!
+  $code: String!
+  $name: String!
+  $rate: Float!
+  $taxBasis: String!
+  $statutoryReference: String
+) {
+  addTaxRule(
+    state: $state
+    code: $code
+    name: $name
+    rate: $rate
+    taxBasis: $taxBasis
+    statutoryReference: $statutoryReference
+  ) {
+    tax_category_id
+    state
+    code
+    name
+    rate
+    tax_basis
+    statutory_reference
+    is_active
+  }
+}
+
+mutation UpdateTaxRule(
+  $taxCategoryId: Int!
+  $rate: Float
+  $isActive: Boolean
+  $name: String
+) {
+  updateTaxRule(
+    taxCategoryId: $taxCategoryId
+    rate: $rate
+    isActive: $isActive
+    name: $name
+  ) {
+    tax_category_id
+    state
+    code
+    name
+    rate
+    tax_basis
+    statutory_reference
+    is_active
+  }
+}
