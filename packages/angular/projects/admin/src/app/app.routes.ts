@@ -78,6 +78,11 @@ export const routes: Routes = [
         path: 'staffing',
         loadComponent: () => import('./pages/staffing/staffing-page').then((m) => m.StaffingPage),
       },
+      {
+        path: 'timeclock',
+        loadComponent: () =>
+          import('./pages/timeclock/timeclock-page').then((m) => m.TimeclockPage),
+      },
       { path: '**', redirectTo: '' },
     ],
   },
