@@ -5760,7 +5760,55 @@ export type ThemeConfigQueryVariables = Exact<{
 
 export type ThemeConfigQuery = {
   __typename?: 'Query';
-  themeConfig: { __typename?: 'ThemeConfigType'; preset: string; isDark: boolean };
+  themeConfig: {
+    __typename?: 'ThemeConfigType';
+    id: string;
+    dispensaryId: string;
+    preset: string;
+    primary: string;
+    secondary: string;
+    accent: string;
+    bgPrimary: string;
+    bgSecondary: string;
+    bgCard: string;
+    textPrimary: string;
+    textSecondary: string;
+    sidebarBg: string;
+    sidebarText: string;
+    success: string;
+    warning: string;
+    error: string;
+    info: string;
+    isDark: boolean;
+  };
+};
+
+export type SaveThemeConfigMutationVariables = Exact<{
+  input: SaveThemeConfigInput;
+}>;
+
+export type SaveThemeConfigMutation = {
+  __typename?: 'Mutation';
+  saveThemeConfig: {
+    __typename?: 'ThemeConfigType';
+    id: string;
+    preset: string;
+    primary: string;
+    secondary: string;
+    accent: string;
+    bgPrimary: string;
+    bgSecondary: string;
+    bgCard: string;
+    textPrimary: string;
+    textSecondary: string;
+    sidebarBg: string;
+    sidebarText: string;
+    success: string;
+    warning: string;
+    error: string;
+    info: string;
+    isDark: boolean;
+  };
 };
 
 export type ActiveClocksQueryVariables = Exact<{
@@ -7873,7 +7921,23 @@ export class UpdateTaxRuleGQL extends Apollo.Mutation<
 export const ThemeConfigDocument = gql`
   query ThemeConfig($dispensaryId: String!) {
     themeConfig(dispensaryId: $dispensaryId) {
+      id
+      dispensaryId
       preset
+      primary
+      secondary
+      accent
+      bgPrimary
+      bgSecondary
+      bgCard
+      textPrimary
+      textSecondary
+      sidebarBg
+      sidebarText
+      success
+      warning
+      error
+      info
       isDark
     }
   }
@@ -7884,6 +7948,43 @@ export const ThemeConfigDocument = gql`
 })
 export class ThemeConfigGQL extends Apollo.Query<ThemeConfigQuery, ThemeConfigQueryVariables> {
   override document = ThemeConfigDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const SaveThemeConfigDocument = gql`
+  mutation SaveThemeConfig($input: SaveThemeConfigInput!) {
+    saveThemeConfig(input: $input) {
+      id
+      preset
+      primary
+      secondary
+      accent
+      bgPrimary
+      bgSecondary
+      bgCard
+      textPrimary
+      textSecondary
+      sidebarBg
+      sidebarText
+      success
+      warning
+      error
+      info
+      isDark
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class SaveThemeConfigGQL extends Apollo.Mutation<
+  SaveThemeConfigMutation,
+  SaveThemeConfigMutationVariables
+> {
+  override document = SaveThemeConfigDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);

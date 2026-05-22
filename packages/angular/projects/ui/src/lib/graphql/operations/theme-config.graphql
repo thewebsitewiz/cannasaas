@@ -1,6 +1,44 @@
 query ThemeConfig($dispensaryId: String!) {
   themeConfig(dispensaryId: $dispensaryId) {
+    id
+    dispensaryId
     preset
+    primary
+    secondary
+    accent
+    bgPrimary
+    bgSecondary
+    bgCard
+    textPrimary
+    textSecondary
+    sidebarBg
+    sidebarText
+    success
+    warning
+    error
+    info
+    isDark
+  }
+}
+
+mutation SaveThemeConfig($input: SaveThemeConfigInput!) {
+  saveThemeConfig(input: $input) {
+    id
+    preset
+    primary
+    secondary
+    accent
+    bgPrimary
+    bgSecondary
+    bgCard
+    textPrimary
+    textSecondary
+    sidebarBg
+    sidebarText
+    success
+    warning
+    error
+    info
     isDark
   }
 }
