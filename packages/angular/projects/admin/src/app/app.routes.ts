@@ -55,8 +55,7 @@ export const routes: Routes = [
       },
       {
         path: 'settings/theme',
-        loadComponent: () =>
-          import('./pages/settings/theme-placeholder').then((m) => m.ThemePlaceholder),
+        loadComponent: () => import('./pages/settings/theme/theme-page').then((m) => m.ThemePage),
       },
       {
         path: 'settings/payments',
