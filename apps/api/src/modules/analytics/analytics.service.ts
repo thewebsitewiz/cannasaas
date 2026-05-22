@@ -62,6 +62,7 @@ interface InventoryValueRow {
 }
 
 interface LowStockRow {
+  inventory_id: string;
   variant_id: string;
   product_name: string;
   variant_name: string;
@@ -331,7 +332,7 @@ export class AnalyticsService {
   ): Promise<LowStockItem[]> {
     const rows = await rawQuery<LowStockRow>(
       this.dataSource,
-      `SELECT i.variant_id, p.name as product_name, pv.name as variant_name,
+      `SELECT i.inventory_id, i.variant_id, p.name as product_name, pv.name as variant_name,
         i.quantity_on_hand, i.quantity_available, i.reorder_threshold
        FROM inventory i
        JOIN product_variants pv ON pv.variant_id = i.variant_id
@@ -344,6 +345,7 @@ export class AnalyticsService {
     );
 
     return rows.map((r) => ({
+      inventoryId: r.inventory_id,
       variantId: r.variant_id,
       productName: r.product_name,
       variantName: r.variant_name,

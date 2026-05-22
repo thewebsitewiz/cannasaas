@@ -97,11 +97,13 @@ function dashboardFixture(): Dashboard {
     lowStockItems: [
       {
         __typename: 'LowStockItem',
+        inventoryId: 'inv-1',
         variantId: 'v-1',
         productName: 'Blue Dream',
         variantName: '3.5g',
         quantityOnHand: 5,
         quantityAvailable: 4,
+        reorderThreshold: 5,
       },
     ],
     metrcSync: {

@@ -56,6 +56,7 @@ export class InventoryOverview {
 
 @ObjectType()
 export class LowStockItem {
+  @Field() inventoryId!: string;
   @Field() variantId!: string;
   @Field() productName!: string;
   @Field() variantName!: string;

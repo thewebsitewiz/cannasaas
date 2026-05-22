@@ -1193,6 +1193,7 @@ input LoginInput {
 }
 
 type LowStockItem {
+  inventoryId: String!
   productName: String!
   quantityAvailable: Float!
   quantityOnHand: Float!
@@ -1472,6 +1473,7 @@ type Mutation {
   setDesignSystem(designSystem: String!, designSystemFile: String!, dispensaryId: ID!): DesignSystemConfig!
   setDispensaryProcessorEnabled(input: SetDispensaryProcessorEnabledInput!): DispensaryPaymentProcessor!
   setProductMetrcCategory(input: SetMetrcCategoryInput!): Product!
+  setReorderThreshold(inventoryId: ID!, value: Float): InventoryResult!
   setUserRole(role: String!, userId: ID!): User!
   shipTransfer(transferId: ID!): InventoryTransfer!
   startInventoryCount(countType: String! = "cycle", dispensaryId: ID!, notes: String): InventoryCount!
