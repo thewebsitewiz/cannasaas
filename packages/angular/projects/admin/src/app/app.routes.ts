@@ -74,6 +74,10 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/menu-categories/menu-categories-page').then((m) => m.MenuCategoriesPage),
       },
+      {
+        path: 'staffing',
+        loadComponent: () => import('./pages/staffing/staffing-page').then((m) => m.StaffingPage),
+      },
       { path: '**', redirectTo: '' },
     ],
   },
