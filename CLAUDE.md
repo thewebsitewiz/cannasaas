@@ -24,17 +24,17 @@ Monorepo: pnpm workspaces + Turborepo.
 
 **Frontend — current React / Vite apps**
 
-- **`apps/admin`** — Vite + React, dispensary back-office. Port `:5174`.
 - **`apps/platform`** — React, super-admin cross-tenant management. Port `:5177`.
 
 **Frontend — Angular (multi-project workspace at `packages/angular/`)**
 
+- **`packages/angular/projects/admin`** — Angular 21, dispensary back-office. Port `:5274`. Authoritative as of May 2026; the former Vite/React `apps/admin` was deleted after parity (sc-626).
 - **`packages/angular/projects/kiosk`** — Angular 21, self-service touch terminal. Port `:5276`. Replaces the former React `apps/kiosk` (deleted).
 - **`packages/angular/projects/storefront`** — Angular 21, customer-facing dispensary site. Port `:5273`. Authoritative as of May 2026; the former Next.js `apps/storefront` was deleted after parity was reached. CSR only — no SSR.
 - **`packages/angular/projects/staff`** — Angular 21, in-store POS. Port `:5275`. Authoritative as of May 2026; the former Vite/React `apps/staff` was deleted after parity (sc-207).
 - **`packages/angular/projects/ui`** — shared Angular library: design tokens, GraphQL operations, components.
 
-Future Angular rewrites of admin, staff, and platform land as additional projects in `packages/angular/projects/<name>/`, **not** as standalone `apps/*` workspaces. The multi-project workspace shares one `node_modules`, one Angular version, and the `ui` library across all projects.
+Future Angular rewrites of platform land as additional projects in `packages/angular/projects/<name>/`, **not** as standalone `apps/*` workspaces. The multi-project workspace shares one `node_modules`, one Angular version, and the `ui` library across all projects.
 
 **Port scheme:** React apps live on `51xx`; Angular apps on `52xx` (the original migration mapped React :517N → Angular :527N).
 
@@ -44,7 +44,7 @@ Future Angular rewrites of admin, staff, and platform land as additional project
 - **`packages/types`** — shared TypeScript types.
 - **`packages/stores`** — shared signal stores / utilities.
 
-**Migration status:** kiosk, storefront, and staff migrations to Angular are complete; the React versions of all three have been deleted. Admin and platform remain on React/Vite. Every per-app CLAUDE.md inherits from this file plus its own.
+**Migration status:** admin, kiosk, storefront, and staff migrations to Angular are complete; the React versions of all four have been deleted. Only `apps/platform` (super-admin cross-tenant management) remains on React/Vite. Every per-app CLAUDE.md inherits from this file plus its own.
 
 ---
 
@@ -356,10 +356,10 @@ ng generate guard features/foo --functional
 
 **Stopping**
 
-- `haltall` — kill all app ports (3000, 5174, 5177, 5273, 5275, 5276)
-- `stopapi`, `stopstr`, `stopadm`, `stopstf`, `stopksk` — per-port. `stopstr` now targets Angular storefront on :5273; `stopstf` targets Angular staff on :5275 (sc-207).
+- `haltall` — kill all app ports (3000, 5177, 5273, 5274, 5275, 5276)
+- `stopapi`, `stopadm`, `stopstr`, `stopstf`, `stopksk` — per-port. All four sites now target Angular ports (:5273/:5274/:5275/:5276) post-cutover.
 - `ports` — `lsof -i -P -n | grep LISTEN`
-- `checkall` — what's on 5174, 5177 (React) and 5273, 5275, 5276 (Angular)
+- `checkall` — what's on 5177 (React platform) and 5273, 5274, 5275, 5276 (Angular)
 
 **Docker**
 
