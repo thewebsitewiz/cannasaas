@@ -1,0 +1,71 @@
+query SalesReport($dispensaryId: ID!, $startDate: String!, $endDate: String!) {
+  salesReport(dispensaryId: $dispensaryId, startDate: $startDate, endDate: $endDate) {
+    totalOrders
+    completedOrders
+    cancelledOrders
+    grossSales
+    totalDiscounts
+    totalTax
+    netRevenue
+    avgOrderValue
+    deliveryOrders
+    pickupOrders
+    cashOrders
+    cardOrders
+    totalCashDiscounts
+  }
+}
+
+query TaxReport($dispensaryId: ID!, $startDate: String!, $endDate: String!) {
+  taxReport(dispensaryId: $dispensaryId, startDate: $startDate, endDate: $endDate) {
+    dispensaryName
+    state
+    licenseNumber
+    taxableSales
+    totalDiscounts
+    netTaxable
+    totalTaxCollected
+    transactionCount
+    taxBreakdown {
+      taxName
+      taxCode
+      rate
+      taxBasis
+      statutoryReference
+      estimatedTax
+    }
+  }
+}
+
+query LaborCostReport($dispensaryId: ID!, $startDate: String!, $endDate: String!) {
+  laborCostReport(
+    dispensaryId: $dispensaryId
+    startDate: $startDate
+    endDate: $endDate
+  ) {
+    employeeCount
+    totalHours
+    totalLaborCost
+    totalRevenue
+    laborCostPercent
+  }
+}
+
+query ShrinkageReport($dispensaryId: ID!, $startDate: String!, $endDate: String!) {
+  shrinkageReport(
+    dispensaryId: $dispensaryId
+    startDate: $startDate
+    endDate: $endDate
+  ) {
+    totalAdjustments
+    totalUnitsLost
+    estimatedValueLost
+    byReason {
+      reason
+      reasonCode
+      count
+      units
+      estimatedValue
+    }
+  }
+}
