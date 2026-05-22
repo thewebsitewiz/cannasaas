@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AuthService, type AdminRole, type AdminUser } from '../core/auth/auth.service';
+import { StockAlertsService } from '../core/stock-alerts/stock-alerts.service';
 import { AdminLayout } from './admin-layout';
 
 @Component({ selector: 'cs-login-stub', template: '' })
@@ -36,7 +37,16 @@ async function setup(args: SetupArgs = {}) {
         useValue: {
           user: () => user,
           role: () => user?.role ?? null,
+          accessToken: () => null,
           logout,
+        },
+      },
+      {
+        provide: StockAlertsService,
+        useValue: {
+          alerts: signal([]).asReadonly(),
+          connected: signal(false).asReadonly(),
+          latest: signal(null).asReadonly(),
         },
       },
     ],

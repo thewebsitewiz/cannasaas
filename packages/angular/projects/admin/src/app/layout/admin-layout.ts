@@ -3,6 +3,7 @@ import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/rou
 
 import { AuthService } from '../core/auth/auth.service';
 import { NavIcon, type NavIconName } from './nav-icon';
+import { StockAlertToast } from './stock-alert-toast';
 
 interface NavItem {
   readonly to: string;
@@ -39,7 +40,7 @@ const NAV_ITEMS: readonly NavItem[] = [
 @Component({
   selector: 'cs-admin-layout',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, NavIcon],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, NavIcon, StockAlertToast],
   template: `
     <div class="flex min-h-screen bg-(--color-bg) text-(--color-text)">
       <aside
@@ -94,6 +95,8 @@ const NAV_ITEMS: readonly NavItem[] = [
           <router-outlet />
         </div>
       </main>
+
+      <cs-stock-alert-toast />
     </div>
   `,
 })
