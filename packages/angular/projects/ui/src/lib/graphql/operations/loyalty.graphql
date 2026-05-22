@@ -1,0 +1,31 @@
+query LoyaltyStats($dispensaryId: ID!) {
+  loyaltyStats(dispensaryId: $dispensaryId) {
+    activeMembers
+    totalEarned
+    totalRedeemed
+    redemptionCount
+    birthdayClaims
+    tierBreakdown {
+      tier
+      count
+    }
+  }
+}
+
+mutation CreateReward(
+  $dispensaryId: ID!
+  $name: String!
+  $pointsCost: Int!
+  $rewardType: String!
+  $rewardValue: Float!
+  $description: String
+) {
+  createReward(
+    dispensaryId: $dispensaryId
+    name: $name
+    pointsCost: $pointsCost
+    rewardType: $rewardType
+    rewardValue: $rewardValue
+    description: $description
+  )
+}
