@@ -1,0 +1,65 @@
+query Vendors {
+  vendors {
+    vendor_id
+    name
+    vendor_type
+    state
+    license_number
+    license_state
+    phone
+    email
+    payment_terms
+    rating
+    is_active
+    total_pos
+    total_spend
+  }
+}
+
+query VendorStats {
+  vendorStats {
+    activeVendors
+    totalPOs
+    openPOs
+    totalSpend
+    outstanding
+  }
+}
+
+query PurchaseOrders($dispensaryId: ID!) {
+  purchaseOrders(dispensaryId: $dispensaryId) {
+    po_id
+    po_number
+    status
+    vendor_name
+    total
+    payment_status
+    line_items
+    order_date
+  }
+}
+
+mutation CreateVendor(
+  $name: String!
+  $vendorType: String!
+  $state: String
+  $email: String
+  $phone: String
+  $paymentTerms: String
+  $contactName: String
+  $contactTitle: String
+) {
+  createVendor(
+    name: $name
+    vendorType: $vendorType
+    state: $state
+    email: $email
+    phone: $phone
+    paymentTerms: $paymentTerms
+    contactName: $contactName
+    contactTitle: $contactTitle
+  ) {
+    vendor_id
+    name
+  }
+}

@@ -5561,6 +5561,77 @@ export type PayrollReportQuery = {
   }>;
 };
 
+export type VendorsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type VendorsQuery = {
+  __typename?: 'Query';
+  vendors: Array<{
+    __typename?: 'Vendor';
+    vendor_id: string;
+    name: string;
+    vendor_type: string;
+    state?: string | null;
+    license_number?: string | null;
+    license_state?: string | null;
+    phone?: string | null;
+    email?: string | null;
+    payment_terms?: string | null;
+    rating?: number | null;
+    is_active: boolean;
+    total_pos?: number | null;
+    total_spend?: number | null;
+  }>;
+};
+
+export type VendorStatsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type VendorStatsQuery = {
+  __typename?: 'Query';
+  vendorStats: {
+    __typename?: 'VendorStats';
+    activeVendors: number;
+    totalPOs: number;
+    openPOs: number;
+    totalSpend: number;
+    outstanding: number;
+  };
+};
+
+export type PurchaseOrdersQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+}>;
+
+export type PurchaseOrdersQuery = {
+  __typename?: 'Query';
+  purchaseOrders: Array<{
+    __typename?: 'PurchaseOrder';
+    po_id: string;
+    po_number: string;
+    status: string;
+    vendor_name?: string | null;
+    total: number;
+    payment_status?: string | null;
+    line_items?: number | null;
+    order_date?: string | null;
+  }>;
+};
+
+export type CreateVendorMutationVariables = Exact<{
+  name: Scalars['String']['input'];
+  vendorType: Scalars['String']['input'];
+  state?: InputMaybe<Scalars['String']['input']>;
+  email?: InputMaybe<Scalars['String']['input']>;
+  phone?: InputMaybe<Scalars['String']['input']>;
+  paymentTerms?: InputMaybe<Scalars['String']['input']>;
+  contactName?: InputMaybe<Scalars['String']['input']>;
+  contactTitle?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+export type CreateVendorMutation = {
+  __typename?: 'Mutation';
+  createVendor: { __typename?: 'Vendor'; vendor_id: string; name: string };
+};
+
 export type VerifyAgeMutationVariables = Exact<{
   dateOfBirth: Scalars['String']['input'];
   idType: Scalars['String']['input'];
@@ -7277,6 +7348,126 @@ export class PayrollReportGQL extends Apollo.Query<
   PayrollReportQueryVariables
 > {
   override document = PayrollReportDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const VendorsDocument = gql`
+  query Vendors {
+    vendors {
+      vendor_id
+      name
+      vendor_type
+      state
+      license_number
+      license_state
+      phone
+      email
+      payment_terms
+      rating
+      is_active
+      total_pos
+      total_spend
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class VendorsGQL extends Apollo.Query<VendorsQuery, VendorsQueryVariables> {
+  override document = VendorsDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const VendorStatsDocument = gql`
+  query VendorStats {
+    vendorStats {
+      activeVendors
+      totalPOs
+      openPOs
+      totalSpend
+      outstanding
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class VendorStatsGQL extends Apollo.Query<VendorStatsQuery, VendorStatsQueryVariables> {
+  override document = VendorStatsDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const PurchaseOrdersDocument = gql`
+  query PurchaseOrders($dispensaryId: ID!) {
+    purchaseOrders(dispensaryId: $dispensaryId) {
+      po_id
+      po_number
+      status
+      vendor_name
+      total
+      payment_status
+      line_items
+      order_date
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class PurchaseOrdersGQL extends Apollo.Query<
+  PurchaseOrdersQuery,
+  PurchaseOrdersQueryVariables
+> {
+  override document = PurchaseOrdersDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const CreateVendorDocument = gql`
+  mutation CreateVendor(
+    $name: String!
+    $vendorType: String!
+    $state: String
+    $email: String
+    $phone: String
+    $paymentTerms: String
+    $contactName: String
+    $contactTitle: String
+  ) {
+    createVendor(
+      name: $name
+      vendorType: $vendorType
+      state: $state
+      email: $email
+      phone: $phone
+      paymentTerms: $paymentTerms
+      contactName: $contactName
+      contactTitle: $contactTitle
+    ) {
+      vendor_id
+      name
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class CreateVendorGQL extends Apollo.Mutation<
+  CreateVendorMutation,
+  CreateVendorMutationVariables
+> {
+  override document = CreateVendorDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);
