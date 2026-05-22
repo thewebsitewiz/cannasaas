@@ -5370,6 +5370,69 @@ export type StaffInventoryProductsQuery = {
   }>;
 };
 
+export type PlatformTaxRulesQueryVariables = Exact<{ [key: string]: never }>;
+
+export type PlatformTaxRulesQuery = {
+  __typename?: 'Query';
+  platformTaxRules: Array<{
+    __typename?: 'TaxRule';
+    tax_category_id: number;
+    state: string;
+    code: string;
+    name: string;
+    rate: number;
+    tax_basis: string;
+    statutory_reference?: string | null;
+    is_active: boolean;
+  }>;
+};
+
+export type AddTaxRuleMutationVariables = Exact<{
+  state: Scalars['String']['input'];
+  code: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  rate: Scalars['Float']['input'];
+  taxBasis: Scalars['String']['input'];
+  statutoryReference?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+export type AddTaxRuleMutation = {
+  __typename?: 'Mutation';
+  addTaxRule: {
+    __typename?: 'TaxRule';
+    tax_category_id: number;
+    state: string;
+    code: string;
+    name: string;
+    rate: number;
+    tax_basis: string;
+    statutory_reference?: string | null;
+    is_active: boolean;
+  };
+};
+
+export type UpdateTaxRuleMutationVariables = Exact<{
+  taxCategoryId: Scalars['Int']['input'];
+  rate?: InputMaybe<Scalars['Float']['input']>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+export type UpdateTaxRuleMutation = {
+  __typename?: 'Mutation';
+  updateTaxRule: {
+    __typename?: 'TaxRule';
+    tax_category_id: number;
+    state: string;
+    code: string;
+    name: string;
+    rate: number;
+    tax_basis: string;
+    statutory_reference?: string | null;
+    is_active: boolean;
+  };
+};
+
 export type ThemeConfigQueryVariables = Exact<{
   dispensaryId: Scalars['String']['input'];
 }>;
@@ -6815,6 +6878,104 @@ export class StaffInventoryProductsGQL extends Apollo.Query<
   StaffInventoryProductsQueryVariables
 > {
   override document = StaffInventoryProductsDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const PlatformTaxRulesDocument = gql`
+  query PlatformTaxRules {
+    platformTaxRules {
+      tax_category_id
+      state
+      code
+      name
+      rate
+      tax_basis
+      statutory_reference
+      is_active
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class PlatformTaxRulesGQL extends Apollo.Query<
+  PlatformTaxRulesQuery,
+  PlatformTaxRulesQueryVariables
+> {
+  override document = PlatformTaxRulesDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const AddTaxRuleDocument = gql`
+  mutation AddTaxRule(
+    $state: String!
+    $code: String!
+    $name: String!
+    $rate: Float!
+    $taxBasis: String!
+    $statutoryReference: String
+  ) {
+    addTaxRule(
+      state: $state
+      code: $code
+      name: $name
+      rate: $rate
+      taxBasis: $taxBasis
+      statutoryReference: $statutoryReference
+    ) {
+      tax_category_id
+      state
+      code
+      name
+      rate
+      tax_basis
+      statutory_reference
+      is_active
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class AddTaxRuleGQL extends Apollo.Mutation<
+  AddTaxRuleMutation,
+  AddTaxRuleMutationVariables
+> {
+  override document = AddTaxRuleDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const UpdateTaxRuleDocument = gql`
+  mutation UpdateTaxRule($taxCategoryId: Int!, $rate: Float, $isActive: Boolean, $name: String) {
+    updateTaxRule(taxCategoryId: $taxCategoryId, rate: $rate, isActive: $isActive, name: $name) {
+      tax_category_id
+      state
+      code
+      name
+      rate
+      tax_basis
+      statutory_reference
+      is_active
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class UpdateTaxRuleGQL extends Apollo.Mutation<
+  UpdateTaxRuleMutation,
+  UpdateTaxRuleMutationVariables
+> {
+  override document = UpdateTaxRuleDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);

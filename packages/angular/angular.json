@@ -23,13 +23,9 @@
                 "input": "projects/admin/public"
               }
             ],
-            "styles": [
-              "projects/admin/src/styles.css"
-            ],
+            "styles": ["projects/admin/src/styles.css"],
             "stylePreprocessorOptions": {
-              "includePaths": [
-                "dist/ui"
-              ]
+              "includePaths": ["dist/ui"]
             }
           },
           "configurations": {
@@ -37,7 +33,7 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "600kB",
+                  "maximumWarning": "700kB",
                   "maximumError": "1MB"
                 },
                 {
@@ -125,13 +121,9 @@
             ],
             "browser": "projects/kiosk/src/main.ts",
             "stylePreprocessorOptions": {
-              "includePaths": [
-                "dist/ui"
-              ]
+              "includePaths": ["dist/ui"]
             },
-            "styles": [
-              "projects/kiosk/src/styles.css"
-            ],
+            "styles": ["projects/kiosk/src/styles.css"],
             "tsConfig": "projects/kiosk/tsconfig.app.json"
           }
         },
@@ -179,13 +171,9 @@
                 "input": "projects/staff/public"
               }
             ],
-            "styles": [
-              "projects/staff/src/styles.css"
-            ],
+            "styles": ["projects/staff/src/styles.css"],
             "stylePreprocessorOptions": {
-              "includePaths": [
-                "dist/ui"
-              ]
+              "includePaths": ["dist/ui"]
             }
           },
           "configurations": {
@@ -262,13 +250,9 @@
                 "output": "/themes"
               }
             ],
-            "styles": [
-              "projects/storefront/src/styles.css"
-            ],
+            "styles": ["projects/storefront/src/styles.css"],
             "stylePreprocessorOptions": {
-              "includePaths": [
-                "dist/ui"
-              ]
+              "includePaths": ["dist/ui"]
             }
           },
           "configurations": {

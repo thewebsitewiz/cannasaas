@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 
-import { adminBaselineGuard, authGuard } from './core/auth/auth.guard';
+import { adminBaselineGuard, authGuard, roleGuard } from './core/auth/auth.guard';
 
 /**
  * Login is public. Everything else passes through `authGuard` +
@@ -62,6 +62,12 @@ export const routes: Routes = [
         path: 'settings/payments',
         loadComponent: () =>
           import('./pages/settings/payments-placeholder').then((m) => m.PaymentsPlaceholder),
+      },
+      {
+        path: 'tax-management',
+        canMatch: [roleGuard('super_admin')],
+        loadComponent: () =>
+          import('./pages/tax-management/tax-management-page').then((m) => m.TaxManagementPage),
       },
       { path: '**', redirectTo: '' },
     ],
