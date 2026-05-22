@@ -1,3 +1,4 @@
+/* eslint-disable */
 // AUTO-GENERATED — do not edit by hand
 
 import { gql } from 'apollo-angular';
@@ -1469,6 +1470,15 @@ export type MetrcSyncOverview = {
   successCount: Scalars['Int']['output'];
   successRate: Scalars['Float']['output'];
   totalSyncs: Scalars['Int']['output'];
+};
+
+export type MetrcSyncQueueStats = {
+  __typename?: 'MetrcSyncQueueStats';
+  active: Scalars['Int']['output'];
+  completed: Scalars['Int']['output'];
+  delayed: Scalars['Int']['output'];
+  failed: Scalars['Int']['output'];
+  waiting: Scalars['Int']['output'];
 };
 
 export type Mutation = {
@@ -3012,6 +3022,7 @@ export type Query = {
   metrcComplianceReport: ComplianceReport;
   metrcCredential?: Maybe<MetrcCredential>;
   metrcSyncOverview: MetrcSyncOverview;
+  metrcSyncQueueStats: MetrcSyncQueueStats;
   myAddresses: Array<CustomerAddress>;
   myCurrentRegisterSession?: Maybe<RegisterSession>;
   myFavorites: Array<CustomerFavorite>;
@@ -5261,6 +5272,111 @@ export type OrdersQuery = {
   }>;
 };
 
+export type DispensaryPaymentProcessorsQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+}>;
+
+export type DispensaryPaymentProcessorsQuery = {
+  __typename?: 'Query';
+  dispensaryPaymentProcessors: Array<{
+    __typename?: 'DispensaryPaymentProcessor';
+    id: string;
+    dispensaryId: string;
+    processorName: DispensaryProcessorName;
+    isEnabled: boolean;
+    isSandbox: boolean;
+    merchantExternalId?: string | null;
+    provisionedAt?: string | null;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  activeDispensaryProcessor: {
+    __typename?: 'ActiveProcessorResult';
+    dispensaryId: string;
+    activePaymentProcessor?: DispensaryProcessorName | null;
+  };
+};
+
+export type SetDispensaryProcessorEnabledMutationVariables = Exact<{
+  input: SetDispensaryProcessorEnabledInput;
+}>;
+
+export type SetDispensaryProcessorEnabledMutation = {
+  __typename?: 'Mutation';
+  setDispensaryProcessorEnabled: {
+    __typename?: 'DispensaryPaymentProcessor';
+    id: string;
+    processorName: DispensaryProcessorName;
+    isEnabled: boolean;
+    isSandbox: boolean;
+  };
+};
+
+export type SetActiveDispensaryProcessorMutationVariables = Exact<{
+  input: SetActiveDispensaryProcessorInput;
+}>;
+
+export type SetActiveDispensaryProcessorMutation = {
+  __typename?: 'Mutation';
+  setActiveDispensaryProcessor: {
+    __typename?: 'ActiveProcessorResult';
+    dispensaryId: string;
+    activePaymentProcessor?: DispensaryProcessorName | null;
+  };
+};
+
+export type ProvisionAeropayForDispensaryMutationVariables = Exact<{
+  input: ProvisionAeropayInput;
+}>;
+
+export type ProvisionAeropayForDispensaryMutation = {
+  __typename?: 'Mutation';
+  provisionAeropayForDispensary: {
+    __typename?: 'DispensaryPaymentProcessor';
+    id: string;
+    processorName: DispensaryProcessorName;
+    isEnabled: boolean;
+    isSandbox: boolean;
+    merchantExternalId?: string | null;
+    provisionedAt?: string | null;
+  };
+};
+
+export type ProvisionCanPayForDispensaryMutationVariables = Exact<{
+  input: ProvisionCanPayInput;
+}>;
+
+export type ProvisionCanPayForDispensaryMutation = {
+  __typename?: 'Mutation';
+  provisionCanPayForDispensary: {
+    __typename?: 'DispensaryPaymentProcessor';
+    id: string;
+    processorName: DispensaryProcessorName;
+    isEnabled: boolean;
+    isSandbox: boolean;
+    merchantExternalId?: string | null;
+    provisionedAt?: string | null;
+  };
+};
+
+export type DeprovisionAeropayForDispensaryMutationVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+}>;
+
+export type DeprovisionAeropayForDispensaryMutation = {
+  __typename?: 'Mutation';
+  deprovisionAeropayForDispensary: boolean;
+};
+
+export type DeprovisionCanPayForDispensaryMutationVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+}>;
+
+export type DeprovisionCanPayForDispensaryMutation = {
+  __typename?: 'Mutation';
+  deprovisionCanPayForDispensary: boolean;
+};
+
 export type CreateProductMutationVariables = Exact<{
   input: CreateProductInput;
 }>;
@@ -7202,6 +7318,175 @@ export const OrdersDocument = gql`
 })
 export class OrdersGQL extends Apollo.Query<OrdersQuery, OrdersQueryVariables> {
   override document = OrdersDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const DispensaryPaymentProcessorsDocument = gql`
+  query DispensaryPaymentProcessors($dispensaryId: ID!) {
+    dispensaryPaymentProcessors(dispensaryId: $dispensaryId) {
+      id
+      dispensaryId
+      processorName
+      isEnabled
+      isSandbox
+      merchantExternalId
+      provisionedAt
+      createdAt
+      updatedAt
+    }
+    activeDispensaryProcessor(dispensaryId: $dispensaryId) {
+      dispensaryId
+      activePaymentProcessor
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class DispensaryPaymentProcessorsGQL extends Apollo.Query<
+  DispensaryPaymentProcessorsQuery,
+  DispensaryPaymentProcessorsQueryVariables
+> {
+  override document = DispensaryPaymentProcessorsDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const SetDispensaryProcessorEnabledDocument = gql`
+  mutation SetDispensaryProcessorEnabled($input: SetDispensaryProcessorEnabledInput!) {
+    setDispensaryProcessorEnabled(input: $input) {
+      id
+      processorName
+      isEnabled
+      isSandbox
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class SetDispensaryProcessorEnabledGQL extends Apollo.Mutation<
+  SetDispensaryProcessorEnabledMutation,
+  SetDispensaryProcessorEnabledMutationVariables
+> {
+  override document = SetDispensaryProcessorEnabledDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const SetActiveDispensaryProcessorDocument = gql`
+  mutation SetActiveDispensaryProcessor($input: SetActiveDispensaryProcessorInput!) {
+    setActiveDispensaryProcessor(input: $input) {
+      dispensaryId
+      activePaymentProcessor
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class SetActiveDispensaryProcessorGQL extends Apollo.Mutation<
+  SetActiveDispensaryProcessorMutation,
+  SetActiveDispensaryProcessorMutationVariables
+> {
+  override document = SetActiveDispensaryProcessorDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const ProvisionAeropayForDispensaryDocument = gql`
+  mutation ProvisionAeropayForDispensary($input: ProvisionAeropayInput!) {
+    provisionAeropayForDispensary(input: $input) {
+      id
+      processorName
+      isEnabled
+      isSandbox
+      merchantExternalId
+      provisionedAt
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class ProvisionAeropayForDispensaryGQL extends Apollo.Mutation<
+  ProvisionAeropayForDispensaryMutation,
+  ProvisionAeropayForDispensaryMutationVariables
+> {
+  override document = ProvisionAeropayForDispensaryDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const ProvisionCanPayForDispensaryDocument = gql`
+  mutation ProvisionCanPayForDispensary($input: ProvisionCanPayInput!) {
+    provisionCanPayForDispensary(input: $input) {
+      id
+      processorName
+      isEnabled
+      isSandbox
+      merchantExternalId
+      provisionedAt
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class ProvisionCanPayForDispensaryGQL extends Apollo.Mutation<
+  ProvisionCanPayForDispensaryMutation,
+  ProvisionCanPayForDispensaryMutationVariables
+> {
+  override document = ProvisionCanPayForDispensaryDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const DeprovisionAeropayForDispensaryDocument = gql`
+  mutation DeprovisionAeropayForDispensary($dispensaryId: ID!) {
+    deprovisionAeropayForDispensary(dispensaryId: $dispensaryId)
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class DeprovisionAeropayForDispensaryGQL extends Apollo.Mutation<
+  DeprovisionAeropayForDispensaryMutation,
+  DeprovisionAeropayForDispensaryMutationVariables
+> {
+  override document = DeprovisionAeropayForDispensaryDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const DeprovisionCanPayForDispensaryDocument = gql`
+  mutation DeprovisionCanPayForDispensary($dispensaryId: ID!) {
+    deprovisionCanPayForDispensary(dispensaryId: $dispensaryId)
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class DeprovisionCanPayForDispensaryGQL extends Apollo.Mutation<
+  DeprovisionCanPayForDispensaryMutation,
+  DeprovisionCanPayForDispensaryMutationVariables
+> {
+  override document = DeprovisionCanPayForDispensaryDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);
