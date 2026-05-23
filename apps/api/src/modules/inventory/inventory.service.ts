@@ -62,6 +62,34 @@ interface InventoryTxRow {
   createdAt: Date | string;
 }
 
+export interface DispensaryTxFilters {
+  limit?: number;
+  offset?: number;
+  since?: Date | null;
+  until?: Date | null;
+  transactionType?: string | null;
+  performedByUserId?: string | null;
+}
+
+export interface DispensaryTxRow {
+  transactionId: string;
+  inventoryId: string;
+  dispensaryId: string;
+  transactionType: string;
+  quantityDelta: string | number;
+  quantityBefore: string | number;
+  quantityAfter: string | number;
+  referenceOrderId: string | null;
+  referenceTransferManifestId: string | null;
+  performedByUserId: string | null;
+  performedByEmail: string | null;
+  notes: string | null;
+  variantId: string;
+  variantName: string | null;
+  productName: string | null;
+  createdAt: Date | string;
+}
+
 interface LowStockRow {
   inventoryId: string;
   variantId: string;
@@ -456,6 +484,69 @@ export class InventoryService {
       [value, inventoryId],
     );
     return this.findById(inventoryId);
+  }
+
+  async getDispensaryTransactions(
+    dispensaryId: string,
+    filters: DispensaryTxFilters = {},
+  ): Promise<DispensaryTxRow[]> {
+    const limit = Math.min(Math.max(filters.limit ?? 50, 1), 500);
+    const offset = Math.max(filters.offset ?? 0, 0);
+
+    const wheres: string[] = ['t.dispensary_id = $1'];
+    const params: unknown[] = [dispensaryId];
+
+    if (filters.since) {
+      params.push(filters.since);
+      wheres.push(`t.created_at >= $${params.length}`);
+    }
+    if (filters.until) {
+      params.push(filters.until);
+      wheres.push(`t.created_at <= $${params.length}`);
+    }
+    if (filters.transactionType) {
+      params.push(filters.transactionType);
+      wheres.push(`t.transaction_type = $${params.length}`);
+    }
+    if (filters.performedByUserId) {
+      params.push(filters.performedByUserId);
+      wheres.push(`t.performed_by_user_id = $${params.length}`);
+    }
+
+    params.push(limit);
+    const limitIdx = params.length;
+    params.push(offset);
+    const offsetIdx = params.length;
+
+    return rawQuery<DispensaryTxRow>(
+      this.ds,
+      `SELECT
+        t.transaction_id as "transactionId",
+        t.inventory_id as "inventoryId",
+        t.dispensary_id as "dispensaryId",
+        t.transaction_type as "transactionType",
+        t.quantity_delta as "quantityDelta",
+        t.quantity_before as "quantityBefore",
+        t.quantity_after as "quantityAfter",
+        t.reference_order_id as "referenceOrderId",
+        t.reference_transfer_manifest_id as "referenceTransferManifestId",
+        t.performed_by_user_id as "performedByUserId",
+        u.email as "performedByEmail",
+        t.notes,
+        i.variant_id as "variantId",
+        pv.name as "variantName",
+        p.name as "productName",
+        t.created_at as "createdAt"
+      FROM inventory_transactions t
+      LEFT JOIN inventory i ON i.inventory_id = t.inventory_id
+      LEFT JOIN product_variants pv ON pv.variant_id = i.variant_id
+      LEFT JOIN products p ON p.id = pv.product_id
+      LEFT JOIN users u ON u.id = t.performed_by_user_id
+      WHERE ${wheres.join(' AND ')}
+      ORDER BY t.created_at DESC
+      LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
+      params,
+    );
   }
 
   async getTransactions(

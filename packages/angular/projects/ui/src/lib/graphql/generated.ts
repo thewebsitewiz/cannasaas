@@ -745,6 +745,26 @@ export type DispStats = {
   total: Scalars['Int']['output'];
 };
 
+export type DispensaryInventoryTransaction = {
+  __typename?: 'DispensaryInventoryTransaction';
+  createdAt: Scalars['DateTime']['output'];
+  dispensaryId: Scalars['ID']['output'];
+  inventoryId: Scalars['ID']['output'];
+  notes?: Maybe<Scalars['String']['output']>;
+  performedByEmail?: Maybe<Scalars['String']['output']>;
+  performedByUserId?: Maybe<Scalars['ID']['output']>;
+  productName?: Maybe<Scalars['String']['output']>;
+  quantityAfter: Scalars['Float']['output'];
+  quantityBefore: Scalars['Float']['output'];
+  quantityDelta: Scalars['Float']['output'];
+  referenceOrderId?: Maybe<Scalars['ID']['output']>;
+  referenceTransferManifestId?: Maybe<Scalars['String']['output']>;
+  transactionId: Scalars['ID']['output'];
+  transactionType: Scalars['String']['output'];
+  variantId: Scalars['ID']['output'];
+  variantName?: Maybe<Scalars['String']['output']>;
+};
+
 export type DispensaryListItem = {
   __typename?: 'DispensaryListItem';
   city?: Maybe<Scalars['String']['output']>;
@@ -3012,6 +3032,7 @@ export type Query = {
   inventoryItem?: Maybe<InventoryResult>;
   inventoryOverview: InventoryOverview;
   inventoryTransactions: Array<InventoryTransactionResult>;
+  inventoryTransactionsByDispensary: Array<DispensaryInventoryTransaction>;
   inventoryTransfers: Array<InventoryTransfer>;
   inventoryValue: InventoryValueResult;
   laborCostReport: LaborCostSummary;
@@ -3393,6 +3414,16 @@ export type QueryInventoryOverviewArgs = {
 export type QueryInventoryTransactionsArgs = {
   inventoryId: Scalars['ID']['input'];
   limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type QueryInventoryTransactionsByDispensaryArgs = {
+  dispensaryId: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  performedByUserId?: InputMaybe<Scalars['ID']['input']>;
+  since?: InputMaybe<Scalars['DateTime']['input']>;
+  transactionType?: InputMaybe<Scalars['String']['input']>;
+  until?: InputMaybe<Scalars['DateTime']['input']>;
 };
 
 export type QueryInventoryTransfersArgs = {
@@ -4876,6 +4907,39 @@ export type ApproveAdjustmentMutation = {
     status: string;
     approvedAt?: string | null;
   };
+};
+
+export type InventoryTransactionsByDispensaryQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  since?: InputMaybe<Scalars['DateTime']['input']>;
+  until?: InputMaybe<Scalars['DateTime']['input']>;
+  transactionType?: InputMaybe<Scalars['String']['input']>;
+  performedByUserId?: InputMaybe<Scalars['ID']['input']>;
+}>;
+
+export type InventoryTransactionsByDispensaryQuery = {
+  __typename?: 'Query';
+  inventoryTransactionsByDispensary: Array<{
+    __typename?: 'DispensaryInventoryTransaction';
+    transactionId: string;
+    inventoryId: string;
+    dispensaryId: string;
+    transactionType: string;
+    quantityDelta: number;
+    quantityBefore: number;
+    quantityAfter: number;
+    referenceOrderId?: string | null;
+    referenceTransferManifestId?: string | null;
+    performedByUserId?: string | null;
+    performedByEmail?: string | null;
+    notes?: string | null;
+    variantId: string;
+    variantName?: string | null;
+    productName?: string | null;
+    createdAt: string;
+  }>;
 };
 
 export type InventoryTransfersQueryVariables = Exact<{
@@ -6740,6 +6804,58 @@ export class ApproveAdjustmentGQL extends Apollo.Mutation<
   ApproveAdjustmentMutationVariables
 > {
   override document = ApproveAdjustmentDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const InventoryTransactionsByDispensaryDocument = gql`
+  query InventoryTransactionsByDispensary(
+    $dispensaryId: ID!
+    $limit: Int
+    $offset: Int
+    $since: DateTime
+    $until: DateTime
+    $transactionType: String
+    $performedByUserId: ID
+  ) {
+    inventoryTransactionsByDispensary(
+      dispensaryId: $dispensaryId
+      limit: $limit
+      offset: $offset
+      since: $since
+      until: $until
+      transactionType: $transactionType
+      performedByUserId: $performedByUserId
+    ) {
+      transactionId
+      inventoryId
+      dispensaryId
+      transactionType
+      quantityDelta
+      quantityBefore
+      quantityAfter
+      referenceOrderId
+      referenceTransferManifestId
+      performedByUserId
+      performedByEmail
+      notes
+      variantId
+      variantName
+      productName
+      createdAt
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class InventoryTransactionsByDispensaryGQL extends Apollo.Query<
+  InventoryTransactionsByDispensaryQuery,
+  InventoryTransactionsByDispensaryQueryVariables
+> {
+  override document = InventoryTransactionsByDispensaryDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);
