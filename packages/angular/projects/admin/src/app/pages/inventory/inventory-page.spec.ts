@@ -1,5 +1,6 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DashboardService, type Dashboard } from '../dashboard/dashboard.service';
@@ -27,7 +28,7 @@ function configure(args: FakeArgs = {}) {
   const svc = makeDashboard(args);
   TestBed.configureTestingModule({
     imports: [InventoryPage],
-    providers: [{ provide: DashboardService, useValue: svc }],
+    providers: [provideRouter([]), { provide: DashboardService, useValue: svc }],
   });
   const fixture = TestBed.createComponent(InventoryPage);
   fixture.detectChanges();

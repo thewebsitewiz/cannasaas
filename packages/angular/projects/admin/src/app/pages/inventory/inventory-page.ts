@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
 import { type Dashboard, DashboardService } from '../dashboard/dashboard.service';
 
@@ -14,10 +15,18 @@ type LowStockItem = Dashboard['lowStockItems'][number];
 @Component({
   selector: 'cs-inventory-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   template: `
     <section class="space-y-6">
-      <h1 class="text-2xl font-bold text-(--color-text)">Inventory</h1>
+      <header class="flex items-center justify-between gap-3">
+        <h1 class="text-2xl font-bold text-(--color-text)">Inventory</h1>
+        <a
+          routerLink="/inventory/audit"
+          class="text-sm text-(--color-primary) hover:text-(--color-primary-hover)"
+        >
+          View audit log →
+        </a>
+      </header>
 
       @if (loading()) {
         <p

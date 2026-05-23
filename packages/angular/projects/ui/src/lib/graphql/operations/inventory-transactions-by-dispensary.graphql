@@ -1,0 +1,36 @@
+query InventoryTransactionsByDispensary(
+  $dispensaryId: ID!
+  $limit: Int
+  $offset: Int
+  $since: DateTime
+  $until: DateTime
+  $transactionType: String
+  $performedByUserId: ID
+) {
+  inventoryTransactionsByDispensary(
+    dispensaryId: $dispensaryId
+    limit: $limit
+    offset: $offset
+    since: $since
+    until: $until
+    transactionType: $transactionType
+    performedByUserId: $performedByUserId
+  ) {
+    transactionId
+    inventoryId
+    dispensaryId
+    transactionType
+    quantityDelta
+    quantityBefore
+    quantityAfter
+    referenceOrderId
+    referenceTransferManifestId
+    performedByUserId
+    performedByEmail
+    notes
+    variantId
+    variantName
+    productName
+    createdAt
+  }
+}

@@ -13,6 +13,7 @@ import {
   InventoryRow,
   InventoryAdjustResult,
   InventoryValueDto,
+  type DispensaryTxRow,
 } from './inventory.service';
 import {
   ReorderSuggestionService,
@@ -67,6 +68,26 @@ class InventoryTransactionResult {
   @Field(() => ID, { nullable: true }) referenceOrderId?: string;
   @Field(() => ID, { nullable: true }) performedByUserId?: string;
   @Field({ nullable: true }) notes?: string;
+  @Field(() => Date) createdAt!: Date;
+}
+
+@ObjectType('DispensaryInventoryTransaction')
+class DispensaryInventoryTransactionResult {
+  @Field(() => ID) transactionId!: string;
+  @Field(() => ID) inventoryId!: string;
+  @Field(() => ID) dispensaryId!: string;
+  @Field() transactionType!: string;
+  @Field(() => Float) quantityDelta!: number;
+  @Field(() => Float) quantityBefore!: number;
+  @Field(() => Float) quantityAfter!: number;
+  @Field(() => ID, { nullable: true }) referenceOrderId?: string;
+  @Field({ nullable: true }) referenceTransferManifestId?: string;
+  @Field(() => ID, { nullable: true }) performedByUserId?: string;
+  @Field({ nullable: true }) performedByEmail?: string;
+  @Field({ nullable: true }) notes?: string;
+  @Field(() => ID) variantId!: string;
+  @Field({ nullable: true }) variantName?: string;
+  @Field({ nullable: true }) productName?: string;
   @Field(() => Date) createdAt!: Date;
 }
 
@@ -172,6 +193,35 @@ export class InventoryResolver {
     limit: number,
   ): Promise<unknown[]> {
     return this.inventory.getTransactions(inventoryId, limit);
+  }
+
+  @Roles('dispensary_admin', 'org_admin', 'super_admin')
+  @Query(() => [DispensaryInventoryTransactionResult], {
+    name: 'inventoryTransactionsByDispensary',
+  })
+  async inventoryTransactionsByDispensary(
+    @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 50 })
+    limit: number,
+    @Args('offset', { type: () => Int, nullable: true, defaultValue: 0 })
+    offset: number,
+    @Args('since', { type: () => Date, nullable: true })
+    since: Date | null,
+    @Args('until', { type: () => Date, nullable: true })
+    until: Date | null,
+    @Args('transactionType', { nullable: true })
+    transactionType: string | null,
+    @Args('performedByUserId', { type: () => ID, nullable: true })
+    performedByUserId: string | null,
+  ): Promise<DispensaryTxRow[]> {
+    return this.inventory.getDispensaryTransactions(dispensaryId, {
+      limit,
+      offset,
+      since,
+      until,
+      transactionType,
+      performedByUserId,
+    });
   }
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')

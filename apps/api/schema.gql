@@ -722,6 +722,25 @@ input DispensaryProductTypeInput {
   sortOrder: Int!
 }
 
+type DispensaryInventoryTransaction {
+  createdAt: DateTime!
+  dispensaryId: ID!
+  inventoryId: ID!
+  notes: String
+  performedByEmail: String
+  performedByUserId: ID
+  productName: String
+  quantityAfter: Float!
+  quantityBefore: Float!
+  quantityDelta: Float!
+  referenceOrderId: ID
+  referenceTransferManifestId: String
+  transactionId: ID!
+  transactionType: String!
+  variantId: ID!
+  variantName: String
+}
+
 type DispensaryPublic {
   city: String
   entityId: ID!
@@ -2095,6 +2114,7 @@ type Query {
   inventoryItem(inventoryId: ID!): InventoryResult
   inventoryOverview(dispensaryId: ID): InventoryOverview!
   inventoryTransactions(inventoryId: ID!, limit: Int = 50): [InventoryTransactionResult!]!
+  inventoryTransactionsByDispensary(dispensaryId: ID!, limit: Int = 50, offset: Int = 0, performedByUserId: ID, since: DateTime, transactionType: String, until: DateTime): [DispensaryInventoryTransaction!]!
   inventoryTransfers(direction: String, dispensaryId: ID!): [InventoryTransfer!]!
   inventoryValue(dispensaryId: ID!): InventoryValueResult!
   laborCostReport(dispensaryId: ID!, endDate: String!, startDate: String!): LaborCostSummary!
