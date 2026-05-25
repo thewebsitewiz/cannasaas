@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 
+import { CsvDownloadService } from '../../core/csv/csv-download.service';
 import { ReportsService, type ReportTab } from './reports.service';
 
 const TABS: ReadonlyArray<{ key: ReportTab; label: string }> = [
@@ -70,6 +71,19 @@ const TABS: ReadonlyArray<{ key: ReportTab; label: string }> = [
             aria-label="End date"
             class="rounded-lg border border-(--color-border) bg-(--color-bg) px-2 py-1 text-sm text-(--color-text)"
           />
+          <button
+            type="button"
+            (click)="onDownloadCsv()"
+            [disabled]="downloading()"
+            aria-label="Download report as CSV"
+            class="rounded-lg border border-(--color-border) px-3 py-1 text-sm text-(--color-text) hover:text-(--color-primary) disabled:opacity-50"
+          >
+            @if (downloading()) {
+              Downloading…
+            } @else {
+              Download CSV
+            }
+          </button>
         </div>
       </div>
 
@@ -382,6 +396,7 @@ const TABS: ReadonlyArray<{ key: ReportTab; label: string }> = [
 })
 export class ReportsPage {
   private readonly svc = inject(ReportsService);
+  private readonly csv = inject(CsvDownloadService);
 
   protected readonly tabs = TABS;
   protected readonly tab = this.svc.tab;
@@ -393,6 +408,7 @@ export class ReportsPage {
   protected readonly shrinkage = this.svc.shrinkage;
   protected readonly loading = this.svc.isLoading;
   protected readonly error = this.svc.error;
+  protected readonly downloading = computed(() => this.csv.downloading() !== null);
 
   protected readonly errorMessage = computed(() => {
     const err = this.error();
@@ -409,6 +425,31 @@ export class ReportsPage {
 
   protected onEndDate(event: Event): void {
     this.svc.setEndDate((event.target as HTMLInputElement).value);
+  }
+
+  protected async onDownloadCsv(): Promise<void> {
+    const tab = this.tab();
+    const start = this.startDate();
+    const end = this.endDate();
+    const dispensaryId = this.svc.dispensaryId();
+    if (!dispensaryId) return;
+
+    if (tab === 'inventory') {
+      // Inventory CSV is a point-in-time valuation — no date range.
+      await this.csv.download({
+        path: '/reports/inventory/csv',
+        params: { dispensaryId },
+        suggestedFilename: `inventory-valuation-${todayIso()}.csv`,
+      });
+      return;
+    }
+
+    const segment = tab === 'staff' ? 'staff' : tab; // 'sales' | 'tax' | 'staff'
+    await this.csv.download({
+      path: `/reports/${segment}/csv`,
+      params: { dispensaryId, startDate: start, endDate: end },
+      suggestedFilename: `${segment}-${start}-to-${end}.csv`,
+    });
   }
 
   protected money(value: number): string {
@@ -430,4 +471,9 @@ export class ReportsPage {
     if (percent > 20) return 'text-amber-500';
     return 'text-emerald-500';
   }
+}
+
+function todayIso(): string {
+  const d = new Date();
+  return d.toISOString().slice(0, 10);
 }

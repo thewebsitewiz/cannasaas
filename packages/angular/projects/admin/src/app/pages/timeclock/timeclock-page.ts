@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 
+import { AuthService } from '../../core/auth/auth.service';
+import { CsvDownloadService } from '../../core/csv/csv-download.service';
 import { TimeclockService, type PayrollRow } from './timeclock.service';
 
 /**
@@ -93,6 +95,19 @@ import { TimeclockService, type PayrollRow } from './timeclock.service';
               aria-label="End date"
               class="rounded-lg border border-(--color-border) bg-(--color-bg) px-2 py-1 text-sm text-(--color-text)"
             />
+            <button
+              type="button"
+              (click)="onDownloadCsv()"
+              [disabled]="downloading()"
+              aria-label="Download payroll as CSV"
+              class="rounded-lg border border-(--color-border) px-3 py-1 text-sm text-(--color-text) hover:text-(--color-primary) disabled:opacity-50"
+            >
+              @if (downloading()) {
+                Downloading…
+              } @else {
+                Download CSV
+              }
+            </button>
           </div>
         </header>
 
@@ -208,6 +223,8 @@ import { TimeclockService, type PayrollRow } from './timeclock.service';
 })
 export class TimeclockPage {
   private readonly svc = inject(TimeclockService);
+  private readonly auth = inject(AuthService);
+  private readonly csv = inject(CsvDownloadService);
 
   protected readonly activeClocks = this.svc.activeClocks;
   protected readonly payroll = this.svc.payroll;
@@ -215,6 +232,7 @@ export class TimeclockPage {
   protected readonly payrollError = this.svc.payrollError;
   protected readonly startDate = this.svc.startDate;
   protected readonly endDate = this.svc.endDate;
+  protected readonly downloading = computed(() => this.csv.downloading() !== null);
 
   protected readonly payrollErrorMessage = computed(() => {
     const err = this.payrollError();
@@ -241,6 +259,18 @@ export class TimeclockPage {
 
   protected onEndDate(event: Event): void {
     this.svc.setEndDate((event.target as HTMLInputElement).value);
+  }
+
+  protected async onDownloadCsv(): Promise<void> {
+    const dispensaryId = this.auth.user()?.dispensaryId;
+    const start = this.startDate();
+    const end = this.endDate();
+    if (!dispensaryId || !start || !end) return;
+    await this.csv.download({
+      path: '/payroll/export',
+      params: { dispensaryId, startDate: start, endDate: end },
+      suggestedFilename: `payroll-${start}-to-${end}.csv`,
+    });
   }
 
   protected initials(first: string | null | undefined, last: string | null | undefined): string {

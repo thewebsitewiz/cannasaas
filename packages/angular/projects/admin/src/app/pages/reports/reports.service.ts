@@ -49,6 +49,7 @@ export class ReportsService {
   readonly tab = this._tab.asReadonly();
   readonly startDate = this._startDate.asReadonly();
   readonly endDate = this._endDate.asReadonly();
+  readonly dispensaryId = computed<string | null>(() => this.auth.user()?.dispensaryId ?? null);
 
   constructor() {
     this.monthAgo.setDate(this.monthAgo.getDate() - 30);

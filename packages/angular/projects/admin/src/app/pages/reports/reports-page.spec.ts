@@ -2,6 +2,7 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { CsvDownloadService } from '../../core/csv/csv-download.service';
 import { ReportsPage } from './reports-page';
 import {
   ReportsService,
@@ -20,9 +21,12 @@ interface FakeArgs {
   readonly shrinkage?: ShrinkageReport | null;
   readonly loading?: boolean;
   readonly error?: unknown;
+  readonly dispensaryId?: string | null;
   readonly setTab?: ReturnType<typeof vi.fn>;
   readonly setStartDate?: ReturnType<typeof vi.fn>;
   readonly setEndDate?: ReturnType<typeof vi.fn>;
+  readonly downloadCsv?: ReturnType<typeof vi.fn>;
+  readonly downloadingPath?: string | null;
 }
 
 function makeSvc(args: FakeArgs): ReportsService {
@@ -30,6 +34,9 @@ function makeSvc(args: FakeArgs): ReportsService {
     tab: signal<ReportTab>(args.tab ?? 'sales').asReadonly(),
     startDate: signal<string>('2026-04-22').asReadonly(),
     endDate: signal<string>('2026-05-22').asReadonly(),
+    dispensaryId: signal<string | null>(
+      args.dispensaryId === undefined ? 'disp-1' : args.dispensaryId,
+    ).asReadonly(),
     sales: signal<SalesReport | null>(args.sales ?? null).asReadonly(),
     tax: signal<TaxReport | null>(args.tax ?? null).asReadonly(),
     labor: signal<LaborCostReport | null>(args.labor ?? null).asReadonly(),
@@ -42,15 +49,26 @@ function makeSvc(args: FakeArgs): ReportsService {
   } as unknown as ReportsService;
 }
 
+function makeCsv(args: FakeArgs): CsvDownloadService {
+  return {
+    downloading: signal<string | null>(args.downloadingPath ?? null).asReadonly(),
+    download: args.downloadCsv ?? vi.fn().mockResolvedValue(undefined),
+  } as unknown as CsvDownloadService;
+}
+
 function configure(args: FakeArgs = {}) {
   const svc = makeSvc(args);
+  const csv = makeCsv(args);
   TestBed.configureTestingModule({
     imports: [ReportsPage],
-    providers: [{ provide: ReportsService, useValue: svc }],
+    providers: [
+      { provide: ReportsService, useValue: svc },
+      { provide: CsvDownloadService, useValue: csv },
+    ],
   });
   const f = TestBed.createComponent(ReportsPage);
   f.detectChanges();
-  return { fixture: f, svc };
+  return { fixture: f, svc, csv };
 }
 
 function salesFixture(overrides: Partial<SalesReport> = {}): SalesReport {
@@ -233,5 +251,78 @@ describe('ReportsPage', () => {
     input.value = '2026-05-30';
     input.dispatchEvent(new Event('change'));
     expect(setEndDate).toHaveBeenCalledWith('2026-05-30');
+  });
+
+  it('Download CSV button renders', () => {
+    const { fixture } = configure();
+    const btn = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Download report as CSV"]',
+    );
+    expect(btn).not.toBeNull();
+  });
+
+  it('clicking Download CSV calls download with the sales endpoint on the sales tab', async () => {
+    const downloadCsv = vi.fn().mockResolvedValue(undefined);
+    const { fixture } = configure({ tab: 'sales', downloadCsv });
+    const btn = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Download report as CSV"]',
+    ) as HTMLButtonElement;
+    btn.click();
+    await fixture.whenStable();
+    const call = downloadCsv.mock.calls[0][0] as {
+      path: string;
+      params: Record<string, unknown>;
+    };
+    expect(call.path).toBe('/reports/sales/csv');
+    expect(call.params['dispensaryId']).toBe('disp-1');
+  });
+
+  it('routes tax / staff tabs to /reports/<segment>/csv', async () => {
+    const downloadCsv = vi.fn().mockResolvedValue(undefined);
+    const { fixture } = configure({ tab: 'staff', downloadCsv });
+    const btn = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Download report as CSV"]',
+    ) as HTMLButtonElement;
+    btn.click();
+    await fixture.whenStable();
+    expect(downloadCsv).toHaveBeenCalledWith(
+      expect.objectContaining({ path: '/reports/staff/csv' }),
+    );
+  });
+
+  it('inventory tab posts to /reports/inventory/csv without date params', async () => {
+    const downloadCsv = vi.fn().mockResolvedValue(undefined);
+    const { fixture } = configure({ tab: 'inventory', downloadCsv });
+    const btn = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Download report as CSV"]',
+    ) as HTMLButtonElement;
+    btn.click();
+    await fixture.whenStable();
+    const call = downloadCsv.mock.calls[0][0] as {
+      path: string;
+      params: Record<string, unknown>;
+    };
+    expect(call.path).toBe('/reports/inventory/csv');
+    expect(call.params).toEqual({ dispensaryId: 'disp-1' });
+  });
+
+  it('button disabled + label "Downloading…" while a download is in flight', () => {
+    const { fixture } = configure({ downloadingPath: '/reports/sales/csv' });
+    const btn = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Download report as CSV"]',
+    ) as HTMLButtonElement;
+    expect(btn.disabled).toBe(true);
+    expect((btn.textContent ?? '').trim()).toBe('Downloading…');
+  });
+
+  it('no-op when dispensary scope is unresolved', async () => {
+    const downloadCsv = vi.fn().mockResolvedValue(undefined);
+    const { fixture } = configure({ dispensaryId: null, downloadCsv });
+    const btn = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Download report as CSV"]',
+    ) as HTMLButtonElement;
+    btn.click();
+    await fixture.whenStable();
+    expect(downloadCsv).not.toHaveBeenCalled();
   });
 });

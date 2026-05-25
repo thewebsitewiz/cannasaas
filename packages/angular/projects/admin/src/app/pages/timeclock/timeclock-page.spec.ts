@@ -2,6 +2,8 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { AuthService } from '../../core/auth/auth.service';
+import { CsvDownloadService } from '../../core/csv/csv-download.service';
 import { TimeclockPage } from './timeclock-page';
 import { TimeclockService, type ActiveClock, type PayrollRow } from './timeclock.service';
 
@@ -12,8 +14,11 @@ interface FakeArgs {
   readonly payrollError?: unknown;
   readonly startDate?: string;
   readonly endDate?: string;
+  readonly dispensaryId?: string | null;
   readonly setStartDate?: ReturnType<typeof vi.fn>;
   readonly setEndDate?: ReturnType<typeof vi.fn>;
+  readonly downloadCsv?: ReturnType<typeof vi.fn>;
+  readonly downloadingPath?: string | null;
 }
 
 function makeSvc(args: FakeArgs): TimeclockService {
@@ -29,15 +34,39 @@ function makeSvc(args: FakeArgs): TimeclockService {
   } as unknown as TimeclockService;
 }
 
+function makeAuth(dispensaryId: string | null): AuthService {
+  return {
+    user: () =>
+      dispensaryId == null
+        ? null
+        : { id: 'u-1', email: 'a@a.com', role: 'dispensary_admin', dispensaryId },
+  } as unknown as AuthService;
+}
+
+function makeCsv(args: FakeArgs): CsvDownloadService {
+  return {
+    downloading: signal<string | null>(args.downloadingPath ?? null).asReadonly(),
+    download: args.downloadCsv ?? vi.fn().mockResolvedValue(undefined),
+  } as unknown as CsvDownloadService;
+}
+
 function configure(args: FakeArgs = {}) {
   const svc = makeSvc(args);
+  const csv = makeCsv(args);
   TestBed.configureTestingModule({
     imports: [TimeclockPage],
-    providers: [{ provide: TimeclockService, useValue: svc }],
+    providers: [
+      { provide: TimeclockService, useValue: svc },
+      {
+        provide: AuthService,
+        useValue: makeAuth(args.dispensaryId === undefined ? 'disp-1' : args.dispensaryId),
+      },
+      { provide: CsvDownloadService, useValue: csv },
+    ],
   });
   const f = TestBed.createComponent(TimeclockPage);
   f.detectChanges();
-  return { fixture: f, svc };
+  return { fixture: f, svc, csv };
 }
 
 function clock(overrides: Partial<ActiveClock> = {}): ActiveClock {
@@ -187,5 +216,57 @@ describe('TimeclockPage', () => {
     input.value = '2026-05-30';
     input.dispatchEvent(new Event('change'));
     expect(setEndDate).toHaveBeenCalledWith('2026-05-30');
+  });
+
+  it('Download CSV button renders', () => {
+    const { fixture } = configure();
+    const btn = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Download payroll as CSV"]',
+    );
+    expect(btn).not.toBeNull();
+  });
+
+  it('clicking Download CSV calls /payroll/export with the current date range', async () => {
+    const downloadCsv = vi.fn().mockResolvedValue(undefined);
+    const { fixture } = configure({
+      startDate: '2026-05-01',
+      endDate: '2026-05-22',
+      downloadCsv,
+    });
+    const btn = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Download payroll as CSV"]',
+    ) as HTMLButtonElement;
+    btn.click();
+    await fixture.whenStable();
+    expect(downloadCsv).toHaveBeenCalledWith(
+      expect.objectContaining({
+        path: '/payroll/export',
+        params: {
+          dispensaryId: 'disp-1',
+          startDate: '2026-05-01',
+          endDate: '2026-05-22',
+        },
+      }),
+    );
+  });
+
+  it('button is disabled + "Downloading…" while in flight', () => {
+    const { fixture } = configure({ downloadingPath: '/payroll/export' });
+    const btn = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Download payroll as CSV"]',
+    ) as HTMLButtonElement;
+    expect(btn.disabled).toBe(true);
+    expect((btn.textContent ?? '').trim()).toBe('Downloading…');
+  });
+
+  it('no-op when dispensary scope is unresolved', async () => {
+    const downloadCsv = vi.fn().mockResolvedValue(undefined);
+    const { fixture } = configure({ dispensaryId: null, downloadCsv });
+    const btn = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Download payroll as CSV"]',
+    ) as HTMLButtonElement;
+    btn.click();
+    await fixture.whenStable();
+    expect(downloadCsv).not.toHaveBeenCalled();
   });
 });
