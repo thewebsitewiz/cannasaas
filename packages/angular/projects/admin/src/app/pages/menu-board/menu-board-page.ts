@@ -17,15 +17,6 @@ import {
 
 const CLOCK_INTERVAL_MS = 1_000;
 const CATEGORY_ROTATE_MS = 15_000;
-const CATEGORIES = [
-  'Flower',
-  'Edible',
-  'Vape',
-  'Pre-Roll',
-  'Concentrate',
-  'Topical',
-  'Tincture',
-] as const;
 
 /**
  * In-store digital menu board. Mirrors the React `MenuBoardPage`:
@@ -33,13 +24,11 @@ const CATEGORIES = [
  * promotions banner, product grid with strain + THC badges, and a
  * fullscreen toggle.
  *
- * **Known parity caveat:** the React filter `p.category === activeCategory`
- * runs against a field that doesn't exist on the current `Product`
- * type — so the React board renders empty grids in production today.
- * The Angular port keeps the category tabs as decorative auto-rotators
- * but shows all products in the grid. File a follow-up if real
- * category filtering is needed (the API has `primaryCategoryId` —
- * we'd need a categories lookup query to resolve the display name).
+ * **Category filter (sc-680):** tabs come from `dispensaryProductTypes`
+ * — the operator's per-dispensary configured + ordered list (sc-639).
+ * Products are filtered by `productTypeId === activeType.productTypeId`.
+ * When the dispensary hasn't configured product types yet, the tab
+ * row is hidden and all products show.
  *
  * Filed scope mentioned a "configure" form (featured products, layout,
  * refresh interval). React doesn't have one — this page IS the display,
@@ -73,24 +62,27 @@ const CATEGORIES = [
       </div>
 
       <!-- Category tabs (auto-rotate every 15s) -->
-      <nav class="mb-8 flex gap-3 overflow-x-auto pb-2" role="tablist" aria-label="Category tabs">
-        @for (cat of categories; track cat; let i = $index) {
-          <button
-            type="button"
-            role="tab"
-            [attr.aria-selected]="activeCategoryIndex() === i"
-            (click)="setActiveCategory(i)"
-            class="whitespace-nowrap rounded-xl px-6 py-3 text-sm font-semibold transition-colors"
-            [class]="
-              activeCategoryIndex() === i
-                ? 'bg-emerald-600 text-white'
-                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-            "
-          >
-            {{ cat }}
-          </button>
-        }
-      </nav>
+      @if (categories().length > 0) {
+        <nav class="mb-8 flex gap-3 overflow-x-auto pb-2" role="tablist" aria-label="Category tabs">
+          @for (cat of categories(); track cat.productTypeId; let i = $index) {
+            <button
+              type="button"
+              role="tab"
+              [attr.aria-selected]="activeCategoryIndex() === i"
+              [attr.aria-label]="cat.name + ' tab'"
+              (click)="setActiveCategory(i)"
+              class="whitespace-nowrap rounded-xl px-6 py-3 text-sm font-semibold transition-colors"
+              [class]="
+                activeCategoryIndex() === i
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+              "
+            >
+              {{ cat.name }}
+            </button>
+          }
+        </nav>
+      }
 
       <!-- Promotions banner -->
       @if (promotions().length > 0) {
@@ -116,11 +108,11 @@ const CATEGORIES = [
       }
 
       <!-- Product grid -->
-      @if (products().length === 0) {
+      @if (filteredProducts().length === 0) {
         <p class="py-20 text-center text-xl text-gray-600">No products to display.</p>
       } @else {
         <ul class="grid grid-cols-2 gap-5 lg:grid-cols-3 xl:grid-cols-4">
-          @for (p of products(); track p.id) {
+          @for (p of filteredProducts(); track p.id) {
             <li class="rounded-2xl border border-gray-800 bg-gray-900 p-6">
               <h3 class="mb-2 text-xl font-bold leading-tight text-white">{{ p.name }}</h3>
               <div class="mb-3 flex items-center gap-2">
@@ -155,7 +147,7 @@ export class MenuBoardPage {
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
 
-  protected readonly categories = CATEGORIES;
+  protected readonly categories = this.svc.enabledProductTypes;
   protected readonly products = this.svc.products;
   protected readonly promotions = this.svc.promotions;
 
@@ -167,12 +159,22 @@ export class MenuBoardPage {
     this.clock().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
   );
 
+  /**
+   * Products narrowed to the active tab's product type. If the
+   * dispensary hasn't configured any product types, fall back to
+   * the full list (so a fresh tenant still sees their catalog).
+   */
+  protected readonly filteredProducts = computed<readonly MenuBoardProduct[]>(() => {
+    const cats = this.categories();
+    if (cats.length === 0) return this.products();
+    const active = cats[Math.min(this.activeCategoryIndex(), cats.length - 1)];
+    if (!active) return this.products();
+    return this.products().filter((p) => p.productTypeId === active.productTypeId);
+  });
+
   constructor() {
     const clockId = setInterval(() => this.clock.set(new Date()), CLOCK_INTERVAL_MS);
-    const rotateId = setInterval(
-      () => this.activeCategoryIndex.update((i) => (i + 1) % CATEGORIES.length),
-      CATEGORY_ROTATE_MS,
-    );
+    const rotateId = setInterval(() => this.rotateCategory(), CATEGORY_ROTATE_MS);
     const handler = () => this.isFullscreen.set(!!this.document.fullscreenElement);
     this.document.addEventListener('fullscreenchange', handler);
 
@@ -190,6 +192,12 @@ export class MenuBoardPage {
 
   protected setActiveCategory(index: number): void {
     this.activeCategoryIndex.set(index);
+  }
+
+  private rotateCategory(): void {
+    const count = this.categories().length;
+    if (count === 0) return;
+    this.activeCategoryIndex.update((i) => (i + 1) % count);
   }
 
   protected onToggleFullscreen(): void {
