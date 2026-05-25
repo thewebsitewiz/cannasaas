@@ -10,6 +10,8 @@ import {
   ProvisionCanPayForDispensaryGQL,
   SetActiveDispensaryProcessorGQL,
   SetDispensaryProcessorEnabledGQL,
+  TestDispensaryProcessorGQL,
+  type TestDispensaryProcessorMutation,
 } from '@cannasaas/ui-ng';
 import { firstValueFrom } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -17,6 +19,7 @@ import { map } from 'rxjs/operators';
 import { AuthService } from '../../../core/auth/auth.service';
 
 export type ProcessorRow = DispensaryPaymentProcessorsQuery['dispensaryPaymentProcessors'][number];
+export type TestResult = TestDispensaryProcessorMutation['testDispensaryProcessor'];
 
 interface PaymentsSnapshot {
   readonly rows: readonly ProcessorRow[];
@@ -30,10 +33,16 @@ export class PaymentsService {
 
   private readonly _reload = signal<number>(0);
   private readonly _busy = signal<DispensaryProcessorName | null>(null);
+  private readonly _testing = signal<DispensaryProcessorName | null>(null);
   private readonly _errorMessage = signal<string | null>(null);
+  private readonly _testResults = signal<ReadonlyMap<DispensaryProcessorName, TestResult>>(
+    new Map(),
+  );
 
   readonly busy = this._busy.asReadonly();
+  readonly testing = this._testing.asReadonly();
   readonly errorMessage = this._errorMessage.asReadonly();
+  readonly testResults = this._testResults.asReadonly();
 
   reload(): void {
     this._reload.update((n) => n + 1);
@@ -129,6 +138,50 @@ export class PaymentsService {
           gql.mutate({ variables: { input: { dispensaryId, merchantId, apiKey, isSandbox } } }),
         );
       }
+    });
+  }
+
+  async testProcessor(processorName: DispensaryProcessorName): Promise<void> {
+    const dispensaryId = this.requireDispensaryId();
+    if (!dispensaryId) return;
+    this._testing.set(processorName);
+    try {
+      const gql = this.injector.get<TestDispensaryProcessorGQL>(TestDispensaryProcessorGQL);
+      const result = await firstValueFrom(
+        gql.mutate({ variables: { dispensaryId, processorName } }),
+      );
+      const payload = result.data?.testDispensaryProcessor;
+      if (!payload) {
+        this.setTestResult(processorName, {
+          __typename: 'TestProcessorResult',
+          ok: false,
+          latencyMs: null,
+          errorMessage: 'No response from API.',
+        });
+        return;
+      }
+      this.setTestResult(processorName, payload);
+    } catch (err) {
+      this.setTestResult(processorName, {
+        __typename: 'TestProcessorResult',
+        ok: false,
+        latencyMs: null,
+        errorMessage: err instanceof Error ? err.message : 'Unknown error.',
+      });
+    } finally {
+      this._testing.set(null);
+    }
+  }
+
+  testResultFor(processorName: DispensaryProcessorName): TestResult | undefined {
+    return this._testResults().get(processorName);
+  }
+
+  private setTestResult(processorName: DispensaryProcessorName, result: TestResult): void {
+    this._testResults.update((m) => {
+      const next = new Map(m);
+      next.set(processorName, result);
+      return next;
     });
   }
 

@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AuthService } from '../../../core/auth/auth.service';
 import { PaymentsPage } from './payments-page';
-import { type ProcessorRow, PaymentsService } from './payments.service';
+import { type ProcessorRow, PaymentsService, type TestResult } from './payments.service';
 
 interface FakeArgs {
   readonly rows?: readonly ProcessorRow[];
@@ -14,11 +14,14 @@ interface FakeArgs {
   readonly loading?: boolean;
   readonly loadError?: unknown;
   readonly busy?: DispensaryProcessorName | null;
+  readonly testing?: DispensaryProcessorName | null;
+  readonly testResults?: ReadonlyMap<DispensaryProcessorName, TestResult>;
   readonly errorMessage?: string | null;
   readonly setEnabled?: ReturnType<typeof vi.fn>;
   readonly setActive?: ReturnType<typeof vi.fn>;
   readonly provision?: ReturnType<typeof vi.fn>;
   readonly deprovision?: ReturnType<typeof vi.fn>;
+  readonly testProcessor?: ReturnType<typeof vi.fn>;
   readonly clearError?: ReturnType<typeof vi.fn>;
 }
 
@@ -41,18 +44,23 @@ function row(overrides: Partial<ProcessorRow> = {}): ProcessorRow {
 function makeSvc(args: FakeArgs): PaymentsService {
   const rows = args.rows ?? [];
   const rowsSig = signal<readonly ProcessorRow[]>(rows).asReadonly();
+  const testResults = args.testResults ?? new Map<DispensaryProcessorName, TestResult>();
   return {
     rows: rowsSig,
     active: signal<DispensaryProcessorName | null>(args.active ?? null).asReadonly(),
     isLoading: signal<boolean>(args.loading ?? false).asReadonly(),
     error: signal<unknown>(args.loadError ?? null).asReadonly(),
     busy: signal<DispensaryProcessorName | null>(args.busy ?? null).asReadonly(),
+    testing: signal<DispensaryProcessorName | null>(args.testing ?? null).asReadonly(),
+    testResults: signal<ReadonlyMap<DispensaryProcessorName, TestResult>>(testResults).asReadonly(),
     errorMessage: signal<string | null>(args.errorMessage ?? null).asReadonly(),
     rowFor: (name: DispensaryProcessorName) => rows.find((r) => r.processorName === name),
+    testResultFor: (name: DispensaryProcessorName) => testResults.get(name),
     setEnabled: args.setEnabled ?? vi.fn().mockResolvedValue(undefined),
     setActive: args.setActive ?? vi.fn().mockResolvedValue(undefined),
     provision: args.provision ?? vi.fn().mockResolvedValue(undefined),
     deprovision: args.deprovision ?? vi.fn().mockResolvedValue(undefined),
+    testProcessor: args.testProcessor ?? vi.fn().mockResolvedValue(undefined),
     clearError: args.clearError ?? vi.fn(),
   } as unknown as PaymentsService;
 }
@@ -217,5 +225,85 @@ describe('PaymentsPage', () => {
     ) as HTMLButtonElement;
     btn.click();
     expect(clearError).toHaveBeenCalled();
+  });
+
+  it('renders Test connection button on provisioned rows', () => {
+    const { fixture } = configure({
+      rows: [row({ isEnabled: true, merchantExternalId: 'mer-xyz' })],
+    });
+    const btn = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Test connection for Aeropay"]',
+    );
+    expect(btn).not.toBeNull();
+  });
+
+  it('clicking Test connection calls svc.testProcessor', () => {
+    const testProcessor = vi.fn().mockResolvedValue(undefined);
+    const { fixture } = configure({
+      rows: [row({ isEnabled: true, merchantExternalId: 'mer-xyz' })],
+      testProcessor,
+    });
+    const btn = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Test connection for Aeropay"]',
+    ) as HTMLButtonElement;
+    btn.click();
+    expect(testProcessor).toHaveBeenCalledWith(DispensaryProcessorName.AEROPAY);
+  });
+
+  it('button reads "Testing…" and is disabled while a test is in flight', () => {
+    const { fixture } = configure({
+      rows: [row({ isEnabled: true, merchantExternalId: 'mer-xyz' })],
+      testing: DispensaryProcessorName.AEROPAY,
+    });
+    const btn = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Test connection for Aeropay"]',
+    ) as HTMLButtonElement;
+    expect(btn.disabled).toBe(true);
+    expect((btn.textContent ?? '').trim()).toBe('Testing…');
+  });
+
+  it('renders a success pill with latency when the last test returned ok:true', () => {
+    const results = new Map<DispensaryProcessorName, TestResult>([
+      [
+        DispensaryProcessorName.AEROPAY,
+        {
+          __typename: 'TestProcessorResult',
+          ok: true,
+          latencyMs: 123,
+          errorMessage: null,
+        } as TestResult,
+      ],
+    ]);
+    const { fixture } = configure({
+      rows: [row({ isEnabled: true, merchantExternalId: 'mer-xyz' })],
+      testResults: results,
+    });
+    const pill = (fixture.nativeElement as HTMLElement).querySelector(
+      '[aria-label="Test connection succeeded for Aeropay"]',
+    );
+    expect(pill?.textContent).toContain('Connected');
+    expect(pill?.textContent).toContain('123ms');
+  });
+
+  it('renders a failure pill with the error message when ok:false', () => {
+    const results = new Map<DispensaryProcessorName, TestResult>([
+      [
+        DispensaryProcessorName.AEROPAY,
+        {
+          __typename: 'TestProcessorResult',
+          ok: false,
+          latencyMs: 42,
+          errorMessage: '401 bad key',
+        } as TestResult,
+      ],
+    ]);
+    const { fixture } = configure({
+      rows: [row({ isEnabled: true, merchantExternalId: 'mer-xyz' })],
+      testResults: results,
+    });
+    const pill = (fixture.nativeElement as HTMLElement).querySelector(
+      '[aria-label="Test connection failed for Aeropay"]',
+    );
+    expect(pill?.textContent).toContain('401 bad key');
   });
 });

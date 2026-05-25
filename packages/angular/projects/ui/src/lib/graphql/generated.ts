@@ -1619,6 +1619,7 @@ export type Mutation = {
   syncPosProducts: PosSyncLog;
   tagProductMetrcUid: Product;
   tagVariantPackageLabel: ProductVariant;
+  testDispensaryProcessor: TestProcessorResult;
   testPosConnection: PosConnectionResult;
   togglePosSync: PosIntegration;
   updateAddress: CustomerAddress;
@@ -2237,6 +2238,11 @@ export type MutationTagProductMetrcUidArgs = {
 
 export type MutationTagVariantPackageLabelArgs = {
   input: TagPackageLabelInput;
+};
+
+export type MutationTestDispensaryProcessorArgs = {
+  dispensaryId: Scalars['ID']['input'];
+  processorName: DispensaryProcessorName;
 };
 
 export type MutationTestPosConnectionArgs = {
@@ -4156,6 +4162,13 @@ export type TenantStats = {
   trial: Scalars['Int']['output'];
 };
 
+export type TestProcessorResult = {
+  __typename?: 'TestProcessorResult';
+  errorMessage?: Maybe<Scalars['String']['output']>;
+  latencyMs?: Maybe<Scalars['Int']['output']>;
+  ok: Scalars['Boolean']['output'];
+};
+
 export type ThemeConfigType = {
   __typename?: 'ThemeConfigType';
   accent: Scalars['String']['output'];
@@ -5955,6 +5968,21 @@ export type UpdateTaxRuleMutation = {
     tax_basis: string;
     statutory_reference?: string | null;
     is_active: boolean;
+  };
+};
+
+export type TestDispensaryProcessorMutationVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+  processorName: DispensaryProcessorName;
+}>;
+
+export type TestDispensaryProcessorMutation = {
+  __typename?: 'Mutation';
+  testDispensaryProcessor: {
+    __typename?: 'TestProcessorResult';
+    ok: boolean;
+    latencyMs?: number | null;
+    errorMessage?: string | null;
   };
 };
 
@@ -8364,6 +8392,29 @@ export class UpdateTaxRuleGQL extends Apollo.Mutation<
   UpdateTaxRuleMutationVariables
 > {
   override document = UpdateTaxRuleDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const TestDispensaryProcessorDocument = gql`
+  mutation TestDispensaryProcessor($dispensaryId: ID!, $processorName: DispensaryProcessorName!) {
+    testDispensaryProcessor(dispensaryId: $dispensaryId, processorName: $processorName) {
+      ok
+      latencyMs
+      errorMessage
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class TestDispensaryProcessorGQL extends Apollo.Mutation<
+  TestDispensaryProcessorMutation,
+  TestDispensaryProcessorMutationVariables
+> {
+  override document = TestDispensaryProcessorDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);

@@ -146,8 +146,10 @@ const PROCESSORS: readonly ProcessorMeta[] = [
                   </div>
 
                   @if (isProvisioned) {
+                    @let testing = svc.testing() === p.name;
+                    @let testResult = svc.testResultFor(p.name);
                     <div
-                      class="flex items-center justify-between rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700"
+                      class="flex flex-wrap items-center justify-between gap-2 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700"
                     >
                       <span>
                         Provisioned · merchant
@@ -155,14 +157,51 @@ const PROCESSORS: readonly ProcessorMeta[] = [
                           {{ row!.merchantExternalId }}
                         </code>
                       </span>
-                      <button
-                        type="button"
-                        (click)="onDeprovision(p.name)"
-                        [disabled]="busy"
-                        class="text-xs text-rose-700 underline disabled:opacity-50"
-                      >
-                        Deprovision
-                      </button>
+                      <div class="flex items-center gap-3">
+                        @if (testResult) {
+                          @if (testResult.ok) {
+                            <span
+                              class="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700"
+                              [attr.aria-label]="'Test connection succeeded for ' + p.label"
+                            >
+                              ✓ Connected{{
+                                testResult.latencyMs != null
+                                  ? ' · ' + testResult.latencyMs + 'ms'
+                                  : ''
+                              }}
+                            </span>
+                          } @else {
+                            <span
+                              class="max-w-xs rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-medium text-rose-700"
+                              [attr.aria-label]="'Test connection failed for ' + p.label"
+                              [attr.title]="testResult.errorMessage"
+                            >
+                              ✗ {{ testResult.errorMessage ?? 'Test failed' }}
+                            </span>
+                          }
+                        }
+                        <button
+                          type="button"
+                          (click)="onTestProcessor(p.name)"
+                          [disabled]="testing || busy"
+                          [attr.aria-label]="'Test connection for ' + p.label"
+                          class="text-xs text-(--color-primary) underline disabled:opacity-50"
+                        >
+                          @if (testing) {
+                            Testing…
+                          } @else {
+                            Test connection
+                          }
+                        </button>
+                        <button
+                          type="button"
+                          (click)="onDeprovision(p.name)"
+                          [disabled]="busy"
+                          class="text-xs text-rose-700 underline disabled:opacity-50"
+                        >
+                          Deprovision
+                        </button>
+                      </div>
                     </div>
                   } @else {
                     <p class="text-sm text-(--color-text-muted)">
@@ -290,6 +329,10 @@ export class PaymentsPage {
 
   protected onClearActive(): void {
     void this.svc.setActive(null);
+  }
+
+  protected onTestProcessor(name: DispensaryProcessorName): void {
+    void this.svc.testProcessor(name);
   }
 
   protected onDeprovision(name: DispensaryProcessorName): void {

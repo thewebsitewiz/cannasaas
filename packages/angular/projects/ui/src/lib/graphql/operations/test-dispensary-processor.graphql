@@ -1,0 +1,10 @@
+mutation TestDispensaryProcessor(
+  $dispensaryId: ID!
+  $processorName: DispensaryProcessorName!
+) {
+  testDispensaryProcessor(dispensaryId: $dispensaryId, processorName: $processorName) {
+    ok
+    latencyMs
+    errorMessage
+  }
+}

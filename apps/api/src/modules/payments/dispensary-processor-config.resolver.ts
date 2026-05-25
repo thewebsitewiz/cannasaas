@@ -3,6 +3,7 @@ import {
   Field,
   ID,
   InputType,
+  Int,
   Mutation,
   ObjectType,
   Query,
@@ -18,6 +19,7 @@ import {
   DispensaryProcessorName,
 } from './entities/dispensary-payment-processor.entity';
 import { DispensaryProcessorConfigService } from './dispensary-processor-config.service';
+import { PaymentProcessorTesterService } from './payment-processor-tester.service';
 
 @InputType()
 class SetDispensaryProcessorEnabledInput {
@@ -41,9 +43,19 @@ class ActiveProcessorResult {
   activePaymentProcessor?: DispensaryProcessorName;
 }
 
+@ObjectType()
+class TestProcessorResult {
+  @Field() ok!: boolean;
+  @Field(() => Int, { nullable: true }) latencyMs?: number;
+  @Field({ nullable: true }) errorMessage?: string;
+}
+
 @Resolver()
 export class DispensaryProcessorConfigResolver {
-  constructor(private readonly service: DispensaryProcessorConfigService) {}
+  constructor(
+    private readonly service: DispensaryProcessorConfigService,
+    private readonly tester: PaymentProcessorTesterService,
+  ) {}
 
   private guard(user: JwtPayload, dispensaryId: string): void {
     if (
@@ -114,5 +126,17 @@ export class DispensaryProcessorConfigResolver {
       dispensaryId: input.dispensaryId,
       activePaymentProcessor: active ?? undefined,
     };
+  }
+
+  @Roles('dispensary_admin', 'org_admin', 'super_admin')
+  @Mutation(() => TestProcessorResult, { name: 'testDispensaryProcessor' })
+  testProcessor(
+    @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
+    @Args('processorName', { type: () => DispensaryProcessorName })
+    processorName: DispensaryProcessorName,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<TestProcessorResult> {
+    this.guard(user, dispensaryId);
+    return this.tester.test(dispensaryId, processorName);
   }
 }

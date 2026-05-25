@@ -1504,6 +1504,7 @@ type Mutation {
   syncPosProducts(dispensaryId: ID!): PosSyncLog!
   tagProductMetrcUid(input: TagProductUidInput!): Product!
   tagVariantPackageLabel(input: TagPackageLabelInput!): ProductVariant!
+  testDispensaryProcessor(dispensaryId: ID!, processorName: DispensaryProcessorName!): TestProcessorResult!
   testPosConnection(dispensaryId: ID!): PosConnectionResult!
   togglePosSync(dispensaryId: ID!, enabled: Boolean!): PosIntegration!
   updateAddress(addressId: ID!, input: AddAddressInput!): CustomerAddress!
@@ -2516,6 +2517,12 @@ type TenantStats {
   suspended: Int!
   total: Int!
   trial: Int!
+}
+
+type TestProcessorResult {
+  errorMessage: String
+  latencyMs: Int
+  ok: Boolean!
 }
 
 type ThemeConfigType {
