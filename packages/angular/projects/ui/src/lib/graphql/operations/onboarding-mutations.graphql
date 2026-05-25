@@ -1,0 +1,37 @@
+mutation UpdateDispensaryForOnboarding(
+  $entityId: ID!
+  $input: UpdateDispensaryInput!
+) {
+  updateDispensary(entityId: $entityId, input: $input) {
+    entityId
+    name
+  }
+}
+
+mutation UpsertMetrcCredentialForOnboarding($input: UpsertCredentialInput!) {
+  upsertMetrcCredential(input: $input) {
+    credentialId
+    dispensaryId
+    state
+  }
+}
+
+mutation UpsertBiotrackCredentialForOnboarding(
+  $dispensaryId: ID!
+  $state: String!
+  $apiKey: String!
+  $apiSecret: String
+  $licenseNumber: String
+) {
+  upsertBiotrackCredential(
+    dispensaryId: $dispensaryId
+    state: $state
+    apiKey: $apiKey
+    apiSecret: $apiSecret
+    licenseNumber: $licenseNumber
+  ) {
+    credentialId
+    dispensaryId
+    state
+  }
+}

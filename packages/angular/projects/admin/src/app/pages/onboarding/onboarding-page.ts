@@ -1,12 +1,21 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
 import {
   ONBOARDING_PRESETS,
   type OnboardingData,
   OnboardingService,
+  type StepKey,
+  type StepStatus,
   TOTAL_STEPS,
 } from './onboarding.service';
+
+interface ProgressRow {
+  readonly key: StepKey;
+  readonly label: string;
+  readonly status: StepStatus;
+  readonly error?: string;
+}
 
 const STEPS = ['Dispensary Info', 'Products', 'Compliance', 'Payments', 'Theme', 'Done'] as const;
 
@@ -446,15 +455,44 @@ const US_STATES = [
                     </dd>
                   </div>
                 </dl>
+                @if (showProgress()) {
+                  <ul
+                    class="space-y-1 rounded-lg border border-(--color-border) bg-(--color-bg) p-3 text-left text-sm"
+                    aria-label="Launch progress"
+                  >
+                    @for (row of progressRows(); track row.key) {
+                      <li class="flex items-start justify-between gap-2">
+                        <span class="text-(--color-text-secondary)">{{ row.label }}</span>
+                        <span class="flex-1" aria-hidden="true"></span>
+                        <span
+                          [class]="statusClass(row.status)"
+                          [attr.aria-label]="row.label + ' ' + row.status"
+                        >
+                          {{ statusGlyph(row.status) }}
+                        </span>
+                      </li>
+                      @if (row.error) {
+                        <li
+                          class="ml-1 text-xs text-rose-600"
+                          [attr.aria-label]="row.label + ' error'"
+                        >
+                          {{ row.error }}
+                        </li>
+                      }
+                    }
+                  </ul>
+                }
                 <button
                   type="button"
                   (click)="onLaunch()"
                   [disabled]="launching()"
                   class="rounded-xl bg-(--color-primary) px-8 py-3 text-lg font-bold text-white hover:bg-(--color-primary-hover) disabled:opacity-50"
-                  aria-label="Launch your store"
+                  [attr.aria-label]="hasFinalizeFailure() ? 'Retry launch' : 'Launch your store'"
                 >
                   @if (launching()) {
                     Launching…
+                  } @else if (hasFinalizeFailure()) {
+                    Retry launch
                   } @else {
                     Launch your store
                   }
@@ -516,6 +554,31 @@ export class OnboardingPage {
   protected readonly progressPercent = this.svc.progressPercent;
 
   protected readonly launching = signal<boolean>(false);
+  protected readonly finalizeProgress = this.svc.finalizeProgress;
+
+  protected readonly progressRows = computed<readonly ProgressRow[]>(() => {
+    const p = this.finalizeProgress();
+    return [
+      {
+        key: 'dispensary',
+        label: 'Dispensary info',
+        status: p.dispensary,
+        error: p.errors.dispensary,
+      },
+      { key: 'products', label: 'Products', status: p.products, error: p.errors.products },
+      { key: 'compliance', label: 'Compliance', status: p.compliance, error: p.errors.compliance },
+      { key: 'payments', label: 'Payments', status: p.payments, error: p.errors.payments },
+      { key: 'theme', label: 'Theme', status: p.theme, error: p.errors.theme },
+    ];
+  });
+
+  protected readonly showProgress = computed(() =>
+    this.progressRows().some((r) => r.status !== 'idle'),
+  );
+
+  protected readonly hasFinalizeFailure = computed(() =>
+    this.progressRows().some((r) => r.status === 'failed'),
+  );
 
   protected readonly newProduct = signal({
     name: '',
@@ -559,10 +622,12 @@ export class OnboardingPage {
   protected async onLaunch(): Promise<void> {
     this.launching.set(true);
     try {
-      // Backend mutation wire-up is deferred — see component docblock.
-      // For now: clear persisted state, return to dashboard.
-      this.svc.finalize();
-      await this.router.navigateByUrl('/');
+      const result = await this.svc.finalize();
+      if (result.ok) {
+        await this.router.navigateByUrl('/');
+      }
+      // On failure, stay on the page — the progress UI surfaces what
+      // went wrong and the button label flips to "Retry launch".
     } finally {
       this.launching.set(false);
     }
@@ -573,5 +638,31 @@ export class OnboardingPage {
     if (this.data().cashEnabled) labels.push('Cash');
     if (this.data().canPayEnabled) labels.push('CanPay');
     return labels.length > 0 ? labels.join(', ') : 'None';
+  }
+
+  protected statusClass(status: StepStatus): string {
+    switch (status) {
+      case 'ok':
+        return 'text-emerald-500';
+      case 'failed':
+        return 'text-rose-500';
+      case 'in_flight':
+        return 'text-(--color-primary)';
+      default:
+        return 'text-(--color-text-muted)';
+    }
+  }
+
+  protected statusGlyph(status: StepStatus): string {
+    switch (status) {
+      case 'ok':
+        return '✓';
+      case 'failed':
+        return '✗';
+      case 'in_flight':
+        return '…';
+      default:
+        return '·';
+    }
   }
 }
