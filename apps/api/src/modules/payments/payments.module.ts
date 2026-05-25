@@ -9,6 +9,7 @@ import { CashlessPaymentsService } from './cashless-payments.service';
 import { CashlessPaymentsResolver } from './cashless-payments.resolver';
 import { DispensaryProcessorConfigService } from './dispensary-processor-config.service';
 import { DispensaryProcessorConfigResolver } from './dispensary-processor-config.resolver';
+import { PaymentProcessorTesterService } from './payment-processor-tester.service';
 import { CredentialEncryptionService } from './security/credential-encryption.service';
 import { AeropayOnboardingService } from './onboarding/aeropay-onboarding.service';
 import { AeropayOnboardingResolver } from './onboarding/aeropay-onboarding.resolver';
@@ -42,6 +43,7 @@ import { PaymentWebhookListener } from './listeners/payment-webhook.listener';
     CashlessPaymentsResolver,
     DispensaryProcessorConfigService,
     DispensaryProcessorConfigResolver,
+    PaymentProcessorTesterService,
     CredentialEncryptionService,
     AeropayOnboardingService,
     AeropayOnboardingResolver,
