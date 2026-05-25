@@ -5260,6 +5260,48 @@ export type MyTimeEntriesQuery = {
   }>;
 };
 
+export type UpdateDispensaryForOnboardingMutationVariables = Exact<{
+  entityId: Scalars['ID']['input'];
+  input: UpdateDispensaryInput;
+}>;
+
+export type UpdateDispensaryForOnboardingMutation = {
+  __typename?: 'Mutation';
+  updateDispensary: { __typename?: 'DispensaryResult'; entityId: string; name: string };
+};
+
+export type UpsertMetrcCredentialForOnboardingMutationVariables = Exact<{
+  input: UpsertCredentialInput;
+}>;
+
+export type UpsertMetrcCredentialForOnboardingMutation = {
+  __typename?: 'Mutation';
+  upsertMetrcCredential: {
+    __typename?: 'MetrcCredential';
+    credentialId: string;
+    dispensaryId: string;
+    state: string;
+  };
+};
+
+export type UpsertBiotrackCredentialForOnboardingMutationVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+  state: Scalars['String']['input'];
+  apiKey: Scalars['String']['input'];
+  apiSecret?: InputMaybe<Scalars['String']['input']>;
+  licenseNumber?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+export type UpsertBiotrackCredentialForOnboardingMutation = {
+  __typename?: 'Mutation';
+  upsertBiotrackCredential: {
+    __typename?: 'BiotrackCredential';
+    credentialId: string;
+    dispensaryId: string;
+    state: string;
+  };
+};
+
 export type OpenRegisterSessionMutationVariables = Exact<{
   input: OpenRegisterSessionGqlInput;
 }>;
@@ -7325,6 +7367,86 @@ export class MyTimeEntriesGQL extends Apollo.Query<
   MyTimeEntriesQueryVariables
 > {
   override document = MyTimeEntriesDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const UpdateDispensaryForOnboardingDocument = gql`
+  mutation UpdateDispensaryForOnboarding($entityId: ID!, $input: UpdateDispensaryInput!) {
+    updateDispensary(entityId: $entityId, input: $input) {
+      entityId
+      name
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class UpdateDispensaryForOnboardingGQL extends Apollo.Mutation<
+  UpdateDispensaryForOnboardingMutation,
+  UpdateDispensaryForOnboardingMutationVariables
+> {
+  override document = UpdateDispensaryForOnboardingDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const UpsertMetrcCredentialForOnboardingDocument = gql`
+  mutation UpsertMetrcCredentialForOnboarding($input: UpsertCredentialInput!) {
+    upsertMetrcCredential(input: $input) {
+      credentialId
+      dispensaryId
+      state
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class UpsertMetrcCredentialForOnboardingGQL extends Apollo.Mutation<
+  UpsertMetrcCredentialForOnboardingMutation,
+  UpsertMetrcCredentialForOnboardingMutationVariables
+> {
+  override document = UpsertMetrcCredentialForOnboardingDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const UpsertBiotrackCredentialForOnboardingDocument = gql`
+  mutation UpsertBiotrackCredentialForOnboarding(
+    $dispensaryId: ID!
+    $state: String!
+    $apiKey: String!
+    $apiSecret: String
+    $licenseNumber: String
+  ) {
+    upsertBiotrackCredential(
+      dispensaryId: $dispensaryId
+      state: $state
+      apiKey: $apiKey
+      apiSecret: $apiSecret
+      licenseNumber: $licenseNumber
+    ) {
+      credentialId
+      dispensaryId
+      state
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class UpsertBiotrackCredentialForOnboardingGQL extends Apollo.Mutation<
+  UpsertBiotrackCredentialForOnboardingMutation,
+  UpsertBiotrackCredentialForOnboardingMutationVariables
+> {
+  override document = UpsertBiotrackCredentialForOnboardingDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);
