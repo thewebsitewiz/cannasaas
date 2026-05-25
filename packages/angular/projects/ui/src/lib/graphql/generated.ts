@@ -5094,6 +5094,7 @@ export type MenuBoardProductsQuery = {
     __typename?: 'Product';
     id: string;
     name: string;
+    productTypeId?: number | null;
     strainType?: string | null;
     thcPercent?: number | null;
     cbdPercent?: number | null;
@@ -7146,6 +7147,7 @@ export const MenuBoardProductsDocument = gql`
     adminProducts(dispensaryId: $dispensaryId) {
       id
       name
+      productTypeId
       strainType
       thcPercent
       cbdPercent

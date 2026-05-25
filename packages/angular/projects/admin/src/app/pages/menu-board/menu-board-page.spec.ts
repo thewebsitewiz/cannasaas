@@ -7,17 +7,57 @@ import {
   MenuBoardService,
   type ActivePromotion,
   type MenuBoardProduct,
+  type ProductType,
 } from './menu-board.service';
 
 interface FakeArgs {
   readonly products?: readonly MenuBoardProduct[];
   readonly promotions?: readonly ActivePromotion[];
+  readonly productTypes?: readonly ProductType[];
 }
+
+const DEFAULT_TYPES: readonly ProductType[] = [
+  {
+    __typename: 'DispensaryProductType',
+    productTypeId: 1,
+    code: 'FLOWER',
+    name: 'Flower',
+    isEnabled: true,
+    sortOrder: 0,
+  },
+  {
+    __typename: 'DispensaryProductType',
+    productTypeId: 2,
+    code: 'EDIBLE',
+    name: 'Edible',
+    isEnabled: true,
+    sortOrder: 1,
+  },
+  {
+    __typename: 'DispensaryProductType',
+    productTypeId: 3,
+    code: 'VAPE',
+    name: 'Vape',
+    isEnabled: true,
+    sortOrder: 2,
+  },
+  {
+    __typename: 'DispensaryProductType',
+    productTypeId: 4,
+    code: 'PRE_ROLL',
+    name: 'Pre-Roll',
+    isEnabled: true,
+    sortOrder: 3,
+  },
+] as ProductType[];
 
 function makeSvc(args: FakeArgs): MenuBoardService {
   return {
     products: signal<readonly MenuBoardProduct[]>(args.products ?? []).asReadonly(),
     promotions: signal<readonly ActivePromotion[]>(args.promotions ?? []).asReadonly(),
+    enabledProductTypes: signal<readonly ProductType[]>(
+      args.productTypes ?? DEFAULT_TYPES,
+    ).asReadonly(),
     isLoading: signal<boolean>(false).asReadonly(),
     error: signal<unknown>(null).asReadonly(),
   } as unknown as MenuBoardService;
@@ -38,6 +78,7 @@ function product(overrides: Partial<MenuBoardProduct> = {}): MenuBoardProduct {
     __typename: 'Product',
     id: 'p-1',
     name: 'Blue Dream',
+    productTypeId: 1,
     strainType: 'hybrid',
     thcPercent: 22,
     cbdPercent: 0.5,
@@ -83,19 +124,17 @@ describe('MenuBoardPage', () => {
     expect(fsBtn).not.toBeNull();
   });
 
-  it('renders all 7 category tabs', () => {
+  it('renders one tab per enabled dispensary product type, in sort order', () => {
     const f = configure();
     const tabs = (f.nativeElement as HTMLElement).querySelectorAll('[role="tab"]');
     const labels = Array.from(tabs).map((t) => (t.textContent ?? '').trim());
-    expect(labels).toEqual([
-      'Flower',
-      'Edible',
-      'Vape',
-      'Pre-Roll',
-      'Concentrate',
-      'Topical',
-      'Tincture',
-    ]);
+    expect(labels).toEqual(['Flower', 'Edible', 'Vape', 'Pre-Roll']);
+  });
+
+  it('hides the tab row entirely when the dispensary has no enabled types', () => {
+    const f = configure({ productTypes: [] });
+    const nav = (f.nativeElement as HTMLElement).querySelector('nav[role="tablist"]');
+    expect(nav).toBeNull();
   });
 
   it('clicking a category tab marks it active', () => {
@@ -111,7 +150,75 @@ describe('MenuBoardPage', () => {
     expect((selected[0].textContent ?? '').trim()).toBe('Pre-Roll');
   });
 
-  it('shows empty state when no products', () => {
+  it("filters products by the active tab's productTypeId", () => {
+    const f = configure({
+      products: [
+        product({ id: 'p-flower', name: 'Blue Dream', productTypeId: 1 }),
+        product({ id: 'p-edible', name: 'Gummy Bear', productTypeId: 2 }),
+        product({ id: 'p-vape', name: 'Live Resin', productTypeId: 3 }),
+      ],
+    });
+    // Default index is 0 → Flower → only Blue Dream renders.
+    const initialText = (f.nativeElement as HTMLElement).textContent ?? '';
+    expect(initialText).toContain('Blue Dream');
+    expect(initialText).not.toContain('Gummy Bear');
+    expect(initialText).not.toContain('Live Resin');
+    // Click the Edible tab → only Gummy Bear.
+    const edibleTab = (f.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Edible tab"]',
+    ) as HTMLButtonElement;
+    edibleTab.click();
+    f.detectChanges();
+    const filtered = (f.nativeElement as HTMLElement).textContent ?? '';
+    expect(filtered).toContain('Gummy Bear');
+    expect(filtered).not.toContain('Blue Dream');
+    expect(filtered).not.toContain('Live Resin');
+  });
+
+  it('shows the empty-state placeholder when the active tab has no products', () => {
+    const f = configure({
+      products: [product({ productTypeId: 1 })],
+      productTypes: [
+        {
+          __typename: 'DispensaryProductType',
+          productTypeId: 1,
+          code: 'FLOWER',
+          name: 'Flower',
+          isEnabled: true,
+          sortOrder: 0,
+        },
+        {
+          __typename: 'DispensaryProductType',
+          productTypeId: 999,
+          code: 'EDIBLE',
+          name: 'Edible',
+          isEnabled: true,
+          sortOrder: 1,
+        },
+      ] as ProductType[],
+    });
+    const edibleTab = (f.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Edible tab"]',
+    ) as HTMLButtonElement;
+    edibleTab.click();
+    f.detectChanges();
+    expect((f.nativeElement as HTMLElement).textContent).toContain('No products to display.');
+  });
+
+  it('falls back to ALL products when the dispensary has no configured types', () => {
+    const f = configure({
+      productTypes: [],
+      products: [
+        product({ id: 'p-1', name: 'Blue Dream', productTypeId: 1 }),
+        product({ id: 'p-2', name: 'Gummy Bear', productTypeId: 2 }),
+      ],
+    });
+    const text = (f.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('Blue Dream');
+    expect(text).toContain('Gummy Bear');
+  });
+
+  it('shows empty state when no products at all', () => {
     const f = configure({ products: [] });
     expect((f.nativeElement as HTMLElement).textContent).toContain('No products to display.');
   });

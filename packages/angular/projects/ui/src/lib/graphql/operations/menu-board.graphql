@@ -2,6 +2,7 @@ query MenuBoardProducts($dispensaryId: ID!) {
   adminProducts(dispensaryId: $dispensaryId) {
     id
     name
+    productTypeId
     strainType
     thcPercent
     cbdPercent
