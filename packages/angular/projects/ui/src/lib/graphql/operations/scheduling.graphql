@@ -6,6 +6,7 @@ query WeekSchedule($dispensaryId: ID!, $weekStart: String!) {
     endTime
     status
     published
+    profileId
   }
 }
 
@@ -44,4 +45,23 @@ query TimeOffRequests($dispensaryId: ID!) {
 
 mutation PublishWeekSchedule($dispensaryId: ID!, $weekStart: String!) {
   publishWeekSchedule(dispensaryId: $dispensaryId, weekStart: $weekStart)
+}
+
+mutation ReassignShift(
+  $shiftId: ID!
+  $profileId: ID!
+  $shiftDate: String!
+) {
+  reassignShift(
+    shiftId: $shiftId
+    profileId: $profileId
+    shiftDate: $shiftDate
+  ) {
+    shiftId
+    shiftDate
+    startTime
+    endTime
+    status
+    published
+  }
 }

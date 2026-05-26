@@ -1618,6 +1618,7 @@ export type Mutation = {
   provisionKiosk: KioskProvisionResult;
   publishWeekSchedule: Scalars['Int']['output'];
   pushOrderToPos: PosOrderPushResult;
+  reassignShift: ScheduledShift;
   receiveTransfer: InventoryTransfer;
   recordCountItem: InventoryCountItem;
   redeemReward: RedeemResult;
@@ -2120,6 +2121,12 @@ export type MutationPublishWeekScheduleArgs = {
 export type MutationPushOrderToPosArgs = {
   dispensaryId: Scalars['ID']['input'];
   orderId: Scalars['ID']['input'];
+};
+
+export type MutationReassignShiftArgs = {
+  profileId: Scalars['ID']['input'];
+  shiftDate: Scalars['String']['input'];
+  shiftId: Scalars['ID']['input'];
 };
 
 export type MutationReceiveTransferArgs = {
@@ -5952,6 +5959,7 @@ export type WeekScheduleQuery = {
     endTime: string;
     status: string;
     published: boolean;
+    profileId: string;
   }>;
 };
 
@@ -6012,6 +6020,25 @@ export type PublishWeekScheduleMutationVariables = Exact<{
 }>;
 
 export type PublishWeekScheduleMutation = { __typename?: 'Mutation'; publishWeekSchedule: number };
+
+export type ReassignShiftMutationVariables = Exact<{
+  shiftId: Scalars['ID']['input'];
+  profileId: Scalars['ID']['input'];
+  shiftDate: Scalars['String']['input'];
+}>;
+
+export type ReassignShiftMutation = {
+  __typename?: 'Mutation';
+  reassignShift: {
+    __typename?: 'ScheduledShift';
+    shiftId: string;
+    shiftDate: string;
+    startTime: string;
+    endTime: string;
+    status: string;
+    published: boolean;
+  };
+};
 
 export type SearchCustomersQueryVariables = Exact<{
   dispensaryId: Scalars['ID']['input'];
@@ -8571,6 +8598,7 @@ export const WeekScheduleDocument = gql`
       endTime
       status
       published
+      profileId
     }
   }
 `;
@@ -8671,6 +8699,32 @@ export class PublishWeekScheduleGQL extends Apollo.Mutation<
   PublishWeekScheduleMutationVariables
 > {
   override document = PublishWeekScheduleDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const ReassignShiftDocument = gql`
+  mutation ReassignShift($shiftId: ID!, $profileId: ID!, $shiftDate: String!) {
+    reassignShift(shiftId: $shiftId, profileId: $profileId, shiftDate: $shiftDate) {
+      shiftId
+      shiftDate
+      startTime
+      endTime
+      status
+      published
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class ReassignShiftGQL extends Apollo.Mutation<
+  ReassignShiftMutation,
+  ReassignShiftMutationVariables
+> {
+  override document = ReassignShiftDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);

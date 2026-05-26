@@ -235,6 +235,59 @@ export class SchedulingService {
     return (result.affected ?? 0) > 0;
   }
 
+  /**
+   * Move an existing shift to a new date and/or profile (sc-686).
+   * Runs the same conflict + approved-time-off guards as createShift,
+   * but excludes the shift itself from the conflict scan so a no-op
+   * reassign isn't blocked. Identity is preserved (shift_id stays).
+   */
+  async reassignShift(input: {
+    shiftId: string;
+    profileId: string;
+    shiftDate: string;
+  }): Promise<ScheduledShift> {
+    const existing = await this.shiftRepo.findOne({
+      where: { shiftId: input.shiftId },
+    });
+    if (!existing) throw new BadRequestException('Shift not found');
+
+    const conflicts = await rawQuery<ConflictRow>(
+      this.ds,
+      `SELECT shift_id FROM scheduled_shifts
+        WHERE profile_id = $1
+          AND shift_date = $2
+          AND shift_id <> $3
+          AND start_time < $5::TIME
+          AND end_time > $4::TIME`,
+      [
+        input.profileId,
+        input.shiftDate,
+        input.shiftId,
+        existing.start_time,
+        existing.end_time,
+      ],
+    );
+    if (conflicts[0])
+      throw new BadRequestException('Shift conflicts with existing schedule');
+
+    const timeOff = await rawQuery<TimeOffIdRow>(
+      this.ds,
+      `SELECT request_id FROM time_off_requests
+        WHERE profile_id = $1
+          AND status = 'approved'
+          AND $2::DATE BETWEEN start_date AND end_date`,
+      [input.profileId, input.shiftDate],
+    );
+    if (timeOff[0])
+      throw new BadRequestException(
+        'Employee has approved time off on this date',
+      );
+
+    existing.profile_id = input.profileId;
+    existing.shift_date = input.shiftDate;
+    return this.shiftRepo.save(existing);
+  }
+
   async publishWeek(dispensaryId: string, weekStart: string): Promise<number> {
     const result = await rawQuery<PublishedShiftRow>(
       this.ds,

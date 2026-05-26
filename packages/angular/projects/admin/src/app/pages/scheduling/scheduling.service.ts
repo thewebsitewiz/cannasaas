@@ -6,6 +6,7 @@ import {
   DriversGQL,
   type DriversQuery,
   PublishWeekScheduleGQL,
+  ReassignShiftGQL,
   TimeOffRequestsGQL,
   type TimeOffRequestsQuery,
   WeekScheduleGQL,
@@ -40,9 +41,11 @@ export class SchedulingService {
   private readonly _weekOffset = signal<number>(0);
   private readonly _reload = signal<number>(0);
   private readonly _publishing = signal<boolean>(false);
+  private readonly _reassignError = signal<string | null>(null);
 
   readonly weekOffset = this._weekOffset.asReadonly();
   readonly publishing = this._publishing.asReadonly();
+  readonly reassignError = this._reassignError.asReadonly();
 
   readonly weekStart = computed(() => getWeekStart(this._weekOffset()));
 
@@ -60,6 +63,23 @@ export class SchedulingService {
 
   reload(): void {
     this._reload.update((n) => n + 1);
+  }
+
+  /**
+   * Move an existing shift to a new date and/or profile (sc-686).
+   * Backend re-checks conflict + approved time-off; UI just sends the
+   * intent and reloads the week so guard rejections surface as toasts.
+   */
+  async reassignShift(shiftId: string, profileId: string, shiftDate: string): Promise<void> {
+    this._reassignError.set(null);
+    try {
+      const gql = this.injector.get(ReassignShiftGQL);
+      await firstValueFrom(gql.mutate({ variables: { shiftId, profileId, shiftDate } }));
+      this.reload();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Reassign failed';
+      this._reassignError.set(msg);
+    }
   }
 
   async publishWeek(): Promise<void> {
