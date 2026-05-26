@@ -98,6 +98,13 @@ class AdjustResult {
   transaction!: InventoryTransactionResult;
 }
 
+@ObjectType('DispensaryInventoryTransactionsPage')
+class DispensaryInventoryTransactionsPage {
+  @Field(() => [DispensaryInventoryTransactionResult])
+  rows!: DispensaryInventoryTransactionResult[];
+  @Field(() => Int) totalCount!: number;
+}
+
 @ObjectType('InventoryLowStockItem')
 class LowStockItem {
   @Field(() => ID) inventoryId!: string;
@@ -196,7 +203,7 @@ export class InventoryResolver {
   }
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
-  @Query(() => [DispensaryInventoryTransactionResult], {
+  @Query(() => DispensaryInventoryTransactionsPage, {
     name: 'inventoryTransactionsByDispensary',
   })
   async inventoryTransactionsByDispensary(
@@ -213,15 +220,22 @@ export class InventoryResolver {
     transactionType: string | null,
     @Args('performedByUserId', { type: () => ID, nullable: true })
     performedByUserId: string | null,
-  ): Promise<DispensaryTxRow[]> {
-    return this.inventory.getDispensaryTransactions(dispensaryId, {
-      limit,
-      offset,
+  ): Promise<{ rows: DispensaryTxRow[]; totalCount: number }> {
+    const filters = {
       since,
       until,
       transactionType,
       performedByUserId,
-    });
+    };
+    const [rows, totalCount] = await Promise.all([
+      this.inventory.getDispensaryTransactions(dispensaryId, {
+        ...filters,
+        limit,
+        offset,
+      }),
+      this.inventory.countDispensaryTransactions(dispensaryId, filters),
+    ]);
+    return { rows, totalCount };
   }
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')

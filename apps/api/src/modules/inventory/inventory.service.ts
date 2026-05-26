@@ -486,6 +486,43 @@ export class InventoryService {
     return this.findById(inventoryId);
   }
 
+  /** sc-690: COUNT(*) over the same WHERE the page uses, so admin gets real
+   *  "page X of Y" pagination. Returned alongside the page rows by the
+   *  resolver — callers that want only counts can call this directly. */
+  async countDispensaryTransactions(
+    dispensaryId: string,
+    filters: Omit<DispensaryTxFilters, 'limit' | 'offset'> = {},
+  ): Promise<number> {
+    const wheres: string[] = ['t.dispensary_id = $1'];
+    const params: unknown[] = [dispensaryId];
+
+    if (filters.since) {
+      params.push(filters.since);
+      wheres.push(`t.created_at >= $${params.length}`);
+    }
+    if (filters.until) {
+      params.push(filters.until);
+      wheres.push(`t.created_at <= $${params.length}`);
+    }
+    if (filters.transactionType) {
+      params.push(filters.transactionType);
+      wheres.push(`t.transaction_type = $${params.length}`);
+    }
+    if (filters.performedByUserId) {
+      params.push(filters.performedByUserId);
+      wheres.push(`t.performed_by_user_id = $${params.length}`);
+    }
+
+    const rows = (await this.ds.query(
+      `SELECT COUNT(*)::int AS count FROM inventory_transactions t
+        WHERE ${wheres.join(' AND ')}`,
+      params,
+    )) as unknown as Array<{ count: number | string }>;
+    const raw = rows[0]?.count;
+    const n = typeof raw === 'number' ? raw : parseInt(String(raw ?? '0'), 10);
+    return Number.isFinite(n) ? n : 0;
+  }
+
   async getDispensaryTransactions(
     dispensaryId: string,
     filters: DispensaryTxFilters = {},
