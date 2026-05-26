@@ -1,12 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
-import {
-  Repository,
-  FindManyOptions,
-  FindOptionsWhere,
-  ILike,
-  DataSource,
-} from 'typeorm';
+import { Repository, FindOptionsWhere, DataSource } from 'typeorm';
 import { Product } from './entities/product.entity';
 import { ProductVariant } from './entities/product-variant.entity';
 import { ProductPricing } from './entities/product-pricing.entity';
@@ -64,25 +58,37 @@ export class ProductsService {
   }
 
   private async _queryProducts(filter: ProductsFilter): Promise<Product[]> {
-    const where: FindOptionsWhere<Product> = {
-      dispensary_id: filter.dispensaryId,
-    };
-    if (filter.isActive !== undefined) where.is_active = filter.isActive;
-    if (filter.productTypeId) where.product_type_id = filter.productTypeId;
-    if (filter.categoryId) where.primary_category_id = filter.categoryId;
-
-    const options: FindManyOptions<Product> = {
-      where: filter.search
-        ? [
-            { ...where, name: ILike(`%${filter.search}%`) },
-            { ...where, description: ILike(`%${filter.search}%`) },
-          ]
-        : where,
-      order: { name: 'ASC' },
-      take: filter.limit ?? 20,
-      skip: filter.offset ?? 0,
-    };
-    return this.productRepo.find(options);
+    const qb = this.productRepo
+      .createQueryBuilder('p')
+      .where('p.dispensary_id = :dispensaryId', {
+        dispensaryId: filter.dispensaryId,
+      });
+    if (filter.isActive !== undefined) {
+      qb.andWhere('p.is_active = :isActive', { isActive: filter.isActive });
+    }
+    if (filter.productTypeId) {
+      qb.andWhere('p.product_type_id = :productTypeId', {
+        productTypeId: filter.productTypeId,
+      });
+    }
+    if (filter.categoryId) {
+      qb.andWhere('p.primary_category_id = :categoryId', {
+        categoryId: filter.categoryId,
+      });
+    }
+    if (filter.search) {
+      qb.andWhere('(p.name ILIKE :search OR p.description ILIKE :search)', {
+        search: `%${filter.search}%`,
+      });
+    }
+    // Admin-defined sort_order first (NULLS LAST), then name as the
+    // historical fallback — products that the operator hasn't manually
+    // reordered keep their alphabetical position (sc-682c).
+    qb.orderBy('p.sort_order', 'ASC', 'NULLS LAST')
+      .addOrderBy('p.name', 'ASC')
+      .take(filter.limit ?? 20)
+      .skip(filter.offset ?? 0);
+    return qb.getMany();
   }
 
   async findById(id: string, dispensaryId?: string): Promise<Product> {
@@ -320,6 +326,28 @@ export class ProductsService {
       })
       .execute();
     return result.affected ?? 0;
+  }
+
+  async setProductsSortOrder(
+    dispensaryId: string,
+    orderedIds: readonly string[],
+  ): Promise<number> {
+    if (orderedIds.length === 0) return 0;
+    // Single UPDATE … CASE statement so we don't fire N queries.
+    // Tenant guard is in the WHERE so a foreign id with the matching
+    // index would be no-oped rather than overwritten.
+    const cases = orderedIds
+      .map((_, idx) => `WHEN id = $${idx + 2} THEN ${idx}`)
+      .join(' ');
+    const inPlaceholders = orderedIds.map((_, idx) => `$${idx + 2}`).join(', ');
+    await this.dataSource.query(
+      `UPDATE products
+         SET sort_order = CASE ${cases} END
+       WHERE dispensary_id = $1
+         AND id IN (${inPlaceholders})`,
+      [dispensaryId, ...orderedIds],
+    );
+    return orderedIds.length;
   }
 
   async deleteProducts(

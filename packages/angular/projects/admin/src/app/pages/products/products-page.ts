@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { type CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { AuthService } from '../../core/auth/auth.service';
@@ -34,7 +42,7 @@ const STRAIN_OPTIONS = ['hybrid', 'sativa', 'indica'] as const;
 @Component({
   selector: 'cs-products-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule],
+  imports: [DragDropModule, ReactiveFormsModule],
   template: `
     <section class="space-y-6">
       <header class="flex items-center justify-between">
@@ -151,6 +159,7 @@ const STRAIN_OPTIONS = ['hybrid', 'sativa', 'indica'] as const;
             <table class="w-full text-sm">
               <thead class="border-b border-(--color-border) bg-(--color-bg)">
                 <tr>
+                  <th class="w-8 px-2 py-3" aria-label="Drag handle column"></th>
                   <th class="w-10 px-3 py-3 text-center">
                     <input
                       type="checkbox"
@@ -178,9 +187,15 @@ const STRAIN_OPTIONS = ['hybrid', 'sativa', 'indica'] as const;
                   </th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-(--color-border)">
-                @for (p of filteredProducts(); track p.id) {
+              <tbody
+                class="divide-y divide-(--color-border)"
+                cdkDropList
+                (cdkDropListDropped)="onProductDrop($event)"
+              >
+                @for (p of displayProducts(); track p.id) {
                   <tr
+                    cdkDrag
+                    [cdkDragData]="p"
                     class="cursor-pointer transition-colors"
                     [class]="
                       selectedId() === p.id
@@ -189,6 +204,14 @@ const STRAIN_OPTIONS = ['hybrid', 'sativa', 'indica'] as const;
                     "
                     (click)="onSelect(p)"
                   >
+                    <td
+                      class="w-8 cursor-grab px-2 py-4 text-center text-(--color-text-muted)"
+                      (click)="$event.stopPropagation()"
+                      cdkDragHandle
+                      [attr.aria-label]="'Drag handle for ' + p.name"
+                    >
+                      ⋮⋮
+                    </td>
                     <td class="w-10 px-3 py-4 text-center" (click)="$event.stopPropagation()">
                       <input
                         type="checkbox"
@@ -736,6 +759,19 @@ export class ProductsPage {
     retailPrice: string;
   }>({ name: '', quantityPerUnit: '', retailPrice: '' });
 
+  /**
+   * Mirrors `filteredProducts()` into a local mutable signal so CDK
+   * drag-drop can reorder rows optimistically (sc-682c). An effect
+   * resyncs whenever the server-side list changes.
+   */
+  protected readonly displayProducts = signal<readonly Product[]>([]);
+
+  constructor() {
+    effect(() => {
+      this.displayProducts.set(this.filteredProducts());
+    });
+  }
+
   protected readonly selectedId = computed(() => this.selected()?.id ?? null);
   protected readonly showPanel = computed(() => this.panelMode() !== null);
 
@@ -1067,5 +1103,20 @@ export class ProductsPage {
     if (!dispensaryId) return;
     await this.svc.deleteProducts(dispensaryId, ids);
     this.onClearSelection();
+  }
+
+  // ── Drag-to-reorder (sc-682c) ─────────────────────────────────────────
+
+  protected async onProductDrop(event: CdkDragDrop<readonly Product[]>): Promise<void> {
+    if (event.previousIndex === event.currentIndex) return;
+    const dispensaryId = this.auth.user()?.dispensaryId;
+    if (!dispensaryId) return;
+    const next = [...this.displayProducts()];
+    moveItemInArray(next, event.previousIndex, event.currentIndex);
+    this.displayProducts.set(next);
+    await this.svc.setProductsSortOrder(
+      dispensaryId,
+      next.map((p) => p.id),
+    );
   }
 }

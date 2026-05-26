@@ -78,6 +78,13 @@ export class Product {
   enriched_at?: Date;
 
   @Field() @Column({ length: 255 }) name!: string;
+  /**
+   * Admin-defined manual sort order for the products list (sc-682c).
+   * NULL means "use the default name sort"; populated values sort first.
+   */
+  @Field(() => Int, { name: 'sortOrder', nullable: true })
+  @Column({ type: 'integer', nullable: true })
+  sort_order?: number;
   @Field({ nullable: true })
   @Column({ type: 'text', nullable: true })
   description?: string;

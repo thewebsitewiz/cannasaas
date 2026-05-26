@@ -60,3 +60,7 @@ mutation SetProductsActive(
 mutation DeleteProducts($dispensaryId: ID!, $productIds: [ID!]!) {
   deleteProducts(dispensaryId: $dispensaryId, productIds: $productIds)
 }
+
+mutation SetProductsSortOrder($dispensaryId: ID!, $orderedIds: [ID!]!) {
+  setProductsSortOrder(dispensaryId: $dispensaryId, orderedIds: $orderedIds)
+}
