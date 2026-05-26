@@ -1,4 +1,13 @@
-import { Resolver, Query, Mutation, Args, ID, Int } from '@nestjs/graphql';
+import {
+  Field,
+  ObjectType,
+  Resolver,
+  Query,
+  Mutation,
+  Args,
+  ID,
+  Int,
+} from '@nestjs/graphql';
 import { ForbiddenException } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -20,6 +29,7 @@ import { BulkTagResult } from './dto/bulk-tag-result.type';
 import { MetrcSaleResult } from './dto/metrc-sale-result.type';
 import { FailedSyncDashboard } from './dto/failed-sync.type';
 import { MetrcSyncQueueStats } from './dto/queue-stats.type';
+import { MetrcLicenseValidatorService } from './metrc-license-validator.service';
 import { MetrcSyncQueueService } from './queue/metrc-sync.queue-service';
 import { TagPackageLabelInput } from './dto/tag-package-label.input';
 import { SetMetrcCategoryInput } from './dto/set-metrc-category.input';
@@ -27,13 +37,32 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtPayload } from '../auth/strategies/jwt.strategy';
 
+@ObjectType()
+class MetrcLicenseValidationResult {
+  @Field() valid!: boolean;
+  @Field({ nullable: true }) reason?: string;
+  @Field({ nullable: true }) licenseType?: string;
+}
+
 @Resolver(() => MetrcCredential)
 export class MetrcResolver {
   constructor(
     private readonly metrc: MetrcService,
     private readonly syncQueue: MetrcSyncQueueService,
+    private readonly licenseValidator: MetrcLicenseValidatorService,
     @InjectDataSource() private dataSource: DataSource,
   ) {}
+
+  @Roles('dispensary_admin', 'org_admin', 'super_admin')
+  @Mutation(() => MetrcLicenseValidationResult, {
+    name: 'validateMetrcLicense',
+  })
+  validateMetrcLicense(
+    @Args('licenseNumber') licenseNumber: string,
+    @Args('state') state: string,
+  ): MetrcLicenseValidationResult {
+    return this.licenseValidator.validate(licenseNumber, state);
+  }
 
   // ── Credentials ──────────────────────────────────────────────────────────
 

@@ -4,6 +4,8 @@ import {
   CreateVendorGQL,
   PurchaseOrdersGQL,
   type PurchaseOrdersQuery,
+  ValidateMetrcLicenseGQL,
+  type ValidateMetrcLicenseMutation,
   type VendorsQuery,
   VendorStatsGQL,
   type VendorStatsQuery,
@@ -27,7 +29,11 @@ export interface CreateVendorInput {
   readonly paymentTerms?: string | null;
   readonly contactName?: string | null;
   readonly contactTitle?: string | null;
+  readonly licenseNumber?: string | null;
+  readonly licenseState?: string | null;
 }
+
+export type LicenseValidation = ValidateMetrcLicenseMutation['validateMetrcLicense'];
 
 /**
  * Wraps the vendor queries + `CreateVendor` mutation. The purchase-
@@ -69,6 +75,8 @@ export class VendorsService {
             paymentTerms: input.paymentTerms ?? null,
             contactName: input.contactName ?? null,
             contactTitle: input.contactTitle ?? null,
+            licenseNumber: input.licenseNumber ?? null,
+            licenseState: input.licenseState ?? null,
           },
         }),
       );
@@ -76,6 +84,19 @@ export class VendorsService {
     } finally {
       this._saving.set(false);
     }
+  }
+
+  async validateLicense(licenseNumber: string, state: string): Promise<LicenseValidation> {
+    const gql = this.injector.get(ValidateMetrcLicenseGQL);
+    const result = await firstValueFrom(gql.mutate({ variables: { licenseNumber, state } }));
+    return (
+      result.data?.validateMetrcLicense ?? {
+        __typename: 'MetrcLicenseValidationResult',
+        valid: false,
+        reason: 'No response from API.',
+        licenseType: null,
+      }
+    );
   }
 
   readonly vendorsResource = rxResource({

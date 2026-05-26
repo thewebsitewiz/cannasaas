@@ -48,6 +48,8 @@ mutation CreateVendor(
   $paymentTerms: String
   $contactName: String
   $contactTitle: String
+  $licenseNumber: String
+  $licenseState: String
 ) {
   createVendor(
     name: $name
@@ -58,8 +60,18 @@ mutation CreateVendor(
     paymentTerms: $paymentTerms
     contactName: $contactName
     contactTitle: $contactTitle
+    licenseNumber: $licenseNumber
+    licenseState: $licenseState
   ) {
     vendor_id
     name
+  }
+}
+
+mutation ValidateMetrcLicense($licenseNumber: String!, $state: String!) {
+  validateMetrcLicense(licenseNumber: $licenseNumber, state: $state) {
+    valid
+    reason
+    licenseType
   }
 }

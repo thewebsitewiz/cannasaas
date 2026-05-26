@@ -1463,6 +1463,13 @@ export type MetrcCredential = {
   validationError?: Maybe<Scalars['String']['output']>;
 };
 
+export type MetrcLicenseValidationResult = {
+  __typename?: 'MetrcLicenseValidationResult';
+  licenseType?: Maybe<Scalars['String']['output']>;
+  reason?: Maybe<Scalars['String']['output']>;
+  valid: Scalars['Boolean']['output'];
+};
+
 export type MetrcManifest = {
   __typename?: 'MetrcManifest';
   created_at: Scalars['DateTime']['output'];
@@ -1680,6 +1687,7 @@ export type Mutation = {
   upsertPosIntegration: PosIntegration;
   validateBiotrackCredential: BiotrackValidationResult;
   validateMetrcCredential: CredentialValidationResult;
+  validateMetrcLicense: MetrcLicenseValidationResult;
   verifyAge: AgeVerifyResult;
   verifyCertification: EmployeeCertification;
   verifyIdentification: IdVerificationResult;
@@ -2472,6 +2480,11 @@ export type MutationValidateBiotrackCredentialArgs = {
 
 export type MutationValidateMetrcCredentialArgs = {
   dispensaryId: Scalars['ID']['input'];
+};
+
+export type MutationValidateMetrcLicenseArgs = {
+  licenseNumber: Scalars['String']['input'];
+  state: Scalars['String']['input'];
 };
 
 export type MutationVerifyAgeArgs = {
@@ -6413,11 +6426,28 @@ export type CreateVendorMutationVariables = Exact<{
   paymentTerms?: InputMaybe<Scalars['String']['input']>;
   contactName?: InputMaybe<Scalars['String']['input']>;
   contactTitle?: InputMaybe<Scalars['String']['input']>;
+  licenseNumber?: InputMaybe<Scalars['String']['input']>;
+  licenseState?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 export type CreateVendorMutation = {
   __typename?: 'Mutation';
   createVendor: { __typename?: 'Vendor'; vendor_id: string; name: string };
+};
+
+export type ValidateMetrcLicenseMutationVariables = Exact<{
+  licenseNumber: Scalars['String']['input'];
+  state: Scalars['String']['input'];
+}>;
+
+export type ValidateMetrcLicenseMutation = {
+  __typename?: 'Mutation';
+  validateMetrcLicense: {
+    __typename?: 'MetrcLicenseValidationResult';
+    valid: boolean;
+    reason?: string | null;
+    licenseType?: string | null;
+  };
 };
 
 export type VerifyAgeMutationVariables = Exact<{
@@ -9235,6 +9265,8 @@ export const CreateVendorDocument = gql`
     $paymentTerms: String
     $contactName: String
     $contactTitle: String
+    $licenseNumber: String
+    $licenseState: String
   ) {
     createVendor(
       name: $name
@@ -9245,6 +9277,8 @@ export const CreateVendorDocument = gql`
       paymentTerms: $paymentTerms
       contactName: $contactName
       contactTitle: $contactTitle
+      licenseNumber: $licenseNumber
+      licenseState: $licenseState
     ) {
       vendor_id
       name
@@ -9260,6 +9294,29 @@ export class CreateVendorGQL extends Apollo.Mutation<
   CreateVendorMutationVariables
 > {
   override document = CreateVendorDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const ValidateMetrcLicenseDocument = gql`
+  mutation ValidateMetrcLicense($licenseNumber: String!, $state: String!) {
+    validateMetrcLicense(licenseNumber: $licenseNumber, state: $state) {
+      valid
+      reason
+      licenseType
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class ValidateMetrcLicenseGQL extends Apollo.Mutation<
+  ValidateMetrcLicenseMutation,
+  ValidateMetrcLicenseMutationVariables
+> {
+  override document = ValidateMetrcLicenseDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);
