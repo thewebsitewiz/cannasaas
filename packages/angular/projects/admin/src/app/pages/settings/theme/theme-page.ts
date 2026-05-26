@@ -33,12 +33,61 @@ const EMPTY_COLORS: ThemeColors = {
 const DEFAULT_PRESET_ID = 'casual';
 
 /**
- * Storefront theme designer. Mirrors the React `ThemePage` data
- * surface — preset gallery + per-field color editor + isDark toggle
- * + Save mutation. The live-preview iframe and CSS export from the
- * React UX are deferred (the storefront's preview URL routing is
- * dispensary-specific and the export pre-dates the unified token
- * system).
+ * Maps editor `ThemeColors` keys to the CSS custom-property names used
+ * by storefront theme files (`packages/ui/src/themes/theme.<id>.css`).
+ * sc-687: shared by the inline preview surface (applies vars to a
+ * wrapper element) and the "Download theme.css" exporter.
+ */
+const CSS_VAR_MAP: Record<keyof Omit<ThemeColors, 'isDark'>, string> = {
+  primary: '--color-primary',
+  secondary: '--color-primary-light',
+  accent: '--color-accent',
+  bgPrimary: '--color-bg',
+  bgSecondary: '--color-bg-alt',
+  bgCard: '--color-surface',
+  textPrimary: '--color-text',
+  textSecondary: '--color-text-secondary',
+  sidebarBg: '--color-sidebar-bg',
+  sidebarText: '--color-sidebar-text',
+  success: '--color-success',
+  warning: '--color-warning',
+  error: '--color-error',
+  info: '--color-info',
+};
+
+export function buildThemeCss(themeId: string, colors: ThemeColors): string {
+  const safeId = (themeId || 'custom').replace(/[^a-z0-9-]+/gi, '-').toLowerCase();
+  const lines: string[] = [
+    '/**',
+    ' * GreenStack Theme: ' + safeId,
+    ' * Exported from the admin theme designer (sc-687).',
+    ' * Drop into packages/ui/src/themes/ to ship as a built-in theme.',
+    ' */',
+    ":root[data-theme='" + safeId + "'] {",
+  ];
+  for (const [key, varName] of Object.entries(CSS_VAR_MAP) as Array<
+    [keyof Omit<ThemeColors, 'isDark'>, string]
+  >) {
+    const value = (colors as unknown as Record<string, string>)[key];
+    lines.push('  ' + varName + ': ' + value + ';');
+  }
+  lines.push('  color-scheme: ' + (colors.isDark ? 'dark' : 'light') + ';');
+  lines.push('}');
+  lines.push('');
+  return lines.join('\n');
+}
+
+/**
+ * Storefront theme designer. Preset gallery + per-field color editor
+ * + isDark toggle + Save mutation, plus (sc-687) an inline live
+ * preview surface that reflects edits in real time via CSS custom
+ * properties and a "Download CSS" exporter that emits a drop-in
+ * `theme.<id>.css` file for `packages/ui/src/themes/`.
+ *
+ * Iframe-based preview was considered and deferred — see sc-687
+ * shipped comment. The inline surface satisfies the 100ms acceptance
+ * criterion without adding cross-origin routing or a preview-only
+ * storefront route.
  *
  * Admin's CLAUDE.md prohibits per-tenant theme injection *inside*
  * the admin app itself; this page configures the **storefront's**
@@ -66,6 +115,14 @@ const DEFAULT_PRESET_ID = 'casual';
           </p>
         </div>
         <div class="flex gap-2">
+          <button
+            type="button"
+            (click)="onExportCss()"
+            class="rounded-lg border border-(--color-border) px-3 py-2 text-xs font-medium text-(--color-text-secondary) hover:text-(--color-text)"
+            aria-label="Download theme CSS"
+          >
+            Download CSS
+          </button>
           <button
             type="button"
             (click)="onResetToActivePreset()"
@@ -213,6 +270,102 @@ const DEFAULT_PRESET_ID = 'casual';
             }
           </div>
         </div>
+
+        <!-- Live preview surface (sc-687). Picks up the in-flight color
+             edits via CSS custom properties scoped to the wrapper, so
+             every keystroke re-paints without a fetch or reload. -->
+        <div
+          class="rounded-xl border border-(--color-border) bg-(--color-surface) p-4"
+          aria-label="Live storefront preview"
+        >
+          <h2 class="mb-3 text-xs font-bold uppercase tracking-wider text-(--color-text-muted)">
+            Live preview
+          </h2>
+          <div
+            data-testid="theme-preview-surface"
+            [attr.style]="previewVarsStyle()"
+            class="overflow-hidden rounded-xl border"
+            style="
+              border-color: var(--cs-preview-border, #e5e5e5);
+              background: var(--color-bg);
+              color: var(--color-text);
+            "
+          >
+            <header
+              class="flex items-center justify-between px-4 py-3"
+              style="background: var(--color-sidebar-bg); color: var(--color-sidebar-text);"
+            >
+              <span class="text-sm font-bold">Acme Dispensary</span>
+              <button
+                type="button"
+                tabindex="-1"
+                class="rounded-full px-3 py-1 text-xs font-bold"
+                style="background: var(--color-accent); color: #fff;"
+              >
+                Cart (2)
+              </button>
+            </header>
+            <div class="px-4 py-6 text-sm" style="background: var(--color-bg-alt);">
+              <p
+                class="text-xs uppercase tracking-wider"
+                style="color: var(--color-text-secondary);"
+              >
+                Featured
+              </p>
+              <h3 class="mt-1 text-lg font-bold" style="color: var(--color-text);">
+                Fresh drop · Indoor flower
+              </h3>
+              <p class="mt-1 text-xs" style="color: var(--color-text-secondary);">
+                Sample storefront surface — colors mirror the edit set above.
+              </p>
+            </div>
+            <div class="grid grid-cols-1 gap-3 px-4 py-4 sm:grid-cols-2">
+              <div
+                class="rounded-lg p-3"
+                style="background: var(--color-surface); color: var(--color-text);"
+              >
+                <p class="text-sm font-semibold">Northern Lights · 3.5g</p>
+                <p class="text-xs" style="color: var(--color-text-secondary);">Indica · 24% THC</p>
+                <div class="mt-2 flex items-center justify-between">
+                  <span class="text-base font-bold" style="color: var(--color-primary);">$45</span>
+                  <button
+                    type="button"
+                    tabindex="-1"
+                    class="rounded-full px-3 py-1 text-xs font-bold text-white"
+                    style="background: var(--color-primary);"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+              <div
+                class="rounded-lg p-3"
+                style="background: var(--color-surface); color: var(--color-text);"
+              >
+                <p class="text-sm font-semibold">Sour Diesel · 1g pre-roll</p>
+                <p class="text-xs" style="color: var(--color-text-secondary);">Sativa · 22% THC</p>
+                <div class="mt-2 flex items-center justify-between">
+                  <span class="text-base font-bold" style="color: var(--color-primary);">$12</span>
+                  <button
+                    type="button"
+                    tabindex="-1"
+                    class="rounded-full px-3 py-1 text-xs font-bold text-white"
+                    style="background: var(--color-primary);"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div
+              class="flex items-center justify-between px-4 py-3 text-xs"
+              style="background: var(--color-bg); color: var(--color-text-secondary);"
+            >
+              <span>Status: <span style="color: var(--color-success);">Open</span></span>
+              <span>Closes 9pm</span>
+            </div>
+          </div>
+        </div>
       }
     </section>
   `,
@@ -248,6 +401,23 @@ export class ThemePage {
   protected readonly errorMessage = computed(() => {
     const err = this.error();
     return err instanceof Error ? err.message : 'Unable to load theme.';
+  });
+
+  /**
+   * Inline `style` attribute for the preview wrapper. We can't bind to
+   * arbitrary CSS-var names via [style.--x] without DomSanitizer fuss,
+   * so we build the declarations once per signal change and let the
+   * browser parse them on assignment.
+   */
+  protected readonly previewVarsStyle = computed<string>(() => {
+    const c = this.local();
+    const parts: string[] = [];
+    for (const [key, varName] of Object.entries(CSS_VAR_MAP) as Array<
+      [keyof Omit<ThemeColors, 'isDark'>, string]
+    >) {
+      parts.push(varName + ':' + (c as unknown as Record<string, string>)[key]);
+    }
+    return parts.join(';');
   });
 
   protected readonly isDirty = computed(() => {
@@ -324,6 +494,19 @@ export class ThemePage {
       this.local.set(themeColorsFromConfig(server));
       this.activePreset.set(server.preset || DEFAULT_PRESET_ID);
     }
+  }
+
+  protected onExportCss(): void {
+    const css = buildThemeCss(this.activePreset(), this.local());
+    const blob = new Blob([css], { type: 'text/css' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'theme.' + (this.activePreset() || 'custom') + '.css';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   }
 
   protected async onSave(): Promise<void> {

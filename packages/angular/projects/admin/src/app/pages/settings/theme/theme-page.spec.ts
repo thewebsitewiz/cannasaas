@@ -4,8 +4,9 @@ import { provideRouter } from '@angular/router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AuthService } from '../../../core/auth/auth.service';
-import { ThemePage } from './theme-page';
+import { ThemePage, buildThemeCss } from './theme-page';
 import { ThemeService, type ThemeConfig } from './theme.service';
+import type { ThemeColors } from './theme-presets';
 
 interface FakeArgs {
   readonly config?: ThemeConfig | null;
@@ -228,5 +229,105 @@ describe('ThemePage', () => {
       'button[aria-label="Apply preset Casual Earthy"][aria-pressed="true"]',
     );
     expect(stillCasual).toBeNull();
+  });
+
+  // ── Live preview + CSS export (sc-687) ─────────────────────────────────────
+
+  it('renders the live preview surface with the current colors as CSS vars', () => {
+    const { fixture } = configure({ config: cfg() });
+    const surface = (fixture.nativeElement as HTMLElement).querySelector(
+      '[data-testid="theme-preview-surface"]',
+    ) as HTMLElement;
+    expect(surface).not.toBeNull();
+    const styleAttr = surface.getAttribute('style') ?? '';
+    expect(styleAttr).toContain('--color-primary:#2a6640');
+    expect(styleAttr).toContain('--color-bg:#f7f2e7');
+    expect(styleAttr).toContain('--color-sidebar-bg:#1e4b31');
+  });
+
+  it('preview vars react to color edits without a server round-trip', () => {
+    const { fixture } = configure({ config: cfg() });
+    const colorInput = (fixture.nativeElement as HTMLElement).querySelector(
+      'input[type="color"][aria-label="Primary color"]',
+    ) as HTMLInputElement;
+    colorInput.value = '#ff00aa';
+    colorInput.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    const surface = (fixture.nativeElement as HTMLElement).querySelector(
+      '[data-testid="theme-preview-surface"]',
+    ) as HTMLElement;
+    expect(surface.getAttribute('style') ?? '').toContain('--color-primary:#ff00aa');
+  });
+
+  it('Download CSS button triggers an anchor download with theme.<preset>.css', () => {
+    const { fixture } = configure({ config: cfg({ preset: 'modern' }) });
+    const clicks: { name: string; download: string }[] = [];
+    const origCreate = document.createElement.bind(document);
+    const createSpy = vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+      const el = origCreate(tag);
+      if (tag === 'a') {
+        const anchor = el as HTMLAnchorElement;
+        anchor.click = () => {
+          clicks.push({ name: anchor.tagName, download: anchor.download });
+        };
+      }
+      return el;
+    });
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:fake');
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+
+    const btn = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button')).find(
+      (b) => b.getAttribute('aria-label') === 'Download theme CSS',
+    ) as HTMLButtonElement;
+    btn.click();
+
+    expect(clicks).toHaveLength(1);
+    expect(clicks[0].download).toBe('theme.modern.css');
+    createSpy.mockRestore();
+  });
+});
+
+describe('buildThemeCss (sc-687)', () => {
+  const sample: ThemeColors = {
+    primary: '#2a6640',
+    secondary: '#5e9b73',
+    accent: '#c47820',
+    bgPrimary: '#f7f2e7',
+    bgSecondary: '#f0ead8',
+    bgCard: '#ffffff',
+    textPrimary: '#1a1a16',
+    textSecondary: '#3a3a30',
+    sidebarBg: '#1e4b31',
+    sidebarText: '#5e9b73',
+    success: '#27ae60',
+    warning: '#d97706',
+    error: '#c0392b',
+    info: '#2e86ab',
+    isDark: false,
+  };
+
+  it('emits a :root[data-theme] block keyed by the preset id', () => {
+    const css = buildThemeCss('casual', sample);
+    expect(css).toContain(":root[data-theme='casual'] {");
+  });
+
+  it('includes every mapped CSS var with the editor color value', () => {
+    const css = buildThemeCss('casual', sample);
+    expect(css).toContain('--color-primary: #2a6640');
+    expect(css).toContain('--color-bg: #f7f2e7');
+    expect(css).toContain('--color-sidebar-bg: #1e4b31');
+    expect(css).toContain('--color-accent: #c47820');
+    expect(css).toContain('--color-text: #1a1a16');
+  });
+
+  it('emits color-scheme matching isDark', () => {
+    expect(buildThemeCss('casual', { ...sample, isDark: true })).toContain('color-scheme: dark');
+    expect(buildThemeCss('casual', { ...sample, isDark: false })).toContain('color-scheme: light');
+  });
+
+  it('sanitizes weird preset ids to a safe slug', () => {
+    const css = buildThemeCss('Custom Theme!', sample);
+    expect(css).toContain(":root[data-theme='custom-theme-'] {");
   });
 });
