@@ -3,6 +3,8 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { AuthService } from '../../core/auth/auth.service';
+import { CsvDownloadService } from '../../core/csv/csv-download.service';
 import { InventoryAuditPage } from './inventory-audit-page';
 import { type AuditFilters, type AuditRow, InventoryAuditService } from './inventory-audit.service';
 
@@ -14,6 +16,7 @@ interface FakeArgs {
   readonly patchFilters?: ReturnType<typeof vi.fn>;
   readonly setPageOffset?: ReturnType<typeof vi.fn>;
   readonly reset?: ReturnType<typeof vi.fn>;
+  readonly csvDownload?: ReturnType<typeof vi.fn>;
 }
 
 const DEFAULT_FILTERS: AuditFilters = {
@@ -63,13 +66,29 @@ function makeSvc(args: FakeArgs): InventoryAuditService {
 
 function configure(args: FakeArgs = {}) {
   const svc = makeSvc(args);
+  const csvDownload = args.csvDownload ?? vi.fn().mockResolvedValue(undefined);
   TestBed.configureTestingModule({
     imports: [InventoryAuditPage],
-    providers: [provideRouter([]), { provide: InventoryAuditService, useValue: svc }],
+    providers: [
+      provideRouter([]),
+      { provide: InventoryAuditService, useValue: svc },
+      {
+        provide: AuthService,
+        useValue: {
+          user: () => ({
+            id: 'u-1',
+            email: 'a@a.com',
+            role: 'dispensary_admin',
+            dispensaryId: 'disp-1',
+          }),
+        },
+      },
+      { provide: CsvDownloadService, useValue: { download: csvDownload } },
+    ],
   });
   const fixture = TestBed.createComponent(InventoryAuditPage);
   fixture.detectChanges();
-  return { fixture, svc };
+  return { fixture, svc, csvDownload };
 }
 
 describe('InventoryAuditPage', () => {
@@ -192,5 +211,61 @@ describe('InventoryAuditPage', () => {
     });
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(text).toContain('order:order-12');
+  });
+
+  // ── CSV download (sc-689) ──────────────────────────────────────────────────
+
+  it('renders the Download CSV button', () => {
+    const { fixture } = configure();
+    const btn = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Download audit log as CSV"]',
+    );
+    expect(btn).not.toBeNull();
+  });
+
+  it('Download CSV calls CsvDownloadService with the audit export path + current filters', async () => {
+    const csvDownload = vi.fn().mockResolvedValue(undefined);
+    const { fixture } = configure({
+      filters: {
+        since: '2026-05-01T00:00:00.000Z',
+        until: '2026-05-22T23:59:59.999Z',
+        transactionType: 'sale',
+      },
+      csvDownload,
+    });
+    const btn = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Download audit log as CSV"]',
+    ) as HTMLButtonElement;
+    btn.click();
+    await fixture.whenStable();
+
+    expect(csvDownload).toHaveBeenCalledTimes(1);
+    const call = csvDownload.mock.calls[0][0] as {
+      path: string;
+      params: Record<string, string>;
+      suggestedFilename: string;
+    };
+    expect(call.path).toBe('/inventory/audit/export');
+    expect(call.params).toEqual({
+      dispensaryId: 'disp-1',
+      since: '2026-05-01T00:00:00.000Z',
+      until: '2026-05-22T23:59:59.999Z',
+      transactionType: 'sale',
+    });
+    expect(call.suggestedFilename).toBe('inventory-audit-2026-05-01-to-2026-05-22.csv');
+  });
+
+  it('omits empty filters from the request params', async () => {
+    const csvDownload = vi.fn().mockResolvedValue(undefined);
+    const { fixture } = configure({ csvDownload });
+    const btn = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Download audit log as CSV"]',
+    ) as HTMLButtonElement;
+    btn.click();
+    await fixture.whenStable();
+
+    expect(csvDownload).toHaveBeenCalledTimes(1);
+    const call = csvDownload.mock.calls[0][0] as { params: Record<string, string> };
+    expect(call.params).toEqual({ dispensaryId: 'disp-1' });
   });
 });
