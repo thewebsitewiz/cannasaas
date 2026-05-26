@@ -7,6 +7,7 @@ import { ComplianceLog } from './entities/compliance-log.entity';
 import { RegulatoryLibrary } from './entities/regulatory-library.entity';
 import { MetrcService } from './metrc.service';
 import { MetrcApiClient } from './metrc-api.client';
+import { MetrcLicenseValidatorService } from './metrc-license-validator.service';
 import { MetrcResolver } from './metrc.resolver';
 import { MetrcSyncProcessor } from './queue/metrc-sync.processor';
 import { MetrcSyncQueueService } from './queue/metrc-sync.queue-service';
@@ -27,6 +28,7 @@ import { MetrcInventorySyncCron } from './cron/metrc-inventory-sync.cron';
   providers: [
     MetrcService,
     MetrcApiClient,
+    MetrcLicenseValidatorService,
     MetrcResolver,
     MetrcSyncProcessor,
     MetrcSyncQueueService,

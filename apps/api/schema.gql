@@ -1379,6 +1379,12 @@ type MetrcManifestItem {
   variantId: ID!
 }
 
+type MetrcLicenseValidationResult {
+  licenseType: String
+  reason: String
+  valid: Boolean!
+}
+
 type MetrcSaleResult {
   message: String
   metrcReceiptId: String
@@ -1564,6 +1570,7 @@ type Mutation {
   upsertPosIntegration(credentials: JSON!, dispensaryExternalId: String, dispensaryId: ID!, provider: String!): PosIntegration!
   validateBiotrackCredential(dispensaryId: ID!): BiotrackValidationResult!
   validateMetrcCredential(dispensaryId: ID!): CredentialValidationResult!
+  validateMetrcLicense(licenseNumber: String!, state: String!): MetrcLicenseValidationResult!
   verifyAge(dateOfBirth: String!, dispensaryId: ID, idExpiration: String, idNumberLast4: String, idState: String, idType: String!, method: String = "self_declared"): AgeVerifyResult!
   verifyCertification(certificationId: ID!): EmployeeCertification!
   verifyIdentification(customerId: ID, dispensaryId: ID!, image: String!): IdVerificationResult!

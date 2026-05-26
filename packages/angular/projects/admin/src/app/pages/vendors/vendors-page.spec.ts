@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { VendorsPage } from './vendors-page';
 import {
+  type LicenseValidation,
   VendorsService,
   type PurchaseOrder,
   type Vendor,
@@ -21,6 +22,7 @@ interface FakeArgs {
   readonly purchaseOrdersLoading?: boolean;
   readonly create?: ReturnType<typeof vi.fn>;
   readonly togglePurchaseOrders?: ReturnType<typeof vi.fn>;
+  readonly validateLicense?: ReturnType<typeof vi.fn>;
 }
 
 function makeSvc(args: FakeArgs): VendorsService {
@@ -35,6 +37,14 @@ function makeSvc(args: FakeArgs): VendorsService {
     purchaseOrdersLoading: signal<boolean>(args.purchaseOrdersLoading ?? false).asReadonly(),
     create: args.create ?? vi.fn().mockResolvedValue(undefined),
     togglePurchaseOrders: args.togglePurchaseOrders ?? vi.fn(),
+    validateLicense:
+      args.validateLicense ??
+      vi.fn().mockResolvedValue({
+        __typename: 'MetrcLicenseValidationResult',
+        valid: true,
+        licenseType: 'MED',
+        reason: null,
+      } satisfies LicenseValidation),
   } as unknown as VendorsService;
 }
 
@@ -237,5 +247,166 @@ describe('VendorsPage', () => {
     expect(callArgs.vendorType).toBe('cultivator');
     expect(callArgs.email).toBe('sales@x.com');
     expect(callArgs.phone).toBeNull();
+  });
+
+  // ── Metrc license validation (sc-685) ─────────────────────────────────
+
+  const openForm = (f: ReturnType<typeof configure>['fixture']): HTMLElement => {
+    const root = f.nativeElement as HTMLElement;
+    const toggle = Array.from(root.querySelectorAll('button')).find((b) =>
+      (b.textContent ?? '').includes('+ New vendor'),
+    ) as HTMLButtonElement;
+    toggle.click();
+    f.detectChanges();
+    return root;
+  };
+
+  it('renders the Metrc license input on the create form', () => {
+    const { fixture } = configure({ stats: stats() });
+    const root = openForm(fixture);
+    expect(root.querySelector('input[aria-label="Vendor Metrc license number"]')).not.toBeNull();
+  });
+
+  it('blur with a valid license shows the green check', async () => {
+    const validateLicense = vi.fn().mockResolvedValue({
+      __typename: 'MetrcLicenseValidationResult',
+      valid: true,
+      licenseType: 'MED',
+      reason: null,
+    } satisfies LicenseValidation);
+    const { fixture } = configure({ stats: stats(), validateLicense });
+    const root = openForm(fixture);
+    const input = root.querySelector(
+      'input[aria-label="Vendor Metrc license number"]',
+    ) as HTMLInputElement;
+    input.value = 'NY-MED-123456';
+    input.dispatchEvent(new Event('input'));
+    input.dispatchEvent(new Event('blur'));
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(validateLicense).toHaveBeenCalledWith('NY-MED-123456', 'NY');
+    expect(root.querySelector('[aria-label="License valid"]')).not.toBeNull();
+  });
+
+  it('blur with a bad license shows the red X + reason', async () => {
+    const validateLicense = vi.fn().mockResolvedValue({
+      __typename: 'MetrcLicenseValidationResult',
+      valid: false,
+      licenseType: null,
+      reason: 'License "GARBAGE" does not match the expected NY pattern.',
+    } satisfies LicenseValidation);
+    const { fixture } = configure({ stats: stats(), validateLicense });
+    const root = openForm(fixture);
+    const input = root.querySelector(
+      'input[aria-label="Vendor Metrc license number"]',
+    ) as HTMLInputElement;
+    input.value = 'garbage';
+    input.dispatchEvent(new Event('input'));
+    input.dispatchEvent(new Event('blur'));
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(root.querySelector('[aria-label="License invalid"]')).not.toBeNull();
+    expect(root.querySelector('[aria-label="License validation error"]')?.textContent).toMatch(
+      /does not match/,
+    );
+  });
+
+  it('blur on empty license is a no-op (no validation call)', async () => {
+    const validateLicense = vi.fn();
+    const { fixture } = configure({ stats: stats(), validateLicense });
+    const root = openForm(fixture);
+    const input = root.querySelector(
+      'input[aria-label="Vendor Metrc license number"]',
+    ) as HTMLInputElement;
+    input.dispatchEvent(new Event('blur'));
+    await fixture.whenStable();
+    expect(validateLicense).not.toHaveBeenCalled();
+  });
+
+  it('Create button is disabled while license validation is in flight', async () => {
+    let resolveValidation: (v: LicenseValidation) => void = () => undefined;
+    const validationPromise = new Promise<LicenseValidation>((resolve) => {
+      resolveValidation = resolve;
+    });
+    const validateLicense = vi.fn().mockReturnValue(validationPromise);
+    const { fixture } = configure({ stats: stats(), validateLicense });
+    const root = openForm(fixture);
+    const name = root.querySelector('input[aria-label="Vendor name"]') as HTMLInputElement;
+    name.value = 'Vendor';
+    name.dispatchEvent(new Event('input'));
+    const input = root.querySelector(
+      'input[aria-label="Vendor Metrc license number"]',
+    ) as HTMLInputElement;
+    input.value = 'NY-MED-123456';
+    input.dispatchEvent(new Event('input'));
+    input.dispatchEvent(new Event('blur'));
+    fixture.detectChanges();
+    const submitBtn = Array.from(root.querySelectorAll('button')).find((b) =>
+      (b.textContent ?? '').trim().startsWith('Create vendor'),
+    ) as HTMLButtonElement;
+    expect(submitBtn.disabled).toBe(true);
+    resolveValidation({
+      __typename: 'MetrcLicenseValidationResult',
+      valid: true,
+      licenseType: 'MED',
+      reason: null,
+    } as LicenseValidation);
+    await fixture.whenStable();
+  });
+
+  it('Create blocks when license is invalid', async () => {
+    const create = vi.fn().mockResolvedValue(undefined);
+    const validateLicense = vi.fn().mockResolvedValue({
+      __typename: 'MetrcLicenseValidationResult',
+      valid: false,
+      licenseType: null,
+      reason: 'nope',
+    } satisfies LicenseValidation);
+    const { fixture } = configure({ stats: stats(), create, validateLicense });
+    const root = openForm(fixture);
+    const name = root.querySelector('input[aria-label="Vendor name"]') as HTMLInputElement;
+    name.value = 'Vendor';
+    name.dispatchEvent(new Event('input'));
+    const input = root.querySelector(
+      'input[aria-label="Vendor Metrc license number"]',
+    ) as HTMLInputElement;
+    input.value = 'bad';
+    input.dispatchEvent(new Event('input'));
+    input.dispatchEvent(new Event('blur'));
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const submitBtn = Array.from(root.querySelectorAll('button')).find((b) =>
+      (b.textContent ?? '').trim().startsWith('Create vendor'),
+    ) as HTMLButtonElement;
+    expect(submitBtn.disabled).toBe(true);
+    submitBtn.click();
+    await fixture.whenStable();
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it('Submitting with a valid license passes licenseNumber + licenseState to create', async () => {
+    const create = vi.fn().mockResolvedValue(undefined);
+    const { fixture } = configure({ stats: stats(), create });
+    const root = openForm(fixture);
+    const name = root.querySelector('input[aria-label="Vendor name"]') as HTMLInputElement;
+    name.value = 'Acme';
+    name.dispatchEvent(new Event('input'));
+    const license = root.querySelector(
+      'input[aria-label="Vendor Metrc license number"]',
+    ) as HTMLInputElement;
+    license.value = 'NY-MED-123456';
+    license.dispatchEvent(new Event('input'));
+    license.dispatchEvent(new Event('blur'));
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const form = root.querySelector('form[aria-label="Create vendor"]') as HTMLFormElement;
+    form.dispatchEvent(new Event('submit'));
+    await fixture.whenStable();
+    const callArgs = create.mock.calls[0][0] as {
+      licenseNumber: string | null;
+      licenseState: string | null;
+    };
+    expect(callArgs.licenseNumber).toBe('NY-MED-123456');
+    expect(callArgs.licenseState).toBe('NY');
   });
 });

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import { VendorsService } from './vendors.service';
+import { type LicenseValidation, VendorsService } from './vendors.service';
 
 interface CreateFormControls {
   readonly name: FormControl<string>;
@@ -12,6 +12,7 @@ interface CreateFormControls {
   readonly paymentTerms: FormControl<string>;
   readonly contactName: FormControl<string>;
   readonly contactTitle: FormControl<string>;
+  readonly licenseNumber: FormControl<string>;
 }
 
 const VENDOR_TYPES = [
@@ -238,10 +239,54 @@ const STATE_CODES = [
                 aria-label="Contact title"
                 class="rounded-lg border border-(--color-border) bg-(--color-bg) px-3 py-2 text-sm text-(--color-text) focus:border-(--color-primary) focus:outline-none"
               />
+              <div class="relative md:col-span-2">
+                <input
+                  type="text"
+                  formControlName="licenseNumber"
+                  (blur)="onLicenseBlur()"
+                  placeholder="Metrc license (e.g. NY-MED-123456)"
+                  aria-label="Vendor Metrc license number"
+                  class="w-full rounded-lg border bg-(--color-bg) px-3 py-2 pr-10 text-sm text-(--color-text) focus:outline-none"
+                  [class]="licenseInputClass()"
+                />
+                @if (licenseChecking()) {
+                  <span
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-(--color-text-muted)"
+                    aria-label="License validation in progress"
+                  >
+                    …
+                  </span>
+                } @else if (licenseValidation(); as v) {
+                  @if (v.valid) {
+                    <span
+                      class="absolute right-3 top-1/2 -translate-y-1/2 text-base text-emerald-500"
+                      aria-label="License valid"
+                      [attr.title]="v.licenseType ? 'License type: ' + v.licenseType : null"
+                    >
+                      ✓
+                    </span>
+                  } @else {
+                    <span
+                      class="absolute right-3 top-1/2 -translate-y-1/2 text-base text-rose-500"
+                      aria-label="License invalid"
+                      [attr.title]="v.reason"
+                    >
+                      ✗
+                    </span>
+                  }
+                }
+                @if (licenseValidation(); as v) {
+                  @if (!v.valid && v.reason) {
+                    <p class="mt-1 text-xs text-rose-500" aria-label="License validation error">
+                      {{ v.reason }}
+                    </p>
+                  }
+                }
+              </div>
             </div>
             <button
               type="submit"
-              [disabled]="createForm.invalid || saving()"
+              [disabled]="createForm.invalid || saving() || licenseChecking() || licenseInvalid()"
               class="rounded-lg bg-(--color-primary) px-4 py-2 text-sm font-medium text-white hover:bg-(--color-primary-hover) disabled:opacity-50"
             >
               @if (saving()) {
@@ -413,6 +458,20 @@ export class VendorsPage {
   protected readonly purchaseOrdersLoading = this.svc.purchaseOrdersLoading;
 
   protected readonly showCreate = signal<boolean>(false);
+  protected readonly licenseValidation = signal<LicenseValidation | null>(null);
+  protected readonly licenseChecking = signal<boolean>(false);
+
+  protected readonly licenseInvalid = computed(() => {
+    const v = this.licenseValidation();
+    return v !== null && !v.valid;
+  });
+
+  protected readonly licenseInputClass = computed(() => {
+    if (this.licenseChecking()) return 'border-(--color-border)';
+    const v = this.licenseValidation();
+    if (!v) return 'border-(--color-border)';
+    return v.valid ? 'border-emerald-500' : 'border-rose-500';
+  });
 
   protected readonly errorMessage = computed(() => {
     const err = this.error();
@@ -432,6 +491,7 @@ export class VendorsPage {
     paymentTerms: new FormControl('net_30', { nonNullable: true }),
     contactName: new FormControl('', { nonNullable: true }),
     contactTitle: new FormControl('', { nonNullable: true }),
+    licenseNumber: new FormControl('', { nonNullable: true }),
   });
   /* eslint-enable @typescript-eslint/unbound-method */
 
@@ -443,9 +503,26 @@ export class VendorsPage {
     this.svc.togglePurchaseOrders();
   }
 
+  protected async onLicenseBlur(): Promise<void> {
+    const license = this.createForm.controls.licenseNumber.value.trim();
+    if (!license) {
+      this.licenseValidation.set(null);
+      return;
+    }
+    const state = this.createForm.controls.state.value;
+    this.licenseChecking.set(true);
+    try {
+      const result = await this.svc.validateLicense(license, state);
+      this.licenseValidation.set(result);
+    } finally {
+      this.licenseChecking.set(false);
+    }
+  }
+
   protected async onSubmit(): Promise<void> {
-    if (this.createForm.invalid) return;
+    if (this.createForm.invalid || this.licenseInvalid()) return;
     const v = this.createForm.getRawValue();
+    const license = v.licenseNumber.trim();
     await this.svc.create({
       name: v.name,
       vendorType: v.vendorType,
@@ -455,6 +532,8 @@ export class VendorsPage {
       paymentTerms: v.paymentTerms || null,
       contactName: v.contactName || null,
       contactTitle: v.contactTitle || null,
+      licenseNumber: license || null,
+      licenseState: license ? v.state || null : null,
     });
     this.createForm.reset({
       name: '',
@@ -465,7 +544,9 @@ export class VendorsPage {
       paymentTerms: 'net_30',
       contactName: '',
       contactTitle: '',
+      licenseNumber: '',
     });
+    this.licenseValidation.set(null);
     this.showCreate.set(false);
   }
 
