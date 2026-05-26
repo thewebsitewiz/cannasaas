@@ -303,4 +303,40 @@ export class ProductsService {
     });
     return (result.affected ?? 0) > 0;
   }
+
+  async setProductsActive(
+    dispensaryId: string,
+    productIds: readonly string[],
+    isActive: boolean,
+  ): Promise<number> {
+    if (productIds.length === 0) return 0;
+    const result = await this.productRepo
+      .createQueryBuilder()
+      .update(Product)
+      .set({ is_active: isActive })
+      .where('dispensary_id = :dispensaryId AND id IN (:...productIds)', {
+        dispensaryId,
+        productIds: [...productIds],
+      })
+      .execute();
+    return result.affected ?? 0;
+  }
+
+  async deleteProducts(
+    dispensaryId: string,
+    productIds: readonly string[],
+  ): Promise<number> {
+    if (productIds.length === 0) return 0;
+    // softDelete one-by-one so the same DeleteDateColumn path runs
+    // (mirrors single-product deleteProduct).
+    let count = 0;
+    for (const id of productIds) {
+      const result = await this.productRepo.softDelete({
+        id,
+        dispensary_id: dispensaryId,
+      });
+      count += result.affected ?? 0;
+    }
+    return count;
+  }
 }

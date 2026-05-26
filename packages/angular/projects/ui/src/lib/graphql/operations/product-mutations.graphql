@@ -44,3 +44,19 @@ mutation UpdateProductVariant($input: UpdateProductVariantInput!) {
 mutation DeleteProductVariant($variantId: ID!, $dispensaryId: ID!) {
   deleteProductVariant(variantId: $variantId, dispensaryId: $dispensaryId)
 }
+
+mutation SetProductsActive(
+  $dispensaryId: ID!
+  $productIds: [ID!]!
+  $isActive: Boolean!
+) {
+  setProductsActive(
+    dispensaryId: $dispensaryId
+    productIds: $productIds
+    isActive: $isActive
+  )
+}
+
+mutation DeleteProducts($dispensaryId: ID!, $productIds: [ID!]!) {
+  deleteProducts(dispensaryId: $dispensaryId, productIds: $productIds)
+}

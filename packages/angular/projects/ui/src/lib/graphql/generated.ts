@@ -1571,6 +1571,7 @@ export type Mutation = {
   deleteOrganization: Scalars['Boolean']['output'];
   deleteProduct: Scalars['Boolean']['output'];
   deleteProductVariant: Scalars['Boolean']['output'];
+  deleteProducts: Scalars['Int']['output'];
   deleteShift: Scalars['Boolean']['output'];
   deprovisionAeropayForDispensary: Scalars['Boolean']['output'];
   deprovisionCanPayForDispensary: Scalars['Boolean']['output'];
@@ -1618,6 +1619,7 @@ export type Mutation = {
   setDesignSystem: DesignSystemConfig;
   setDispensaryProcessorEnabled: DispensaryPaymentProcessor;
   setProductMetrcCategory: Product;
+  setProductsActive: Scalars['Int']['output'];
   setReorderThreshold: InventoryResult;
   setUserRole: User;
   shipTransfer: InventoryTransfer;
@@ -1973,6 +1975,11 @@ export type MutationDeleteProductVariantArgs = {
   variantId: Scalars['ID']['input'];
 };
 
+export type MutationDeleteProductsArgs = {
+  dispensaryId: Scalars['ID']['input'];
+  productIds: Array<Scalars['ID']['input']>;
+};
+
 export type MutationDeleteShiftArgs = {
   shiftId: Scalars['ID']['input'];
 };
@@ -2204,6 +2211,12 @@ export type MutationSetDispensaryProcessorEnabledArgs = {
 
 export type MutationSetProductMetrcCategoryArgs = {
   input: SetMetrcCategoryInput;
+};
+
+export type MutationSetProductsActiveArgs = {
+  dispensaryId: Scalars['ID']['input'];
+  isActive: Scalars['Boolean']['input'];
+  productIds: Array<Scalars['ID']['input']>;
 };
 
 export type MutationSetReorderThresholdArgs = {
@@ -5613,6 +5626,21 @@ export type DeleteProductVariantMutation = {
   deleteProductVariant: boolean;
 };
 
+export type SetProductsActiveMutationVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+  productIds: Array<Scalars['ID']['input']> | Scalars['ID']['input'];
+  isActive: Scalars['Boolean']['input'];
+}>;
+
+export type SetProductsActiveMutation = { __typename?: 'Mutation'; setProductsActive: number };
+
+export type DeleteProductsMutationVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+  productIds: Array<Scalars['ID']['input']> | Scalars['ID']['input'];
+}>;
+
+export type DeleteProductsMutation = { __typename?: 'Mutation'; deleteProducts: number };
+
 export type ProductQueryVariables = Exact<{
   dispensaryId: Scalars['ID']['input'];
   id: Scalars['ID']['input'];
@@ -8010,6 +8038,44 @@ export class DeleteProductVariantGQL extends Apollo.Mutation<
   DeleteProductVariantMutationVariables
 > {
   override document = DeleteProductVariantDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const SetProductsActiveDocument = gql`
+  mutation SetProductsActive($dispensaryId: ID!, $productIds: [ID!]!, $isActive: Boolean!) {
+    setProductsActive(dispensaryId: $dispensaryId, productIds: $productIds, isActive: $isActive)
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class SetProductsActiveGQL extends Apollo.Mutation<
+  SetProductsActiveMutation,
+  SetProductsActiveMutationVariables
+> {
+  override document = SetProductsActiveDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const DeleteProductsDocument = gql`
+  mutation DeleteProducts($dispensaryId: ID!, $productIds: [ID!]!) {
+    deleteProducts(dispensaryId: $dispensaryId, productIds: $productIds)
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class DeleteProductsGQL extends Apollo.Mutation<
+  DeleteProductsMutation,
+  DeleteProductsMutationVariables
+> {
+  override document = DeleteProductsDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);

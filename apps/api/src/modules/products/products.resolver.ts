@@ -234,6 +234,25 @@ export class ProductsResolver {
   ): Promise<boolean> {
     return this.products.deleteVariant(variantId, dispensaryId);
   }
+
+  @Roles('dispensary_admin', 'org_admin', 'super_admin')
+  @Mutation(() => Int, { name: 'setProductsActive' })
+  async setProductsActive(
+    @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
+    @Args('productIds', { type: () => [ID] }) productIds: string[],
+    @Args('isActive') isActive: boolean,
+  ): Promise<number> {
+    return this.products.setProductsActive(dispensaryId, productIds, isActive);
+  }
+
+  @Roles('dispensary_admin', 'org_admin', 'super_admin')
+  @Mutation(() => Int, { name: 'deleteProducts' })
+  async deleteProducts(
+    @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
+    @Args('productIds', { type: () => [ID] }) productIds: string[],
+  ): Promise<number> {
+    return this.products.deleteProducts(dispensaryId, productIds);
+  }
 }
 interface InventoryQtyRow {
   quantity_available: string | number;
