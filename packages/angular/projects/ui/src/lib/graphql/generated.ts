@@ -1623,6 +1623,7 @@ export type Mutation = {
   reserveStock: AdjustResult;
   resetThemeConfig: ThemeConfigType;
   retryFailedMetrcSyncs: Scalars['Int']['output'];
+  retryMetrcSync: Scalars['Boolean']['output'];
   reviewTimeOff: TimeOffRequest;
   revokeCertification: EmployeeCertification;
   runReconciliation: ReconciliationReport;
@@ -2174,6 +2175,11 @@ export type MutationResetThemeConfigArgs = {
 
 export type MutationRetryFailedMetrcSyncsArgs = {
   dispensaryId: Scalars['ID']['input'];
+};
+
+export type MutationRetryMetrcSyncArgs = {
+  dispensaryId: Scalars['ID']['input'];
+  orderId: Scalars['ID']['input'];
 };
 
 export type MutationReviewTimeOffArgs = {
@@ -5198,6 +5204,40 @@ export type ActivePromotionsQuery = {
   }>;
 };
 
+export type FailedMetrcSyncsQueryVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+}>;
+
+export type FailedMetrcSyncsQuery = {
+  __typename?: 'Query';
+  failedMetrcSyncs: {
+    __typename?: 'FailedSyncDashboard';
+    dispensaryId: string;
+    totalFailed: number;
+    oldestFailedAt: string;
+    items: Array<{
+      __typename?: 'FailedSyncItem';
+      orderId: string;
+      orderStatus: string;
+      metrcSyncStatus: string;
+      metrcReportedAt?: string | null;
+      subtotal: number;
+      total: number;
+      createdAt: string;
+      lastSyncAttempt?: string | null;
+      lastSyncError?: string | null;
+      attemptCount: number;
+    }>;
+  };
+};
+
+export type RetryMetrcSyncMutationVariables = Exact<{
+  orderId: Scalars['ID']['input'];
+  dispensaryId: Scalars['ID']['input'];
+}>;
+
+export type RetryMetrcSyncMutation = { __typename?: 'Mutation'; retryMetrcSync: boolean };
+
 export type MyCurrentRegisterSessionQueryVariables = Exact<{
   dispensaryId: Scalars['ID']['input'];
 }>;
@@ -7375,6 +7415,60 @@ export class ActivePromotionsGQL extends Apollo.Query<
   ActivePromotionsQueryVariables
 > {
   override document = ActivePromotionsDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const FailedMetrcSyncsDocument = gql`
+  query FailedMetrcSyncs($dispensaryId: ID!) {
+    failedMetrcSyncs(dispensaryId: $dispensaryId) {
+      dispensaryId
+      totalFailed
+      oldestFailedAt
+      items {
+        orderId
+        orderStatus
+        metrcSyncStatus
+        metrcReportedAt
+        subtotal
+        total
+        createdAt
+        lastSyncAttempt
+        lastSyncError
+        attemptCount
+      }
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class FailedMetrcSyncsGQL extends Apollo.Query<
+  FailedMetrcSyncsQuery,
+  FailedMetrcSyncsQueryVariables
+> {
+  override document = FailedMetrcSyncsDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const RetryMetrcSyncDocument = gql`
+  mutation RetryMetrcSync($orderId: ID!, $dispensaryId: ID!) {
+    retryMetrcSync(orderId: $orderId, dispensaryId: $dispensaryId)
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class RetryMetrcSyncGQL extends Apollo.Mutation<
+  RetryMetrcSyncMutation,
+  RetryMetrcSyncMutationVariables
+> {
+  override document = RetryMetrcSyncDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);

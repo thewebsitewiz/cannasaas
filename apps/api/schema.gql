@@ -1507,6 +1507,7 @@ type Mutation {
   reserveStock(inventoryId: ID!, quantity: Float!, referenceOrderId: ID): AdjustResult!
   resetThemeConfig(dispensaryId: String!): ThemeConfigType!
   retryFailedMetrcSyncs(dispensaryId: ID!): Int!
+  retryMetrcSync(dispensaryId: ID!, orderId: ID!): Boolean!
   reviewTimeOff(approved: Boolean!, requestId: ID!): TimeOffRequest!
   revokeCertification(certificationId: ID!, reason: String): EmployeeCertification!
   runReconciliation(dispensaryId: ID!): ReconciliationReport!

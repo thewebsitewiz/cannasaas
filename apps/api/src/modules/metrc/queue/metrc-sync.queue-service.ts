@@ -69,6 +69,50 @@ export class MetrcSyncQueueService {
     return failed.length;
   }
 
+  /**
+   * Enqueue a retry for a single failed Metrc sale sync (sc-684).
+   * Guards: order must exist in this dispensary AND be in
+   * `metrcSyncStatus = 'failed'`. Otherwise we no-op + return false so
+   * the admin sees a clean rejection rather than queue spam.
+   */
+  async enqueueRetrySingleSync(
+    orderId: string,
+    dispensaryId: string,
+  ): Promise<boolean> {
+    const rows = (await this.dataSource.query(
+      `SELECT "orderId" FROM orders
+       WHERE "orderId" = $1
+         AND "dispensaryId" = $2
+         AND "metrcSyncStatus" = 'failed'
+       LIMIT 1`,
+      [orderId, dispensaryId],
+    )) as unknown;
+    const found = (rows as Array<{ orderId: string }>).length > 0;
+    if (!found) {
+      this.logger.warn(
+        `Retry rejected: order ${orderId} is not in 'failed' status for dispensary ${dispensaryId}`,
+      );
+      return false;
+    }
+
+    await this.queue.add(
+      MetrcJobName.RETRY_FAILED,
+      {
+        orderId,
+        dispensaryId,
+        attemptNumber: 1,
+      } satisfies SyncSaleJobData,
+      {
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 30_000 },
+        removeOnComplete: { count: 100 },
+        removeOnFail: { count: 200 },
+      },
+    );
+    this.logger.log(`Enqueued single retry for order ${orderId}`);
+    return true;
+  }
+
   async getQueueStats(): Promise<Record<string, number>> {
     const [waiting, active, failed, completed, delayed] = await Promise.all([
       this.queue.getWaitingCount(),

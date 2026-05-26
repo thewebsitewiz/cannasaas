@@ -209,6 +209,18 @@ export class MetrcResolver {
     return this.syncQueue.enqueueRetryFailed(dispensaryId);
   }
 
+  @Roles('dispensary_admin', 'org_admin', 'super_admin')
+  @Mutation(() => Boolean, { name: 'retryMetrcSync' })
+  async retrySingle(
+    @Args('orderId', { type: () => ID }) orderId: string,
+    @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<boolean> {
+    if (user.role === 'dispensary_admin' && dispensaryId !== user.dispensaryId)
+      throw new ForbiddenException('Access denied');
+    return this.syncQueue.enqueueRetrySingleSync(orderId, dispensaryId);
+  }
+
   // ── Failed Sync Dashboard ────────────────────────────────────────────────
 
   @Roles('budtender', 'dispensary_admin', 'org_admin', 'super_admin')

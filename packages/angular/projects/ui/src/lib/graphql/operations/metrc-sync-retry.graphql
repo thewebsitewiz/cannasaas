@@ -1,0 +1,23 @@
+query FailedMetrcSyncs($dispensaryId: ID!) {
+  failedMetrcSyncs(dispensaryId: $dispensaryId) {
+    dispensaryId
+    totalFailed
+    oldestFailedAt
+    items {
+      orderId
+      orderStatus
+      metrcSyncStatus
+      metrcReportedAt
+      subtotal
+      total
+      createdAt
+      lastSyncAttempt
+      lastSyncError
+      attemptCount
+    }
+  }
+}
+
+mutation RetryMetrcSync($orderId: ID!, $dispensaryId: ID!) {
+  retryMetrcSync(orderId: $orderId, dispensaryId: $dispensaryId)
+}
