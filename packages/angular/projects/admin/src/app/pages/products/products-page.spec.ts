@@ -19,6 +19,9 @@ interface FakeArgs {
   readonly update?: ReturnType<typeof vi.fn>;
   readonly updateVariantPrice?: ReturnType<typeof vi.fn>;
   readonly deleteProduct?: ReturnType<typeof vi.fn>;
+  readonly createVariant?: ReturnType<typeof vi.fn>;
+  readonly updateVariant?: ReturnType<typeof vi.fn>;
+  readonly deleteVariant?: ReturnType<typeof vi.fn>;
 }
 
 function makeSvc(args: FakeArgs): ProductsService {
@@ -41,6 +44,9 @@ function makeSvc(args: FakeArgs): ProductsService {
     update: args.update ?? vi.fn().mockResolvedValue(undefined),
     updateVariantPrice: args.updateVariantPrice ?? vi.fn().mockResolvedValue(undefined),
     deleteProduct: args.deleteProduct ?? vi.fn().mockResolvedValue(undefined),
+    createVariant: args.createVariant ?? vi.fn().mockResolvedValue(undefined),
+    updateVariant: args.updateVariant ?? vi.fn().mockResolvedValue(undefined),
+    deleteVariant: args.deleteVariant ?? vi.fn().mockResolvedValue(undefined),
   } as unknown as ProductsService;
 }
 
@@ -317,5 +323,176 @@ describe('ProductsPage', () => {
       'button[aria-label^="Confirm delete"]',
     );
     expect(confirmBtn).toBeNull();
+  });
+
+  // ── Variant CRUD (sc-682a) ────────────────────────────────────────────
+
+  it('detail panel renders the Variants section header + add-variant button', () => {
+    const { fixture } = configure({ products: [product()] });
+    const row = (fixture.nativeElement as HTMLElement).querySelector(
+      'tbody tr',
+    ) as HTMLTableRowElement;
+    row.click();
+    fixture.detectChanges();
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('Variants (1)');
+    const addBtn = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Add variant"]',
+    );
+    expect(addBtn).not.toBeNull();
+  });
+
+  it('clicking Add variant opens the inline form', () => {
+    const { fixture } = configure({ products: [product()] });
+    const row = (fixture.nativeElement as HTMLElement).querySelector(
+      'tbody tr',
+    ) as HTMLTableRowElement;
+    row.click();
+    fixture.detectChanges();
+    const addBtn = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Add variant"]',
+    ) as HTMLButtonElement;
+    addBtn.click();
+    fixture.detectChanges();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('input[aria-label="New variant name"]'),
+    ).not.toBeNull();
+  });
+
+  it('submitting Add variant calls svc.createVariant with parsed numbers', async () => {
+    const createVariant = vi.fn().mockResolvedValue(undefined);
+    const { fixture } = configure({
+      products: [product({ id: 'p-42' })],
+      createVariant,
+    });
+    const row = (fixture.nativeElement as HTMLElement).querySelector(
+      'tbody tr',
+    ) as HTMLTableRowElement;
+    row.click();
+    fixture.detectChanges();
+    const addBtn = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Add variant"]',
+    ) as HTMLButtonElement;
+    addBtn.click();
+    fixture.detectChanges();
+
+    const nameInput = (fixture.nativeElement as HTMLElement).querySelector(
+      'input[aria-label="New variant name"]',
+    ) as HTMLInputElement;
+    nameInput.value = '7g';
+    nameInput.dispatchEvent(new Event('input'));
+    const weightInput = (fixture.nativeElement as HTMLElement).querySelector(
+      'input[aria-label="New variant weight"]',
+    ) as HTMLInputElement;
+    weightInput.value = '7';
+    weightInput.dispatchEvent(new Event('input'));
+    const priceInput = (fixture.nativeElement as HTMLElement).querySelector(
+      'input[aria-label="New variant price"]',
+    ) as HTMLInputElement;
+    priceInput.value = '80';
+    priceInput.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    const form = (fixture.nativeElement as HTMLElement).querySelector('form') as HTMLFormElement;
+    form.dispatchEvent(new Event('submit'));
+    await fixture.whenStable();
+    expect(createVariant).toHaveBeenCalledWith({
+      productId: 'p-42',
+      dispensaryId: 'disp-1',
+      name: '7g',
+      quantityPerUnit: 7,
+      retailPrice: 80,
+    });
+  });
+
+  it('submitting Add variant skips the mutation when name is empty', async () => {
+    const createVariant = vi.fn().mockResolvedValue(undefined);
+    const { fixture } = configure({ products: [product()], createVariant });
+    const row = (fixture.nativeElement as HTMLElement).querySelector(
+      'tbody tr',
+    ) as HTMLTableRowElement;
+    row.click();
+    fixture.detectChanges();
+    const addBtn = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Add variant"]',
+    ) as HTMLButtonElement;
+    addBtn.click();
+    fixture.detectChanges();
+    const submitBtn = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('button'),
+    ).find((b) => (b.textContent ?? '').trim() === 'Add variant') as HTMLButtonElement;
+    expect(submitBtn.disabled).toBe(true);
+    submitBtn.click();
+    await fixture.whenStable();
+    expect(createVariant).not.toHaveBeenCalled();
+  });
+
+  it('Cancel closes the Add variant form', () => {
+    const { fixture } = configure({ products: [product()] });
+    const row = (fixture.nativeElement as HTMLElement).querySelector(
+      'tbody tr',
+    ) as HTMLTableRowElement;
+    row.click();
+    fixture.detectChanges();
+    const addBtn = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Add variant"]',
+    ) as HTMLButtonElement;
+    addBtn.click();
+    fixture.detectChanges();
+    const cancelBtn = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('button'),
+    ).find((b) => (b.textContent ?? '').trim() === 'Cancel') as HTMLButtonElement;
+    cancelBtn.click();
+    fixture.detectChanges();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('input[aria-label="New variant name"]'),
+    ).toBeNull();
+  });
+
+  it('variant delete: ✕ asks for confirm, Delete calls svc.deleteVariant', async () => {
+    const deleteVariant = vi.fn().mockResolvedValue(undefined);
+    const { fixture } = configure({ products: [product()], deleteVariant });
+    const row = (fixture.nativeElement as HTMLElement).querySelector(
+      'tbody tr',
+    ) as HTMLTableRowElement;
+    row.click();
+    fixture.detectChanges();
+    const xBtn = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Delete variant 3.5g Jar"]',
+    ) as HTMLButtonElement;
+    xBtn.click();
+    fixture.detectChanges();
+    const confirmBtn = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Confirm delete variant 3.5g Jar"]',
+    ) as HTMLButtonElement;
+    confirmBtn.click();
+    await fixture.whenStable();
+    expect(deleteVariant).toHaveBeenCalledWith('v-1', 'disp-1');
+  });
+
+  it('variant delete: No cancels the confirm without calling deleteVariant', () => {
+    const deleteVariant = vi.fn().mockResolvedValue(undefined);
+    const { fixture } = configure({ products: [product()], deleteVariant });
+    const row = (fixture.nativeElement as HTMLElement).querySelector(
+      'tbody tr',
+    ) as HTMLTableRowElement;
+    row.click();
+    fixture.detectChanges();
+    const xBtn = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Delete variant 3.5g Jar"]',
+    ) as HTMLButtonElement;
+    xBtn.click();
+    fixture.detectChanges();
+    const noBtn = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('button'),
+    ).find((b) => (b.textContent ?? '').trim() === 'No') as HTMLButtonElement;
+    noBtn.click();
+    fixture.detectChanges();
+    expect(deleteVariant).not.toHaveBeenCalled();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector(
+        'button[aria-label="Confirm delete variant 3.5g Jar"]',
+      ),
+    ).toBeNull();
   });
 });

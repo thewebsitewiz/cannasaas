@@ -431,6 +431,15 @@ input CreateProductInput {
   variantQuantityG: Float
 }
 
+input CreateProductVariantInput {
+  dispensaryId: ID!
+  name: String!
+  productId: ID!
+  quantityPerUnit: Float
+  retailPrice: Float
+  sku: String
+}
+
 input CreatePromotionInput {
   appliesTo: String
   appliesToBrandId: ID
@@ -1424,6 +1433,7 @@ type Mutation {
   createOrganization(input: CreateOrganizationInput!): OrganizationResult!
   createPerformanceReview(input: CreateReviewInput!): PerformanceReview!
   createProduct(input: CreateProductInput!): Product!
+  createProductVariant(input: CreateProductVariantInput!): ProductVariant!
   createPromotion(dispensaryId: ID!, input: CreatePromotionInput!): PromotionResult!
   createPurchaseOrder(dispensaryId: ID!, items: [POLineItemInput!]!, notes: String, vendorId: ID!): JSON!
   createReward(description: String, dispensaryId: ID!, name: String!, pointsCost: Int!, rewardType: String!, rewardValue: Float!): JSON!
@@ -1442,6 +1452,7 @@ type Mutation {
   deleteManufacturer(manufacturerId: ID!): Boolean!
   deleteOrganization(organizationId: ID!): Boolean!
   deleteProduct(dispensaryId: ID!, productId: ID!): Boolean!
+  deleteProductVariant(dispensaryId: ID!, variantId: ID!): Boolean!
   deleteShift(shiftId: ID!): Boolean!
   deprovisionAeropayForDispensary(dispensaryId: ID!): Boolean!
   deprovisionCanPayForDispensary(dispensaryId: ID!): Boolean!
@@ -1522,6 +1533,7 @@ type Mutation {
   updateOrganization(input: UpdateOrganizationInput!, organizationId: ID!): OrganizationResult!
   updatePOStatus(poId: ID!, status: String!): JSON!
   updateProduct(input: UpdateProductInput!): Product!
+  updateProductVariant(input: UpdateProductVariantInput!): ProductVariant!
   updatePromotion(input: UpdatePromotionInput!, promoId: ID!): PromotionResult!
   updateSubscription(input: UpdateSubscriptionInput!, organizationId: ID!): OrganizationResult!
   updateTaxRule(isActive: Boolean, name: String, rate: Float, taxCategoryId: Int!): TaxRule!
@@ -2703,6 +2715,15 @@ input UpdateProductInput {
   strainName: String
   strainType: String
   thcPercent: Float
+}
+
+input UpdateProductVariantInput {
+  dispensaryId: ID!
+  isActive: Boolean
+  name: String
+  quantityPerUnit: Float
+  sku: String
+  variantId: ID!
 }
 
 input UpdatePromotionInput {

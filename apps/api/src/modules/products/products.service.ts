@@ -17,7 +17,9 @@ import {
 import { CacheService } from '../../common/services/cache.service';
 import {
   CreateProductInput,
+  CreateProductVariantInput,
   UpdateProductInput,
+  UpdateProductVariantInput,
 } from './dto/product-crud.input';
 
 export interface ProductsFilter {
@@ -232,6 +234,71 @@ export class ProductsService {
   ): Promise<boolean> {
     const result = await this.productRepo.softDelete({
       id: productId,
+      dispensary_id: dispensaryId,
+    });
+    return (result.affected ?? 0) > 0;
+  }
+
+  async createVariant(
+    input: CreateProductVariantInput,
+  ): Promise<ProductVariant> {
+    // Guard: product exists for this dispensary.
+    const product = await this.productRepo.findOne({
+      where: { id: input.productId, dispensary_id: input.dispensaryId },
+    });
+    if (!product) throw new NotFoundException('Product not found');
+
+    const qr = this.dataSource.createQueryRunner();
+    await qr.connect();
+    await qr.startTransaction();
+    try {
+      const variant = this.variantRepo.create({
+        product_id: input.productId,
+        dispensary_id: input.dispensaryId,
+        name: input.name,
+        quantity_per_unit: input.quantityPerUnit,
+        sku: input.sku,
+        is_active: true,
+      });
+      const saved = await qr.manager.save(ProductVariant, variant);
+      if (input.retailPrice !== undefined) {
+        await qr.query(
+          `INSERT INTO product_pricing (variant_id, dispensary_id, price_type, price, effective_from)
+           VALUES ($1, $2, 'retail', $3, NOW())`,
+          [saved.variant_id, input.dispensaryId, input.retailPrice],
+        );
+      }
+      await qr.commitTransaction();
+      return saved;
+    } catch (err) {
+      await qr.rollbackTransaction();
+      throw err;
+    } finally {
+      await qr.release();
+    }
+  }
+
+  async updateVariant(
+    input: UpdateProductVariantInput,
+  ): Promise<ProductVariant> {
+    const variant = await this.variantRepo.findOne({
+      where: { variant_id: input.variantId, dispensary_id: input.dispensaryId },
+    });
+    if (!variant) throw new NotFoundException('Variant not found');
+    if (input.name !== undefined) variant.name = input.name;
+    if (input.quantityPerUnit !== undefined)
+      variant.quantity_per_unit = input.quantityPerUnit;
+    if (input.sku !== undefined) variant.sku = input.sku;
+    if (input.isActive !== undefined) variant.is_active = input.isActive;
+    return this.variantRepo.save(variant);
+  }
+
+  async deleteVariant(
+    variantId: string,
+    dispensaryId: string,
+  ): Promise<boolean> {
+    const result = await this.variantRepo.softDelete({
+      variant_id: variantId,
       dispensary_id: dispensaryId,
     });
     return (result.affected ?? 0) > 0;

@@ -387,11 +387,51 @@ const STRAIN_OPTIONS = ['hybrid', 'sativa', 'indica'] as const;
                   }
                 </div>
 
+                <p
+                  class="border-t border-(--color-border) pt-3 text-xs font-semibold uppercase tracking-wide text-(--color-text-secondary)"
+                >
+                  Variants ({{ p.variants.length }})
+                </p>
                 @for (v of p.variants; track v.variantId) {
                   <div class="space-y-2 border-t border-(--color-border) pt-4 text-sm">
-                    <p class="text-xs font-semibold text-(--color-text-secondary)">
-                      Variant: {{ v.name }}
-                    </p>
+                    <div class="flex items-center justify-between">
+                      <p class="text-xs font-semibold text-(--color-text-secondary)">
+                        Variant: {{ v.name }}
+                      </p>
+                      @if (deletingVariantId() === v.variantId) {
+                        <div class="flex items-center gap-1 text-xs">
+                          <button
+                            type="button"
+                            (click)="onConfirmDeleteVariant(v)"
+                            [disabled]="deleting()"
+                            class="rounded-md bg-rose-600 px-2 py-1 text-white hover:bg-rose-500 disabled:opacity-50"
+                            [attr.aria-label]="'Confirm delete variant ' + v.name"
+                          >
+                            @if (deleting()) {
+                              …
+                            } @else {
+                              Delete
+                            }
+                          </button>
+                          <button
+                            type="button"
+                            (click)="cancelDeleteVariant()"
+                            class="rounded-md border border-(--color-border) px-2 py-1 text-(--color-text-secondary)"
+                          >
+                            No
+                          </button>
+                        </div>
+                      } @else {
+                        <button
+                          type="button"
+                          (click)="openDeleteVariant(v.variantId)"
+                          [attr.aria-label]="'Delete variant ' + v.name"
+                          class="text-xs text-rose-500 hover:text-rose-400"
+                        >
+                          ✕
+                        </button>
+                      }
+                    </div>
                     <div class="flex justify-between">
                       <span class="text-(--color-text-secondary)">SKU</span>
                       <span class="font-mono text-xs text-(--color-text)">{{ v.sku }}</span>
@@ -440,6 +480,79 @@ const STRAIN_OPTIONS = ['hybrid', 'sativa', 'indica'] as const;
                       </div>
                     </div>
                   </div>
+                }
+
+                @if (addingVariant()) {
+                  <form
+                    (submit)="onSubmitNewVariant(p, $event)"
+                    class="space-y-2 rounded-md border border-(--color-border) bg-(--color-bg) p-3 text-xs"
+                  >
+                    <p class="font-semibold text-(--color-text-secondary)">New variant</p>
+                    <label class="block">
+                      <span class="text-(--color-text-secondary)">Name</span>
+                      <input
+                        type="text"
+                        [value]="newVariant().name"
+                        (input)="onNewVariantField('name', $event)"
+                        aria-label="New variant name"
+                        placeholder="3.5g"
+                        class="mt-1 block w-full rounded-md border border-(--color-border) bg-(--color-surface) px-2 py-1 text-sm text-(--color-text)"
+                      />
+                    </label>
+                    <div class="grid grid-cols-2 gap-2">
+                      <label class="block">
+                        <span class="text-(--color-text-secondary)">Weight (g)</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          [value]="newVariant().quantityPerUnit"
+                          (input)="onNewVariantField('quantityPerUnit', $event)"
+                          aria-label="New variant weight"
+                          class="mt-1 block w-full rounded-md border border-(--color-border) bg-(--color-surface) px-2 py-1 text-sm text-right tabular-nums text-(--color-text)"
+                        />
+                      </label>
+                      <label class="block">
+                        <span class="text-(--color-text-secondary)">Price</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          [value]="newVariant().retailPrice"
+                          (input)="onNewVariantField('retailPrice', $event)"
+                          aria-label="New variant price"
+                          class="mt-1 block w-full rounded-md border border-(--color-border) bg-(--color-surface) px-2 py-1 text-sm text-right tabular-nums text-(--color-text)"
+                        />
+                      </label>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <button
+                        type="submit"
+                        [disabled]="saving() || !newVariant().name.trim()"
+                        class="rounded-md bg-(--color-primary) px-3 py-1 text-xs font-semibold text-white hover:bg-(--color-primary-hover) disabled:opacity-50"
+                      >
+                        @if (saving()) {
+                          Adding…
+                        } @else {
+                          Add variant
+                        }
+                      </button>
+                      <button
+                        type="button"
+                        (click)="cancelAddVariant()"
+                        class="rounded-md border border-(--color-border) px-3 py-1 text-xs text-(--color-text-secondary)"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                } @else {
+                  <button
+                    type="button"
+                    (click)="openAddVariant()"
+                    aria-label="Add variant"
+                    class="rounded-md border border-dashed border-(--color-border) px-3 py-2 text-xs text-(--color-text-secondary) hover:border-(--color-primary) hover:text-(--color-primary)"
+                  >
+                    + Add variant
+                  </button>
                 }
 
                 <div class="flex gap-2 border-t border-(--color-border) pt-3">
@@ -507,6 +620,13 @@ export class ProductsPage {
   protected readonly panelMode = signal<PanelMode>(null);
   protected readonly priceEdit = signal<string>('');
   protected readonly confirmDelete = signal<boolean>(false);
+  protected readonly addingVariant = signal<boolean>(false);
+  protected readonly deletingVariantId = signal<string | null>(null);
+  protected readonly newVariant = signal<{
+    name: string;
+    quantityPerUnit: string;
+    retailPrice: string;
+  }>({ name: '', quantityPerUnit: '', retailPrice: '' });
 
   protected readonly selectedId = computed(() => this.selected()?.id ?? null);
   protected readonly showPanel = computed(() => this.panelMode() !== null);
@@ -725,5 +845,59 @@ export class ProductsPage {
       default:
         return 'bg-emerald-500/10 text-emerald-500';
     }
+  }
+
+  // ── Variant CRUD (sc-682a) ────────────────────────────────────────────
+
+  protected openAddVariant(): void {
+    this.addingVariant.set(true);
+    this.newVariant.set({ name: '', quantityPerUnit: '', retailPrice: '' });
+  }
+
+  protected cancelAddVariant(): void {
+    this.addingVariant.set(false);
+  }
+
+  protected onNewVariantField(
+    field: 'name' | 'quantityPerUnit' | 'retailPrice',
+    event: Event,
+  ): void {
+    const value = (event.target as HTMLInputElement).value;
+    this.newVariant.update((prev) => ({ ...prev, [field]: value }));
+  }
+
+  protected async onSubmitNewVariant(p: Product, event?: Event): Promise<void> {
+    event?.preventDefault();
+    const { name: rawName, quantityPerUnit, retailPrice } = this.newVariant();
+    const name = rawName.trim();
+    if (!name) return;
+    const dispensaryId = this.auth.user()?.dispensaryId;
+    if (!dispensaryId) return;
+    const qty = quantityPerUnit.trim() ? Number(quantityPerUnit) : undefined;
+    const price = retailPrice.trim() ? Number(retailPrice) : undefined;
+    await this.svc.createVariant({
+      productId: p.id,
+      dispensaryId,
+      name,
+      quantityPerUnit: qty != null && Number.isFinite(qty) ? qty : undefined,
+      retailPrice: price != null && Number.isFinite(price) ? price : undefined,
+    });
+    this.addingVariant.set(false);
+    this.newVariant.set({ name: '', quantityPerUnit: '', retailPrice: '' });
+  }
+
+  protected openDeleteVariant(variantId: string): void {
+    this.deletingVariantId.set(variantId);
+  }
+
+  protected cancelDeleteVariant(): void {
+    this.deletingVariantId.set(null);
+  }
+
+  protected async onConfirmDeleteVariant(v: ProductVariant): Promise<void> {
+    const dispensaryId = this.auth.user()?.dispensaryId;
+    if (!dispensaryId) return;
+    await this.svc.deleteVariant(v.variantId, dispensaryId);
+    this.deletingVariantId.set(null);
   }
 }
