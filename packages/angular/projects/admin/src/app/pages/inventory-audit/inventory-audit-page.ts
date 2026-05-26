@@ -176,7 +176,10 @@ const TRANSACTION_TYPES: readonly { value: string; label: string }[] = [
         </div>
 
         <div class="flex items-center justify-between text-sm text-(--color-text-secondary)">
-          <div>Showing {{ pageStart() }}–{{ pageEnd() }} (page {{ pageNum() }})</div>
+          <div>
+            Showing {{ pageStart() }}–{{ pageEnd() }} of {{ totalCount() }} (page {{ pageNum() }} of
+            {{ pageCount() }})
+          </div>
           <div class="flex items-center gap-2">
             <button
               type="button"
@@ -210,6 +213,7 @@ export class InventoryAuditPage {
   protected readonly downloading = signal<boolean>(false);
   protected readonly types = TRANSACTION_TYPES;
   protected readonly rows = this.svc.rows;
+  protected readonly totalCount = this.svc.totalCount;
   protected readonly loading = this.svc.isLoading;
   protected readonly error = this.svc.error;
   protected readonly filters = this.svc.filters;
@@ -225,17 +229,22 @@ export class InventoryAuditPage {
   protected readonly pageNum = computed(
     () => Math.floor(this.filters().offset / this.filters().limit) + 1,
   );
+  protected readonly pageCount = computed(() => {
+    const t = this.totalCount();
+    const l = this.filters().limit;
+    if (t === 0 || l === 0) return 1;
+    return Math.max(1, Math.ceil(t / l));
+  });
   protected readonly pageStart = computed(() =>
     this.rows().length === 0 ? 0 : this.filters().offset + 1,
   );
   protected readonly pageEnd = computed(() => this.filters().offset + this.rows().length);
 
-  /**
-   * The query has no totalCount, so "next page" is a hint: enabled if
-   * the current page is exactly full. Users will hit "Next" and either
-   * get more rows or an empty page they can back out of.
-   */
-  protected readonly hasNextPage = computed(() => this.rows().length === this.filters().limit);
+  /** sc-690: real bound from totalCount — disabled on the last page
+   *  even when it's exactly full. */
+  protected readonly hasNextPage = computed(
+    () => this.filters().offset + this.rows().length < this.totalCount(),
+  );
 
   protected formatDate(iso: string): string {
     const d = new Date(iso);

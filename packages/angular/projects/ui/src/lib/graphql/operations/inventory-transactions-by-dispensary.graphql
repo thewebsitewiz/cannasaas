@@ -16,21 +16,24 @@ query InventoryTransactionsByDispensary(
     transactionType: $transactionType
     performedByUserId: $performedByUserId
   ) {
-    transactionId
-    inventoryId
-    dispensaryId
-    transactionType
-    quantityDelta
-    quantityBefore
-    quantityAfter
-    referenceOrderId
-    referenceTransferManifestId
-    performedByUserId
-    performedByEmail
-    notes
-    variantId
-    variantName
-    productName
-    createdAt
+    totalCount
+    rows {
+      transactionId
+      inventoryId
+      dispensaryId
+      transactionType
+      quantityDelta
+      quantityBefore
+      quantityAfter
+      referenceOrderId
+      referenceTransferManifestId
+      performedByUserId
+      performedByEmail
+      notes
+      variantId
+      variantName
+      productName
+      createdAt
+    }
   }
 }

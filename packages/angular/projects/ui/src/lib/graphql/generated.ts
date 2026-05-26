@@ -774,6 +774,12 @@ export type DispensaryInventoryTransaction = {
   variantName?: Maybe<Scalars['String']['output']>;
 };
 
+export type DispensaryInventoryTransactionsPage = {
+  __typename?: 'DispensaryInventoryTransactionsPage';
+  rows: Array<DispensaryInventoryTransaction>;
+  totalCount: Scalars['Int']['output'];
+};
+
 export type DispensaryListItem = {
   __typename?: 'DispensaryListItem';
   city?: Maybe<Scalars['String']['output']>;
@@ -3129,7 +3135,7 @@ export type Query = {
   inventoryItem?: Maybe<InventoryResult>;
   inventoryOverview: InventoryOverview;
   inventoryTransactions: Array<InventoryTransactionResult>;
-  inventoryTransactionsByDispensary: Array<DispensaryInventoryTransaction>;
+  inventoryTransactionsByDispensary: DispensaryInventoryTransactionsPage;
   inventoryTransfers: Array<InventoryTransfer>;
   inventoryValue: InventoryValueResult;
   laborCostReport: LaborCostSummary;
@@ -5034,25 +5040,29 @@ export type InventoryTransactionsByDispensaryQueryVariables = Exact<{
 
 export type InventoryTransactionsByDispensaryQuery = {
   __typename?: 'Query';
-  inventoryTransactionsByDispensary: Array<{
-    __typename?: 'DispensaryInventoryTransaction';
-    transactionId: string;
-    inventoryId: string;
-    dispensaryId: string;
-    transactionType: string;
-    quantityDelta: number;
-    quantityBefore: number;
-    quantityAfter: number;
-    referenceOrderId?: string | null;
-    referenceTransferManifestId?: string | null;
-    performedByUserId?: string | null;
-    performedByEmail?: string | null;
-    notes?: string | null;
-    variantId: string;
-    variantName?: string | null;
-    productName?: string | null;
-    createdAt: string;
-  }>;
+  inventoryTransactionsByDispensary: {
+    __typename?: 'DispensaryInventoryTransactionsPage';
+    totalCount: number;
+    rows: Array<{
+      __typename?: 'DispensaryInventoryTransaction';
+      transactionId: string;
+      inventoryId: string;
+      dispensaryId: string;
+      transactionType: string;
+      quantityDelta: number;
+      quantityBefore: number;
+      quantityAfter: number;
+      referenceOrderId?: string | null;
+      referenceTransferManifestId?: string | null;
+      performedByUserId?: string | null;
+      performedByEmail?: string | null;
+      notes?: string | null;
+      variantId: string;
+      variantName?: string | null;
+      productName?: string | null;
+      createdAt: string;
+    }>;
+  };
 };
 
 export type InventoryTransfersQueryVariables = Exact<{
@@ -7177,22 +7187,25 @@ export const InventoryTransactionsByDispensaryDocument = gql`
       transactionType: $transactionType
       performedByUserId: $performedByUserId
     ) {
-      transactionId
-      inventoryId
-      dispensaryId
-      transactionType
-      quantityDelta
-      quantityBefore
-      quantityAfter
-      referenceOrderId
-      referenceTransferManifestId
-      performedByUserId
-      performedByEmail
-      notes
-      variantId
-      variantName
-      productName
-      createdAt
+      totalCount
+      rows {
+        transactionId
+        inventoryId
+        dispensaryId
+        transactionType
+        quantityDelta
+        quantityBefore
+        quantityAfter
+        referenceOrderId
+        referenceTransferManifestId
+        performedByUserId
+        performedByEmail
+        notes
+        variantId
+        variantName
+        productName
+        createdAt
+      }
     }
   }
 `;

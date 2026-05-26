@@ -750,6 +750,11 @@ type DispensaryInventoryTransaction {
   variantName: String
 }
 
+type DispensaryInventoryTransactionsPage {
+  rows: [DispensaryInventoryTransaction!]!
+  totalCount: Int!
+}
+
 type DispensaryPublic {
   city: String
   entityId: ID!
@@ -2155,7 +2160,7 @@ type Query {
   inventoryItem(inventoryId: ID!): InventoryResult
   inventoryOverview(dispensaryId: ID): InventoryOverview!
   inventoryTransactions(inventoryId: ID!, limit: Int = 50): [InventoryTransactionResult!]!
-  inventoryTransactionsByDispensary(dispensaryId: ID!, limit: Int = 50, offset: Int = 0, performedByUserId: ID, since: DateTime, transactionType: String, until: DateTime): [DispensaryInventoryTransaction!]!
+  inventoryTransactionsByDispensary(dispensaryId: ID!, limit: Int = 50, offset: Int = 0, performedByUserId: ID, since: DateTime, transactionType: String, until: DateTime): DispensaryInventoryTransactionsPage!
   inventoryTransfers(direction: String, dispensaryId: ID!): [InventoryTransfer!]!
   inventoryValue(dispensaryId: ID!): InventoryValueResult!
   laborCostReport(dispensaryId: ID!, endDate: String!, startDate: String!): LaborCostSummary!

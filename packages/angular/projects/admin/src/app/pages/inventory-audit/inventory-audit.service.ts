@@ -9,7 +9,7 @@ import { map } from 'rxjs/operators';
 import { AuthService } from '../../core/auth/auth.service';
 
 export type AuditRow =
-  InventoryTransactionsByDispensaryQuery['inventoryTransactionsByDispensary'][number];
+  InventoryTransactionsByDispensaryQuery['inventoryTransactionsByDispensary']['rows'][number];
 
 export interface AuditFilters {
   readonly since: string | null;
@@ -78,11 +78,17 @@ export class InventoryAuditService {
             performedByUserId: params.performedByUserId,
           },
         })
-        .pipe(map((r): readonly AuditRow[] => r.data?.inventoryTransactionsByDispensary ?? []));
+        .pipe(
+          map((r): { rows: readonly AuditRow[]; totalCount: number } => ({
+            rows: r.data?.inventoryTransactionsByDispensary?.rows ?? [],
+            totalCount: r.data?.inventoryTransactionsByDispensary?.totalCount ?? 0,
+          })),
+        );
     },
   });
 
-  readonly rows = computed<readonly AuditRow[]>(() => this.resource.value() ?? []);
+  readonly rows = computed<readonly AuditRow[]>(() => this.resource.value()?.rows ?? []);
+  readonly totalCount = computed<number>(() => this.resource.value()?.totalCount ?? 0);
   readonly isLoading = this.resource.isLoading;
   readonly error = this.resource.error;
 }
