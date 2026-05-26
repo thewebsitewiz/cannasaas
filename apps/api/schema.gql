@@ -1501,6 +1501,7 @@ type Mutation {
   provisionKiosk(input: ProvisionKioskInput!): KioskProvisionResult!
   publishWeekSchedule(dispensaryId: ID!, weekStart: String!): Int!
   pushOrderToPos(dispensaryId: ID!, orderId: ID!): PosOrderPushResult!
+  reassignShift(profileId: ID!, shiftDate: String!, shiftId: ID!): ScheduledShift!
   receiveTransfer(items: [ReceiveItemInput!]!, transferId: ID!): InventoryTransfer!
   recordCountItem(countItemId: ID!, countedQuantity: Int!, notes: String): InventoryCountItem!
   redeemReward(dispensaryId: ID!, orderId: ID, rewardId: ID!): RedeemResult!

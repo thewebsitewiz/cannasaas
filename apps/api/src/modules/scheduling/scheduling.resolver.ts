@@ -103,6 +103,16 @@ export class SchedulingResolver {
   }
 
   @Roles('dispensary_admin', 'org_admin', 'super_admin')
+  @Mutation(() => ScheduledShift, { name: 'reassignShift' })
+  async reassignShift(
+    @Args('shiftId', { type: () => ID }) shiftId: string,
+    @Args('profileId', { type: () => ID }) profileId: string,
+    @Args('shiftDate') shiftDate: string,
+  ): Promise<ScheduledShift> {
+    return this.scheduling.reassignShift({ shiftId, profileId, shiftDate });
+  }
+
+  @Roles('dispensary_admin', 'org_admin', 'super_admin')
   @Mutation(() => Int, { name: 'publishWeekSchedule' })
   async publishWeek(
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { CdkDrag, CdkDropList, type CdkDragDrop } from '@angular/cdk/drag-drop';
 
 import {
   SchedulingService,
@@ -20,19 +21,20 @@ function todayIso(): string {
   return new Date().toISOString().split('T')[0];
 }
 
+function cellDomId(date: string): string {
+  return 'sched-day-' + date;
+}
+
 /**
- * Weekly scheduling overview. Mirrors React parity: read-only
- * week-grid, drivers panel + 30-day stats, time-off requests panel,
- * Publish-week button (disabled when zero unpublished shifts).
- *
- * Filed scope mentioned a CDK drag-drop assignment editor + create-
- * shift modal + conflict detection. None exist in React — that's a
- * larger feature that should land in a dedicated follow-up story.
- * For now this matches React behavior.
+ * Weekly scheduling overview with CDK drag-drop reassignment (sc-686).
+ * Drag a shift card from one day onto another to call reassignShift;
+ * the backend re-checks conflict + approved-time-off guards and the
+ * resource reloads on success.
  */
 @Component({
   selector: 'cs-scheduling-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [CdkDropList, CdkDrag],
   template: `
     <section class="space-y-6">
       <h1 class="text-2xl font-bold text-(--color-text)">Scheduling</h1>
@@ -100,6 +102,15 @@ function todayIso(): string {
           <p class="mt-1 text-sm">{{ errorMessage() }}</p>
         </div>
       } @else {
+        @if (reassignError(); as msg) {
+          <div
+            class="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-300"
+            role="alert"
+          >
+            {{ msg }}
+          </div>
+        }
+
         <!-- Week grid -->
         <div class="grid grid-cols-7 gap-2">
           @for (cell of cells(); track cell.date) {
@@ -111,6 +122,11 @@ function todayIso(): string {
                   : 'border-(--color-border) bg-(--color-surface)'
               "
               [attr.aria-label]="cell.label + ' ' + cell.date"
+              cdkDropList
+              [id]="cellDomId(cell.date)"
+              [cdkDropListData]="cell.date"
+              [cdkDropListConnectedTo]="dropListIds()"
+              (cdkDropListDropped)="onShiftDropped($event)"
             >
               <p
                 class="mb-2 text-xs font-semibold"
@@ -124,12 +140,15 @@ function todayIso(): string {
                 <ul class="space-y-1">
                   @for (s of cell.shifts; track s.shiftId) {
                     <li
-                      class="rounded px-2 py-1 text-[10px]"
+                      class="cursor-grab rounded px-2 py-1 text-[10px] active:cursor-grabbing"
                       [class]="
                         s.published
                           ? 'bg-emerald-500/10 text-emerald-500'
                           : 'bg-amber-500/10 text-amber-500'
                       "
+                      cdkDrag
+                      [cdkDragData]="s"
+                      [attr.data-shift-id]="s.shiftId"
                     >
                       {{ shiftRangeLabel(s) }}
                     </li>
@@ -253,6 +272,7 @@ export class SchedulingPage {
   protected readonly publishing = this.svc.publishing;
   protected readonly weekOffset = this.svc.weekOffset;
   protected readonly weekStart = this.svc.weekStart;
+  protected readonly reassignError = this.svc.reassignError;
 
   protected readonly errorMessage = computed(() => {
     const err = this.error();
@@ -290,6 +310,10 @@ export class SchedulingPage {
     });
   });
 
+  protected readonly dropListIds = computed<string[]>(() =>
+    this.cells().map((c) => cellDomId(c.date)),
+  );
+
   protected prevWeek(): void {
     this.svc.shiftWeek(-1);
   }
@@ -304,6 +328,19 @@ export class SchedulingPage {
 
   protected onPublish(): void {
     void this.svc.publishWeek();
+  }
+
+  protected cellDomId(date: string): string {
+    return cellDomId(date);
+  }
+
+  protected onShiftDropped(event: CdkDragDrop<string, string, ScheduledShift>): void {
+    const fromDate = event.previousContainer.data;
+    const toDate = event.container.data;
+    if (fromDate === toDate) return;
+    const shift = event.item.data;
+    if (!shift.shiftId || !shift.profileId) return;
+    void this.svc.reassignShift(shift.shiftId, shift.profileId, toDate);
   }
 
   protected shiftRangeLabel(s: ScheduledShift): string {

@@ -21,9 +21,11 @@ interface FakeArgs {
   readonly publishing?: boolean;
   readonly weekOffset?: number;
   readonly weekStart?: string;
+  readonly reassignError?: string | null;
   readonly publishWeek?: ReturnType<typeof vi.fn>;
   readonly shiftWeek?: ReturnType<typeof vi.fn>;
   readonly resetWeek?: ReturnType<typeof vi.fn>;
+  readonly reassignShift?: ReturnType<typeof vi.fn>;
 }
 
 function makeSvc(args: FakeArgs): SchedulingService {
@@ -37,9 +39,11 @@ function makeSvc(args: FakeArgs): SchedulingService {
     publishing: signal<boolean>(args.publishing ?? false).asReadonly(),
     weekOffset: signal<number>(args.weekOffset ?? 0).asReadonly(),
     weekStart: signal<string>(args.weekStart ?? '2026-05-18').asReadonly(),
+    reassignError: signal<string | null>(args.reassignError ?? null).asReadonly(),
     publishWeek: args.publishWeek ?? vi.fn().mockResolvedValue(undefined),
     shiftWeek: args.shiftWeek ?? vi.fn(),
     resetWeek: args.resetWeek ?? vi.fn(),
+    reassignShift: args.reassignShift ?? vi.fn().mockResolvedValue(undefined),
   } as unknown as SchedulingService;
 }
 
@@ -248,5 +252,73 @@ describe('SchedulingPage', () => {
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(text).toContain('No drivers configured');
     expect(text).toContain('No time-off requests');
+  });
+
+  // ── Drag-drop (sc-686) ─────────────────────────────────────────────────────
+
+  it('renders shift cards with cdkDrag + day cells with cdkDropList', () => {
+    const { fixture } = configure({
+      weekStart: '2026-05-18',
+      shifts: [shift({ shiftDate: '2026-05-19' })],
+    });
+    const root = fixture.nativeElement as HTMLElement;
+    const dropLists = root.querySelectorAll('[cdkDropList], .cdk-drop-list');
+    const drags = root.querySelectorAll('.cdk-drag');
+    expect(dropLists.length).toBeGreaterThanOrEqual(7);
+    expect(drags.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('dropping a shift on a different day calls svc.reassignShift with the new date', () => {
+    const reassignShift = vi.fn().mockResolvedValue(undefined);
+    const { fixture } = configure({
+      weekStart: '2026-05-18',
+      shifts: [
+        shift({
+          shiftId: 's-99',
+          shiftDate: '2026-05-19',
+          ...({ profileId: 'p-7' } as Partial<ScheduledShift>),
+        }),
+      ],
+      reassignShift,
+    });
+    // Synthesize a CdkDragDrop event onto the page handler.
+    const page = fixture.componentInstance as unknown as {
+      onShiftDropped: (e: unknown) => void;
+    };
+    page.onShiftDropped({
+      previousContainer: { data: '2026-05-19' },
+      container: { data: '2026-05-21' },
+      item: {
+        data: {
+          shiftId: 's-99',
+          profileId: 'p-7',
+          shiftDate: '2026-05-19',
+        },
+      },
+    });
+    expect(reassignShift).toHaveBeenCalledTimes(1);
+    expect(reassignShift.mock.calls[0]).toEqual(['s-99', 'p-7', '2026-05-21']);
+  });
+
+  it('dropping a shift on its own day is a no-op', () => {
+    const reassignShift = vi.fn();
+    const { fixture } = configure({ reassignShift });
+    const page = fixture.componentInstance as unknown as {
+      onShiftDropped: (e: unknown) => void;
+    };
+    page.onShiftDropped({
+      previousContainer: { data: '2026-05-19' },
+      container: { data: '2026-05-19' },
+      item: { data: { shiftId: 's-1', profileId: 'p-1' } },
+    });
+    expect(reassignShift).not.toHaveBeenCalled();
+  });
+
+  it('renders the reassign error banner when the service reports one', () => {
+    const { fixture } = configure({
+      reassignError: 'Shift conflicts with existing schedule',
+    });
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('Shift conflicts with existing schedule');
   });
 });
