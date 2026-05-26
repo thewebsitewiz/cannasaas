@@ -36,6 +36,7 @@ class EmployeeListItem {
   @Field({ nullable: true }) firstName?: string;
   @Field({ nullable: true }) lastName?: string;
   @Field() role!: string;
+  @Field() isActive!: boolean;
   @Field({ nullable: true }) positionName?: string;
   @Field({ nullable: true }) positionCode?: string;
   @Field({ nullable: true }) department?: string;

@@ -937,6 +937,7 @@ export type EmployeeListItem = {
   firstName?: Maybe<Scalars['String']['output']>;
   hireDate: Scalars['String']['output'];
   hourlyRate?: Maybe<Scalars['Float']['output']>;
+  isActive: Scalars['Boolean']['output'];
   lastName?: Maybe<Scalars['String']['output']>;
   payType: Scalars['String']['output'];
   phone?: Maybe<Scalars['String']['output']>;
@@ -1215,6 +1216,20 @@ export type InventoryValueResult = {
   totalItems: Scalars['Int']['output'];
   totalOnHand: Scalars['Float']['output'];
   totalReserved: Scalars['Float']['output'];
+};
+
+export type InviteStaffInput = {
+  dispensaryId: Scalars['ID']['input'];
+  email: Scalars['String']['input'];
+  firstName?: InputMaybe<Scalars['String']['input']>;
+  lastName?: InputMaybe<Scalars['String']['input']>;
+  role: Scalars['String']['input'];
+};
+
+export type InviteStaffResult = {
+  __typename?: 'InviteStaffResult';
+  temporaryPassword: Scalars['String']['output'];
+  user: User;
 };
 
 export type KioskCustomerLookup = {
@@ -1583,6 +1598,7 @@ export type Mutation = {
   importOtreebaStrains: BulkImportResultType;
   indexProducts: Scalars['Int']['output'];
   initiateCashlessPayment: CashlessPaymentResult;
+  inviteStaff: InviteStaffResult;
   logWaste: WasteDestructionLog;
   login: AuthToken;
   markOrderReady: Scalars['Boolean']['output'];
@@ -2028,6 +2044,10 @@ export type MutationInitiateCashlessPaymentArgs = {
   dispensaryId: Scalars['ID']['input'];
   orderId: Scalars['ID']['input'];
   provider: Scalars['String']['input'];
+};
+
+export type MutationInviteStaffArgs = {
+  input: InviteStaffInput;
 };
 
 export type MutationLogWasteArgs = {
@@ -6043,6 +6063,8 @@ export type EmployeesQuery = {
     firstName?: string | null;
     lastName?: string | null;
     email: string;
+    role: string;
+    isActive: boolean;
     positionName?: string | null;
     department?: string | null;
     employeeNumber?: string | null;
@@ -6054,6 +6076,43 @@ export type EmployeesQuery = {
     expiringCerts: number;
   }>;
 };
+
+export type InviteStaffMutationVariables = Exact<{
+  input: InviteStaffInput;
+}>;
+
+export type InviteStaffMutation = {
+  __typename?: 'Mutation';
+  inviteStaff: {
+    __typename?: 'InviteStaffResult';
+    temporaryPassword: string;
+    user: {
+      __typename?: 'User';
+      id: string;
+      email: string;
+      role: string;
+      firstName?: string | null;
+      lastName?: string | null;
+      isActive: boolean;
+    };
+  };
+};
+
+export type SetUserRoleMutationVariables = Exact<{
+  userId: Scalars['ID']['input'];
+  role: Scalars['String']['input'];
+}>;
+
+export type SetUserRoleMutation = {
+  __typename?: 'Mutation';
+  setUserRole: { __typename?: 'User'; id: string; role: string };
+};
+
+export type DeactivateUserMutationVariables = Exact<{
+  userId: Scalars['ID']['input'];
+}>;
+
+export type DeactivateUserMutation = { __typename?: 'Mutation'; deactivateUser: boolean };
 
 export type StaffComplianceOverviewQueryVariables = Exact<{
   dispensaryId: Scalars['ID']['input'];
@@ -8622,6 +8681,8 @@ export const EmployeesDocument = gql`
       firstName
       lastName
       email
+      role
+      isActive
       positionName
       department
       employeeNumber
@@ -8640,6 +8701,76 @@ export const EmployeesDocument = gql`
 })
 export class EmployeesGQL extends Apollo.Query<EmployeesQuery, EmployeesQueryVariables> {
   override document = EmployeesDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const InviteStaffDocument = gql`
+  mutation InviteStaff($input: InviteStaffInput!) {
+    inviteStaff(input: $input) {
+      user {
+        id
+        email
+        role
+        firstName
+        lastName
+        isActive
+      }
+      temporaryPassword
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class InviteStaffGQL extends Apollo.Mutation<
+  InviteStaffMutation,
+  InviteStaffMutationVariables
+> {
+  override document = InviteStaffDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const SetUserRoleDocument = gql`
+  mutation SetUserRole($userId: ID!, $role: String!) {
+    setUserRole(userId: $userId, role: $role) {
+      id
+      role
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class SetUserRoleGQL extends Apollo.Mutation<
+  SetUserRoleMutation,
+  SetUserRoleMutationVariables
+> {
+  override document = SetUserRoleDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const DeactivateUserDocument = gql`
+  mutation DeactivateUser($userId: ID!) {
+    deactivateUser(userId: $userId)
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class DeactivateUserGQL extends Apollo.Mutation<
+  DeactivateUserMutation,
+  DeactivateUserMutationVariables
+> {
+  override document = DeactivateUserDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);

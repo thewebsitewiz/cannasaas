@@ -855,6 +855,7 @@ type EmployeeListItem {
   firstName: String
   hireDate: String!
   hourlyRate: Float
+  isActive: Boolean!
   lastName: String
   payType: String!
   phone: String
@@ -1113,6 +1114,19 @@ type InventoryValueResult {
   totalItems: Int!
   totalOnHand: Float!
   totalReserved: Float!
+}
+
+input InviteStaffInput {
+  dispensaryId: ID!
+  email: String!
+  firstName: String
+  lastName: String
+  role: String!
+}
+
+type InviteStaffResult {
+  temporaryPassword: String!
+  user: User!
 }
 
 """
@@ -1465,6 +1479,7 @@ type Mutation {
   importOtreebaStrains(count: Int, page: Int, type: String): BulkImportResultType!
   indexProducts(dispensaryId: String!): Int!
   initiateCashlessPayment(amount: Float!, dispensaryId: ID!, orderId: ID!, provider: String!): CashlessPaymentResult!
+  inviteStaff(input: InviteStaffInput!): InviteStaffResult!
   logWaste(destructionMethod: String, dispensaryId: ID!, notes: String, productName: String!, quantity: Float!, reason: String!, unitOfMeasure: String! = "grams", variantId: ID, wasteType: String!, witness1Name: String!, witness1Title: String, witness2Name: String): WasteDestructionLog!
   login(input: LoginInput!): AuthToken!
   markOrderReady(dispensaryId: ID, orderId: ID!): Boolean!
