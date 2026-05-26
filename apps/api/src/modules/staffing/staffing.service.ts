@@ -22,6 +22,7 @@ interface EmployeeListRow {
   firstName: string;
   lastName: string;
   role: string;
+  user_is_active: boolean;
   position_id: number | null;
   position_name: string | null;
   position_code: string | null;
@@ -104,6 +105,7 @@ export interface EmployeeListItem {
   firstName: string;
   lastName: string;
   role: string;
+  isActive: boolean;
   positionId?: number;
   positionName?: string;
   positionCode?: string;
@@ -240,7 +242,7 @@ export class StaffingService {
   ): Promise<EmployeeListItem[]> {
     const rows = await rawQuery<EmployeeListRow>(
       this.dataSource,
-      `SELECT ep.*, u.email, u."firstName", u."lastName", u.role,
+      `SELECT ep.*, u.email, u."firstName", u."lastName", u.role, u.is_active as user_is_active,
         lp.name as position_name, lp.code as position_code, lp.department as position_department,
         (SELECT COUNT(*) FROM employee_certifications ec WHERE ec.profile_id = ep.profile_id AND ec.status = 'active') as active_certs,
         (SELECT COUNT(*) FROM employee_certifications ec WHERE ec.profile_id = ep.profile_id AND ec.status = 'active' AND ec.expiration_date <= CURRENT_DATE + INTERVAL '30 days') as expiring_certs
@@ -260,6 +262,7 @@ export class StaffingService {
       firstName: r.firstName,
       lastName: r.lastName,
       role: r.role,
+      isActive: r.user_is_active,
       positionId: r.position_id ?? undefined,
       positionName: r.position_name ?? undefined,
       positionCode: r.position_code ?? undefined,

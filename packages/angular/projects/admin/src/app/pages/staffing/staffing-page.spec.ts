@@ -1,15 +1,28 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StaffingPage } from './staffing-page';
-import { StaffingService, type ComplianceOverview, type Employee } from './staffing.service';
+import {
+  StaffingService,
+  type ComplianceOverview,
+  type Employee,
+  type InviteStaffResult,
+} from './staffing.service';
 
 interface FakeArgs {
   readonly employees?: readonly Employee[];
   readonly compliance?: ComplianceOverview | null;
   readonly loading?: boolean;
   readonly error?: unknown;
+  readonly busyUserId?: string | null;
+  readonly errorMessage?: string | null;
+  readonly lastInvite?: InviteStaffResult | null;
+  readonly invite?: ReturnType<typeof vi.fn>;
+  readonly setRole?: ReturnType<typeof vi.fn>;
+  readonly deactivate?: ReturnType<typeof vi.fn>;
+  readonly clearError?: ReturnType<typeof vi.fn>;
+  readonly clearLastInvite?: ReturnType<typeof vi.fn>;
 }
 
 function makeSvc(args: FakeArgs): StaffingService {
@@ -18,6 +31,14 @@ function makeSvc(args: FakeArgs): StaffingService {
     compliance: signal<ComplianceOverview | null>(args.compliance ?? null).asReadonly(),
     isLoading: signal<boolean>(args.loading ?? false).asReadonly(),
     error: signal<unknown>(args.error ?? null).asReadonly(),
+    busyUserId: signal<string | null>(args.busyUserId ?? null).asReadonly(),
+    errorMessage: signal<string | null>(args.errorMessage ?? null).asReadonly(),
+    lastInvite: signal<InviteStaffResult | null>(args.lastInvite ?? null).asReadonly(),
+    invite: args.invite ?? vi.fn().mockResolvedValue(undefined),
+    setRole: args.setRole ?? vi.fn().mockResolvedValue(undefined),
+    deactivate: args.deactivate ?? vi.fn().mockResolvedValue(undefined),
+    clearError: args.clearError ?? vi.fn(),
+    clearLastInvite: args.clearLastInvite ?? vi.fn(),
   } as unknown as StaffingService;
 }
 
@@ -39,6 +60,8 @@ function emp(overrides: Partial<Employee> = {}): Employee {
     firstName: 'Ada',
     lastName: 'Lovelace',
     email: 'ada@x.com',
+    role: 'budtender',
+    isActive: true,
     positionName: 'Budtender',
     department: null,
     employeeNumber: 'E-001',
@@ -154,5 +177,172 @@ describe('StaffingPage', () => {
       employees: [emp({ employmentType: 'part_time' })],
     });
     expect((f.nativeElement as HTMLElement).textContent).toContain('Part-time');
+  });
+
+  // ── Write-ops (sc-683) ────────────────────────────────────────────────
+
+  it('Invite staff button opens the modal', () => {
+    const f = configure({ compliance: compliance(), employees: [emp()] });
+    const btn = (f.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Invite staff"]',
+    ) as HTMLButtonElement;
+    btn.click();
+    f.detectChanges();
+    expect(
+      (f.nativeElement as HTMLElement).querySelector('[aria-label="Invite staff"][role="dialog"]'),
+    ).not.toBeNull();
+  });
+
+  it('submitting the invite modal calls svc.invite with the form values', async () => {
+    const invite = vi.fn().mockResolvedValue(undefined);
+    const f = configure({ compliance: compliance(), employees: [emp()], invite });
+    const openBtn = (f.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Invite staff"]',
+    ) as HTMLButtonElement;
+    openBtn.click();
+    f.detectChanges();
+
+    const root = f.nativeElement as HTMLElement;
+    const email = root.querySelector('input[aria-label="Staff email"]') as HTMLInputElement;
+    email.value = 'newbie@x.com';
+    email.dispatchEvent(new Event('input'));
+    const first = root.querySelector('input[aria-label="Staff first name"]') as HTMLInputElement;
+    first.value = 'New';
+    first.dispatchEvent(new Event('input'));
+    const last = root.querySelector('input[aria-label="Staff last name"]') as HTMLInputElement;
+    last.value = 'Hire';
+    last.dispatchEvent(new Event('input'));
+    const role = root.querySelector('select[aria-label="Staff role"]') as HTMLSelectElement;
+    role.value = 'dispensary_admin';
+    role.dispatchEvent(new Event('change'));
+    f.detectChanges();
+
+    const form = root.querySelector('form') as HTMLFormElement;
+    form.dispatchEvent(new Event('submit'));
+    await f.whenStable();
+    expect(invite).toHaveBeenCalledWith({
+      email: 'newbie@x.com',
+      firstName: 'New',
+      lastName: 'Hire',
+      role: 'dispensary_admin',
+    });
+  });
+
+  it('changing role dropdown calls svc.setRole', () => {
+    const setRole = vi.fn().mockResolvedValue(undefined);
+    const f = configure({
+      compliance: compliance(),
+      employees: [emp({ userId: 'u-9', role: 'budtender' })],
+      setRole,
+    });
+    const select = (f.nativeElement as HTMLElement).querySelector(
+      'select[aria-label^="Role for"]',
+    ) as HTMLSelectElement;
+    select.value = 'dispensary_admin';
+    select.dispatchEvent(new Event('change'));
+    expect(setRole).toHaveBeenCalledWith('u-9', 'dispensary_admin');
+  });
+
+  it('Deactivate asks for confirm; clicking the inner Deactivate calls svc.deactivate', async () => {
+    const deactivate = vi.fn().mockResolvedValue(undefined);
+    const f = configure({
+      compliance: compliance(),
+      employees: [emp({ userId: 'u-7' })],
+      deactivate,
+    });
+    const initial = Array.from((f.nativeElement as HTMLElement).querySelectorAll('button')).find(
+      (b) => (b.textContent ?? '').trim() === 'Deactivate',
+    ) as HTMLButtonElement;
+    initial.click();
+    f.detectChanges();
+    const confirm = (f.nativeElement as HTMLElement).querySelector(
+      'button[aria-label^="Confirm deactivate"]',
+    ) as HTMLButtonElement;
+    confirm.click();
+    await f.whenStable();
+    expect(deactivate).toHaveBeenCalledWith('u-7');
+  });
+
+  it('No cancels the deactivate confirm', () => {
+    const deactivate = vi.fn().mockResolvedValue(undefined);
+    const f = configure({
+      compliance: compliance(),
+      employees: [emp()],
+      deactivate,
+    });
+    const initial = Array.from((f.nativeElement as HTMLElement).querySelectorAll('button')).find(
+      (b) => (b.textContent ?? '').trim() === 'Deactivate',
+    ) as HTMLButtonElement;
+    initial.click();
+    f.detectChanges();
+    const noBtn = Array.from((f.nativeElement as HTMLElement).querySelectorAll('button')).find(
+      (b) => (b.textContent ?? '').trim() === 'No',
+    ) as HTMLButtonElement;
+    noBtn.click();
+    f.detectChanges();
+    expect(deactivate).not.toHaveBeenCalled();
+    expect(
+      (f.nativeElement as HTMLElement).querySelector('button[aria-label^="Confirm deactivate"]'),
+    ).toBeNull();
+  });
+
+  it('deactivated row greys out and shows the (deactivated) label', () => {
+    const f = configure({
+      compliance: compliance(),
+      employees: [emp({ isActive: false })],
+    });
+    const row = (f.nativeElement as HTMLElement).querySelector('tbody tr') as HTMLTableRowElement;
+    expect(row.className).toContain('opacity-50');
+    expect(row.textContent).toContain('(deactivated)');
+  });
+
+  it('renders the temp-password banner after a successful invite', () => {
+    const f = configure({
+      compliance: compliance(),
+      employees: [emp()],
+      lastInvite: {
+        __typename: 'InviteStaffResult',
+        temporaryPassword: 'abc123xyz_TEMP',
+        user: {
+          __typename: 'User',
+          id: 'u-new',
+          email: 'newbie@x.com',
+          role: 'budtender',
+          firstName: 'New',
+          lastName: 'Hire',
+          isActive: true,
+        },
+      } as unknown as InviteStaffResult,
+    });
+    const banner = (f.nativeElement as HTMLElement).querySelector('[aria-label="Invite result"]');
+    expect(banner?.textContent).toContain('newbie@x.com');
+    expect(banner?.textContent).toContain('abc123xyz_TEMP');
+  });
+
+  it('dismiss buttons call clearLastInvite + clearError', () => {
+    const clearLastInvite = vi.fn();
+    const clearError = vi.fn();
+    const f = configure({
+      compliance: compliance(),
+      employees: [emp()],
+      errorMessage: 'Bad email',
+      lastInvite: {
+        __typename: 'InviteStaffResult',
+        temporaryPassword: 'X',
+        user: { __typename: 'User', id: 'u', email: 'a@a.com', role: 'budtender' },
+      } as unknown as InviteStaffResult,
+      clearLastInvite,
+      clearError,
+    });
+    const dismissInvite = (f.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Dismiss invite result"]',
+    ) as HTMLButtonElement;
+    dismissInvite.click();
+    const dismissErr = (f.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Dismiss error"]',
+    ) as HTMLButtonElement;
+    dismissErr.click();
+    expect(clearLastInvite).toHaveBeenCalled();
+    expect(clearError).toHaveBeenCalled();
   });
 });

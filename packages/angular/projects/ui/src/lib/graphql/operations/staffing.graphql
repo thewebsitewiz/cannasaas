@@ -5,6 +5,8 @@ query Employees($dispensaryId: ID!, $status: String) {
     firstName
     lastName
     email
+    role
+    isActive
     positionName
     department
     employeeNumber
@@ -15,6 +17,31 @@ query Employees($dispensaryId: ID!, $status: String) {
     activeCerts
     expiringCerts
   }
+}
+
+mutation InviteStaff($input: InviteStaffInput!) {
+  inviteStaff(input: $input) {
+    user {
+      id
+      email
+      role
+      firstName
+      lastName
+      isActive
+    }
+    temporaryPassword
+  }
+}
+
+mutation SetUserRole($userId: ID!, $role: String!) {
+  setUserRole(userId: $userId, role: $role) {
+    id
+    role
+  }
+}
+
+mutation DeactivateUser($userId: ID!) {
+  deactivateUser(userId: $userId)
 }
 
 query StaffComplianceOverview($dispensaryId: ID!) {
