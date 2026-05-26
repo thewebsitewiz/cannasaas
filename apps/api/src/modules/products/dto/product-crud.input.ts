@@ -75,3 +75,43 @@ export class UpdateVariantPriceInput {
   dispensaryId!: string;
   @Field(() => Float) @IsNumber() @Min(0) price!: number;
 }
+
+@InputType()
+export class CreateProductVariantInput {
+  @Field(() => ID)
+  @Matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
+  productId!: string;
+  @Field(() => ID)
+  @Matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
+  dispensaryId!: string;
+  @Field() @IsString() name!: string;
+  @Field(() => Float, { nullable: true })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  quantityPerUnit?: number;
+  @Field({ nullable: true }) @IsOptional() @IsString() sku?: string;
+  @Field(() => Float, { nullable: true })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  retailPrice?: number;
+}
+
+@InputType()
+export class UpdateProductVariantInput {
+  @Field(() => ID)
+  @Matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
+  variantId!: string;
+  @Field(() => ID)
+  @Matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
+  dispensaryId!: string;
+  @Field({ nullable: true }) @IsOptional() @IsString() name?: string;
+  @Field(() => Float, { nullable: true })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  quantityPerUnit?: number;
+  @Field({ nullable: true }) @IsOptional() @IsString() sku?: string;
+  @Field({ nullable: true }) @IsOptional() @IsBoolean() isActive?: boolean;
+}

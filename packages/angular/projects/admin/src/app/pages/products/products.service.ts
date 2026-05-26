@@ -3,11 +3,16 @@ import { rxResource } from '@angular/core/rxjs-interop';
 import {
   type CreateProductInput,
   CreateProductGQL,
+  type CreateProductVariantInput,
+  CreateProductVariantGQL,
   DeleteProductGQL,
+  DeleteProductVariantGQL,
   ProductsGQL,
   type ProductsQuery,
   type UpdateProductInput,
   UpdateProductGQL,
+  type UpdateProductVariantInput,
+  UpdateProductVariantGQL,
   type UpdateVariantPriceInput,
   UpdateVariantPriceGQL,
 } from '@cannasaas/ui-ng';
@@ -91,6 +96,39 @@ export class ProductsService {
     try {
       const gql = this.injector.get(DeleteProductGQL);
       await firstValueFrom(gql.mutate({ variables: { productId, dispensaryId } }));
+      this.reload();
+    } finally {
+      this._deleting.set(false);
+    }
+  }
+
+  async createVariant(input: CreateProductVariantInput): Promise<void> {
+    this._saving.set(true);
+    try {
+      const gql = this.injector.get(CreateProductVariantGQL);
+      await firstValueFrom(gql.mutate({ variables: { input } }));
+      this.reload();
+    } finally {
+      this._saving.set(false);
+    }
+  }
+
+  async updateVariant(input: UpdateProductVariantInput): Promise<void> {
+    this._saving.set(true);
+    try {
+      const gql = this.injector.get(UpdateProductVariantGQL);
+      await firstValueFrom(gql.mutate({ variables: { input } }));
+      this.reload();
+    } finally {
+      this._saving.set(false);
+    }
+  }
+
+  async deleteVariant(variantId: string, dispensaryId: string): Promise<void> {
+    this._deleting.set(true);
+    try {
+      const gql = this.injector.get(DeleteProductVariantGQL);
+      await firstValueFrom(gql.mutate({ variables: { variantId, dispensaryId } }));
       this.reload();
     } finally {
       this._deleting.set(false);

@@ -14,7 +14,9 @@ import { DataSource } from 'typeorm';
 import { ForbiddenException } from '@nestjs/common';
 import {
   CreateProductInput,
+  CreateProductVariantInput,
   UpdateProductInput,
+  UpdateProductVariantInput,
   UpdateVariantPriceInput,
 } from './dto/product-crud.input';
 import { ProductsService } from './products.service';
@@ -206,6 +208,31 @@ export class ProductsResolver {
     @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
   ): Promise<boolean> {
     return this.products.deleteProduct(productId, dispensaryId);
+  }
+
+  @Roles('dispensary_admin', 'org_admin', 'super_admin')
+  @Mutation(() => ProductVariant, { name: 'createProductVariant' })
+  async createProductVariant(
+    @Args('input') input: CreateProductVariantInput,
+  ): Promise<ProductVariant> {
+    return this.products.createVariant(input);
+  }
+
+  @Roles('dispensary_admin', 'org_admin', 'super_admin')
+  @Mutation(() => ProductVariant, { name: 'updateProductVariant' })
+  async updateProductVariant(
+    @Args('input') input: UpdateProductVariantInput,
+  ): Promise<ProductVariant> {
+    return this.products.updateVariant(input);
+  }
+
+  @Roles('dispensary_admin', 'org_admin', 'super_admin')
+  @Mutation(() => Boolean, { name: 'deleteProductVariant' })
+  async deleteProductVariant(
+    @Args('variantId', { type: () => ID }) variantId: string,
+    @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
+  ): Promise<boolean> {
+    return this.products.deleteVariant(variantId, dispensaryId);
   }
 }
 interface InventoryQtyRow {

@@ -19,3 +19,28 @@ mutation UpdateVariantPrice($input: UpdateVariantPriceInput!) {
 mutation DeleteProduct($productId: ID!, $dispensaryId: ID!) {
   deleteProduct(productId: $productId, dispensaryId: $dispensaryId)
 }
+
+mutation CreateProductVariant($input: CreateProductVariantInput!) {
+  createProductVariant(input: $input) {
+    variantId
+    name
+    sortOrder
+    quantityPerUnit
+    sku
+    isActive
+  }
+}
+
+mutation UpdateProductVariant($input: UpdateProductVariantInput!) {
+  updateProductVariant(input: $input) {
+    variantId
+    name
+    quantityPerUnit
+    sku
+    isActive
+  }
+}
+
+mutation DeleteProductVariant($variantId: ID!, $dispensaryId: ID!) {
+  deleteProductVariant(variantId: $variantId, dispensaryId: $dispensaryId)
+}
