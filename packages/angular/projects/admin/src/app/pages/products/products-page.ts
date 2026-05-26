@@ -50,15 +50,85 @@ const STRAIN_OPTIONS = ['hybrid', 'sativa', 'indica'] as const;
         </button>
       </header>
 
-      <div class="relative max-w-md">
-        <input
-          type="text"
-          [value]="search()"
-          (input)="onSearchInput($event)"
-          placeholder="Search products…"
-          aria-label="Search products"
-          class="w-full rounded-lg border border-(--color-border) bg-(--color-surface) px-3 py-2 text-sm text-(--color-text) focus:border-(--color-primary) focus:outline-none"
-        />
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="relative max-w-md flex-1">
+          <input
+            type="text"
+            [value]="search()"
+            (input)="onSearchInput($event)"
+            placeholder="Search products…"
+            aria-label="Search products"
+            class="w-full rounded-lg border border-(--color-border) bg-(--color-surface) px-3 py-2 text-sm text-(--color-text) focus:border-(--color-primary) focus:outline-none"
+          />
+        </div>
+        @if (selectedCount() > 0) {
+          <div
+            class="flex flex-wrap items-center gap-2 rounded-lg border border-(--color-primary) bg-(--color-primary)/10 px-3 py-2 text-sm"
+            role="region"
+            aria-label="Bulk actions"
+          >
+            <span class="font-medium text-(--color-text)" aria-label="Selected count">
+              {{ selectedCount() }} selected
+            </span>
+            <button
+              type="button"
+              (click)="onBulkSetActive(true)"
+              [disabled]="saving()"
+              aria-label="Enable selected products"
+              class="rounded-md border border-(--color-border) px-2 py-1 text-xs text-(--color-text) hover:text-(--color-primary) disabled:opacity-50"
+            >
+              Enable
+            </button>
+            <button
+              type="button"
+              (click)="onBulkSetActive(false)"
+              [disabled]="saving()"
+              aria-label="Disable selected products"
+              class="rounded-md border border-(--color-border) px-2 py-1 text-xs text-(--color-text) hover:text-(--color-primary) disabled:opacity-50"
+            >
+              Disable
+            </button>
+            @if (!confirmBulkDelete()) {
+              <button
+                type="button"
+                (click)="openBulkDeleteConfirm()"
+                aria-label="Delete selected products"
+                class="rounded-md border border-rose-500/30 px-2 py-1 text-xs text-rose-500 hover:bg-rose-500/10"
+              >
+                Delete
+              </button>
+            } @else {
+              <button
+                type="button"
+                (click)="onConfirmBulkDelete()"
+                [disabled]="deleting()"
+                aria-label="Confirm bulk delete"
+                class="rounded-md bg-rose-600 px-2 py-1 text-xs text-white hover:bg-rose-500 disabled:opacity-50"
+              >
+                @if (deleting()) {
+                  Deleting…
+                } @else {
+                  Confirm delete {{ selectedCount() }}
+                }
+              </button>
+              <button
+                type="button"
+                (click)="cancelBulkDelete()"
+                class="rounded-md border border-(--color-border) px-2 py-1 text-xs text-(--color-text-secondary)"
+              >
+                No
+              </button>
+            }
+            <button
+              type="button"
+              (click)="onClearSelection()"
+              aria-label="Clear selection"
+              class="text-xs text-(--color-text-muted) underline"
+            >
+              Clear
+            </button>
+          </div>
+        }
       </div>
 
       <div class="grid grid-cols-1 gap-6" [class.md:grid-cols-3]="showPanel()">
@@ -81,6 +151,16 @@ const STRAIN_OPTIONS = ['hybrid', 'sativa', 'indica'] as const;
             <table class="w-full text-sm">
               <thead class="border-b border-(--color-border) bg-(--color-bg)">
                 <tr>
+                  <th class="w-10 px-3 py-3 text-center">
+                    <input
+                      type="checkbox"
+                      [checked]="allOnPageSelected()"
+                      [indeterminate]="someOnPageSelected()"
+                      (change)="onToggleSelectAll($event)"
+                      aria-label="Select all products"
+                      class="h-4 w-4 cursor-pointer accent-(--color-primary)"
+                    />
+                  </th>
                   <th class="px-5 py-3 text-left font-medium text-(--color-text-secondary)">
                     Product
                   </th>
@@ -109,6 +189,15 @@ const STRAIN_OPTIONS = ['hybrid', 'sativa', 'indica'] as const;
                     "
                     (click)="onSelect(p)"
                   >
+                    <td class="w-10 px-3 py-4 text-center" (click)="$event.stopPropagation()">
+                      <input
+                        type="checkbox"
+                        [checked]="isProductSelected(p.id)"
+                        (change)="onToggleProduct(p.id, $event)"
+                        [attr.aria-label]="'Select ' + p.name"
+                        class="h-4 w-4 cursor-pointer accent-(--color-primary)"
+                      />
+                    </td>
                     <td class="px-5 py-4">
                       <p class="font-medium text-(--color-text)">{{ p.name }}</p>
                       @if (firstVariant(p); as v) {
@@ -622,6 +711,25 @@ export class ProductsPage {
   protected readonly confirmDelete = signal<boolean>(false);
   protected readonly addingVariant = signal<boolean>(false);
   protected readonly deletingVariantId = signal<string | null>(null);
+
+  /** Set of selected product ids for bulk-ops (sc-682b). */
+  protected readonly selectedIds = signal<ReadonlySet<string>>(new Set());
+  protected readonly confirmBulkDelete = signal<boolean>(false);
+
+  protected readonly selectedCount = computed(() => this.selectedIds().size);
+
+  protected readonly allOnPageSelected = computed(() => {
+    const visible = this.filteredProducts();
+    if (visible.length === 0) return false;
+    const selected = this.selectedIds();
+    return visible.every((p) => selected.has(p.id));
+  });
+
+  protected readonly someOnPageSelected = computed(() => {
+    const selected = this.selectedIds();
+    if (selected.size === 0) return false;
+    return !this.allOnPageSelected();
+  });
   protected readonly newVariant = signal<{
     name: string;
     quantityPerUnit: string;
@@ -899,5 +1007,65 @@ export class ProductsPage {
     if (!dispensaryId) return;
     await this.svc.deleteVariant(v.variantId, dispensaryId);
     this.deletingVariantId.set(null);
+  }
+
+  // ── Bulk-ops (sc-682b) ─────────────────────────────────────────────────
+
+  protected isProductSelected(id: string): boolean {
+    return this.selectedIds().has(id);
+  }
+
+  protected onToggleProduct(id: string, event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    this.selectedIds.update((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }
+
+  protected onToggleSelectAll(event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    const visible = this.filteredProducts();
+    this.selectedIds.update((prev) => {
+      const next = new Set(prev);
+      for (const p of visible) {
+        if (checked) next.add(p.id);
+        else next.delete(p.id);
+      }
+      return next;
+    });
+  }
+
+  protected onClearSelection(): void {
+    this.selectedIds.set(new Set());
+    this.confirmBulkDelete.set(false);
+  }
+
+  protected async onBulkSetActive(isActive: boolean): Promise<void> {
+    const ids = [...this.selectedIds()];
+    if (ids.length === 0) return;
+    const dispensaryId = this.auth.user()?.dispensaryId;
+    if (!dispensaryId) return;
+    await this.svc.setProductsActive(dispensaryId, ids, isActive);
+    this.onClearSelection();
+  }
+
+  protected openBulkDeleteConfirm(): void {
+    this.confirmBulkDelete.set(true);
+  }
+
+  protected cancelBulkDelete(): void {
+    this.confirmBulkDelete.set(false);
+  }
+
+  protected async onConfirmBulkDelete(): Promise<void> {
+    const ids = [...this.selectedIds()];
+    if (ids.length === 0) return;
+    const dispensaryId = this.auth.user()?.dispensaryId;
+    if (!dispensaryId) return;
+    await this.svc.deleteProducts(dispensaryId, ids);
+    this.onClearSelection();
   }
 }

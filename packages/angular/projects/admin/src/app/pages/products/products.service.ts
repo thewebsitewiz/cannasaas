@@ -6,9 +6,11 @@ import {
   type CreateProductVariantInput,
   CreateProductVariantGQL,
   DeleteProductGQL,
+  DeleteProductsGQL,
   DeleteProductVariantGQL,
   ProductsGQL,
   type ProductsQuery,
+  SetProductsActiveGQL,
   type UpdateProductInput,
   UpdateProductGQL,
   type UpdateProductVariantInput,
@@ -121,6 +123,40 @@ export class ProductsService {
       this.reload();
     } finally {
       this._saving.set(false);
+    }
+  }
+
+  async setProductsActive(
+    dispensaryId: string,
+    productIds: readonly string[],
+    isActive: boolean,
+  ): Promise<number> {
+    this._saving.set(true);
+    try {
+      const gql = this.injector.get(SetProductsActiveGQL);
+      const result = await firstValueFrom(
+        gql.mutate({
+          variables: { dispensaryId, productIds: [...productIds], isActive },
+        }),
+      );
+      this.reload();
+      return result.data?.setProductsActive ?? 0;
+    } finally {
+      this._saving.set(false);
+    }
+  }
+
+  async deleteProducts(dispensaryId: string, productIds: readonly string[]): Promise<number> {
+    this._deleting.set(true);
+    try {
+      const gql = this.injector.get(DeleteProductsGQL);
+      const result = await firstValueFrom(
+        gql.mutate({ variables: { dispensaryId, productIds: [...productIds] } }),
+      );
+      this.reload();
+      return result.data?.deleteProducts ?? 0;
+    } finally {
+      this._deleting.set(false);
     }
   }
 

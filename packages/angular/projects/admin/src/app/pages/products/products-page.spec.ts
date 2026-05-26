@@ -22,6 +22,8 @@ interface FakeArgs {
   readonly createVariant?: ReturnType<typeof vi.fn>;
   readonly updateVariant?: ReturnType<typeof vi.fn>;
   readonly deleteVariant?: ReturnType<typeof vi.fn>;
+  readonly setProductsActive?: ReturnType<typeof vi.fn>;
+  readonly deleteProducts?: ReturnType<typeof vi.fn>;
 }
 
 function makeSvc(args: FakeArgs): ProductsService {
@@ -47,6 +49,8 @@ function makeSvc(args: FakeArgs): ProductsService {
     createVariant: args.createVariant ?? vi.fn().mockResolvedValue(undefined),
     updateVariant: args.updateVariant ?? vi.fn().mockResolvedValue(undefined),
     deleteVariant: args.deleteVariant ?? vi.fn().mockResolvedValue(undefined),
+    setProductsActive: args.setProductsActive ?? vi.fn().mockResolvedValue(0),
+    deleteProducts: args.deleteProducts ?? vi.fn().mockResolvedValue(0),
   } as unknown as ProductsService;
 }
 
@@ -494,5 +498,192 @@ describe('ProductsPage', () => {
         'button[aria-label="Confirm delete variant 3.5g Jar"]',
       ),
     ).toBeNull();
+  });
+
+  // ── Bulk-ops (sc-682b) ────────────────────────────────────────────────
+
+  it('renders a per-row checkbox per product', () => {
+    const { fixture } = configure({
+      products: [product({ id: 'p-1', name: 'A' }), product({ id: 'p-2', name: 'B' })],
+    });
+    const checkboxes = (fixture.nativeElement as HTMLElement).querySelectorAll(
+      'tbody input[type="checkbox"]',
+    );
+    expect(checkboxes.length).toBe(2);
+  });
+
+  it('bulk toolbar is hidden when no rows are selected', () => {
+    const { fixture } = configure({ products: [product()] });
+    const toolbar = (fixture.nativeElement as HTMLElement).querySelector(
+      '[aria-label="Bulk actions"]',
+    );
+    expect(toolbar).toBeNull();
+  });
+
+  it('selecting a row shows the toolbar with count', () => {
+    const { fixture } = configure({ products: [product({ id: 'p-1', name: 'A' })] });
+    const checkbox = (fixture.nativeElement as HTMLElement).querySelector(
+      'input[aria-label="Select A"]',
+    ) as HTMLInputElement;
+    checkbox.checked = true;
+    checkbox.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+    const toolbar = (fixture.nativeElement as HTMLElement).querySelector(
+      '[aria-label="Bulk actions"]',
+    );
+    expect(toolbar).not.toBeNull();
+    expect(toolbar?.textContent).toContain('1 selected');
+  });
+
+  it('Select-all checks all visible rows', () => {
+    const { fixture } = configure({
+      products: [product({ id: 'p-1', name: 'A' }), product({ id: 'p-2', name: 'B' })],
+    });
+    const selectAll = (fixture.nativeElement as HTMLElement).querySelector(
+      'input[aria-label="Select all products"]',
+    ) as HTMLInputElement;
+    selectAll.checked = true;
+    selectAll.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+    const toolbar = (fixture.nativeElement as HTMLElement).querySelector(
+      '[aria-label="Bulk actions"]',
+    );
+    expect(toolbar?.textContent).toContain('2 selected');
+  });
+
+  it('Enable calls svc.setProductsActive(true) with selected ids', async () => {
+    const setProductsActive = vi.fn().mockResolvedValue(2);
+    const { fixture } = configure({
+      products: [product({ id: 'p-1', name: 'A' }), product({ id: 'p-2', name: 'B' })],
+      setProductsActive,
+    });
+    const selectAll = (fixture.nativeElement as HTMLElement).querySelector(
+      'input[aria-label="Select all products"]',
+    ) as HTMLInputElement;
+    selectAll.checked = true;
+    selectAll.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+    const enableBtn = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Enable selected products"]',
+    ) as HTMLButtonElement;
+    enableBtn.click();
+    await fixture.whenStable();
+    const call = setProductsActive.mock.calls[0] as [string, string[], boolean];
+    expect(call[0]).toBe('disp-1');
+    expect(new Set(call[1])).toEqual(new Set(['p-1', 'p-2']));
+    expect(call[2]).toBe(true);
+  });
+
+  it('Disable calls svc.setProductsActive(false)', async () => {
+    const setProductsActive = vi.fn().mockResolvedValue(1);
+    const { fixture } = configure({
+      products: [product({ id: 'p-1', name: 'A' })],
+      setProductsActive,
+    });
+    const checkbox = (fixture.nativeElement as HTMLElement).querySelector(
+      'input[aria-label="Select A"]',
+    ) as HTMLInputElement;
+    checkbox.checked = true;
+    checkbox.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+    const disableBtn = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Disable selected products"]',
+    ) as HTMLButtonElement;
+    disableBtn.click();
+    await fixture.whenStable();
+    expect(setProductsActive.mock.calls[0][2]).toBe(false);
+  });
+
+  it('Delete asks for confirm; Confirm delete calls svc.deleteProducts', async () => {
+    const deleteProducts = vi.fn().mockResolvedValue(2);
+    const { fixture } = configure({
+      products: [product({ id: 'p-1', name: 'A' }), product({ id: 'p-2', name: 'B' })],
+      deleteProducts,
+    });
+    const selectAll = (fixture.nativeElement as HTMLElement).querySelector(
+      'input[aria-label="Select all products"]',
+    ) as HTMLInputElement;
+    selectAll.checked = true;
+    selectAll.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+    const deleteBtn = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Delete selected products"]',
+    ) as HTMLButtonElement;
+    deleteBtn.click();
+    fixture.detectChanges();
+    const confirmBtn = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Confirm bulk delete"]',
+    ) as HTMLButtonElement;
+    confirmBtn.click();
+    await fixture.whenStable();
+    const call = deleteProducts.mock.calls[0] as [string, string[]];
+    expect(call[0]).toBe('disp-1');
+    expect(new Set(call[1])).toEqual(new Set(['p-1', 'p-2']));
+  });
+
+  it('No cancels the bulk delete confirmation', () => {
+    const deleteProducts = vi.fn().mockResolvedValue(1);
+    const { fixture } = configure({
+      products: [product({ id: 'p-1', name: 'A' })],
+      deleteProducts,
+    });
+    const checkbox = (fixture.nativeElement as HTMLElement).querySelector(
+      'input[aria-label="Select A"]',
+    ) as HTMLInputElement;
+    checkbox.checked = true;
+    checkbox.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+    const deleteBtn = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Delete selected products"]',
+    ) as HTMLButtonElement;
+    deleteBtn.click();
+    fixture.detectChanges();
+    const noBtn = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('button'),
+    ).find((b) => (b.textContent ?? '').trim() === 'No') as HTMLButtonElement;
+    noBtn.click();
+    fixture.detectChanges();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector(
+        'button[aria-label="Confirm bulk delete"]',
+      ),
+    ).toBeNull();
+    expect(deleteProducts).not.toHaveBeenCalled();
+  });
+
+  it('Clear empties the selection', () => {
+    const { fixture } = configure({
+      products: [product({ id: 'p-1', name: 'A' })],
+    });
+    const checkbox = (fixture.nativeElement as HTMLElement).querySelector(
+      'input[aria-label="Select A"]',
+    ) as HTMLInputElement;
+    checkbox.checked = true;
+    checkbox.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+    const clearBtn = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[aria-label="Clear selection"]',
+    ) as HTMLButtonElement;
+    clearBtn.click();
+    fixture.detectChanges();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('[aria-label="Bulk actions"]'),
+    ).toBeNull();
+  });
+
+  it('row click does not toggle the row checkbox', () => {
+    const { fixture } = configure({ products: [product({ id: 'p-77', name: 'A' })] });
+    const row = (fixture.nativeElement as HTMLElement).querySelector(
+      'tbody tr',
+    ) as HTMLTableRowElement;
+    row.click();
+    fixture.detectChanges();
+    // Clicking the row should open the detail panel — not check the checkbox.
+    const checkbox = (fixture.nativeElement as HTMLElement).querySelector(
+      'input[aria-label="Select A"]',
+    ) as HTMLInputElement;
+    expect(checkbox.checked).toBe(false);
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('Product details');
   });
 });

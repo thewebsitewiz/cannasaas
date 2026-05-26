@@ -1453,6 +1453,7 @@ type Mutation {
   deleteOrganization(organizationId: ID!): Boolean!
   deleteProduct(dispensaryId: ID!, productId: ID!): Boolean!
   deleteProductVariant(dispensaryId: ID!, variantId: ID!): Boolean!
+  deleteProducts(dispensaryId: ID!, productIds: [ID!]!): Int!
   deleteShift(shiftId: ID!): Boolean!
   deprovisionAeropayForDispensary(dispensaryId: ID!): Boolean!
   deprovisionCanPayForDispensary(dispensaryId: ID!): Boolean!
@@ -1503,6 +1504,7 @@ type Mutation {
   setDesignSystem(designSystem: String!, designSystemFile: String!, dispensaryId: ID!): DesignSystemConfig!
   setDispensaryProcessorEnabled(input: SetDispensaryProcessorEnabledInput!): DispensaryPaymentProcessor!
   setProductMetrcCategory(input: SetMetrcCategoryInput!): Product!
+  setProductsActive(dispensaryId: ID!, isActive: Boolean!, productIds: [ID!]!): Int!
   setReorderThreshold(inventoryId: ID!, value: Float): InventoryResult!
   setUserRole(role: String!, userId: ID!): User!
   shipTransfer(transferId: ID!): InventoryTransfer!
