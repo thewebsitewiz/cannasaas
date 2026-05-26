@@ -1,7 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
+import { AuthService } from '../../core/auth/auth.service';
+import { CsvDownloadService } from '../../core/csv/csv-download.service';
 import { type AuditRow, InventoryAuditService } from './inventory-audit.service';
 
 const TRANSACTION_TYPES: readonly { value: string; label: string }[] = [
@@ -73,13 +75,26 @@ const TRANSACTION_TYPES: readonly { value: string; label: string }[] = [
             }
           </select>
         </label>
-        <div class="flex items-end">
+        <div class="flex items-end gap-2">
           <button
             type="button"
             (click)="onReset()"
             class="rounded-md border border-(--color-border) px-3 py-1.5 text-xs text-(--color-text-secondary) hover:text-(--color-text)"
           >
             Reset filters
+          </button>
+          <button
+            type="button"
+            (click)="onDownloadCsv()"
+            [disabled]="downloading()"
+            aria-label="Download audit log as CSV"
+            class="rounded-md border border-(--color-border) px-3 py-1.5 text-xs text-(--color-text-secondary) hover:text-(--color-text) disabled:opacity-50"
+          >
+            @if (downloading()) {
+              Downloading…
+            } @else {
+              Download CSV
+            }
           </button>
         </div>
       </div>
@@ -189,7 +204,10 @@ const TRANSACTION_TYPES: readonly { value: string; label: string }[] = [
 })
 export class InventoryAuditPage {
   private readonly svc = inject(InventoryAuditService);
+  private readonly csv = inject(CsvDownloadService);
+  private readonly auth = inject(AuthService);
 
+  protected readonly downloading = signal<boolean>(false);
   protected readonly types = TRANSACTION_TYPES;
   protected readonly rows = this.svc.rows;
   protected readonly loading = this.svc.isLoading;
@@ -274,6 +292,29 @@ export class InventoryAuditPage {
 
   protected onReset(): void {
     this.svc.reset();
+  }
+
+  protected async onDownloadCsv(): Promise<void> {
+    const dispensaryId = this.auth.user()?.dispensaryId;
+    if (!dispensaryId) return;
+    const f = this.filters();
+    const params: Record<string, string> = { dispensaryId };
+    if (f.since) params['since'] = f.since;
+    if (f.until) params['until'] = f.until;
+    if (f.transactionType) params['transactionType'] = f.transactionType;
+    if (f.performedByUserId) params['performedByUserId'] = f.performedByUserId;
+    const sinceLabel = f.since ? f.since.slice(0, 10) : 'all';
+    const untilLabel = f.until ? f.until.slice(0, 10) : 'all';
+    this.downloading.set(true);
+    try {
+      await this.csv.download({
+        path: '/inventory/audit/export',
+        params,
+        suggestedFilename: `inventory-audit-${sinceLabel}-to-${untilLabel}.csv`,
+      });
+    } finally {
+      this.downloading.set(false);
+    }
   }
 }
 
