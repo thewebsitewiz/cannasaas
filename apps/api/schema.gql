@@ -1505,6 +1505,7 @@ type Mutation {
   setDispensaryProcessorEnabled(input: SetDispensaryProcessorEnabledInput!): DispensaryPaymentProcessor!
   setProductMetrcCategory(input: SetMetrcCategoryInput!): Product!
   setProductsActive(dispensaryId: ID!, isActive: Boolean!, productIds: [ID!]!): Int!
+  setProductsSortOrder(dispensaryId: ID!, orderedIds: [ID!]!): Int!
   setReorderThreshold(inventoryId: ID!, value: Float): InventoryResult!
   setUserRole(role: String!, userId: ID!): User!
   shipTransfer(transferId: ID!): InventoryTransfer!
@@ -1912,6 +1913,7 @@ type Product {
   productTypeId: Int
   shortDescription: String
   sku: String
+  sortOrder: Int
   strainId: ID
   strainName: String
   strainType: String

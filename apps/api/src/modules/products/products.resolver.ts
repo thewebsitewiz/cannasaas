@@ -253,6 +253,15 @@ export class ProductsResolver {
   ): Promise<number> {
     return this.products.deleteProducts(dispensaryId, productIds);
   }
+
+  @Roles('dispensary_admin', 'org_admin', 'super_admin')
+  @Mutation(() => Int, { name: 'setProductsSortOrder' })
+  async setProductsSortOrder(
+    @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
+    @Args('orderedIds', { type: () => [ID] }) orderedIds: string[],
+  ): Promise<number> {
+    return this.products.setProductsSortOrder(dispensaryId, orderedIds);
+  }
 }
 interface InventoryQtyRow {
   quantity_available: string | number;

@@ -11,6 +11,7 @@ import {
   ProductsGQL,
   type ProductsQuery,
   SetProductsActiveGQL,
+  SetProductsSortOrderGQL,
   type UpdateProductInput,
   UpdateProductGQL,
   type UpdateProductVariantInput,
@@ -141,6 +142,20 @@ export class ProductsService {
       );
       this.reload();
       return result.data?.setProductsActive ?? 0;
+    } finally {
+      this._saving.set(false);
+    }
+  }
+
+  async setProductsSortOrder(dispensaryId: string, orderedIds: readonly string[]): Promise<number> {
+    this._saving.set(true);
+    try {
+      const gql = this.injector.get(SetProductsSortOrderGQL);
+      const result = await firstValueFrom(
+        gql.mutate({ variables: { dispensaryId, orderedIds: [...orderedIds] } }),
+      );
+      this.reload();
+      return result.data?.setProductsSortOrder ?? 0;
     } finally {
       this._saving.set(false);
     }

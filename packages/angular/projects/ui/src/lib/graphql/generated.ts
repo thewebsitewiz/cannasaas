@@ -1620,6 +1620,7 @@ export type Mutation = {
   setDispensaryProcessorEnabled: DispensaryPaymentProcessor;
   setProductMetrcCategory: Product;
   setProductsActive: Scalars['Int']['output'];
+  setProductsSortOrder: Scalars['Int']['output'];
   setReorderThreshold: InventoryResult;
   setUserRole: User;
   shipTransfer: InventoryTransfer;
@@ -2217,6 +2218,11 @@ export type MutationSetProductsActiveArgs = {
   dispensaryId: Scalars['ID']['input'];
   isActive: Scalars['Boolean']['input'];
   productIds: Array<Scalars['ID']['input']>;
+};
+
+export type MutationSetProductsSortOrderArgs = {
+  dispensaryId: Scalars['ID']['input'];
+  orderedIds: Array<Scalars['ID']['input']>;
 };
 
 export type MutationSetReorderThresholdArgs = {
@@ -2849,6 +2855,7 @@ export type Product = {
   productTypeId?: Maybe<Scalars['Int']['output']>;
   shortDescription?: Maybe<Scalars['String']['output']>;
   sku?: Maybe<Scalars['String']['output']>;
+  sortOrder?: Maybe<Scalars['Int']['output']>;
   strainId?: Maybe<Scalars['ID']['output']>;
   strainName?: Maybe<Scalars['String']['output']>;
   strainType?: Maybe<Scalars['String']['output']>;
@@ -5641,6 +5648,16 @@ export type DeleteProductsMutationVariables = Exact<{
 
 export type DeleteProductsMutation = { __typename?: 'Mutation'; deleteProducts: number };
 
+export type SetProductsSortOrderMutationVariables = Exact<{
+  dispensaryId: Scalars['ID']['input'];
+  orderedIds: Array<Scalars['ID']['input']> | Scalars['ID']['input'];
+}>;
+
+export type SetProductsSortOrderMutation = {
+  __typename?: 'Mutation';
+  setProductsSortOrder: number;
+};
+
 export type ProductQueryVariables = Exact<{
   dispensaryId: Scalars['ID']['input'];
   id: Scalars['ID']['input'];
@@ -8076,6 +8093,25 @@ export class DeleteProductsGQL extends Apollo.Mutation<
   DeleteProductsMutationVariables
 > {
   override document = DeleteProductsDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const SetProductsSortOrderDocument = gql`
+  mutation SetProductsSortOrder($dispensaryId: ID!, $orderedIds: [ID!]!) {
+    setProductsSortOrder(dispensaryId: $dispensaryId, orderedIds: $orderedIds)
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class SetProductsSortOrderGQL extends Apollo.Mutation<
+  SetProductsSortOrderMutation,
+  SetProductsSortOrderMutationVariables
+> {
+  override document = SetProductsSortOrderDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);

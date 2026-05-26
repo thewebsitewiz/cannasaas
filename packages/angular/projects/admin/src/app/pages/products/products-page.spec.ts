@@ -24,6 +24,7 @@ interface FakeArgs {
   readonly deleteVariant?: ReturnType<typeof vi.fn>;
   readonly setProductsActive?: ReturnType<typeof vi.fn>;
   readonly deleteProducts?: ReturnType<typeof vi.fn>;
+  readonly setProductsSortOrder?: ReturnType<typeof vi.fn>;
 }
 
 function makeSvc(args: FakeArgs): ProductsService {
@@ -51,6 +52,7 @@ function makeSvc(args: FakeArgs): ProductsService {
     deleteVariant: args.deleteVariant ?? vi.fn().mockResolvedValue(undefined),
     setProductsActive: args.setProductsActive ?? vi.fn().mockResolvedValue(0),
     deleteProducts: args.deleteProducts ?? vi.fn().mockResolvedValue(0),
+    setProductsSortOrder: args.setProductsSortOrder ?? vi.fn().mockResolvedValue(0),
   } as unknown as ProductsService;
 }
 
@@ -685,5 +687,51 @@ describe('ProductsPage', () => {
     expect(checkbox.checked).toBe(false);
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(text).toContain('Product details');
+  });
+
+  // ── Drag-to-reorder (sc-682c) ─────────────────────────────────────────
+
+  it('renders a drag handle cell per row', () => {
+    const { fixture } = configure({
+      products: [product({ id: 'p-1', name: 'Blue Dream' })],
+    });
+    const handle = (fixture.nativeElement as HTMLElement).querySelector(
+      '[aria-label="Drag handle for Blue Dream"]',
+    );
+    expect(handle).not.toBeNull();
+  });
+
+  it('drop reorders displayProducts and calls setProductsSortOrder with new id order', async () => {
+    const setProductsSortOrder = vi.fn().mockResolvedValue(3);
+    const { fixture } = configure({
+      products: [
+        product({ id: 'p-1', name: 'A' }),
+        product({ id: 'p-2', name: 'B' }),
+        product({ id: 'p-3', name: 'C' }),
+      ],
+      setProductsSortOrder,
+    });
+    const page = fixture.componentInstance as unknown as {
+      onProductDrop: (e: { previousIndex: number; currentIndex: number }) => Promise<void>;
+    };
+    await page.onProductDrop({ previousIndex: 0, currentIndex: 2 });
+    await fixture.whenStable();
+    const call = setProductsSortOrder.mock.calls[0] as [string, string[]];
+    expect(call[0]).toBe('disp-1');
+    expect(call[1]).toEqual(['p-2', 'p-3', 'p-1']);
+  });
+
+  it('drop is a no-op when previousIndex === currentIndex', async () => {
+    const setProductsSortOrder = vi.fn().mockResolvedValue(0);
+    const { fixture } = configure({
+      products: [product({ id: 'p-1', name: 'A' }), product({ id: 'p-2', name: 'B' })],
+      setProductsSortOrder,
+    });
+    const page = fixture.componentInstance as unknown as {
+      onProductDrop: (e: { previousIndex: number; currentIndex: number }) => Promise<void>;
+    };
+    await page.onProductDrop({ previousIndex: 1, currentIndex: 1 });
+    await fixture.whenStable();
+    expect(setProductsSortOrder).not.toHaveBeenCalled();
   });
 });
