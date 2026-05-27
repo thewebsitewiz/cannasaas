@@ -260,6 +260,26 @@ describe('ThemePage', () => {
     expect(surface.getAttribute('style') ?? '').toContain('--color-primary:#ff00aa');
   });
 
+  // TC-SET-001 (sc-525): switching preset must flow into the preview
+  // pane's CSS vars, not just into the color inputs.
+  it('TC-SET-001 — switching preset live-previews the new color tokens', () => {
+    const { fixture } = configure({ config: cfg({ preset: 'casual' }) });
+    const root = fixture.nativeElement as HTMLElement;
+
+    // Casual preset → preview should carry the casual primary (#2a6640).
+    let surface = root.querySelector('[data-testid="theme-preview-surface"]') as HTMLElement;
+    expect(surface.getAttribute('style') ?? '').toContain('--color-primary:#2a6640');
+
+    // Switch to Modern Teal → preview vars update without any save.
+    (
+      root.querySelector('button[aria-label="Apply preset Modern Teal"]') as HTMLButtonElement
+    ).click();
+    fixture.detectChanges();
+
+    surface = root.querySelector('[data-testid="theme-preview-surface"]') as HTMLElement;
+    expect(surface.getAttribute('style') ?? '').toContain('--color-primary:#0a7a6a');
+  });
+
   it('Download CSS button triggers an anchor download with theme.<preset>.css', () => {
     const { fixture } = configure({ config: cfg({ preset: 'modern' }) });
     const clicks: { name: string; download: string }[] = [];

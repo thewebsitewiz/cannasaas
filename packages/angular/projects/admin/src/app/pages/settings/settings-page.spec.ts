@@ -152,4 +152,30 @@ describe('SettingsPage', () => {
     await fixture.whenStable();
     expect(save).toHaveBeenCalledWith(3.5, false);
   });
+
+  // TC-SET-003 (sc-527): saving the slider must surface a success
+  // toast (role="status") so the operator sees the save landed.
+  it('TC-SET-003 — successful Save shows a "Settings saved successfully" status message', async () => {
+    const save = vi.fn().mockResolvedValue(undefined);
+    const { fixture } = configure({
+      config: cfg({ cashDiscountPercent: 0, cashDeliveryEnabled: true }),
+      save,
+    });
+    const root = fixture.nativeElement as HTMLElement;
+    const slider = root.querySelector('input[type="range"]') as HTMLInputElement;
+    slider.value = '5';
+    slider.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    const saveBtn = Array.from(root.querySelectorAll('button')).find(
+      (b) => (b.textContent ?? '').trim() === 'Save settings',
+    ) as HTMLButtonElement;
+    saveBtn.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const toast = root.querySelector('[role="status"]');
+    expect(toast).not.toBeNull();
+    expect((toast?.textContent ?? '').trim()).toMatch(/Settings saved successfully/);
+  });
 });
