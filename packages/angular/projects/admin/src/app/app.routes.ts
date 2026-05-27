@@ -111,6 +111,7 @@ export const routes: Routes = [
       },
       {
         path: 'onboarding',
+        canMatch: [roleGuard('super_admin', 'org_admin')],
         loadComponent: () =>
           import('./pages/onboarding/onboarding-page').then((m) => m.OnboardingPage),
       },
