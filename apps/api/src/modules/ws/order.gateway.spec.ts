@@ -175,4 +175,92 @@ describe('OrderGateway', () => {
       expect(recorded[0].payload).toMatchObject({ type: 'low_stock' });
     });
   });
+
+  // ── TC-ORDER-003 (sc-576) — WS broadcasts on every transition ─────────────
+
+  describe('handleOrderCompleted', () => {
+    it('TC-ORDER-003 — broadcasts to user: (order:update) and staff: (order:new)', () => {
+      gateway.handleOrderCompleted({
+        orderId: 'o-1',
+        dispensaryId: 'd-1',
+        customerUserId: 'u-1',
+        total: 54,
+        orderType: 'in_store',
+      });
+      const rooms = recorded.map((r) => r.room);
+      expect(rooms).toContain('user:u-1');
+      expect(rooms).toContain('staff:d-1');
+
+      const userBroadcast = recorded.find((r) => r.room === 'user:u-1');
+      expect(userBroadcast?.event).toBe('order:update');
+      const staffBroadcast = recorded.find((r) => r.room === 'staff:d-1');
+      expect(staffBroadcast?.event).toBe('order:new');
+
+      // Every payload tagged with status='confirmed' (initial transition).
+      for (const r of recorded) {
+        expect(r.payload).toMatchObject({
+          type: 'order.confirmed',
+          status: 'confirmed',
+          orderId: 'o-1',
+        });
+      }
+    });
+
+    it('TC-ORDER-003 — anonymous order (no customerUserId) still broadcasts to staff only', () => {
+      gateway.handleOrderCompleted({
+        orderId: 'o-anon',
+        dispensaryId: 'd-1',
+      });
+      const rooms = recorded.map((r) => r.room);
+      expect(rooms).toContain('staff:d-1');
+      expect(rooms.some((r) => r.startsWith('user:'))).toBe(false);
+    });
+  });
+
+  describe('handleOrderStatusChanged', () => {
+    it('TC-ORDER-003 — every status transition emits order:update to order + user + staff', () => {
+      gateway.handleOrderStatusChanged({
+        orderId: 'o-2',
+        dispensaryId: 'd-1',
+        customerUserId: 'u-2',
+        status: 'ready_for_pickup',
+      });
+      const rooms = recorded.map((r) => r.room);
+      expect(rooms).toContain('order:o-2');
+      expect(rooms).toContain('user:u-2');
+      expect(rooms).toContain('staff:d-1');
+      for (const r of recorded) {
+        expect(r.event).toBe('order:update');
+        expect(r.payload).toMatchObject({
+          type: 'order.status_changed',
+          status: 'ready_for_pickup',
+        });
+      }
+    });
+
+    it('TC-ORDER-003 — every payload carries an ISO timestamp', () => {
+      gateway.handleOrderStatusChanged({
+        orderId: 'o-3',
+        dispensaryId: 'd-1',
+        customerUserId: 'u-3',
+        status: 'cancelled',
+      });
+      for (const r of recorded) {
+        const p = r.payload as { timestamp?: string };
+        expect(p.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+      }
+    });
+
+    it('TC-ORDER-003 — anonymous status transition still hits order: + staff:', () => {
+      gateway.handleOrderStatusChanged({
+        orderId: 'o-anon',
+        dispensaryId: 'd-1',
+        status: 'cancelled',
+      });
+      const rooms = recorded.map((r) => r.room);
+      expect(rooms).toContain('order:o-anon');
+      expect(rooms).toContain('staff:d-1');
+      expect(rooms.some((r) => r.startsWith('user:'))).toBe(false);
+    });
+  });
 });
