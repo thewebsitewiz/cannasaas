@@ -17,6 +17,11 @@ import { StockEventEmitterService } from './stock-event-emitter.service';
     StockEventEmitterService,
   ],
   controllers: [InventoryAuditController],
-  exports: [TypeOrmModule, InventoryService, ReorderSuggestionService],
+  exports: [
+    TypeOrmModule,
+    InventoryService,
+    ReorderSuggestionService,
+    StockEventEmitterService,
+  ],
 })
 export class InventoryModule {}

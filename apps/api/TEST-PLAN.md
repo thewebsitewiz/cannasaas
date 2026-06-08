@@ -62,6 +62,13 @@ Same as the kiosk/storefront plans:
 | TC-INV-003 | reserveStock to zero emits out_of_stock | Reserve from 4 → 0. | Both `stock_changed` and `inventory.out_of_stock` emitted. `staff:` and `storefront:` rooms both updated (storefront with public projection only). |
 | TC-INV-004 | releaseReserve emits stock_changed | Release a held reserve. | `stock_changed` with `source: 'release'`. |
 | TC-INV-005 | storefront projection strips operator context | Inspect the `stock:changed` event in DevTools on the storefront. | Only `type`, `variantId`, `available`, `status`, `timestamp`. No `productName`, no `reorderThreshold`. |
+| TC-INV-LS-001 | Order reserve emits via StockEventEmitter | `createOrder` for a variant whose available drops from 10 → 4 (threshold 5). | Post-commit, `recordChange` is called with `source: 'reserve'`, `previousAvailable: 10`, `newAvailable: 4`, `reorderThreshold: 5`. Gateway broadcasts `inventory:alert` to `staff:` room. |
+| TC-INV-LS-002 | Order cancel emits via StockEventEmitter | `cancelOrder` releases 6 units back to a variant (4 → 10). | `recordChange` called with `source: 'release'`. Status crossover from `low_stock` → `in_stock` does NOT re-fire low/out events. |
+| TC-INV-LS-003 | RETURNING handles null `reorder_threshold` | Reserve against a variant with no threshold configured. | `recordChange` called with `reorderThreshold: null`; no low/out crossover emitted regardless of available level. |
+| TC-NOTIF-LS-001 | LowStock email fan-out per dispensary admin | Emit `inventory.low_stock` for a dispensary with two active `dispensary_admin` users. | `sendByTemplate('low_stock_alert', …)` called twice, once per admin email, with `dispensaryName` and `quantity` interpolated. |
+| TC-NOTIF-LS-002 | Cooldown suppresses repeat low_stock in window | Emit two `inventory.low_stock` events for the same (dispensary, productName) within 60 minutes. | First emits; second short-circuits via `CacheService.setNxEx` returning `false`. No second email sent. |
+| TC-NOTIF-LS-003 | OutOfStock uses distinct cooldown key | Emit `inventory.out_of_stock` immediately after a `low_stock` for the same product. | Separate cooldown key (`…:out_of_stock_alert:…` vs `…:low_stock_alert:…`); both send. |
+| TC-NOTIF-LS-004 | No admin recipients → graceful skip | Emit `inventory.low_stock` for a dispensary with no active admins. | Listener logs a warning, no template lookup, no send. |
 
 ### 6.3 Payment webhooks (Aeropay + CanPay)
 

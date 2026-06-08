@@ -12,6 +12,16 @@ import { DataSource, QueryRunner } from 'typeorm';
 import { CreateOrderInput } from './dto/create-order.input';
 import { CompleteOrderInput } from './dto/complete-order.input';
 import { OrderSummary, TaxLineItem } from './dto/order-summary.type';
+import { StockEventEmitterService } from '../inventory/stock-event-emitter.service';
+import type { StockChangeSource } from '../inventory/stock-events';
+
+interface ReserveReturningRow {
+  inventory_id: string;
+  variant_id: string;
+  new_available: string;
+  prev_available: string;
+  reorder_threshold: string | null;
+}
 
 /** Row shape returned from lkp_tax_categories */
 interface TaxCategoryRow {
@@ -224,7 +234,44 @@ export class OrdersService {
   constructor(
     @InjectDataSource() private dataSource: DataSource,
     private readonly eventEmitter: EventEmitter2,
+    private readonly stockEvents: StockEventEmitterService,
   ) {}
+
+  /**
+   * Translate a batch of inventory `UPDATE … RETURNING` rows into
+   * `StockEventEmitterService.recordChange` calls. Used by the order
+   * reserve / cancel paths so customer orders flow through the same
+   * event pipeline as manual adjustments (sc-113). Emitting happens
+   * post-commit; a failure to emit never rolls back the order.
+   */
+  private async emitStockChanges(
+    rows: ReserveReturningRow[],
+    dispensaryId: string,
+    source: StockChangeSource,
+  ): Promise<void> {
+    for (const row of rows) {
+      try {
+        await this.stockEvents.recordChange({
+          dispensaryId,
+          inventoryId: row.inventory_id,
+          variantId: row.variant_id,
+          previousAvailable: Number(row.prev_available),
+          newAvailable: Number(row.new_available),
+          reorderThreshold:
+            row.reorder_threshold != null
+              ? Number(row.reorder_threshold)
+              : null,
+          source,
+        });
+      } catch (err) {
+        this.logger.warn(
+          `emitStockChanges: recordChange failed for variant=${row.variant_id}: ${
+            err instanceof Error ? err.message : 'unknown'
+          }`,
+        );
+      }
+    }
+  }
 
   /**
    * Typed wrapper around `QueryRunner.query` — TypeORM declares it as
@@ -574,6 +621,8 @@ export class OrdersService {
       );
       const order = orderRows[0];
 
+      const stockChanges: ReserveReturningRow[] = [];
+
       // Insert line items
       for (const item of resolvedItems) {
         await qr.query(
@@ -593,18 +642,34 @@ export class OrdersService {
           ],
         );
 
-        // Reserve inventory (pre-validated above)
-        await qr.query(
-          `UPDATE inventory
-           SET quantity_reserved = quantity_reserved + $1,
-               quantity_available = quantity_available - $1,
-               updated_at = NOW()
-           WHERE dispensary_id = $2 AND variant_id = $3 AND quantity_available >= $1`,
-          [item.quantity, input.dispensaryId, item.variantId],
-        );
+        // Reserve inventory (pre-validated above). RETURNING surfaces the
+        // post-update level + threshold so we can emit inventory.low_stock /
+        // inventory.out_of_stock events after commit (sc-113).
+        if (item.variantId) {
+          const reserveRows = await this.runnerQuery<ReserveReturningRow>(
+            qr,
+            `UPDATE inventory
+             SET quantity_reserved = quantity_reserved + $1,
+                 quantity_available = quantity_available - $1,
+                 updated_at = NOW()
+             WHERE dispensary_id = $2 AND variant_id = $3 AND quantity_available >= $1
+             RETURNING inventory_id, variant_id,
+                       quantity_available::text AS new_available,
+                       (quantity_available + $1)::text AS prev_available,
+                       reorder_threshold::text AS reorder_threshold`,
+            [item.quantity, input.dispensaryId, item.variantId],
+          );
+          stockChanges.push(...reserveRows);
+        }
       }
 
       await qr.commitTransaction();
+
+      void this.emitStockChanges(
+        stockChanges,
+        input.dispensaryId,
+        'reserve',
+      ).catch(() => undefined);
 
       // Emit order.created event (async, non-blocking)
       void this.emitOrderEvent(
@@ -844,16 +909,25 @@ export class OrdersService {
         [orderId],
       );
 
+      const stockChanges: ReserveReturningRow[] = [];
+
       for (const item of lineItems) {
         if (item.variantId) {
-          await qr.query(
+          // Release reserved → available, capture pre/post state for emission.
+          const releaseRows = await this.runnerQuery<ReserveReturningRow>(
+            qr,
             `UPDATE inventory
              SET quantity_reserved = GREATEST(quantity_reserved - $1, 0),
                  quantity_available = quantity_available + $1,
                  updated_at = NOW()
-             WHERE dispensary_id = $2 AND variant_id = $3`,
+             WHERE dispensary_id = $2 AND variant_id = $3
+             RETURNING inventory_id, variant_id,
+                       quantity_available::text AS new_available,
+                       (quantity_available - $1)::text AS prev_available,
+                       reorder_threshold::text AS reorder_threshold`,
             [item.quantity, dispensaryId, item.variantId],
           );
+          stockChanges.push(...releaseRows);
         }
       }
 
@@ -868,6 +942,10 @@ export class OrdersService {
       );
 
       await qr.commitTransaction();
+
+      void this.emitStockChanges(stockChanges, dispensaryId, 'release').catch(
+        () => undefined,
+      );
 
       // Notify customer of cancellation
       void this.emitOrderEvent(orderId, dispensaryId, 'cancelled').catch(
