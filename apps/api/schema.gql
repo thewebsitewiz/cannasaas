@@ -683,6 +683,30 @@ type DispStats {
   total: Int!
 }
 
+type DispensaryInventoryTransaction {
+  createdAt: DateTime!
+  dispensaryId: ID!
+  inventoryId: ID!
+  notes: String
+  performedByEmail: String
+  performedByUserId: ID
+  productName: String
+  quantityAfter: Float!
+  quantityBefore: Float!
+  quantityDelta: Float!
+  referenceOrderId: ID
+  referenceTransferManifestId: String
+  transactionId: ID!
+  transactionType: String!
+  variantId: ID!
+  variantName: String
+}
+
+type DispensaryInventoryTransactionsPage {
+  rows: [DispensaryInventoryTransaction!]!
+  totalCount: Int!
+}
+
 type DispensaryListItem {
   city: String
   companyId: ID!
@@ -729,30 +753,6 @@ input DispensaryProductTypeInput {
   isEnabled: Boolean!
   productTypeId: Int!
   sortOrder: Int!
-}
-
-type DispensaryInventoryTransaction {
-  createdAt: DateTime!
-  dispensaryId: ID!
-  inventoryId: ID!
-  notes: String
-  performedByEmail: String
-  performedByUserId: ID
-  productName: String
-  quantityAfter: Float!
-  quantityBefore: Float!
-  quantityDelta: Float!
-  referenceOrderId: ID
-  referenceTransferManifestId: String
-  transactionId: ID!
-  transactionType: String!
-  variantId: ID!
-  variantName: String
-}
-
-type DispensaryInventoryTransactionsPage {
-  rows: [DispensaryInventoryTransaction!]!
-  totalCount: Int!
 }
 
 type DispensaryPublic {
@@ -1352,6 +1352,12 @@ type MetrcCredential {
   validationError: String
 }
 
+type MetrcLicenseValidationResult {
+  licenseType: String
+  reason: String
+  valid: Boolean!
+}
+
 type MetrcManifest {
   created_at: DateTime!
   dispensaryId: ID!
@@ -1382,12 +1388,6 @@ type MetrcManifestItem {
   quantity: Float!
   unitOfMeasure: String!
   variantId: ID!
-}
-
-type MetrcLicenseValidationResult {
-  licenseType: String
-  reason: String
-  valid: Boolean!
 }
 
 type MetrcSaleResult {

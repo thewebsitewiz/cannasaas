@@ -216,7 +216,7 @@ export class InventoryResolver {
     since: Date | null,
     @Args('until', { type: () => Date, nullable: true })
     until: Date | null,
-    @Args('transactionType', { nullable: true })
+    @Args('transactionType', { type: () => String, nullable: true })
     transactionType: string | null,
     @Args('performedByUserId', { type: () => ID, nullable: true })
     performedByUserId: string | null,
