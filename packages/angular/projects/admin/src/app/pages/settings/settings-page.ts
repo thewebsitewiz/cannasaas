@@ -16,8 +16,7 @@ const PREVIEW_ROWS = [25, 50, 75, 100, 150];
  * Settings hub for the dispensary admin. Two surfaces:
  *
  * 1. Two navigation cards that deep-link to `/settings/theme` (sc-636)
- *    and `/settings/payments` (sc-637) — both placeholder routes
- *    until those stories ship.
+ *    and `/settings/payments` (sc-637).
  * 2. Cash-discount card: slider for `percent` (0–15%), checkbox for
  *    "allow cash on delivery", Save → mutation, preview table.
  *
