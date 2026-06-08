@@ -6,9 +6,13 @@ import {
 } from './entities/notification.entity';
 import { NotificationService } from './notification.service';
 import { NotificationResolver } from './notification.resolver';
+import { CacheModule } from '../../common/services/cache.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([NotificationTemplate, NotificationLog])],
+  imports: [
+    TypeOrmModule.forFeature([NotificationTemplate, NotificationLog]),
+    CacheModule,
+  ],
   providers: [NotificationService, NotificationResolver],
   exports: [NotificationService],
 })

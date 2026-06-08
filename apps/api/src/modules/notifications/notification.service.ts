@@ -11,6 +11,8 @@ import {
   NotificationLog,
 } from './entities/notification.entity';
 import { CircuitBreaker } from '../../common/services/circuit-breaker';
+import { CacheService } from '../../common/services/cache.service';
+import type { LowStockEvent } from '../inventory/stock-events';
 
 // ── Twilio shape (avoid pulling the full SDK type surface) ────────────────
 
@@ -51,6 +53,12 @@ interface DispensaryAddressRow {
 
 interface DispensaryNameRow {
   name: string;
+}
+
+interface StockAlertRecipient {
+  readonly userId: string;
+  readonly email: string;
+  readonly firstName: string | null;
 }
 
 interface NotificationStatsRow {
@@ -135,6 +143,7 @@ export class NotificationService {
     private logRepo: Repository<NotificationLog>,
     @InjectDataSource() private ds: DataSource,
     private config: ConfigService,
+    private readonly cache: CacheService,
   ) {
     const smtpHost = this.config.get<string>('SMTP_HOST', 'smtp.sendgrid.net');
     const smtpPort = this.config.get<number>('SMTP_PORT', 587);
@@ -516,6 +525,98 @@ export class NotificationService {
         userId: payload.userId,
         dispensaryId: payload.dispensaryId,
       },
+    );
+  }
+
+  // ── Low-stock alerts (sc-113) ─────────────────────────────────────────────
+
+  /**
+   * Cooldown window for low-stock / out-of-stock emails. Keyed per
+   * (dispensary, product, severity) so a flurry of order events doesn't
+   * flood inboxes. 60 minutes balances "operator notices within an hour"
+   * against "no inbox spam during a busy weekend rush."
+   */
+  private readonly lowStockCooldownSeconds = 3600;
+
+  @OnEvent('inventory.low_stock')
+  async onLowStock(payload: LowStockEvent): Promise<void> {
+    await this.dispatchStockAlert(payload, 'low_stock_alert');
+  }
+
+  @OnEvent('inventory.out_of_stock')
+  async onOutOfStock(payload: LowStockEvent): Promise<void> {
+    await this.dispatchStockAlert(payload, 'out_of_stock_alert');
+  }
+
+  private async dispatchStockAlert(
+    payload: LowStockEvent,
+    templateCode: 'low_stock_alert' | 'out_of_stock_alert',
+  ): Promise<void> {
+    const cooldownKey = `lowstock:${payload.dispensaryId}:${templateCode}:${payload.productName}`;
+    const firstWriter = await this.cache.setNxEx(
+      cooldownKey,
+      '1',
+      this.lowStockCooldownSeconds,
+    );
+    if (!firstWriter) {
+      this.logger.debug(
+        `${templateCode} suppressed by cooldown: ${payload.dispensaryId}/${payload.productName}`,
+      );
+      return;
+    }
+
+    const recipients = await this.resolveStockAlertRecipients(
+      payload.dispensaryId,
+    );
+    if (recipients.length === 0) {
+      this.logger.warn(
+        `${templateCode}: no admin recipients for dispensary ${payload.dispensaryId}`,
+      );
+      return;
+    }
+
+    const dispRows = await rawQuery<DispensaryNameRow>(
+      this.ds,
+      `SELECT name FROM dispensaries WHERE entity_id = $1`,
+      [payload.dispensaryId],
+    );
+    const dispensaryName = dispRows[0]?.name ?? 'Your dispensary';
+    const adminUrl = this.config.get<string>(
+      'ADMIN_URL',
+      'https://admin.cannasaas.com',
+    );
+
+    for (const recipient of recipients) {
+      await this.sendByTemplate(
+        templateCode,
+        {
+          firstName: recipient.firstName ?? 'team',
+          productName: payload.productName,
+          dispensaryName,
+          quantity: payload.quantity,
+          adminUrl,
+        },
+        {
+          email: recipient.email,
+          userId: recipient.userId,
+          dispensaryId: payload.dispensaryId,
+        },
+      );
+    }
+  }
+
+  private async resolveStockAlertRecipients(
+    dispensaryId: string,
+  ): Promise<readonly StockAlertRecipient[]> {
+    return rawQuery<StockAlertRecipient>(
+      this.ds,
+      `SELECT id AS "userId", email, first_name AS "firstName"
+       FROM users
+       WHERE dispensary_id = $1
+         AND role IN ('dispensary_admin', 'org_admin')
+         AND is_active = TRUE
+         AND email IS NOT NULL`,
+      [dispensaryId],
     );
   }
 
