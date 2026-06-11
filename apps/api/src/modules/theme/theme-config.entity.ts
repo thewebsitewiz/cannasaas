@@ -71,6 +71,30 @@ export class ThemeConfig {
   @Column({ name: 'is_dark', default: false })
   isDark!: boolean;
 
+  /* ── Branding assets (sc-637 follow-on) ── */
+  @Column({ name: 'logo_url', type: 'varchar', length: 500, nullable: true })
+  logoUrl?: string | null;
+
+  @Column({
+    name: 'masthead_url',
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+  })
+  mastheadUrl?: string | null;
+
+  /* ── Google Fonts selection ── */
+  @Column({
+    name: 'display_font',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
+  displayFont?: string | null;
+
+  @Column({ name: 'body_font', type: 'varchar', length: 100, nullable: true })
+  bodyFont?: string | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 

@@ -57,6 +57,7 @@ import { RegisterSessionsModule } from './modules/register-sessions/register-ses
 import { BiotrackModule } from './modules/biotrack/biotrack.module';
 import { IdVerificationModule } from './modules/verification/id-verification.module';
 import { CacheModule } from './common/services/cache.module';
+import { DispensaryOwnershipModule } from './common/services/dispensary-ownership.module';
 import { SentryModule } from './common/services/sentry.module';
 import { MetricsModule } from './common/services/metrics.module';
 import { WebhooksModule } from './modules/webhooks/webhooks.module';
@@ -86,6 +87,7 @@ import { join } from 'path';
       plugins: [depthLimitPlugin, complexityLimitPlugin],
     }),
     CacheModule,
+    DispensaryOwnershipModule,
     DatabaseModule,
     AuthModule,
     UsersModule,

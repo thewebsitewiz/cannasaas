@@ -8,6 +8,7 @@ import { ReportingService } from '../../src/modules/reporting/reporting.service'
 import { PayrollController } from '../../src/modules/timeclock/payroll.controller';
 import { TimeClockService } from '../../src/modules/timeclock/timeclock.service';
 import { ImageController } from '../../src/modules/image/image.controller';
+import { DispensaryOwnershipService } from '../../src/common/services/dispensary-ownership.service';
 import { ImageService } from '../../src/modules/image/image.service';
 import { JwtPayload } from '../../src/modules/auth/strategies/jwt.strategy';
 
@@ -186,6 +187,10 @@ describe('REST tenant isolation — sc-609 follow-up', () => {
           ImageController,
           { provide: ImageService, useValue: images },
           { provide: getDataSourceToken(), useValue: { query: dsQuery } },
+          {
+            provide: DispensaryOwnershipService,
+            useValue: { assertOwns: jest.fn().mockResolvedValue({ organizationId: null }) },
+          },
         ],
       }).compile();
       controller = moduleRef.get(ImageController);

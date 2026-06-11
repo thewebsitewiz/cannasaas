@@ -86,4 +86,14 @@ export class SaveThemeConfigInput {
   @IsOptional()
   @IsBoolean()
   isDark?: boolean;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  displayFont?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  bodyFont?: string;
 }
