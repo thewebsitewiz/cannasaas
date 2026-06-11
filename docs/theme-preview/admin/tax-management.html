@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en" data-theme="modern" data-preview-depth="1">
+<head><meta charset="utf-8"><title>Tax management — Admin</title><link rel="stylesheet" href="../_assets/preview.css"></head>
+<body>
+<div class="admin-shell">
+<aside class="admin-sidebar"><h2>GreenLeaf</h2><ul><li><a href="dashboard.html">Dashboard</a></li><li><a href="products.html">Products</a></li><li><a href="orders.html">Orders</a></li><li><a href="inventory.html">Inventory</a></li><li><a href="inventory-audit.html">Inventory audit</a></li><li><a href="inventory-control.html">Inventory control</a></li><li><a href="compliance.html">Compliance</a></li><li><a href="menu-categories.html">Menu categories</a></li><li><a href="menu-board.html">Menu board</a></li><li><a href="staffing.html">Staffing</a></li><li><a href="timeclock.html">Timeclock</a></li><li><a href="scheduling.html">Scheduling</a></li><li><a href="vendors.html">Vendors</a></li><li><a href="loyalty.html">Loyalty</a></li><li><a href="reports.html">Reports</a></li><li><a href="tax-management.html" class="active">Tax management</a></li><li><a href="onboarding.html">Onboarding</a></li><li><a href="settings.html">Settings</a></li></ul></aside>
+<div class="admin-main">
+<header class="admin-topbar"><div><strong>Tax management</strong></div><div><small>admin@greenleaf.com</small> · <a href="login.html">Logout</a></div></header>
+<main class="tp-page">
+
+<h1 style="margin-bottom:1.5rem;">Tax management</h1>
+<small style="display:block;margin-bottom:1rem;">Super-admin only. Statutory tax categories per state.</small>
+<table class="tp-table tp-card">
+  <thead><tr><th>Code</th><th>State</th><th>Name</th><th>Basis</th><th>Rate</th><th>Effective</th><th></th></tr></thead>
+  <tbody>
+    <tr><td>NY_EXCISE_FLOWER</td><td>NY</td><td>NY excise — flower</td><td>per_mg_thc</td><td>0.0030 / mg</td><td>2025-04-01</td><td><a href="#">Edit</a></td></tr>
+    <tr><td>NY_SALES_PRP</td><td>NY</td><td>NY retail sales price</td><td>retail_price</td><td>9.00%</td><td>2025-04-01</td><td><a href="#">Edit</a></td></tr>
+    <tr><td>NJ_EXCISE</td><td>NJ</td><td>NJ social equity excise</td><td>retail_price</td><td>1.00%</td><td>2025-01-01</td><td><a href="#">Edit</a></td></tr>
+    <tr><td>NJ_SALES</td><td>NJ</td><td>NJ sales tax</td><td>retail_price</td><td>6.625%</td><td>2025-01-01</td><td><a href="#">Edit</a></td></tr>
+    <tr><td>CT_EXCISE</td><td>CT</td><td>CT cannabis excise</td><td>per_mg_thc</td><td>0.0025 / mg</td><td>2025-01-01</td><td><a href="#">Edit</a></td></tr>
+  </tbody>
+</table>
+</main>
+</div>
+</div>
+<script src="../_assets/theme-switch.js"></script>
+</body></html>

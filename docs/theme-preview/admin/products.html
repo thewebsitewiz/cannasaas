@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en" data-theme="modern" data-preview-depth="1">
+  <head>
+    <meta charset="utf-8" />
+    <title>Products — Admin</title>
+    <link rel="stylesheet" href="../_assets/preview.css" />
+  </head>
+  <body>
+    <div class="admin-shell">
+      <aside class="admin-sidebar">
+        <h2>GreenLeaf</h2>
+        <ul>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="products.html" class="active">Products</a></li>
+          <li><a href="orders.html">Orders</a></li>
+          <li><a href="inventory.html">Inventory</a></li>
+          <li><a href="inventory-audit.html">Inventory audit</a></li>
+          <li><a href="inventory-control.html">Inventory control</a></li>
+          <li><a href="compliance.html">Compliance</a></li>
+          <li><a href="menu-categories.html">Menu categories</a></li>
+          <li><a href="menu-board.html">Menu board</a></li>
+          <li><a href="staffing.html">Staffing</a></li>
+          <li><a href="timeclock.html">Timeclock</a></li>
+          <li><a href="scheduling.html">Scheduling</a></li>
+          <li><a href="vendors.html">Vendors</a></li>
+          <li><a href="loyalty.html">Loyalty</a></li>
+          <li><a href="reports.html">Reports</a></li>
+          <li><a href="tax-management.html">Tax management</a></li>
+          <li><a href="onboarding.html">Onboarding</a></li>
+          <li><a href="settings.html">Settings</a></li>
+        </ul>
+      </aside>
+      <div class="admin-main">
+        <header class="admin-topbar">
+          <div><strong>Products</strong></div>
+          <div><small>admin@greenleaf.com</small> · <a href="login.html">Logout</a></div>
+        </header>
+        <main class="tp-page">
+          <div class="tp-page__title">
+            <h1>Products</h1>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="tp-btn tp-btn--ghost">Bulk import</button>
+              <button class="tp-btn">+ New product</button>
+            </div>
+          </div>
+
+          <div class="tp-card" style="margin-bottom: 1rem; display: flex; gap: 0.75rem;">
+            <input class="tp-input" placeholder="Search by name, SKU, or batch…" />
+            <select class="tp-select" style="max-width: 200px;">
+              <option>All types</option><option>Flower</option><option>Vape</option><option>Edible</option>
+            </select>
+            <select class="tp-select" style="max-width: 200px;">
+              <option>All brands</option><option>Cresco</option><option>Wana</option><option>Kiva</option>
+            </select>
+          </div>
+
+          <table class="tp-table tp-card">
+            <thead><tr><th>Product</th><th>Type</th><th>Brand</th><th>Price</th><th>Inventory</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <tr><td>Blue Dream 1g</td><td>Flower</td><td>Cresco</td><td>$22.00</td><td>34</td><td><span class="tp-pill tp-pill--success">active</span></td><td><a href="#">Edit</a></td></tr>
+              <tr><td>Gelato Live Resin Cart</td><td>Vape</td><td>Stiiizy</td><td>$58.00</td><td>2 <span class="tp-pill tp-pill--warn">low</span></td><td><span class="tp-pill tp-pill--success">active</span></td><td><a href="#">Edit</a></td></tr>
+              <tr><td>Cherry Gummies 100mg</td><td>Edible</td><td>Wana</td><td>$28.00</td><td>76</td><td><span class="tp-pill tp-pill--success">active</span></td><td><a href="#">Edit</a></td></tr>
+              <tr><td>OG Kush 3.5g</td><td>Flower</td><td>Cresco</td><td>$54.00</td><td>1 <span class="tp-pill tp-pill--danger">critical</span></td><td><span class="tp-pill tp-pill--success">active</span></td><td><a href="#">Edit</a></td></tr>
+              <tr><td>Sour Diesel 1g</td><td>Flower</td><td>Cresco</td><td>$22.00</td><td>2 <span class="tp-pill tp-pill--warn">low</span></td><td><span class="tp-pill tp-pill--success">active</span></td><td><a href="#">Edit</a></td></tr>
+              <tr><td>Hybrid Chocolate Bar 100mg</td><td>Edible</td><td>Kiva</td><td>$32.00</td><td>54</td><td><span class="tp-pill tp-pill--success">active</span></td><td><a href="#">Edit</a></td></tr>
+              <tr><td>Branded Logo Hoodie L</td><td>Apparel</td><td>—</td><td>$45.00</td><td>1 <span class="tp-pill tp-pill--warn">low</span></td><td><span class="tp-pill">draft</span></td><td><a href="#">Edit</a></td></tr>
+            </tbody>
+          </table>
+          <p style="margin-top: 1rem;"><small>Showing 7 of 312 products · <a href="#">Next page →</a></small></p>
+        </main>
+      </div>
+    </div>
+    <script src="../_assets/theme-switch.js"></script>
+  </body>
+</html>

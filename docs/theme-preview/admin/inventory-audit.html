@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en" data-theme="modern" data-preview-depth="1">
+<head><meta charset="utf-8"><title>Inventory audit — Admin</title><link rel="stylesheet" href="../_assets/preview.css"></head>
+<body>
+<div class="admin-shell">
+  <aside class="admin-sidebar"><h2>GreenLeaf</h2>
+    <ul>
+      <li><a href="dashboard.html">Dashboard</a></li><li><a href="products.html">Products</a></li><li><a href="orders.html">Orders</a></li>
+      <li><a href="inventory.html">Inventory</a></li><li><a href="inventory-audit.html" class="active">Inventory audit</a></li>
+      <li><a href="inventory-control.html">Inventory control</a></li><li><a href="compliance.html">Compliance</a></li>
+      <li><a href="menu-categories.html">Menu categories</a></li><li><a href="menu-board.html">Menu board</a></li>
+      <li><a href="staffing.html">Staffing</a></li><li><a href="timeclock.html">Timeclock</a></li><li><a href="scheduling.html">Scheduling</a></li>
+      <li><a href="vendors.html">Vendors</a></li><li><a href="loyalty.html">Loyalty</a></li><li><a href="reports.html">Reports</a></li>
+      <li><a href="tax-management.html">Tax management</a></li><li><a href="onboarding.html">Onboarding</a></li><li><a href="settings.html">Settings</a></li>
+    </ul></aside>
+  <div class="admin-main">
+    <header class="admin-topbar"><div><strong>Inventory audit</strong></div><div><small>admin@greenleaf.com</small> · <a href="login.html">Logout</a></div></header>
+    <main class="tp-page">
+      <div class="tp-page__title"><h1>Stock change audit log</h1><button class="tp-btn">Export CSV</button></div>
+      <div class="tp-card" style="margin-bottom:1rem;display:flex;gap:0.75rem;">
+        <input class="tp-input" placeholder="Variant or product name…">
+        <select class="tp-select" style="max-width:200px;"><option>All types</option><option>adjustment</option><option>reserve</option><option>release</option><option>receive</option></select>
+        <select class="tp-select" style="max-width:200px;"><option>Last 7 days</option><option>Today</option><option>Last 30 days</option></select>
+      </div>
+      <table class="tp-table tp-card">
+        <thead><tr><th>When</th><th>Variant</th><th>Type</th><th>Δ qty</th><th>Before → after</th><th>Performed by</th><th>Order</th></tr></thead>
+        <tbody>
+          <tr><td>14:08:22</td><td>Sour Diesel 1g</td><td><span class="tp-pill">reserve</span></td><td>-6</td><td>8 → 2</td><td>Marcus L. (customer)</td><td>#A8F3-22</td></tr>
+          <tr><td>13:51:09</td><td>Cherry Gummies 100mg</td><td><span class="tp-pill">reserve</span></td><td>-1</td><td>77 → 76</td><td>Jana R. (customer)</td><td>#A8F3-21</td></tr>
+          <tr><td>13:30:14</td><td>OG Kush 3.5g</td><td><span class="tp-pill">adjustment</span></td><td>-1</td><td>2 → 1</td><td>sarah@greenleaf.com</td><td>—</td></tr>
+          <tr><td>13:15:43</td><td>Branded Logo Hoodie M</td><td><span class="tp-pill">receive</span></td><td>+12</td><td>0 → 12</td><td>sarah@greenleaf.com</td><td>—</td></tr>
+          <tr><td>12:55:30</td><td>Gelato Cart</td><td><span class="tp-pill">release</span></td><td>+2</td><td>0 → 2</td><td>system (cancel)</td><td>#A8F3-17</td></tr>
+        </tbody>
+      </table>
+    </main>
+  </div>
+</div>
+<script src="../_assets/theme-switch.js"></script>
+</body></html>

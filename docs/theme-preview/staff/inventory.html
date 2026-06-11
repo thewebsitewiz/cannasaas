@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en" data-theme="modern" data-preview-depth="1">
+<head><meta charset="utf-8"><title>Stock lookup — Staff POS</title><link rel="stylesheet" href="../_assets/preview.css"></head>
+<body>
+<div class="staff-shell">
+<header class="staff-header">
+  <div style="display:flex;gap:1rem;align-items:center;"><strong>GreenLeaf POS</strong><span class="tp-pill tp-pill--success">Register #2 open · $485.00</span></div>
+  <nav class="staff-header__nav"><a href="new-order.html">New order</a><a href="queue.html">Queue</a><a href="fulfillment.html">Fulfillment</a><a href="inventory.html" class="active">Inventory</a><a href="products.html">Products</a><a href="timesheets.html">Timesheets</a></nav>
+  <div style="display:flex;gap:0.75rem;align-items:center;font-size:0.85rem;"><span>🔔 2 alerts</span><span>marcus@greenleaf.com</span><a href="login.html">Logout</a></div>
+</header>
+<main class="tp-page">
+
+<h1>Stock lookup</h1>
+<div class="tp-card" style="margin:1rem 0;display:flex;gap:0.75rem;">
+  <input class="tp-input" placeholder="Scan or type variant name…">
+</div>
+<table class="tp-table tp-card">
+  <thead><tr><th>Variant</th><th>Available</th><th>Reserved</th><th>Location</th></tr></thead>
+  <tbody>
+    <tr><td>Blue Dream 1g</td><td>34</td><td>2</td><td>A-3-12</td></tr>
+    <tr><td>Sour Diesel 1g</td><td>2 <span class="tp-pill tp-pill--warn">low</span></td><td>6</td><td>A-3-14</td></tr>
+    <tr><td>OG Kush 3.5g</td><td>1 <span class="tp-pill tp-pill--danger">critical</span></td><td>0</td><td>A-2-09</td></tr>
+    <tr><td>Cherry Gummies 100mg</td><td>76</td><td>0</td><td>C-1-08</td></tr>
+  </tbody>
+</table>
+</main>
+</div>
+<script src="../_assets/theme-switch.js"></script>
+</body></html>

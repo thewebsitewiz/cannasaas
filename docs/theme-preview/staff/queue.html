@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en" data-theme="modern" data-preview-depth="1">
+<head><meta charset="utf-8"><title>Queue — Staff POS</title><link rel="stylesheet" href="../_assets/preview.css"></head>
+<body>
+<div class="staff-shell">
+<header class="staff-header">
+  <div style="display:flex;gap:1rem;align-items:center;"><strong>GreenLeaf POS</strong><span class="tp-pill tp-pill--success">Register #2 open · $485.00</span></div>
+  <nav class="staff-header__nav"><a href="new-order.html">New order</a><a href="queue.html" class="active">Queue</a><a href="fulfillment.html">Fulfillment</a><a href="inventory.html">Inventory</a><a href="products.html">Products</a><a href="timesheets.html">Timesheets</a></nav>
+  <div style="display:flex;gap:0.75rem;align-items:center;font-size:0.85rem;"><span>🔔 2 alerts</span><span>marcus@greenleaf.com</span><a href="login.html">Logout</a></div>
+</header>
+<main class="tp-page">
+
+<div class="tp-page__title"><h1>Order queue</h1><span class="tp-pill tp-pill--warn">3 active</span></div>
+<table class="tp-table tp-card">
+  <thead><tr><th>Order</th><th>Customer</th><th>Type</th><th>Items</th><th>Total</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    <tr><td>#A8F3-22</td><td>Marcus L.</td><td>pickup</td><td>4</td><td>$184.50</td><td><span class="tp-pill tp-pill--warn">preparing</span></td><td><button class="tp-btn">Mark ready</button></td></tr>
+    <tr><td>#A8F3-21</td><td>Jana R.</td><td>delivery</td><td>2</td><td>$76.00</td><td><span class="tp-pill tp-pill--success">ready</span></td><td><button class="tp-btn">Complete</button></td></tr>
+    <tr><td>#A8F3-20</td><td>Theo D.</td><td>pickup</td><td>6</td><td>$235.10</td><td><span class="tp-pill">confirmed</span></td><td><button class="tp-btn">Start prepping</button></td></tr>
+  </tbody>
+</table>
+</main>
+</div>
+<script src="../_assets/theme-switch.js"></script>
+</body></html>

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en" data-theme="modern" data-preview-depth="1">
+<head><meta charset="utf-8"><title>Inventory control — Admin</title><link rel="stylesheet" href="../_assets/preview.css"></head>
+<body>
+<div class="admin-shell">
+  <aside class="admin-sidebar"><h2>GreenLeaf</h2>
+    <ul>
+      <li><a href="dashboard.html">Dashboard</a></li><li><a href="products.html">Products</a></li><li><a href="orders.html">Orders</a></li>
+      <li><a href="inventory.html">Inventory</a></li><li><a href="inventory-audit.html">Inventory audit</a></li>
+      <li><a href="inventory-control.html" class="active">Inventory control</a></li><li><a href="compliance.html">Compliance</a></li>
+      <li><a href="menu-categories.html">Menu categories</a></li><li><a href="menu-board.html">Menu board</a></li>
+      <li><a href="staffing.html">Staffing</a></li><li><a href="timeclock.html">Timeclock</a></li><li><a href="scheduling.html">Scheduling</a></li>
+      <li><a href="vendors.html">Vendors</a></li><li><a href="loyalty.html">Loyalty</a></li><li><a href="reports.html">Reports</a></li>
+      <li><a href="tax-management.html">Tax management</a></li><li><a href="onboarding.html">Onboarding</a></li><li><a href="settings.html">Settings</a></li>
+    </ul></aside>
+  <div class="admin-main">
+    <header class="admin-topbar"><div><strong>Inventory control</strong></div><div><small>admin@greenleaf.com</small> · <a href="login.html">Logout</a></div></header>
+    <main class="tp-page">
+      <h1 style="margin-bottom:1rem;">Reorder suggestions</h1>
+      <p style="margin-bottom:1.5rem;color:var(--color-text-muted);">Variants whose 30-day velocity outpaces current inventory. Threshold + suggested-quantity columns are editable per row.</p>
+      <table class="tp-table tp-card">
+        <thead><tr><th>Variant</th><th>30-day velocity</th><th>Current</th><th>Days of cover</th><th>Threshold</th><th>Suggested qty</th><th></th></tr></thead>
+        <tbody>
+          <tr><td>Sour Diesel 1g</td><td>1.2 / day</td><td>2</td><td>1.7</td><td><input class="tp-input" value="5" style="width:60px;padding:2px 6px"></td><td><input class="tp-input" value="50" style="width:60px;padding:2px 6px"></td><td><button class="tp-btn tp-btn--ghost">Mark ordered</button></td></tr>
+          <tr><td>OG Kush 3.5g</td><td>0.4 / day</td><td>1</td><td>2.5</td><td><input class="tp-input" value="5" style="width:60px;padding:2px 6px"></td><td><input class="tp-input" value="20" style="width:60px;padding:2px 6px"></td><td><button class="tp-btn tp-btn--ghost">Mark ordered</button></td></tr>
+          <tr><td>Gelato Live Resin Cart</td><td>2.1 / day</td><td>2</td><td>1.0</td><td><input class="tp-input" value="10" style="width:60px;padding:2px 6px"></td><td><input class="tp-input" value="40" style="width:60px;padding:2px 6px"></td><td><button class="tp-btn tp-btn--ghost">Mark ordered</button></td></tr>
+        </tbody>
+      </table>
+    </main>
+  </div>
+</div>
+<script src="../_assets/theme-switch.js"></script>
+</body></html>

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en" data-theme="midnight" data-preview-depth="1">
+<head><meta charset="utf-8"><title>Tenants — Platform</title><link rel="stylesheet" href="../_assets/preview.css"></head>
+<body>
+<div class="admin-shell">
+<aside class="admin-sidebar">
+  <h2>CannaSaaS</h2>
+  <small style="display:block;padding:0 0.75rem 1rem;opacity:0.7;">Super-admin</small>
+  <ul>
+    <li><a href="dashboard.html">Dashboard</a></li>
+    <li><a href="tenants.html" class="active">Tenants</a></li>
+    <li><a href="billing.html">Billing</a></li>
+    <li><a href="tax.html">Tax</a></li>
+    <li><a href="reports.html">Reports</a></li>
+    <li><a href="activity.html">Activity</a></li>
+  </ul>
+</aside>
+<div class="admin-main">
+<header class="admin-topbar"><div><strong>Tenants</strong></div><div><small>dennis@cannasaas.com</small> · <a href="login.html">Logout</a></div></header>
+<main class="tp-page">
+
+<div class="tp-page__title"><h1>Tenants</h1><button class="tp-btn">+ Onboard tenant</button></div>
+<div class="tp-card" style="margin-bottom:1rem;display:flex;gap:0.75rem;">
+  <input class="tp-input" placeholder="Search tenants…">
+  <select class="tp-select" style="max-width:200px;"><option>All states</option><option>NY</option><option>NJ</option><option>CT</option></select>
+  <select class="tp-select" style="max-width:200px;"><option>All tiers</option><option>Trial</option><option>Standard</option><option>Enterprise</option></select>
+</div>
+<table class="tp-table tp-card">
+  <thead><tr><th>Tenant</th><th>State</th><th>Tier</th><th>Dispensaries</th><th>GMV 30d</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td>GreenLeaf</td><td>NY</td><td>Standard</td><td>2</td><td>$487k</td><td><span class="tp-pill tp-pill--success">active</span></td></tr>
+    <tr><td>Liberty Cannabis</td><td>NJ</td><td>Enterprise</td><td>5</td><td>$1.2M</td><td><span class="tp-pill tp-pill--success">active</span></td></tr>
+    <tr><td>Verdant NYC</td><td>NY</td><td>Standard</td><td>1</td><td>$284k</td><td><span class="tp-pill tp-pill--success">active</span></td></tr>
+    <tr><td>Sunshine Co</td><td>CT</td><td>Standard</td><td>3</td><td>$176k</td><td><span class="tp-pill tp-pill--success">active</span></td></tr>
+    <tr><td>Hudson Dispensary</td><td>NY</td><td>Trial</td><td>1</td><td>$0</td><td><span class="tp-pill tp-pill--warn">onboarding</span></td></tr>
+  </tbody>
+</table>
+</main>
+</div>
+</div>
+<script src="../_assets/theme-switch.js"></script>
+</body></html>

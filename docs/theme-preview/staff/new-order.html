@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en" data-theme="modern" data-preview-depth="1">
+<head><meta charset="utf-8"><title>New order — Staff POS</title><link rel="stylesheet" href="../_assets/preview.css"></head>
+<body>
+<div class="staff-shell">
+<header class="staff-header">
+  <div style="display:flex;gap:1rem;align-items:center;"><strong>GreenLeaf POS</strong><span class="tp-pill tp-pill--success">Register #2 open · $485.00</span></div>
+  <nav class="staff-header__nav"><a href="new-order.html" class="active">New order</a><a href="queue.html">Queue</a><a href="fulfillment.html">Fulfillment</a><a href="inventory.html">Inventory</a><a href="products.html">Products</a><a href="timesheets.html">Timesheets</a></nav>
+  <div style="display:flex;gap:0.75rem;align-items:center;font-size:0.85rem;"><span>🔔 2 alerts</span><span>marcus@greenleaf.com</span><a href="login.html">Logout</a></div>
+</header>
+<main class="tp-page">
+
+<div class="tp-grid" style="grid-template-columns:2fr 1fr;">
+  <section>
+    <h1>New order</h1>
+    <div class="tp-card" style="margin-bottom:1rem;display:flex;gap:0.75rem;">
+      <input class="tp-input" placeholder="Scan barcode or search…">
+      <button class="tp-btn">Add walk-in</button>
+    </div>
+    <div class="tp-grid tp-grid-3">
+      <div class="tp-card"><div class="tp-product__img">🌿</div><h3>Blue Dream 1g</h3><small>Flower · 22% THC</small><div class="tp-product__price">$22.00</div></div>
+      <div class="tp-card"><div class="tp-product__img">💨</div><h3>Gelato Cart</h3><small>Vape · 84% THC</small><div class="tp-product__price">$58.00</div></div>
+      <div class="tp-card"><div class="tp-product__img">🍬</div><h3>Cherry Gummies</h3><small>Edible · 100mg</small><div class="tp-product__price">$28.00</div></div>
+      <div class="tp-card"><div class="tp-product__img">🌿</div><h3>Sour Diesel 1g</h3><small>Flower · 20% THC</small><div class="tp-product__price">$22.00</div></div>
+      <div class="tp-card"><div class="tp-product__img">🌿</div><h3>OG Kush 3.5g</h3><small>Flower · 24% THC</small><div class="tp-product__price">$54.00</div></div>
+      <div class="tp-card"><div class="tp-product__img">🍫</div><h3>Hybrid Bar</h3><small>Edible · 100mg</small><div class="tp-product__price">$32.00</div></div>
+    </div>
+  </section>
+  <aside class="tp-card" style="height:fit-content;">
+    <h2>Cart</h2>
+    <small>Customer: <strong>K. Adams</strong></small>
+    <table class="tp-table" style="margin-top:0.75rem;">
+      <tr><td>Blue Dream 1g × 2</td><td>$44.00</td></tr>
+      <tr><td>Cherry Gummies × 1</td><td>$28.00</td></tr>
+      <tr><td>Subtotal</td><td>$72.00</td></tr>
+      <tr><td>Tax</td><td>$6.48</td></tr>
+      <tr><th>Total</th><th>$78.48</th></tr>
+    </table>
+    <select class="tp-select" style="margin-top:0.75rem;"><option>Cash</option><option>Aeropay</option><option>CanPay</option></select>
+    <button class="tp-btn" style="width:100%;margin-top:0.5rem;">Charge $78.48</button>
+  </aside>
+</div>
+</main>
+</div>
+<script src="../_assets/theme-switch.js"></script>
+</body></html>

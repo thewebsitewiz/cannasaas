@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en" data-theme="modern" data-preview-depth="1">
+<head><meta charset="utf-8"><title>Compliance — Admin</title><link rel="stylesheet" href="../_assets/preview.css"></head>
+<body>
+<div class="admin-shell">
+<aside class="admin-sidebar"><h2>GreenLeaf</h2><ul><li><a href="dashboard.html">Dashboard</a></li><li><a href="products.html">Products</a></li><li><a href="orders.html">Orders</a></li><li><a href="inventory.html">Inventory</a></li><li><a href="inventory-audit.html">Inventory audit</a></li><li><a href="inventory-control.html">Inventory control</a></li><li><a href="compliance.html" class="active">Compliance</a></li><li><a href="menu-categories.html">Menu categories</a></li><li><a href="menu-board.html">Menu board</a></li><li><a href="staffing.html">Staffing</a></li><li><a href="timeclock.html">Timeclock</a></li><li><a href="scheduling.html">Scheduling</a></li><li><a href="vendors.html">Vendors</a></li><li><a href="loyalty.html">Loyalty</a></li><li><a href="reports.html">Reports</a></li><li><a href="tax-management.html">Tax management</a></li><li><a href="onboarding.html">Onboarding</a></li><li><a href="settings.html">Settings</a></li></ul></aside>
+<div class="admin-main">
+<header class="admin-topbar"><div><strong>Compliance</strong></div><div><small>admin@greenleaf.com</small> · <a href="login.html">Logout</a></div></header>
+<main class="tp-page">
+
+<div class="tp-page__title"><h1>Compliance</h1><span class="tp-pill tp-pill--success">All checks passing</span></div>
+<div class="tp-grid tp-grid-3" style="margin-bottom:1.5rem;">
+  <div class="tp-card"><small>Metrc sync</small><h2 style="font-size:1.5rem;">98.4%</h2><small>last hour</small></div>
+  <div class="tp-card"><small>Age-gate failures</small><h2 style="font-size:1.5rem;">0</h2><small>past 24h</small></div>
+  <div class="tp-card"><small>Open alerts</small><h2 style="font-size:1.5rem;">2</h2><small class="tp-pill tp-pill--warn">review</small></div>
+</div>
+<section class="tp-card"><h2>Open compliance alerts</h2>
+  <table class="tp-table" style="margin-top:0.75rem;">
+    <thead><tr><th>Code</th><th>Detail</th><th>Severity</th><th>Opened</th></tr></thead>
+    <tbody>
+      <tr><td>METRC-RETRY-002</td><td>Order #A8F3-15 receipt retry queued (3rd attempt)</td><td><span class="tp-pill tp-pill--warn">medium</span></td><td>2 hours ago</td></tr>
+      <tr><td>STATE-LIMIT-001</td><td>Daily flower purchase warning for K. Adams</td><td><span class="tp-pill">info</span></td><td>3 hours ago</td></tr>
+    </tbody>
+  </table>
+</section>
+</main>
+</div>
+</div>
+<script src="../_assets/theme-switch.js"></script>
+</body></html>

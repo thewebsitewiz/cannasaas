@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en" data-theme="casual" data-preview-depth="1">
+<head><meta charset="utf-8"><title>Checkout — Kiosk</title><link rel="stylesheet" href="../_assets/preview.css"></head>
+<body>
+<div class="kiosk-shell">
+<header class="kiosk-header">
+  <strong>GreenLeaf Tappan</strong>
+  <span>K. Adams · 1,250 pts</span>
+  <button class="tp-btn tp-btn--ghost">🛒 3 · $78.48</button>
+</header>
+<main style="flex:1;padding:2rem;overflow:auto;">
+
+<h1 style="font-size:2rem;">Checkout</h1>
+<div class="tp-grid" style="grid-template-columns:2fr 1fr;gap:2rem;margin-top:1rem;">
+  <section>
+    <h2>Pickup or delivery</h2>
+    <div style="display:flex;gap:1rem;margin:0.5rem 0 1.5rem;">
+      <label class="tp-card" style="flex:1;text-align:center;padding:1rem;border-color:var(--color-primary);"><input type="radio" name="ful" checked> Pickup<br><small>Ready in 15 min</small></label>
+      <label class="tp-card" style="flex:1;text-align:center;padding:1rem;"><input type="radio" name="ful"> Delivery<br><small>Today before 6pm</small></label>
+    </div>
+    <h2>Payment</h2>
+    <div style="display:flex;gap:1rem;margin:0.5rem 0;">
+      <label class="tp-card" style="flex:1;text-align:center;padding:1rem;border-color:var(--color-primary);"><input type="radio" name="pay" checked> Cash <span class="tp-pill tp-pill--success">7% off</span></label>
+      <label class="tp-card" style="flex:1;text-align:center;padding:1rem;"><input type="radio" name="pay"> Aeropay</label>
+      <label class="tp-card" style="flex:1;text-align:center;padding:1rem;"><input type="radio" name="pay"> CanPay</label>
+    </div>
+  </section>
+  <aside class="tp-card">
+    <h2>Total</h2>
+    <p style="font-size:2rem;font-weight:700;color:var(--color-primary);">$127.13</p>
+    <small>After 7% cash discount</small>
+    <button class="tp-btn" style="width:100%;margin-top:1rem;font-size:1.05rem;padding:1rem;">Place order</button>
+  </aside>
+</div>
+</main>
+<footer class="kiosk-footer">21+ only. Please verify ID at pickup. § cannasaas.com/terms</footer>
+</div>
+<script src="../_assets/theme-switch.js"></script>
+</body></html>

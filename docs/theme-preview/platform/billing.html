@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en" data-theme="midnight" data-preview-depth="1">
+<head><meta charset="utf-8"><title>Billing — Platform</title><link rel="stylesheet" href="../_assets/preview.css"></head>
+<body>
+<div class="admin-shell">
+<aside class="admin-sidebar">
+  <h2>CannaSaaS</h2>
+  <small style="display:block;padding:0 0.75rem 1rem;opacity:0.7;">Super-admin</small>
+  <ul>
+    <li><a href="dashboard.html">Dashboard</a></li>
+    <li><a href="tenants.html">Tenants</a></li>
+    <li><a href="billing.html" class="active">Billing</a></li>
+    <li><a href="tax.html">Tax</a></li>
+    <li><a href="reports.html">Reports</a></li>
+    <li><a href="activity.html">Activity</a></li>
+  </ul>
+</aside>
+<div class="admin-main">
+<header class="admin-topbar"><div><strong>Billing</strong></div><div><small>dennis@cannasaas.com</small> · <a href="login.html">Logout</a></div></header>
+<main class="tp-page">
+
+<h1 style="margin-bottom:1rem;">Billing</h1>
+<div class="tp-grid tp-grid-3" style="margin-bottom:1.5rem;">
+  <div class="tp-card"><small>MRR</small><h2 style="font-size:1.5rem;">$84,200</h2></div>
+  <div class="tp-card"><small>Outstanding</small><h2 style="font-size:1.5rem;">$12,400</h2><span class="tp-pill tp-pill--warn">3 invoices overdue</span></div>
+  <div class="tp-card"><small>Churn 30d</small><h2 style="font-size:1.5rem;">0.0%</h2></div>
+</div>
+<table class="tp-table tp-card">
+  <thead><tr><th>Invoice</th><th>Tenant</th><th>Issued</th><th>Due</th><th>Total</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td>INV-2026-0184</td><td>Liberty Cannabis</td><td>Jun 1</td><td>Jun 15</td><td>$8,400</td><td><span class="tp-pill tp-pill--success">paid</span></td></tr>
+    <tr><td>INV-2026-0183</td><td>GreenLeaf</td><td>Jun 1</td><td>Jun 15</td><td>$4,820</td><td><span class="tp-pill tp-pill--success">paid</span></td></tr>
+    <tr><td>INV-2026-0182</td><td>Verdant NYC</td><td>Jun 1</td><td>Jun 15</td><td>$3,200</td><td><span class="tp-pill">open</span></td></tr>
+    <tr><td>INV-2026-0181</td><td>Sunshine Co</td><td>May 28</td><td>Jun 11</td><td>$4,400</td><td><span class="tp-pill tp-pill--warn">overdue</span></td></tr>
+  </tbody>
+</table>
+</main>
+</div>
+</div>
+<script src="../_assets/theme-switch.js"></script>
+</body></html>
