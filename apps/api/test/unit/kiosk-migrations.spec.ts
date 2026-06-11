@@ -23,7 +23,7 @@ describe('CreateKioskDevices1779408000000 (sc-596 TC-MIG-001, sc-597 TC-MIG-002)
   it('up creates the expected columns', () => {
     const REQUIRED_COLS = [
       'id UUID PRIMARY KEY DEFAULT gen_random_uuid\\(\\)',
-      'user_id UUID NOT NULL REFERENCES users\\(user_id\\) ON DELETE CASCADE',
+      'user_id UUID NOT NULL REFERENCES users\\(id\\) ON DELETE CASCADE',
       'dispensary_id UUID NOT NULL REFERENCES dispensaries\\(entity_id\\) ON DELETE CASCADE',
       'label VARCHAR NOT NULL',
       'current_token_id UUID NOT NULL',

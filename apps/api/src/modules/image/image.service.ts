@@ -41,7 +41,13 @@ export class ImageService {
     this.baseUrl =
       process.env['UPLOAD_BASE_URL'] ?? 'http://localhost:3000/uploads';
 
-    for (const dir of ['products', 'brands', 'avatars', 'thumbnails']) {
+    for (const dir of [
+      'products',
+      'brands',
+      'avatars',
+      'thumbnails',
+      'branding',
+    ]) {
       const full = path.join(this.uploadDir, dir);
       if (!fs.existsSync(full)) fs.mkdirSync(full, { recursive: true });
     }
@@ -128,6 +134,43 @@ export class ImageService {
       mimeType: file.mimetype,
       size: file.size,
     };
+  }
+
+  /**
+   * Per-dispensary branding upload (sc-637 follow-on). One file per kind
+   * (logo or masthead) — the caller stores the returned URL on the
+   * `theme_configs` row. Kind-specific size caps avoid loosening the
+   * existing 5 MB validateFile() default just for one path.
+   */
+  async uploadBranding(
+    file: UploadedFile,
+    dispensaryId: string,
+    kind: 'logo' | 'masthead',
+  ): Promise<{ url: string }> {
+    const cap = kind === 'logo' ? 2 * 1024 * 1024 : 5 * 1024 * 1024;
+    if (!file) throw new BadRequestException('No file provided');
+    if (!this.allowedTypes.includes(file.mimetype)) {
+      throw new BadRequestException(
+        'Invalid file type. Allowed: JPEG, PNG, WebP',
+      );
+    }
+    if (file.size > cap) {
+      throw new BadRequestException(
+        `File too large. Maximum ${cap / (1024 * 1024)}MB for ${kind}`,
+      );
+    }
+
+    const ext = this.getExtension(file.mimetype);
+    const hash = crypto.randomBytes(8).toString('hex');
+    const filename = `${dispensaryId.slice(0, 8)}_${kind}_${hash}${ext}`;
+    const filePath = path.join(this.uploadDir, 'branding', filename);
+    await fs.promises.writeFile(filePath, file.buffer);
+
+    const url = this.baseUrl + '/branding/' + filename;
+    this.logger.log(
+      `Branding ${kind} uploaded: ${filename} (${(file.size / 1024).toFixed(0)} KB)`,
+    );
+    return { url };
   }
 
   deleteFile(url: string): void {

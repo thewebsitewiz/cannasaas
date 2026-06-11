@@ -19,9 +19,15 @@ import {
 } from './image.service';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
+import { DispensaryOwnershipService } from '../../common/services/dispensary-ownership.service';
 
 interface AuthedRequest extends Request {
-  user?: { sub: string; role: string; dispensaryId?: string };
+  user?: {
+    sub: string;
+    role: string;
+    dispensaryId?: string;
+    organizationId?: string;
+  };
 }
 
 interface ProductImageRow {
@@ -38,6 +44,7 @@ export class ImageController {
   constructor(
     private readonly images: ImageService,
     @InjectDataSource() private ds: DataSource,
+    private readonly ownership: DispensaryOwnershipService,
   ) {}
 
   @Post('product/:productId')
@@ -50,10 +57,7 @@ export class ImageController {
     @Param('productId') productId: string,
     @Req() req: AuthedRequest,
   ) {
-    const dispensaryId = await this.assertProductInCallerTenant(
-      productId,
-      req,
-    );
+    const dispensaryId = await this.assertProductInCallerTenant(productId, req);
     const result = await this.images.uploadProductImage(
       file,
       dispensaryId,
@@ -78,10 +82,7 @@ export class ImageController {
     @Param('productId') productId: string,
     @Req() req: AuthedRequest,
   ) {
-    const dispensaryId = await this.assertProductInCallerTenant(
-      productId,
-      req,
-    );
+    const dispensaryId = await this.assertProductInCallerTenant(productId, req);
     const result = await this.images.uploadProductImage(
       file,
       dispensaryId,
@@ -116,6 +117,75 @@ export class ImageController {
       [productId],
     );
     return { success: true };
+  }
+
+  /**
+   * Per-dispensary branding logo. Multipart upload, 2 MB cap (smaller
+   * than the masthead because a logo is usually a square mark, not a
+   * hero photo). Writes the URL into `theme_configs.logo_url`.
+   */
+  @Post('dispensary/:dispensaryId/logo')
+  @Roles('dispensary_admin', 'org_admin', 'super_admin')
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: 2 * 1024 * 1024 } }),
+  )
+  async uploadDispensaryLogo(
+    @UploadedFile() file: UploadedFileShape,
+    @Param('dispensaryId') dispensaryId: string,
+    @Req() req: AuthedRequest,
+  ) {
+    await this.ownership.assertOwns(req.user, dispensaryId);
+    const result = await this.images.uploadBranding(file, dispensaryId, 'logo');
+    await this.upsertThemeBrandingColumn(dispensaryId, 'logo_url', result.url);
+    return { success: true, url: result.url };
+  }
+
+  /**
+   * Per-dispensary masthead image (hero banner). Multipart upload, 5 MB cap.
+   * Writes the URL into `theme_configs.masthead_url`.
+   */
+  @Post('dispensary/:dispensaryId/masthead')
+  @Roles('dispensary_admin', 'org_admin', 'super_admin')
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: 5 * 1024 * 1024 } }),
+  )
+  async uploadDispensaryMasthead(
+    @UploadedFile() file: UploadedFileShape,
+    @Param('dispensaryId') dispensaryId: string,
+    @Req() req: AuthedRequest,
+  ) {
+    await this.ownership.assertOwns(req.user, dispensaryId);
+    const result = await this.images.uploadBranding(
+      file,
+      dispensaryId,
+      'masthead',
+    );
+    await this.upsertThemeBrandingColumn(
+      dispensaryId,
+      'masthead_url',
+      result.url,
+    );
+    return { success: true, url: result.url };
+  }
+
+  /**
+   * Upsert a single branding column on the dispensary's `theme_configs`
+   * row, creating the row with defaults if it doesn't exist yet. Kept
+   * inline rather than pushed into ThemeService to avoid a circular
+   * dependency between the image module and the theme module.
+   */
+  private async upsertThemeBrandingColumn(
+    dispensaryId: string,
+    column: 'logo_url' | 'masthead_url',
+    value: string,
+  ): Promise<void> {
+    await this.ds.query(
+      `INSERT INTO theme_configs (dispensary_id, ${column}, created_at, updated_at)
+       VALUES ($1, $2, NOW(), NOW())
+       ON CONFLICT (dispensary_id)
+       DO UPDATE SET ${column} = EXCLUDED.${column}, updated_at = NOW()`,
+      [dispensaryId, value],
+    );
   }
 
   @Post('avatar')
@@ -162,9 +232,7 @@ export class ImageController {
     const user = req.user;
     if (!user) throw new ForbiddenException('Not authenticated');
     if (user.role !== 'super_admin' && user.dispensaryId !== owner) {
-      throw new ForbiddenException(
-        'Product belongs to a different dispensary',
-      );
+      throw new ForbiddenException('Product belongs to a different dispensary');
     }
     return owner;
   }

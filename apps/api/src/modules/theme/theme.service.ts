@@ -1,9 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { ThemeConfig } from './theme-config.entity';
 import { SaveThemeConfigInput } from './dto';
 import { CacheService } from '../../common/services/cache.service';
+
+interface ThemableDispensaryRow {
+  readonly entityId: string;
+  readonly name: string;
+  readonly slug: string;
+  readonly preset: string | null;
+  readonly logoUrl: string | null;
+}
 
 @Injectable()
 export class ThemeService {
@@ -11,6 +19,7 @@ export class ThemeService {
     @InjectRepository(ThemeConfig)
     private readonly repo: Repository<ThemeConfig>,
     private readonly cache: CacheService,
+    @InjectDataSource() private readonly ds: DataSource,
   ) {}
 
   /** Get theme config for a dispensary (returns defaults if none saved) */
@@ -74,6 +83,58 @@ export class ThemeService {
     // Invalidate cache on save
     await this.cache.del(`theme:${input.dispensaryId}`);
     return result;
+  }
+
+  /**
+   * Returns the dispensaries the caller is allowed to theme, projected
+   * to the columns the admin picker actually needs (name + slug + the
+   * existing preset / logoUrl so the UI can render a thumbnail).
+   *
+   * Scoping rules:
+   *   super_admin       → all active dispensaries
+   *   org_admin         → all active dispensaries in their organization
+   *   dispensary_admin  → only their own dispensary
+   */
+  async listThemableForUser(
+    role: string,
+    dispensaryId: string | null | undefined,
+    organizationId: string | null | undefined,
+  ): Promise<ThemableDispensaryRow[]> {
+    if (role === 'super_admin') {
+      return this.ds.query(
+        `SELECT d.entity_id AS "entityId", d.name, d.slug,
+                tc.preset, tc.logo_url AS "logoUrl"
+           FROM dispensaries d
+           LEFT JOIN theme_configs tc ON tc.dispensary_id = d.entity_id
+          WHERE d.is_active = TRUE
+          ORDER BY d.name ASC`,
+      );
+    }
+    if (role === 'org_admin') {
+      if (!organizationId) return [];
+      return this.ds.query(
+        `SELECT d.entity_id AS "entityId", d.name, d.slug,
+                tc.preset, tc.logo_url AS "logoUrl"
+           FROM dispensaries d
+           JOIN companies c ON c.company_id = d.company_id
+           LEFT JOIN theme_configs tc ON tc.dispensary_id = d.entity_id
+          WHERE d.is_active = TRUE AND c.organization_id = $1
+          ORDER BY d.name ASC`,
+        [organizationId],
+      );
+    }
+    if (role === 'dispensary_admin') {
+      if (!dispensaryId) return [];
+      return this.ds.query(
+        `SELECT d.entity_id AS "entityId", d.name, d.slug,
+                tc.preset, tc.logo_url AS "logoUrl"
+           FROM dispensaries d
+           LEFT JOIN theme_configs tc ON tc.dispensary_id = d.entity_id
+          WHERE d.entity_id = $1`,
+        [dispensaryId],
+      );
+    }
+    return [];
   }
 
   /** Reset to default casual theme */
