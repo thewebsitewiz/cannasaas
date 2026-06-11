@@ -16,7 +16,7 @@ export class CreateRegisterSessions1779192400000 implements MigrationInterface {
       CREATE TABLE register_sessions (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         dispensary_id UUID NOT NULL REFERENCES dispensaries(entity_id) ON DELETE CASCADE,
-        opened_by_user_id UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT,
+        opened_by_user_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
         opening_cash_cents INTEGER NOT NULL,
         closing_cash_cents INTEGER,
         status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'closed')),

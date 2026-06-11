@@ -41,7 +41,7 @@ export class AddForeignKeyCascades1774500000000 implements MigrationInterface {
 
     // customer_profiles -> users
     await queryRunner.query(`ALTER TABLE customer_profiles DROP CONSTRAINT IF EXISTS fk_customer_user`);
-    await queryRunner.query(`ALTER TABLE customer_profiles ADD CONSTRAINT fk_customer_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE`);
+    await queryRunner.query(`ALTER TABLE customer_profiles ADD CONSTRAINT fk_customer_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE`);
 
     // customer_addresses -> customer_profiles
     await queryRunner.query(`ALTER TABLE customer_addresses DROP CONSTRAINT IF EXISTS fk_address_customer`);
@@ -49,11 +49,11 @@ export class AddForeignKeyCascades1774500000000 implements MigrationInterface {
 
     // employee_profiles -> users
     await queryRunner.query(`ALTER TABLE employee_profiles DROP CONSTRAINT IF EXISTS fk_employee_user`);
-    await queryRunner.query(`ALTER TABLE employee_profiles ADD CONSTRAINT fk_employee_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE`);
+    await queryRunner.query(`ALTER TABLE employee_profiles ADD CONSTRAINT fk_employee_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE`);
 
     // refresh_tokens -> users
     await queryRunner.query(`ALTER TABLE refresh_tokens DROP CONSTRAINT IF EXISTS fk_refresh_user`);
-    await queryRunner.query(`ALTER TABLE refresh_tokens ADD CONSTRAINT fk_refresh_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE`);
+    await queryRunner.query(`ALTER TABLE refresh_tokens ADD CONSTRAINT fk_refresh_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE`);
 
     // users -> organizations
     await queryRunner.query(`ALTER TABLE users DROP CONSTRAINT IF EXISTS fk_users_organization`);
