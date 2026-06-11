@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en" data-theme="modern" data-preview-depth="1">
+<head><meta charset="utf-8"><title>Inventory — Admin</title><link rel="stylesheet" href="../_assets/preview.css"></head>
+<body>
+<div class="admin-shell">
+  <aside class="admin-sidebar"><h2>GreenLeaf</h2>
+    <ul>
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="products.html">Products</a></li>
+      <li><a href="orders.html">Orders</a></li>
+      <li><a href="inventory.html" class="active">Inventory</a></li>
+      <li><a href="inventory-audit.html">Inventory audit</a></li>
+      <li><a href="inventory-control.html">Inventory control</a></li>
+      <li><a href="compliance.html">Compliance</a></li>
+      <li><a href="menu-categories.html">Menu categories</a></li>
+      <li><a href="menu-board.html">Menu board</a></li>
+      <li><a href="staffing.html">Staffing</a></li>
+      <li><a href="timeclock.html">Timeclock</a></li>
+      <li><a href="scheduling.html">Scheduling</a></li>
+      <li><a href="vendors.html">Vendors</a></li>
+      <li><a href="loyalty.html">Loyalty</a></li>
+      <li><a href="reports.html">Reports</a></li>
+      <li><a href="tax-management.html">Tax management</a></li>
+      <li><a href="onboarding.html">Onboarding</a></li>
+      <li><a href="settings.html">Settings</a></li>
+    </ul></aside>
+  <div class="admin-main">
+    <header class="admin-topbar"><div><strong>Inventory</strong></div><div><small>admin@greenleaf.com</small> · <a href="login.html">Logout</a></div></header>
+    <main class="tp-page">
+      <div class="tp-page__title"><h1>Inventory</h1><div style="display:flex;gap:0.5rem;"><button class="tp-btn tp-btn--ghost">Bulk update thresholds</button><button class="tp-btn">+ Adjust</button></div></div>
+      <div class="tp-grid tp-grid-4" style="margin-bottom:1.5rem;">
+        <div class="tp-card"><small>Total SKUs</small><h2 style="font-size:1.5rem;">312</h2></div>
+        <div class="tp-card"><small>Low stock</small><h2 style="font-size:1.5rem;">12</h2><span class="tp-pill tp-pill--warn">attention</span></div>
+        <div class="tp-card"><small>Out of stock</small><h2 style="font-size:1.5rem;">3</h2><span class="tp-pill tp-pill--danger">critical</span></div>
+        <div class="tp-card"><small>Inventory value</small><h2 style="font-size:1.5rem;">$184,920</h2></div>
+      </div>
+      <table class="tp-table tp-card">
+        <thead><tr><th>Variant</th><th>Type</th><th>On hand</th><th>Reserved</th><th>Available</th><th>Threshold</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Blue Dream 1g</td><td>Flower</td><td>34</td><td>2</td><td>32</td><td>10</td><td><span class="tp-pill tp-pill--success">in stock</span></td></tr>
+          <tr><td>Sour Diesel 1g</td><td>Flower</td><td>8</td><td>6</td><td>2</td><td>5</td><td><span class="tp-pill tp-pill--warn">low</span></td></tr>
+          <tr><td>OG Kush 3.5g</td><td>Flower</td><td>1</td><td>0</td><td>1</td><td>5</td><td><span class="tp-pill tp-pill--danger">critical</span></td></tr>
+          <tr><td>Gelato Live Resin Cart</td><td>Vape</td><td>4</td><td>2</td><td>2</td><td>10</td><td><span class="tp-pill tp-pill--warn">low</span></td></tr>
+          <tr><td>Cherry Gummies 100mg</td><td>Edible</td><td>76</td><td>0</td><td>76</td><td>15</td><td><span class="tp-pill tp-pill--success">in stock</span></td></tr>
+          <tr><td>Branded Logo Hoodie L</td><td>Apparel</td><td>1</td><td>0</td><td>1</td><td>3</td><td><span class="tp-pill tp-pill--warn">low</span></td></tr>
+        </tbody>
+      </table>
+    </main>
+  </div>
+</div>
+<script src="../_assets/theme-switch.js"></script>
+</body></html>

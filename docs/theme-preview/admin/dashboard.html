@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en" data-theme="modern" data-preview-depth="1">
+  <head>
+    <meta charset="utf-8" />
+    <title>Dashboard — Admin</title>
+    <link rel="stylesheet" href="../_assets/preview.css" />
+  </head>
+  <body>
+    <div class="admin-shell">
+      <aside class="admin-sidebar">
+        <h2>GreenLeaf</h2>
+        <ul>
+          <li><a href="dashboard.html" class="active">Dashboard</a></li>
+          <li><a href="products.html">Products</a></li>
+          <li><a href="orders.html">Orders</a></li>
+          <li><a href="inventory.html">Inventory</a></li>
+          <li><a href="inventory-audit.html">Inventory audit</a></li>
+          <li><a href="inventory-control.html">Inventory control</a></li>
+          <li><a href="compliance.html">Compliance</a></li>
+          <li><a href="menu-categories.html">Menu categories</a></li>
+          <li><a href="menu-board.html">Menu board</a></li>
+          <li><a href="staffing.html">Staffing</a></li>
+          <li><a href="timeclock.html">Timeclock</a></li>
+          <li><a href="scheduling.html">Scheduling</a></li>
+          <li><a href="vendors.html">Vendors</a></li>
+          <li><a href="loyalty.html">Loyalty</a></li>
+          <li><a href="reports.html">Reports</a></li>
+          <li><a href="tax-management.html">Tax management</a></li>
+          <li><a href="onboarding.html">Onboarding</a></li>
+          <li><a href="settings.html">Settings</a></li>
+        </ul>
+      </aside>
+      <div class="admin-main">
+        <header class="admin-topbar">
+          <div><strong>Dashboard</strong></div>
+          <div>
+            <small>admin@greenleaf.com</small>
+            &nbsp;·&nbsp; <a href="login.html">Logout</a>
+          </div>
+        </header>
+        <main class="tp-page">
+          <div class="tp-page__title">
+            <div>
+              <h1>Good afternoon, Sarah</h1>
+              <small>Tuesday, June 10, 2026 · GreenLeaf Tappan</small>
+            </div>
+            <button class="tp-btn">+ New product</button>
+          </div>
+
+          <div class="tp-grid tp-grid-4" style="margin-bottom: 1.5rem;">
+            <div class="tp-card"><small>Sales today</small><h2 style="font-size: 1.5rem;">$12,480</h2><small>+18% vs. yesterday</small></div>
+            <div class="tp-card"><small>Orders</small><h2 style="font-size: 1.5rem;">87</h2><small>3 awaiting fulfillment</small></div>
+            <div class="tp-card"><small>Avg basket</small><h2 style="font-size: 1.5rem;">$143.45</h2><small>up $9.20 WoW</small></div>
+            <div class="tp-card"><small>Low-stock SKUs</small><h2 style="font-size: 1.5rem;">12</h2><small class="tp-pill tp-pill--warn">attention</small></div>
+          </div>
+
+          <div class="tp-grid tp-grid-2">
+            <section class="tp-card">
+              <h2>Live orders</h2>
+              <table class="tp-table" style="margin-top: 0.75rem;">
+                <thead><tr><th>Order</th><th>Customer</th><th>Status</th><th>Total</th></tr></thead>
+                <tbody>
+                  <tr><td>#A8F3-22</td><td>Marcus L.</td><td><span class="tp-pill tp-pill--warn">preparing</span></td><td>$184.50</td></tr>
+                  <tr><td>#A8F3-21</td><td>Jana R.</td><td><span class="tp-pill tp-pill--success">ready</span></td><td>$76.00</td></tr>
+                  <tr><td>#A8F3-20</td><td>Theo D.</td><td><span class="tp-pill">confirmed</span></td><td>$235.10</td></tr>
+                  <tr><td>#A8F3-19</td><td>Walk-in</td><td><span class="tp-pill tp-pill--success">completed</span></td><td>$48.25</td></tr>
+                </tbody>
+              </table>
+            </section>
+            <section class="tp-card">
+              <h2>Low-stock alerts</h2>
+              <table class="tp-table" style="margin-top: 0.75rem;">
+                <thead><tr><th>Product</th><th>Available</th><th>Threshold</th></tr></thead>
+                <tbody>
+                  <tr><td>Sour Diesel 1g</td><td>2</td><td>5</td></tr>
+                  <tr><td>OG Kush 3.5g</td><td>1</td><td>5</td></tr>
+                  <tr><td>Gelato Live Resin Cart</td><td>2</td><td>10</td></tr>
+                  <tr><td>Branded Logo Hoodie L</td><td>1</td><td>3</td></tr>
+                </tbody>
+              </table>
+            </section>
+          </div>
+        </main>
+      </div>
+    </div>
+    <script src="../_assets/theme-switch.js"></script>
+  </body>
+</html>

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en" data-theme="modern" data-preview-depth="1">
+<head><meta charset="utf-8"><title>Checkout — GreenLeaf</title><link rel="stylesheet" href="../_assets/preview.css"></head>
+<body>
+<div class="store-shell">
+<header class="store-header">
+  <div class="store-header__brand">🌿 GreenLeaf</div>
+  <nav class="store-header__nav"><a href="home.html">Home</a><a href="products.html" class="active">Shop</a><a href="orders.html">Orders</a><a href="account.html">Account</a></nav>
+  <div style="display:flex;gap:0.75rem;font-size:0.9rem;align-items:center;"><a href="cart.html">🛒 3</a><a href="login.html">Sign in</a></div>
+</header>
+
+<main class="tp-page" style="max-width:1000px;margin:0 auto;">
+  <h1>Checkout</h1>
+  <div class="tp-grid" style="grid-template-columns:2fr 1fr;gap:2rem;margin-top:1rem;">
+    <section class="tp-card">
+      <h2>Fulfillment</h2>
+      <div style="display:flex;gap:1rem;margin:0.5rem 0 1.5rem;">
+        <label class="tp-card" style="flex:1;text-align:center;padding:1rem;border-color:var(--color-primary);"><input type="radio" checked> Pickup<br><small>Today 14:30</small></label>
+        <label class="tp-card" style="flex:1;text-align:center;padding:1rem;"><input type="radio"> Delivery<br><small>2hr window</small></label>
+      </div>
+      <h2>Contact</h2>
+      <div class="tp-field"><label>Phone</label><input class="tp-input" value="(555) 555-5555"></div>
+      <h2>Payment</h2>
+      <div style="display:flex;gap:1rem;">
+        <label class="tp-card" style="flex:1;padding:1rem;border-color:var(--color-primary);"><input type="radio" checked> Cash <span class="tp-pill tp-pill--success">7% off</span></label>
+        <label class="tp-card" style="flex:1;padding:1rem;"><input type="radio"> Aeropay</label>
+        <label class="tp-card" style="flex:1;padding:1rem;"><input type="radio"> CanPay</label>
+      </div>
+    </section>
+    <aside class="tp-card">
+      <h2>Total</h2>
+      <table class="tp-table">
+        <tr><td>Subtotal</td><td>$130.00</td></tr>
+        <tr><td>Tax</td><td>$11.70</td></tr>
+        <tr><td>Cash discount</td><td>-$9.10</td></tr>
+        <tr><th>Total</th><th>$132.60</th></tr>
+      </table>
+      <button class="tp-btn" style="width:100%;margin-top:1rem;">Place order</button>
+    </aside>
+  </div>
+</main>
+<footer class="store-footer">
+  <p>GreenLeaf Tappan · 100 Elm St · Tappan, NY 10983 · (555) 555-5555</p>
+  <small>For adults 21+ only. Keep out of reach of children. Cannabis can impair concentration and reaction times.</small>
+</footer>
+</div>
+<script src="../_assets/theme-switch.js"></script>
+</body></html>

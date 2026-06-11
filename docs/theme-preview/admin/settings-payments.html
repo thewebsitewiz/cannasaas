@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en" data-theme="modern" data-preview-depth="1">
+<head><meta charset="utf-8"><title>Payment processors — Admin</title><link rel="stylesheet" href="../_assets/preview.css"></head>
+<body>
+<div class="admin-shell">
+<aside class="admin-sidebar"><h2>GreenLeaf</h2><ul><li><a href="dashboard.html">Dashboard</a></li><li><a href="products.html">Products</a></li><li><a href="orders.html">Orders</a></li><li><a href="inventory.html">Inventory</a></li><li><a href="inventory-audit.html">Inventory audit</a></li><li><a href="inventory-control.html">Inventory control</a></li><li><a href="compliance.html">Compliance</a></li><li><a href="menu-categories.html">Menu categories</a></li><li><a href="menu-board.html">Menu board</a></li><li><a href="staffing.html">Staffing</a></li><li><a href="timeclock.html">Timeclock</a></li><li><a href="scheduling.html">Scheduling</a></li><li><a href="vendors.html">Vendors</a></li><li><a href="loyalty.html">Loyalty</a></li><li><a href="reports.html">Reports</a></li><li><a href="tax-management.html">Tax management</a></li><li><a href="onboarding.html">Onboarding</a></li><li><a href="settings.html">Settings</a></li></ul></aside>
+<div class="admin-main">
+<header class="admin-topbar"><div><strong>Payment processors</strong></div><div><small>admin@greenleaf.com</small> · <a href="login.html">Logout</a></div></header>
+<main class="tp-page">
+
+<a href="settings.html" style="font-size:0.85rem;">← Back to settings</a>
+<h1 style="margin:0.5rem 0 0.25rem;">Payment processors</h1>
+<p style="color:var(--color-text-muted);margin-bottom:1.5rem;">Enable the ACH-based processors your dispensary accepts. One may be marked default.</p>
+<section class="tp-card" style="margin-bottom:1rem;">
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <div><h2>Aeropay <span class="tp-pill tp-pill--success" style="margin-left:0.5rem;">Active default</span></h2><small>Pay-by-bank. Customer is redirected to Aeropay to authorize.</small></div>
+    <label style="display:flex;gap:0.5rem;"><input type="checkbox" checked> Enabled</label>
+  </div>
+  <div style="border-top:1px solid var(--color-border);margin-top:0.75rem;padding-top:0.75rem;display:flex;align-items:center;justify-content:space-between;">
+    <span><span class="tp-pill tp-pill--success">Connected · 123ms</span> &nbsp; Provisioned · merchant <code>mer-xy3z</code></span>
+    <button class="tp-btn tp-btn--ghost">Test connection</button>
+  </div>
+</section>
+<section class="tp-card">
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <div><h2>CanPay</h2><small>Customer scans a QR code in the CanPay mobile app to authorize.</small></div>
+    <label style="display:flex;gap:0.5rem;"><input type="checkbox"> Enabled</label>
+  </div>
+</section>
+</main>
+</div>
+</div>
+<script src="../_assets/theme-switch.js"></script>
+</body></html>

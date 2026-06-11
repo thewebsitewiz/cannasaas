@@ -1,0 +1,420 @@
+/* CannaSaaS Theme Preview — shared structural CSS.
+ *
+ * Designed to be theme-agnostic: every visual property references a
+ * CSS custom property from packages/ui/src/themes/theme.*.css. Switch
+ * the linked theme file and the entire preview re-skins.
+ */
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+body {
+  font-family: var(--font-body, system-ui, sans-serif);
+  background: var(--color-bg, #fff);
+  color: var(--color-text, #111);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display, var(--font-body, system-ui));
+  margin: 0;
+  color: var(--color-text, #111);
+}
+h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+h3 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+a {
+  color: var(--color-primary, #0a7a6a);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+small {
+  color: var(--color-text-muted, #8898aa);
+  font-size: 0.8125rem;
+}
+code,
+pre {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  background: var(--color-bg-alt, #f0f2f4);
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+
+/* ── Theme switcher (rendered into every page) ─────────────────── */
+.tp-switcher {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 9999;
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #ddd);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+.tp-switcher label {
+  color: var(--color-text-muted);
+}
+.tp-switcher select {
+  background: var(--color-bg-alt, #f3f4f6);
+  border: 1px solid var(--color-border, #ddd);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font: inherit;
+  color: inherit;
+}
+
+/* ── Cards / panels ───────────────────────────────────────────── */
+.tp-card {
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.tp-grid {
+  display: grid;
+  gap: 1rem;
+}
+.tp-grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.tp-grid-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.tp-grid-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+@media (max-width: 900px) {
+  .tp-grid-3,
+  .tp-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ── Buttons ──────────────────────────────────────────────────── */
+.tp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--color-primary, #0a7a6a);
+  color: var(--color-bg, #fff);
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tp-btn:hover {
+  background: var(--color-primary-hover, #086058);
+}
+.tp-btn--ghost {
+  background: transparent;
+  color: var(--color-primary, #0a7a6a);
+  border: 1px solid var(--color-border, #e5e7eb);
+}
+.tp-btn--danger {
+  background: var(--color-error, #c0392b);
+}
+
+/* ── Form controls ────────────────────────────────────────────── */
+.tp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 1rem;
+}
+.tp-field label {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary, #555);
+  font-weight: 500;
+}
+.tp-input,
+.tp-select,
+.tp-textarea {
+  font: inherit;
+  background: var(--color-bg, #fff);
+  border: 1px solid var(--color-border, #ddd);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  color: var(--color-text, #111);
+  width: 100%;
+}
+.tp-input:focus,
+.tp-select:focus,
+.tp-textarea:focus {
+  outline: 2px solid var(--color-primary, #0a7a6a);
+  outline-offset: -1px;
+}
+
+/* ── Tables ───────────────────────────────────────────────────── */
+.tp-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.tp-table th,
+.tp-table td {
+  text-align: left;
+  padding: 0.625rem 0.75rem;
+  border-bottom: 1px solid var(--color-border, #eee);
+  font-size: 0.875rem;
+}
+.tp-table th {
+  background: var(--color-bg-alt, #f9fafb);
+  color: var(--color-text-secondary, #555);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.tp-table tr:hover {
+  background: var(--color-bg-alt, #f9fafb);
+}
+
+/* ── Pills / chips ────────────────────────────────────────────── */
+.tp-pill {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--color-bg-alt, #eef);
+  color: var(--color-text-secondary, #555);
+}
+.tp-pill--success {
+  background: rgba(39, 174, 96, 0.12);
+  color: var(--color-success, #27ae60);
+}
+.tp-pill--warn {
+  background: rgba(217, 119, 6, 0.12);
+  color: var(--color-warning, #d97706);
+}
+.tp-pill--danger {
+  background: rgba(192, 57, 43, 0.12);
+  color: var(--color-error, #c0392b);
+}
+
+/* ── Page-level layout ────────────────────────────────────────── */
+.tp-page {
+  padding: 1.5rem;
+}
+.tp-page__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+/* ── Admin shell (sidebar + topbar + main) ────────────────────── */
+.admin-shell {
+  display: flex;
+  min-height: 100vh;
+}
+.admin-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--color-sidebar-bg, #1b3a2a);
+  color: var(--color-sidebar-text, #c8d8c4);
+  padding: 1.25rem 0.5rem;
+}
+.admin-sidebar h2 {
+  color: inherit;
+  font-size: 1rem;
+  padding: 0 0.75rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 1rem;
+}
+.admin-sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.admin-sidebar a {
+  display: block;
+  color: inherit;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 2px;
+  font-size: 0.875rem;
+}
+.admin-sidebar a:hover,
+.admin-sidebar a.active {
+  background: rgba(255, 255, 255, 0.08);
+  text-decoration: none;
+}
+.admin-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.admin-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  background: var(--color-surface, #fff);
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+}
+
+/* ── Staff shell ──────────────────────────────────────────────── */
+.staff-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+.staff-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  background: var(--color-surface, #fff);
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+}
+.staff-header__nav {
+  display: flex;
+  gap: 1.25rem;
+}
+.staff-header__nav a {
+  color: var(--color-text-secondary, #555);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.staff-header__nav a.active {
+  color: var(--color-primary);
+}
+
+/* ── Kiosk shell ──────────────────────────────────────────────── */
+.kiosk-shell {
+  background: var(--color-bg, #0a1a0f);
+  color: var(--color-text, #fff);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.kiosk-shell .kiosk-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+  background: var(--color-bg-alt, #061008);
+}
+.kiosk-shell .kiosk-footer {
+  padding: 1rem 2rem;
+  text-align: center;
+  font-size: 0.8rem;
+  background: var(--color-bg-alt, #061008);
+  color: var(--color-text-muted, #888);
+}
+
+/* ── Storefront shell ─────────────────────────────────────────── */
+.store-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+.store-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: var(--color-surface, #fff);
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+}
+.store-header__brand {
+  font-weight: 800;
+  font-size: 1.25rem;
+  color: var(--color-primary);
+}
+.store-header__nav {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.9rem;
+}
+.store-masthead {
+  background: var(--color-primary, #0a7a6a);
+  background-image: var(
+    --brand-masthead-url,
+    linear-gradient(120deg, #0a7a6a, #086058)
+  );
+  background-size: cover;
+  background-position: center;
+  color: var(--color-bg, #fff);
+  padding: 4rem 2rem;
+  text-align: center;
+}
+.store-masthead h1 {
+  color: inherit;
+  font-size: 2.5rem;
+}
+.store-footer {
+  padding: 2rem;
+  text-align: center;
+  background: var(--color-bg-alt, #f3f4f6);
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  border-top: 1px solid var(--color-border);
+}
+
+/* ── Product card (storefront + kiosk + staff) ────────────────── */
+.tp-product {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.tp-product__img {
+  background: var(--color-bg-alt);
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  font-size: 2rem;
+}
+.tp-product__body {
+  padding: 0.75rem;
+}
+.tp-product__title {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.tp-product__meta {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+.tp-product__price {
+  font-weight: 700;
+  color: var(--color-primary);
+  font-size: 1.05rem;
+  margin-top: 0.5rem;
+}

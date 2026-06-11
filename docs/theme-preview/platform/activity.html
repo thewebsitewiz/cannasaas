@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en" data-theme="midnight" data-preview-depth="1">
+<head><meta charset="utf-8"><title>Platform activity — Platform</title><link rel="stylesheet" href="../_assets/preview.css"></head>
+<body>
+<div class="admin-shell">
+<aside class="admin-sidebar">
+  <h2>CannaSaaS</h2>
+  <small style="display:block;padding:0 0.75rem 1rem;opacity:0.7;">Super-admin</small>
+  <ul>
+    <li><a href="dashboard.html">Dashboard</a></li>
+    <li><a href="tenants.html">Tenants</a></li>
+    <li><a href="billing.html">Billing</a></li>
+    <li><a href="tax.html">Tax</a></li>
+    <li><a href="reports.html">Reports</a></li>
+    <li><a href="activity.html" class="active">Activity</a></li>
+  </ul>
+</aside>
+<div class="admin-main">
+<header class="admin-topbar"><div><strong>Platform activity</strong></div><div><small>dennis@cannasaas.com</small> · <a href="login.html">Logout</a></div></header>
+<main class="tp-page">
+
+<h1 style="margin-bottom:1rem;">Activity log</h1>
+<div class="tp-card" style="margin-bottom:1rem;display:flex;gap:0.75rem;">
+  <input class="tp-input" placeholder="Filter by tenant, action, or actor…">
+  <select class="tp-select" style="max-width:200px;"><option>All actions</option><option>tenant.created</option><option>billing.invoice.posted</option><option>tax.rule.updated</option></select>
+</div>
+<table class="tp-table tp-card">
+  <thead><tr><th>When</th><th>Actor</th><th>Action</th><th>Target</th></tr></thead>
+  <tbody>
+    <tr><td>14:08:22</td><td>dennis@cannasaas.com</td><td>tenant.created</td><td>Hudson Dispensary</td></tr>
+    <tr><td>13:55:09</td><td>dennis@cannasaas.com</td><td>tax.rule.updated</td><td>NY_EXCISE_FLOWER</td></tr>
+    <tr><td>13:42:14</td><td>system</td><td>billing.invoice.posted</td><td>GreenLeaf · $4,820</td></tr>
+    <tr><td>13:21:43</td><td>system</td><td>webhook.delivered</td><td>Aeropay payment.confirmed</td></tr>
+    <tr><td>12:55:30</td><td>philip@cannasaas.com</td><td>tenant.access.granted</td><td>Verdant NYC</td></tr>
+  </tbody>
+</table>
+</main>
+</div>
+</div>
+<script src="../_assets/theme-switch.js"></script>
+</body></html>

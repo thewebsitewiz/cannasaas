@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en" data-theme="modern" data-preview-depth="0">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CannaSaaS — Theme Preview</title>
+    <link rel="stylesheet" href="_assets/preview.css" />
+    <style>
+      .home {
+        max-width: 1080px;
+        margin: 2rem auto;
+        padding: 0 1.5rem;
+      }
+      .home header {
+        margin-bottom: 2rem;
+      }
+      .home h1 {
+        font-size: 2rem;
+      }
+      .home section + section {
+        margin-top: 2rem;
+      }
+      .home h2 {
+        margin-bottom: 0.5rem;
+      }
+      .home ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 0.5rem;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      }
+      .home li a {
+        display: block;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        color: var(--color-text);
+        font-size: 0.95rem;
+      }
+      .home li a small {
+        display: block;
+        margin-top: 0.125rem;
+      }
+      .home li a:hover {
+        border-color: var(--color-primary);
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="home">
+      <header>
+        <h1>CannaSaaS — Theme Preview</h1>
+        <p>
+          Static HTML mirror of every route across the four Angular apps. Use
+          the top-right switcher to swap themes; the page repaints instantly.
+          New themes drop into <code>_assets/themes/</code> alongside the
+          existing 10 presets.
+        </p>
+      </header>
+
+      <section>
+        <h2>Admin portal — 20 pages</h2>
+        <ul>
+          <li><a href="admin/login.html">Login <small>/login</small></a></li>
+          <li><a href="admin/dashboard.html">Dashboard <small>/</small></a></li>
+          <li><a href="admin/products.html">Products <small>/products</small></a></li>
+          <li><a href="admin/orders.html">Orders <small>/orders</small></a></li>
+          <li><a href="admin/inventory.html">Inventory <small>/inventory</small></a></li>
+          <li><a href="admin/inventory-audit.html">Inventory Audit <small>/inventory/audit</small></a></li>
+          <li><a href="admin/inventory-control.html">Inventory Control <small>/inventory-control</small></a></li>
+          <li><a href="admin/compliance.html">Compliance <small>/compliance</small></a></li>
+          <li><a href="admin/settings.html">Settings <small>/settings</small></a></li>
+          <li><a href="admin/settings-theme.html">Theme Designer <small>/settings/theme</small></a></li>
+          <li><a href="admin/settings-payments.html">Payments <small>/settings/payments</small></a></li>
+          <li><a href="admin/tax-management.html">Tax Management <small>/tax-management</small></a></li>
+          <li><a href="admin/menu-categories.html">Menu Categories <small>/menu-categories</small></a></li>
+          <li><a href="admin/staffing.html">Staffing <small>/staffing</small></a></li>
+          <li><a href="admin/timeclock.html">Timeclock <small>/timeclock</small></a></li>
+          <li><a href="admin/vendors.html">Vendors <small>/vendors</small></a></li>
+          <li><a href="admin/menu-board.html">Menu Board <small>/menu-board</small></a></li>
+          <li><a href="admin/loyalty.html">Loyalty <small>/loyalty</small></a></li>
+          <li><a href="admin/scheduling.html">Scheduling <small>/scheduling</small></a></li>
+          <li><a href="admin/reports.html">Reports <small>/reports</small></a></li>
+          <li><a href="admin/onboarding.html">Onboarding <small>/onboarding</small></a></li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Staff POS — 9 pages</h2>
+        <ul>
+          <li><a href="staff/login.html">Login <small>/login</small></a></li>
+          <li><a href="staff/register-open.html">Register Open <small>/register/open</small></a></li>
+          <li><a href="staff/register-close.html">Register Close <small>/register/close</small></a></li>
+          <li><a href="staff/new-order.html">New Order <small>/</small></a></li>
+          <li><a href="staff/queue.html">Order Queue <small>/queue</small></a></li>
+          <li><a href="staff/timesheets.html">Timesheets <small>/timesheets</small></a></li>
+          <li><a href="staff/inventory.html">Inventory <small>/inventory</small></a></li>
+          <li><a href="staff/products.html">Product Lookup <small>/products</small></a></li>
+          <li><a href="staff/fulfillment.html">Fulfillment <small>/fulfillment</small></a></li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Kiosk — 7 pages</h2>
+        <ul>
+          <li><a href="kiosk/checkin.html">Check-in <small>/checkin</small></a></li>
+          <li><a href="kiosk/setup.html">Setup <small>/setup</small></a></li>
+          <li><a href="kiosk/menu.html">Menu <small>/</small></a></li>
+          <li><a href="kiosk/product.html">Product detail <small>/product/:id</small></a></li>
+          <li><a href="kiosk/cart.html">Cart <small>/cart</small></a></li>
+          <li><a href="kiosk/checkout.html">Checkout <small>/checkout</small></a></li>
+          <li><a href="kiosk/confirm.html">Order confirm <small>/confirm/:orderId</small></a></li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Platform — 7 pages (super-admin cross-tenant)</h2>
+        <ul>
+          <li><a href="platform/login.html">Login <small>/login</small></a></li>
+          <li><a href="platform/dashboard.html">Dashboard <small>/</small></a></li>
+          <li><a href="platform/tenants.html">Tenants <small>/tenants</small></a></li>
+          <li><a href="platform/billing.html">Billing <small>/billing</small></a></li>
+          <li><a href="platform/tax.html">Tax config <small>/tax</small></a></li>
+          <li><a href="platform/reports.html">Reports <small>/reports</small></a></li>
+          <li><a href="platform/activity.html">Activity <small>/activity</small></a></li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Storefront — 12 pages</h2>
+        <ul>
+          <li><a href="storefront/home.html">Home <small>/</small></a></li>
+          <li><a href="storefront/products.html">Products <small>/products</small></a></li>
+          <li><a href="storefront/product.html">Product detail <small>/products/:id</small></a></li>
+          <li><a href="storefront/cart.html">Cart <small>/cart</small></a></li>
+          <li><a href="storefront/checkout.html">Checkout <small>/checkout</small></a></li>
+          <li><a href="storefront/express-checkout.html">Express checkout <small>/express-checkout</small></a></li>
+          <li><a href="storefront/orders.html">Orders list <small>/orders</small></a></li>
+          <li><a href="storefront/order.html">Order tracking <small>/orders/:id</small></a></li>
+          <li><a href="storefront/login.html">Login <small>/login</small></a></li>
+          <li><a href="storefront/register.html">Register <small>/register</small></a></li>
+          <li><a href="storefront/verify.html">Age verify <small>/account/verify</small></a></li>
+          <li><a href="storefront/account.html">Account <small>/account</small></a></li>
+        </ul>
+      </section>
+    </main>
+    <script src="_assets/theme-switch.js"></script>
+  </body>
+</html>

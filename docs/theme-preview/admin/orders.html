@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en" data-theme="modern" data-preview-depth="1">
+  <head><meta charset="utf-8"><title>Orders — Admin</title><link rel="stylesheet" href="../_assets/preview.css"></head>
+  <body>
+    <div class="admin-shell">
+      <aside class="admin-sidebar">
+        <h2>GreenLeaf</h2>
+        <ul>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="products.html">Products</a></li>
+          <li><a href="orders.html" class="active">Orders</a></li>
+          <li><a href="inventory.html">Inventory</a></li>
+          <li><a href="inventory-audit.html">Inventory audit</a></li>
+          <li><a href="inventory-control.html">Inventory control</a></li>
+          <li><a href="compliance.html">Compliance</a></li>
+          <li><a href="menu-categories.html">Menu categories</a></li>
+          <li><a href="menu-board.html">Menu board</a></li>
+          <li><a href="staffing.html">Staffing</a></li>
+          <li><a href="timeclock.html">Timeclock</a></li>
+          <li><a href="scheduling.html">Scheduling</a></li>
+          <li><a href="vendors.html">Vendors</a></li>
+          <li><a href="loyalty.html">Loyalty</a></li>
+          <li><a href="reports.html">Reports</a></li>
+          <li><a href="tax-management.html">Tax management</a></li>
+          <li><a href="onboarding.html">Onboarding</a></li>
+          <li><a href="settings.html">Settings</a></li>
+        </ul>
+      </aside>
+      <div class="admin-main">
+        <header class="admin-topbar"><div><strong>Orders</strong></div><div><small>admin@greenleaf.com</small> · <a href="login.html">Logout</a></div></header>
+        <main class="tp-page">
+          <div class="tp-page__title"><h1>Orders</h1><button class="tp-btn">Export CSV</button></div>
+          <div class="tp-card" style="margin-bottom: 1rem; display: flex; gap: 0.75rem;">
+            <input class="tp-input" placeholder="Search by order id or customer…">
+            <select class="tp-select" style="max-width:200px;"><option>All statuses</option><option>pending</option><option>preparing</option><option>ready</option><option>completed</option><option>cancelled</option></select>
+            <select class="tp-select" style="max-width:200px;"><option>Last 7 days</option><option>Today</option><option>Last 30 days</option><option>This year</option></select>
+          </div>
+          <table class="tp-table tp-card">
+            <thead><tr><th>Order</th><th>Placed</th><th>Customer</th><th>Type</th><th>Status</th><th>Total</th><th>Metrc</th></tr></thead>
+            <tbody>
+              <tr><td>#A8F3-22</td><td>14:02</td><td>Marcus L.</td><td>pickup</td><td><span class="tp-pill tp-pill--warn">preparing</span></td><td>$184.50</td><td><span class="tp-pill tp-pill--success">synced</span></td></tr>
+              <tr><td>#A8F3-21</td><td>13:48</td><td>Jana R.</td><td>delivery</td><td><span class="tp-pill tp-pill--success">ready</span></td><td>$76.00</td><td><span class="tp-pill tp-pill--success">synced</span></td></tr>
+              <tr><td>#A8F3-20</td><td>13:31</td><td>Theo D.</td><td>pickup</td><td><span class="tp-pill">confirmed</span></td><td>$235.10</td><td><span class="tp-pill">pending</span></td></tr>
+              <tr><td>#A8F3-19</td><td>13:12</td><td>Walk-in</td><td>in_store</td><td><span class="tp-pill tp-pill--success">completed</span></td><td>$48.25</td><td><span class="tp-pill tp-pill--success">synced</span></td></tr>
+              <tr><td>#A8F3-18</td><td>12:55</td><td>K. Adams</td><td>delivery</td><td><span class="tp-pill tp-pill--success">completed</span></td><td>$112.40</td><td><span class="tp-pill tp-pill--success">synced</span></td></tr>
+              <tr><td>#A8F3-17</td><td>12:31</td><td>R. Park</td><td>pickup</td><td><span class="tp-pill tp-pill--danger">cancelled</span></td><td>$96.00</td><td>—</td></tr>
+            </tbody>
+          </table>
+        </main>
+      </div>
+    </div>
+    <script src="../_assets/theme-switch.js"></script>
+  </body>
+</html>

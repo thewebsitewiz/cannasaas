@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en" data-theme="midnight" data-preview-depth="1">
+<head><meta charset="utf-8"><title>Tax config — Platform</title><link rel="stylesheet" href="../_assets/preview.css"></head>
+<body>
+<div class="admin-shell">
+<aside class="admin-sidebar">
+  <h2>CannaSaaS</h2>
+  <small style="display:block;padding:0 0.75rem 1rem;opacity:0.7;">Super-admin</small>
+  <ul>
+    <li><a href="dashboard.html">Dashboard</a></li>
+    <li><a href="tenants.html">Tenants</a></li>
+    <li><a href="billing.html">Billing</a></li>
+    <li><a href="tax.html" class="active">Tax</a></li>
+    <li><a href="reports.html">Reports</a></li>
+    <li><a href="activity.html">Activity</a></li>
+  </ul>
+</aside>
+<div class="admin-main">
+<header class="admin-topbar"><div><strong>Tax config</strong></div><div><small>dennis@cannasaas.com</small> · <a href="login.html">Logout</a></div></header>
+<main class="tp-page">
+
+<div class="tp-page__title"><h1>Tax configuration</h1><button class="tp-btn">+ New rule</button></div>
+<table class="tp-table tp-card">
+  <thead><tr><th>Code</th><th>State</th><th>Name</th><th>Basis</th><th>Rate</th><th>Effective</th><th>Reference</th></tr></thead>
+  <tbody>
+    <tr><td>NY_EXCISE_FLOWER</td><td>NY</td><td>NY excise — flower</td><td>per_mg_thc</td><td>$0.0030 / mg</td><td>2025-04-01</td><td>NY Tax §493.B.4</td></tr>
+    <tr><td>NY_EXCISE_CONCENTRATE</td><td>NY</td><td>NY excise — concentrate</td><td>per_mg_thc</td><td>$0.008 / mg</td><td>2025-04-01</td><td>NY Tax §493.B.4</td></tr>
+    <tr><td>NY_EXCISE_EDIBLE</td><td>NY</td><td>NY excise — edible</td><td>per_mg_thc</td><td>$0.030 / mg</td><td>2025-04-01</td><td>NY Tax §493.B.4</td></tr>
+    <tr><td>NY_SALES_PRP</td><td>NY</td><td>NY retail sales price</td><td>retail_price</td><td>9.00%</td><td>2025-04-01</td><td>NY Tax §1105</td></tr>
+    <tr><td>NJ_SOCIAL_EQUITY</td><td>NJ</td><td>NJ social equity excise</td><td>retail_price</td><td>1.00%</td><td>2025-01-01</td><td>NJ S2535 §22</td></tr>
+    <tr><td>NJ_SALES</td><td>NJ</td><td>NJ sales tax</td><td>retail_price</td><td>6.625%</td><td>2025-01-01</td><td>NJ Stat §54:32B-3</td></tr>
+    <tr><td>CT_EXCISE</td><td>CT</td><td>CT cannabis excise</td><td>per_mg_thc</td><td>$0.0025 / mg</td><td>2025-01-01</td><td>CT HB 1201</td></tr>
+  </tbody>
+</table>
+</main>
+</div>
+</div>
+<script src="../_assets/theme-switch.js"></script>
+</body></html>
