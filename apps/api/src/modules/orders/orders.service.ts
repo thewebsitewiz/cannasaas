@@ -300,7 +300,8 @@ export class OrdersService {
   ): Promise<void> {
     try {
       const rows: OrderEventRow[] = await this.dataSource.query(
-        `SELECT "customerUserId", "orderType", total FROM orders WHERE "orderId" = $1`,
+        `SELECT customer_user_id AS "customerUserId", order_type AS "orderType", total
+         FROM orders WHERE order_id = $1`,
         [orderId],
       );
       const order = rows[0];
@@ -597,14 +598,14 @@ export class OrdersService {
       const orderRows = await this.runnerQuery<OrderInsertRow>(
         qr,
         `INSERT INTO orders (
-          "orderId", "dispensaryId", "customerUserId", "staffUserId",
-          "orderType", "orderStatus", subtotal, "discountTotal", "taxTotal", total,
-          "taxBreakdown", notes, "fulfillmentAddress", "scheduledPickupAt",
-          "createdAt", "updatedAt"
+          order_id, dispensary_id, customer_user_id, staff_user_id,
+          order_type, order_status, subtotal, discount_total, tax_total, total,
+          tax_breakdown, notes, fulfillment_address, scheduled_pickup_at,
+          created_at, updated_at
         ) VALUES (
           gen_random_uuid(), $1, $2, $3, $4, 'pending',
           $5, 0, $6, $7, $8, $9, $10, $11, NOW(), NOW()
-        ) RETURNING "orderId", "createdAt"`,
+        ) RETURNING order_id AS "orderId", created_at AS "createdAt"`,
         [
           input.dispensaryId,
           input.customerUserId ?? null,
@@ -627,9 +628,9 @@ export class OrdersService {
       for (const item of resolvedItems) {
         await qr.query(
           `INSERT INTO order_line_items (
-            "lineItemId", "orderId", "productId", "variantId",
-            quantity, "unitPrice", "discountApplied", "taxApplied",
-            "metrcItemUid", "createdAt"
+            line_item_id, order_id, product_id, variant_id,
+            quantity, unit_price, discount_applied, tax_applied,
+            metrc_item_uid, created_at
           ) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, 0, $6, $7, NOW())`,
           [
             order.orderId,
@@ -704,20 +705,33 @@ export class OrdersService {
     dispensaryId: string,
   ): Promise<OrderDetailRow> {
     const rows: OrderDetailRow[] = await this.dataSource.query(
-      `SELECT o.*,
-        json_agg(json_build_object(
-          'lineItemId', li."lineItemId",
-          'productId', li."productId",
-          'variantId', li."variantId",
-          'quantity', li.quantity,
-          'unitPrice', li."unitPrice",
-          'taxApplied', li."taxApplied",
-          'metrcItemUid', li."metrcItemUid"
-        )) as line_items
+      `SELECT
+         o.order_id AS "orderId",
+         o.dispensary_id AS "dispensaryId",
+         o.customer_user_id AS "customerUserId",
+         o.staff_user_id AS "staffUserId",
+         o.order_type AS "orderType",
+         o.order_status AS "orderStatus",
+         o.subtotal,
+         o.discount_total AS "discountTotal",
+         o.tax_total AS "taxTotal",
+         o.total,
+         o.payment_method AS "paymentMethod",
+         o.created_at AS "createdAt",
+         o.updated_at AS "updatedAt",
+         json_agg(json_build_object(
+           'lineItemId', li.line_item_id,
+           'productId', li.product_id,
+           'variantId', li.variant_id,
+           'quantity', li.quantity,
+           'unitPrice', li.unit_price,
+           'taxApplied', li.tax_applied,
+           'metrcItemUid', li.metrc_item_uid
+         )) as line_items
        FROM orders o
-       LEFT JOIN order_line_items li ON li."orderId" = o."orderId"
-       WHERE o."orderId" = $1 AND o."dispensaryId" = $2
-       GROUP BY o."orderId"`,
+       LEFT JOIN order_line_items li ON li.order_id = o.order_id
+       WHERE o.order_id = $1 AND o.dispensary_id = $2
+       GROUP BY o.order_id`,
       [orderId, dispensaryId],
     );
     const order = rows[0];
@@ -733,19 +747,21 @@ export class OrdersService {
     // Explicitly select only list-view columns; exclude heavy JSONB fields
     // (tax_breakdown, applied_promotions, metrc_receipt_data) to avoid over-fetching
     return this.dataSource.query(
-      `SELECT "orderId", "dispensaryId", "customerUserId", "orderType", "orderStatus",
-              subtotal, "taxTotal", total, payment_method as "paymentMethod",
-              "createdAt", "updatedAt"
-       FROM orders WHERE "dispensaryId" = $1
-       ORDER BY "createdAt" DESC LIMIT $2 OFFSET $3`,
+      `SELECT order_id AS "orderId", dispensary_id AS "dispensaryId",
+              customer_user_id AS "customerUserId", order_type AS "orderType",
+              order_status AS "orderStatus", subtotal,
+              tax_total AS "taxTotal", total, payment_method AS "paymentMethod",
+              created_at AS "createdAt", updated_at AS "updatedAt"
+       FROM orders WHERE dispensary_id = $1
+       ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
       [dispensaryId, limit, offset],
     );
   }
 
   async confirmOrder(orderId: string, dispensaryId: string): Promise<boolean> {
     const result: unknown = await this.dataSource.query(
-      `UPDATE orders SET "orderStatus" = 'confirmed', "updatedAt" = NOW()
-       WHERE "orderId" = $1 AND "dispensaryId" = $2 AND "orderStatus" = 'pending'`,
+      `UPDATE orders SET order_status = 'confirmed', updated_at = NOW()
+       WHERE order_id = $1 AND dispensary_id = $2 AND order_status = 'pending'`,
       [orderId, dispensaryId],
     );
     const updated = dmlRowCount(result) > 0;
@@ -761,8 +777,8 @@ export class OrdersService {
     dispensaryId: string,
   ): Promise<boolean> {
     const result: unknown = await this.dataSource.query(
-      `UPDATE orders SET "orderStatus" = 'preparing', "updatedAt" = NOW()
-       WHERE "orderId" = $1 AND "dispensaryId" = $2 AND "orderStatus" = 'confirmed'`,
+      `UPDATE orders SET order_status = 'preparing', updated_at = NOW()
+       WHERE order_id = $1 AND dispensary_id = $2 AND order_status = 'confirmed'`,
       [orderId, dispensaryId],
     );
     const updated = dmlRowCount(result) > 0;
@@ -775,8 +791,8 @@ export class OrdersService {
 
   async markReady(orderId: string, dispensaryId: string): Promise<boolean> {
     const result: unknown = await this.dataSource.query(
-      `UPDATE orders SET "orderStatus" = 'ready', "updatedAt" = NOW()
-       WHERE "orderId" = $1 AND "dispensaryId" = $2 AND "orderStatus" = 'preparing'`,
+      `UPDATE orders SET order_status = 'ready', updated_at = NOW()
+       WHERE order_id = $1 AND dispensary_id = $2 AND order_status = 'preparing'`,
       [orderId, dispensaryId],
     );
     const updated = dmlRowCount(result) > 0;
@@ -799,9 +815,12 @@ export class OrdersService {
       // Get order
       const orderRows = await this.runnerQuery<CompleteOrderRow>(
         qr,
-        `SELECT "orderId", "dispensaryId", "orderStatus", subtotal, "taxTotal", total, "taxBreakdown",
-                "customerUserId", "orderType", "createdAt"
-         FROM orders WHERE "orderId" = $1 AND "dispensaryId" = $2`,
+        `SELECT order_id AS "orderId", dispensary_id AS "dispensaryId",
+                order_status AS "orderStatus", subtotal,
+                tax_total AS "taxTotal", total, tax_breakdown AS "taxBreakdown",
+                customer_user_id AS "customerUserId", order_type AS "orderType",
+                created_at AS "createdAt"
+         FROM orders WHERE order_id = $1 AND dispensary_id = $2`,
         [input.orderId, input.dispensaryId],
       );
       const order = orderRows[0];
@@ -814,23 +833,26 @@ export class OrdersService {
       // Get line items
       const lineItems = await this.runnerQuery<CompleteOrderLineItemRow>(
         qr,
-        `SELECT li."lineItemId", li."productId", li."variantId", li.quantity,
-                li."unitPrice", li."taxApplied", li."metrcItemUid", li."metrcPackageLabel",
+        `SELECT li.line_item_id AS "lineItemId", li.product_id AS "productId",
+                li.variant_id AS "variantId", li.quantity,
+                li.unit_price AS "unitPrice", li.tax_applied AS "taxApplied",
+                li.metrc_item_uid AS "metrcItemUid",
+                li.metrc_package_label AS "metrcPackageLabel",
                 p.name as product_name
          FROM order_line_items li
-         JOIN products p ON p.id = li."productId"
-         WHERE li."orderId" = $1`,
+         JOIN products p ON p.id = li.product_id
+         WHERE li.order_id = $1`,
         [input.orderId],
       );
 
       // Update order status
       await qr.query(
         `UPDATE orders SET
-          "orderStatus" = 'completed',
-          "metrcReceiptId" = $1,
-          "metrcSyncStatus" = 'pending',
-          "updatedAt" = NOW()
-         WHERE "orderId" = $2`,
+          order_status = 'completed',
+          metrc_receipt_id = $1,
+          metrc_sync_status = 'pending',
+          updated_at = NOW()
+         WHERE order_id = $2`,
         [input.metrcReceiptId ?? null, input.orderId],
       );
 
@@ -884,9 +906,9 @@ export class OrdersService {
     try {
       const orderRows = await this.runnerQuery<CancelOrderRow>(
         qr,
-        `SELECT "orderId", "orderStatus"
+        `SELECT order_id AS "orderId", order_status AS "orderStatus"
          FROM orders
-         WHERE "orderId" = $1 AND "dispensaryId" = $2
+         WHERE order_id = $1 AND dispensary_id = $2
          FOR UPDATE`,
         [orderId, dispensaryId],
       );
@@ -903,9 +925,9 @@ export class OrdersService {
 
       const lineItems = await this.runnerQuery<CancelLineItemRow>(
         qr,
-        `SELECT "variantId", quantity
+        `SELECT variant_id AS "variantId", quantity
          FROM order_line_items
-         WHERE "orderId" = $1`,
+         WHERE order_id = $1`,
         [orderId],
       );
 
@@ -933,11 +955,11 @@ export class OrdersService {
 
       await qr.query(
         `UPDATE orders
-         SET "orderStatus" = 'cancelled',
-             "cancellationReason" = $1,
-             "cancelledAt" = NOW(),
-             "updatedAt" = NOW()
-         WHERE "orderId" = $2`,
+         SET order_status = 'cancelled',
+             cancellation_reason = $1,
+             cancelled_at = NOW(),
+             updated_at = NOW()
+         WHERE order_id = $2`,
         [reason, orderId],
       );
 
@@ -970,17 +992,19 @@ export class OrdersService {
     const params: unknown[] = [customerUserId, limit, offset];
     let statusFilter = '';
     if (status) {
-      statusFilter = `AND "orderStatus" = $4`;
+      statusFilter = `AND order_status = $4`;
       params.push(status);
     }
 
     return this.dataSource.query(
-      `SELECT "orderId", "dispensaryId", "orderType", "orderStatus",
-            subtotal, "taxTotal", total, payment_method as "paymentMethod",
-            "createdAt", "updatedAt"
-     FROM orders
-     WHERE "customerUserId" = $1 ${statusFilter}
-     ORDER BY "createdAt" DESC LIMIT $2 OFFSET $3`,
+      `SELECT order_id AS "orderId", dispensary_id AS "dispensaryId",
+              order_type AS "orderType", order_status AS "orderStatus",
+              subtotal, tax_total AS "taxTotal", total,
+              payment_method AS "paymentMethod",
+              created_at AS "createdAt", updated_at AS "updatedAt"
+       FROM orders
+       WHERE customer_user_id = $1 ${statusFilter}
+       ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
       params,
     );
   }
@@ -996,30 +1020,35 @@ export class OrdersService {
   ): Promise<MyLastOrderRow | null> {
     const rows: MyLastOrderRow[] = await this.dataSource.query(
       `SELECT
-         o."orderId", o."orderType", o."orderStatus",
-         o.subtotal, o."taxTotal", o.total,
+         o.order_id   AS "orderId",
+         o.order_type AS "orderType",
+         o.order_status AS "orderStatus",
+         o.subtotal,
+         o.tax_total AS "taxTotal",
+         o.total,
          o.payment_method AS "paymentMethod",
-         o."createdAt", o."updatedAt",
+         o.created_at AS "createdAt",
+         o.updated_at AS "updatedAt",
          COALESCE(
            json_agg(
              json_build_object(
-               'productId', li."productId",
-               'variantId', li."variantId",
+               'productId', li.product_id,
+               'variantId', li.variant_id,
                'productName', p.name,
                'variantName', pv.name,
                'quantity', li.quantity,
-               'price', li."unitPrice"
-             ) ORDER BY li."createdAt"
-           ) FILTER (WHERE li."lineItemId" IS NOT NULL),
+               'price', li.unit_price
+             ) ORDER BY li.created_at
+           ) FILTER (WHERE li.line_item_id IS NOT NULL),
            '[]'::json
          ) AS "lineItems"
        FROM orders o
-       LEFT JOIN order_line_items li ON li."orderId" = o."orderId"
-       LEFT JOIN products p           ON p.id        = li."productId"
-       LEFT JOIN product_variants pv  ON pv.variant_id = li."variantId"
-       WHERE o."customerUserId" = $1 AND o."dispensaryId" = $2
-       GROUP BY o."orderId"
-       ORDER BY o."createdAt" DESC
+       LEFT JOIN order_line_items li ON li.order_id   = o.order_id
+       LEFT JOIN products p           ON p.id         = li.product_id
+       LEFT JOIN product_variants pv  ON pv.variant_id = li.variant_id
+       WHERE o.customer_user_id = $1 AND o.dispensary_id = $2
+       GROUP BY o.order_id
+       ORDER BY o.created_at DESC
        LIMIT 1`,
       [customerUserId, dispensaryId],
     );
@@ -1038,21 +1067,21 @@ export class OrdersService {
   ): Promise<MyFavoritesRow[]> {
     return this.dataSource.query(
       `SELECT
-         li."productId" AS "productId",
-         li."variantId" AS "variantId",
-         p.name           AS "productName",
-         pv.name          AS "variantName",
-         (array_agg(li."unitPrice" ORDER BY o."createdAt" DESC))[1] AS price,
-         COUNT(DISTINCT li."orderId")::int AS "orderCount"
+         li.product_id  AS "productId",
+         li.variant_id  AS "variantId",
+         p.name         AS "productName",
+         pv.name        AS "variantName",
+         (array_agg(li.unit_price ORDER BY o.created_at DESC))[1] AS price,
+         COUNT(DISTINCT li.order_id)::int AS "orderCount"
        FROM order_line_items li
-       JOIN orders o ON o."orderId" = li."orderId"
-       LEFT JOIN products p          ON p.id = li."productId"
-       LEFT JOIN product_variants pv ON pv.variant_id = li."variantId"
-       WHERE o."customerUserId" = $1
-         AND o."dispensaryId"   = $2
-         AND o."orderStatus"   != 'cancelled'
-       GROUP BY li."productId", li."variantId", p.name, pv.name
-       ORDER BY "orderCount" DESC, MAX(o."createdAt") DESC
+       JOIN orders o ON o.order_id = li.order_id
+       LEFT JOIN products p          ON p.id = li.product_id
+       LEFT JOIN product_variants pv ON pv.variant_id = li.variant_id
+       WHERE o.customer_user_id = $1
+         AND o.dispensary_id   = $2
+         AND o.order_status   != 'cancelled'
+       GROUP BY li.product_id, li.variant_id, p.name, pv.name
+       ORDER BY "orderCount" DESC, MAX(o.created_at) DESC
        LIMIT $3`,
       [customerUserId, dispensaryId, limit],
     );
