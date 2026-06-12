@@ -18,6 +18,10 @@ query ThemeConfig($dispensaryId: String!) {
     error
     info
     isDark
+    displayFont
+    bodyFont
+    logoUrl
+    mastheadUrl
   }
 }
 
@@ -40,5 +44,19 @@ mutation SaveThemeConfig($input: SaveThemeConfigInput!) {
     error
     info
     isDark
+    displayFont
+    bodyFont
+    logoUrl
+    mastheadUrl
+  }
+}
+
+query MyThemableDispensaries {
+  myThemableDispensaries {
+    entityId
+    name
+    slug
+    preset
+    logoUrl
   }
 }

@@ -3,53 +3,148 @@
 <head><meta charset="utf-8"><title>Theme designer — Admin</title><link rel="stylesheet" href="../_assets/preview.css"></head>
 <body>
 <div class="admin-shell">
-<aside class="admin-sidebar"><h2>GreenLeaf</h2><ul><li><a href="dashboard.html">Dashboard</a></li><li><a href="products.html">Products</a></li><li><a href="orders.html">Orders</a></li><li><a href="inventory.html">Inventory</a></li><li><a href="inventory-audit.html">Inventory audit</a></li><li><a href="inventory-control.html">Inventory control</a></li><li><a href="compliance.html">Compliance</a></li><li><a href="menu-categories.html">Menu categories</a></li><li><a href="menu-board.html">Menu board</a></li><li><a href="staffing.html">Staffing</a></li><li><a href="timeclock.html">Timeclock</a></li><li><a href="scheduling.html">Scheduling</a></li><li><a href="vendors.html">Vendors</a></li><li><a href="loyalty.html">Loyalty</a></li><li><a href="reports.html">Reports</a></li><li><a href="tax-management.html">Tax management</a></li><li><a href="onboarding.html">Onboarding</a></li><li><a href="settings.html">Settings</a></li></ul></aside>
+<aside class="admin-sidebar"><h2>GreenLeaf</h2><ul><li><a href="dashboard.html">Dashboard</a></li><li><a href="products.html">Products</a></li><li><a href="orders.html">Orders</a></li><li><a href="inventory.html">Inventory</a></li><li><a href="inventory-audit.html">Inventory audit</a></li><li><a href="inventory-control.html">Inventory control</a></li><li><a href="compliance.html">Compliance</a></li><li><a href="menu-categories.html">Menu categories</a></li><li><a href="menu-board.html">Menu board</a></li><li><a href="staffing.html">Staffing</a></li><li><a href="timeclock.html">Timeclock</a></li><li><a href="scheduling.html">Scheduling</a></li><li><a href="vendors.html">Vendors</a></li><li><a href="loyalty.html">Loyalty</a></li><li><a href="reports.html">Reports</a></li><li><a href="tax-management.html">Tax management</a></li><li><a href="onboarding.html">Onboarding</a></li><li><a href="settings.html" class="active">Settings</a></li></ul></aside>
 <div class="admin-main">
 <header class="admin-topbar"><div><strong>Theme designer</strong></div><div><small>admin@greenleaf.com</small> · <a href="login.html">Logout</a></div></header>
 <main class="tp-page">
 
 <a href="settings.html" style="font-size:0.85rem;">← Back to settings</a>
-<h1 style="margin:0.5rem 0 0.25rem;">Storefront theme</h1>
-<p style="color:var(--color-text-muted);margin-bottom:1.5rem;">Pick a preset or customize colors, fonts, and branding images.</p>
-<div class="tp-grid tp-grid-2" style="grid-template-columns:1fr 1fr;">
-  <section>
-    <h2 style="margin-bottom:0.5rem;">Presets</h2>
-    <div class="tp-grid tp-grid-3" style="gap:0.5rem;">
-      <div class="tp-card" style="text-align:center;padding:0.5rem;"><strong>apothecary</strong></div>
-      <div class="tp-card" style="text-align:center;padding:0.5rem;"><strong>casual</strong></div>
-      <div class="tp-card" style="text-align:center;padding:0.5rem;border-color:var(--color-primary);"><strong>modern ✓</strong></div>
-      <div class="tp-card" style="text-align:center;padding:0.5rem;"><strong>midnight</strong></div>
-      <div class="tp-card" style="text-align:center;padding:0.5rem;"><strong>neon</strong></div>
-      <div class="tp-card" style="text-align:center;padding:0.5rem;"><strong>regal</strong></div>
-    </div>
-    <h2 style="margin-top:1.25rem;">Fonts</h2>
-    <div class="tp-field"><label>Display</label><select class="tp-select"><option>Plus Jakarta Sans</option><option>Playfair Display</option><option>Lora</option></select></div>
-    <div class="tp-field"><label>Body</label><select class="tp-select"><option>Inter</option><option>IBM Plex Sans</option><option>Source Sans 3</option></select></div>
-    <h2>Branding</h2>
-    <div class="tp-field"><label>Logo (max 2 MB)</label><input class="tp-input" type="file"></div>
-    <div class="tp-field"><label>Masthead (max 5 MB)</label><input class="tp-input" type="file"></div>
-    <button class="tp-btn">Save changes</button>
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin:0.5rem 0 1.5rem;">
+  <div>
+    <h1 style="margin-bottom:0.25rem;">Storefront theme</h1>
+    <p style="color:var(--color-text-muted);">Pick a preset or hand-tune 14 color tokens. Upload a logo and masthead. Choose fonts from a curated Google Fonts list.</p>
+  </div>
+  <div style="display:flex;gap:0.5rem;">
+    <button class="tp-btn tp-btn--ghost">Download CSS</button>
+    <button class="tp-btn tp-btn--ghost">Reset</button>
+    <button class="tp-btn">Save theme</button>
+  </div>
+</div>
+
+<!-- Org-admin only: dispensary picker. Hidden for dispensary_admin (single-site). -->
+<div class="tp-card" style="margin-bottom:1rem;display:flex;align-items:center;gap:0.75rem;" aria-label="Dispensary picker">
+  <strong style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted);">Site</strong>
+  <select class="tp-select" style="max-width:280px;" aria-label="Choose dispensary to theme">
+    <option selected>GreenLeaf Tappan (greenleaf-tappan)</option>
+    <option>GreenLeaf Nyack (greenleaf-nyack)</option>
+    <option>Verdant NYC (verdant-nyc)</option>
+  </select>
+  <small style="color:var(--color-text-muted);">You have access to 3 sites.</small>
+</div>
+
+<div class="tp-grid" style="grid-template-columns:1fr 2fr;gap:1.5rem;">
+  <section class="tp-card">
+    <h2 style="text-transform:uppercase;font-size:0.75rem;letter-spacing:0.05em;color:var(--color-text-muted);margin-bottom:0.75rem;">Design presets</h2>
+    <ul style="list-style:none;padding:0;display:flex;flex-direction:column;gap:0.5rem;">
+      <li><button class="tp-card" style="display:flex;align-items:center;gap:0.75rem;width:100%;text-align:left;padding:0.5rem;"><span style="display:flex;gap:2px;"><span style="width:14px;height:14px;border-radius:50%;background:#2d6a4f;"></span><span style="width:14px;height:14px;border-radius:50%;background:#74956c;"></span><span style="width:14px;height:14px;border-radius:50%;background:#c47820;"></span></span><span><strong style="display:block;">Apothecary</strong><small>Earthy &amp; herbal</small></span></button></li>
+      <li><button class="tp-card" style="display:flex;align-items:center;gap:0.75rem;width:100%;text-align:left;padding:0.5rem;border-color:var(--color-primary);"><span style="display:flex;gap:2px;"><span style="width:14px;height:14px;border-radius:50%;background:#0a7a6a;"></span><span style="width:14px;height:14px;border-radius:50%;background:#40a898;"></span><span style="width:14px;height:14px;border-radius:50%;background:#e85d20;"></span></span><span><strong style="display:block;">Modern ✓</strong><small>Clean &amp; clinical</small></span></button></li>
+      <li><button class="tp-card" style="display:flex;align-items:center;gap:0.75rem;width:100%;text-align:left;padding:0.5rem;"><span style="display:flex;gap:2px;"><span style="width:14px;height:14px;border-radius:50%;background:#1b3a2a;"></span><span style="width:14px;height:14px;border-radius:50%;background:#c8d8c4;"></span><span style="width:14px;height:14px;border-radius:50%;background:#d97706;"></span></span><span><strong style="display:block;">Midnight</strong><small>Dark mode</small></span></button></li>
+      <li><button class="tp-card" style="display:flex;align-items:center;gap:0.75rem;width:100%;text-align:left;padding:0.5rem;"><span style="display:flex;gap:2px;"><span style="width:14px;height:14px;border-radius:50%;background:#ff00ff;"></span><span style="width:14px;height:14px;border-radius:50%;background:#00ffff;"></span><span style="width:14px;height:14px;border-radius:50%;background:#ffff00;"></span></span><span><strong style="display:block;">Neon</strong><small>Bold &amp; bright</small></span></button></li>
+    </ul>
   </section>
-  <section>
-    <h2>Colors</h2>
-    <div class="tp-grid tp-grid-2" style="gap:0.5rem;">
-      <div class="tp-field"><label>Primary</label><input class="tp-input" type="color" value="#0a7a6a"></div>
-      <div class="tp-field"><label>Accent</label><input class="tp-input" type="color" value="#e85d20"></div>
-      <div class="tp-field"><label>Background</label><input class="tp-input" type="color" value="#f8f9fa"></div>
-      <div class="tp-field"><label>Surface</label><input class="tp-input" type="color" value="#ffffff"></div>
-      <div class="tp-field"><label>Text</label><input class="tp-input" type="color" value="#0d1117"></div>
-      <div class="tp-field"><label>Success</label><input class="tp-input" type="color" value="#27ae60"></div>
+  <section class="tp-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+      <h2 style="text-transform:uppercase;font-size:0.75rem;letter-spacing:0.05em;color:var(--color-text-muted);">Colors</h2>
+      <label style="display:flex;gap:0.5rem;align-items:center;font-size:0.75rem;"><input type="checkbox"> Dark theme</label>
     </div>
-    <h2 style="margin-top:1rem;">Live preview</h2>
-    <div class="tp-card" style="padding:1rem;background:var(--color-bg-alt);">
-      <button class="tp-btn">Sample button</button>
-      <p><a href="#">Sample link</a> and <code>sample code</code></p>
-      <span class="tp-pill tp-pill--success">Success</span>
-      <span class="tp-pill tp-pill--warn">Warning</span>
-      <span class="tp-pill tp-pill--danger">Error</span>
+    <fieldset style="border:none;padding:0;margin-bottom:0.75rem;">
+      <legend style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted);">Brand</legend>
+      <div class="tp-grid tp-grid-2" style="gap:0.5rem;margin-top:0.5rem;">
+        <label style="display:flex;align-items:center;gap:0.5rem;"><input type="color" value="#0a7a6a" style="height:32px;width:32px;border:none;"><span><small style="display:block;">Primary</small><code>#0a7a6a</code></span></label>
+        <label style="display:flex;align-items:center;gap:0.5rem;"><input type="color" value="#e85d20" style="height:32px;width:32px;border:none;"><span><small style="display:block;">Accent</small><code>#e85d20</code></span></label>
+        <label style="display:flex;align-items:center;gap:0.5rem;"><input type="color" value="#40a898" style="height:32px;width:32px;border:none;"><span><small style="display:block;">Secondary</small><code>#40a898</code></span></label>
+      </div>
+    </fieldset>
+    <fieldset style="border:none;padding:0;margin-bottom:0.75rem;">
+      <legend style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted);">Surface</legend>
+      <div class="tp-grid tp-grid-2" style="gap:0.5rem;margin-top:0.5rem;">
+        <label style="display:flex;align-items:center;gap:0.5rem;"><input type="color" value="#f8f9fa" style="height:32px;width:32px;border:none;"><span><small style="display:block;">Bg primary</small><code>#f8f9fa</code></span></label>
+        <label style="display:flex;align-items:center;gap:0.5rem;"><input type="color" value="#ffffff" style="height:32px;width:32px;border:none;"><span><small style="display:block;">Card</small><code>#ffffff</code></span></label>
+        <label style="display:flex;align-items:center;gap:0.5rem;"><input type="color" value="#0d1117" style="height:32px;width:32px;border:none;"><span><small style="display:block;">Text</small><code>#0d1117</code></span></label>
+        <label style="display:flex;align-items:center;gap:0.5rem;"><input type="color" value="#1b3a2a" style="height:32px;width:32px;border:none;"><span><small style="display:block;">Sidebar</small><code>#1b3a2a</code></span></label>
+      </div>
+    </fieldset>
+    <fieldset style="border:none;padding:0;">
+      <legend style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted);">Semantic</legend>
+      <div class="tp-grid tp-grid-2" style="gap:0.5rem;margin-top:0.5rem;">
+        <label style="display:flex;align-items:center;gap:0.5rem;"><input type="color" value="#27ae60" style="height:32px;width:32px;border:none;"><span><small style="display:block;">Success</small><code>#27ae60</code></span></label>
+        <label style="display:flex;align-items:center;gap:0.5rem;"><input type="color" value="#d97706" style="height:32px;width:32px;border:none;"><span><small style="display:block;">Warning</small><code>#d97706</code></span></label>
+        <label style="display:flex;align-items:center;gap:0.5rem;"><input type="color" value="#c0392b" style="height:32px;width:32px;border:none;"><span><small style="display:block;">Error</small><code>#c0392b</code></span></label>
+      </div>
+    </fieldset>
+  </section>
+</div>
+
+<!-- Fonts + branding (sc-637 follow-on) -->
+<div class="tp-grid tp-grid-2" style="margin-top:1rem;">
+  <section class="tp-card" aria-label="Fonts">
+    <h2 style="text-transform:uppercase;font-size:0.75rem;letter-spacing:0.05em;color:var(--color-text-muted);margin-bottom:0.5rem;">Fonts</h2>
+    <small style="display:block;margin-bottom:0.75rem;color:var(--color-text-muted);">Drawn from a curated Google Fonts list. The CSS endpoint adds <code>@import</code> automatically.</small>
+    <div class="tp-field"><label>Display font (headings)</label>
+      <select class="tp-select" aria-label="Display font">
+        <option>— Use preset default —</option>
+        <option selected>Playfair Display</option>
+        <option>Lora</option>
+        <option>Cormorant Garamond</option>
+        <option>Bebas Neue</option>
+        <option>Oswald</option>
+        <option>Archivo Black</option>
+        <option>Space Grotesk</option>
+        <option>Plus Jakarta Sans</option>
+        <option>DM Serif Display</option>
+        <option>Fraunces</option>
+      </select>
+    </div>
+    <div class="tp-field"><label>Body font</label>
+      <select class="tp-select" aria-label="Body font">
+        <option>— Use preset default —</option>
+        <option selected>Inter</option>
+        <option>IBM Plex Sans</option>
+        <option>Source Sans 3</option>
+        <option>Nunito Sans</option>
+        <option>Work Sans</option>
+        <option>Manrope</option>
+      </select>
+    </div>
+  </section>
+  <section class="tp-card" aria-label="Branding assets">
+    <h2 style="text-transform:uppercase;font-size:0.75rem;letter-spacing:0.05em;color:var(--color-text-muted);margin-bottom:0.5rem;">Branding</h2>
+    <div class="tp-grid tp-grid-2">
+      <div>
+        <p style="font-size:0.75rem;font-weight:600;margin-bottom:0.5rem;">Logo <small style="color:var(--color-text-muted);">(2 MB max)</small></p>
+        <div style="height:96px;border:1px dashed var(--color-border);border-radius:8px;display:flex;align-items:center;justify-content:center;background:var(--color-bg);">
+          <span style="font-size:2rem;">🌿</span>
+        </div>
+        <input type="file" accept="image/jpeg,image/png,image/webp" aria-label="Upload dispensary logo" style="margin-top:0.5rem;width:100%;font-size:0.75rem;">
+      </div>
+      <div>
+        <p style="font-size:0.75rem;font-weight:600;margin-bottom:0.5rem;">Masthead <small style="color:var(--color-text-muted);">(5 MB max)</small></p>
+        <div style="height:96px;border:1px dashed var(--color-border);border-radius:8px;background:linear-gradient(120deg, var(--color-primary), var(--color-accent));"></div>
+        <input type="file" accept="image/jpeg,image/png,image/webp" aria-label="Upload storefront masthead" style="margin-top:0.5rem;width:100%;font-size:0.75rem;">
+      </div>
     </div>
   </section>
 </div>
+
+<section class="tp-card" style="margin-top:1rem;" aria-label="Live storefront preview">
+  <h2 style="text-transform:uppercase;font-size:0.75rem;letter-spacing:0.05em;color:var(--color-text-muted);margin-bottom:0.75rem;">Live preview</h2>
+  <div style="border:1px solid var(--color-border);border-radius:12px;overflow:hidden;background:var(--color-bg);color:var(--color-text);">
+    <header style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;background:var(--color-sidebar-bg);color:var(--color-sidebar-text);">
+      <span style="font-weight:700;">GreenLeaf Tappan</span>
+      <span class="tp-pill" style="background:var(--color-accent);color:#fff;">Cart (2)</span>
+    </header>
+    <div style="padding:1.5rem 1rem;background:var(--color-bg-alt);">
+      <small style="text-transform:uppercase;letter-spacing:0.05em;">Featured</small>
+      <h3 style="margin:0.25rem 0;">Fresh drop · Indoor flower</h3>
+      <small>Sample storefront surface — colors and fonts mirror the edits above.</small>
+    </div>
+    <div class="tp-grid tp-grid-2" style="padding:1rem;gap:0.75rem;">
+      <div class="tp-card" style="padding:0.75rem;"><strong>Northern Lights · 3.5g</strong><br><small>Indica · 24% THC</small><div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.5rem;"><strong style="color:var(--color-primary);">$45</strong><button class="tp-btn">Add</button></div></div>
+      <div class="tp-card" style="padding:0.75rem;"><strong>Sour Diesel · 1g pre-roll</strong><br><small>Sativa · 22% THC</small><div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.5rem;"><strong style="color:var(--color-primary);">$12</strong><button class="tp-btn">Add</button></div></div>
+    </div>
+  </div>
+</section>
+
 </main>
 </div>
 </div>

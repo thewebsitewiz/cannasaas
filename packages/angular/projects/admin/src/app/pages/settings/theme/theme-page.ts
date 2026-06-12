@@ -9,6 +9,7 @@ import {
 import { RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../core/auth/auth.service';
+import { BODY_FONTS, DISPLAY_FONTS } from './font-catalog';
 import { COLOR_FIELDS, THEME_PRESETS, type ThemeColors, type ThemePreset } from './theme-presets';
 import { ThemeService, type ThemeConfig } from './theme.service';
 
@@ -148,6 +149,34 @@ export function buildThemeCss(themeId: string, colors: ThemeColors): string {
         </div>
       </header>
 
+      @if (themableDispensaries().length > 1) {
+        <div
+          class="flex items-center gap-3 rounded-xl border border-(--color-border) bg-(--color-surface) p-3"
+          aria-label="Dispensary picker"
+        >
+          <label class="text-xs font-bold uppercase tracking-wider text-(--color-text-muted)">
+            Site
+          </label>
+          <select
+            (change)="onSelectDispensary($event)"
+            aria-label="Choose dispensary to theme"
+            class="rounded-md border border-(--color-border) bg-(--color-bg) px-2 py-1.5 text-sm text-(--color-text)"
+          >
+            @for (d of themableDispensaries(); track d.entityId) {
+              <option
+                [value]="d.entityId"
+                [selected]="d.entityId === activeDispensaryId()"
+              >
+                {{ d.name }} ({{ d.slug }})
+              </option>
+            }
+          </select>
+          <span class="text-xs text-(--color-text-muted)">
+            You have access to {{ themableDispensaries().length }} sites.
+          </span>
+        </div>
+      }
+
       @if (loading()) {
         <p
           class="rounded-xl border border-(--color-border) bg-(--color-surface) p-8 text-center text-sm text-(--color-text-muted)"
@@ -271,6 +300,129 @@ export function buildThemeCss(themeId: string, colors: ThemeColors): string {
           </div>
         </div>
 
+        <!-- Fonts + branding (sc-637 follow-on) -->
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <section
+            class="space-y-3 rounded-xl border border-(--color-border) bg-(--color-surface) p-4"
+            aria-label="Fonts"
+          >
+            <h2 class="text-xs font-bold uppercase tracking-wider text-(--color-text-muted)">
+              Fonts
+            </h2>
+            <p class="text-xs text-(--color-text-muted)">
+              Drawn from a curated Google Fonts list. The CSS endpoint adds the
+              <code>@import</code> automatically — no extra setup.
+            </p>
+            <label class="block text-xs">
+              <span class="mb-1 block font-semibold text-(--color-text-secondary)">
+                Display font (headings)
+              </span>
+              <select
+                (change)="onDisplayFontChange($event)"
+                aria-label="Display font"
+                class="block w-full rounded-md border border-(--color-border) bg-(--color-bg) px-2 py-1.5 text-sm text-(--color-text)"
+              >
+                <option value="" [selected]="!displayFont()">— Use preset default —</option>
+                @for (f of displayFonts; track f.family) {
+                  <option [value]="f.family" [selected]="f.family === displayFont()">
+                    {{ f.family }}
+                  </option>
+                }
+              </select>
+            </label>
+            <label class="block text-xs">
+              <span class="mb-1 block font-semibold text-(--color-text-secondary)">
+                Body font
+              </span>
+              <select
+                (change)="onBodyFontChange($event)"
+                aria-label="Body font"
+                class="block w-full rounded-md border border-(--color-border) bg-(--color-bg) px-2 py-1.5 text-sm text-(--color-text)"
+              >
+                <option value="" [selected]="!bodyFont()">— Use preset default —</option>
+                @for (f of bodyFonts; track f.family) {
+                  <option [value]="f.family" [selected]="f.family === bodyFont()">
+                    {{ f.family }}
+                  </option>
+                }
+              </select>
+            </label>
+          </section>
+
+          <section
+            class="space-y-4 rounded-xl border border-(--color-border) bg-(--color-surface) p-4"
+            aria-label="Branding assets"
+          >
+            <h2 class="text-xs font-bold uppercase tracking-wider text-(--color-text-muted)">
+              Branding
+            </h2>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <p class="mb-2 text-xs font-semibold text-(--color-text-secondary)">
+                  Logo <span class="text-(--color-text-muted)">(2 MB max)</span>
+                </p>
+                <div
+                  class="flex h-24 items-center justify-center rounded-md border border-dashed border-(--color-border) bg-(--color-bg)"
+                >
+                  @if (config()?.logoUrl; as src) {
+                    <img
+                      [src]="src"
+                      alt="Current dispensary logo"
+                      class="max-h-20 max-w-full object-contain"
+                    />
+                  } @else {
+                    <span class="text-xs text-(--color-text-muted)">No logo uploaded</span>
+                  }
+                </div>
+                <label class="mt-2 block text-xs">
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    (change)="onLogoSelected($event)"
+                    [disabled]="uploading() === 'logo'"
+                    aria-label="Upload dispensary logo"
+                    class="block w-full text-xs text-(--color-text-secondary)"
+                  />
+                </label>
+                @if (uploading() === 'logo') {
+                  <p class="mt-1 text-xs text-(--color-text-muted)" role="status">Uploading…</p>
+                }
+              </div>
+              <div>
+                <p class="mb-2 text-xs font-semibold text-(--color-text-secondary)">
+                  Masthead <span class="text-(--color-text-muted)">(5 MB max)</span>
+                </p>
+                <div
+                  class="flex h-24 items-center justify-center overflow-hidden rounded-md border border-dashed border-(--color-border) bg-(--color-bg)"
+                >
+                  @if (config()?.mastheadUrl; as src) {
+                    <img
+                      [src]="src"
+                      alt="Current storefront masthead"
+                      class="h-full w-full object-cover"
+                    />
+                  } @else {
+                    <span class="text-xs text-(--color-text-muted)">No masthead uploaded</span>
+                  }
+                </div>
+                <label class="mt-2 block text-xs">
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    (change)="onMastheadSelected($event)"
+                    [disabled]="uploading() === 'masthead'"
+                    aria-label="Upload storefront masthead"
+                    class="block w-full text-xs text-(--color-text-secondary)"
+                  />
+                </label>
+                @if (uploading() === 'masthead') {
+                  <p class="mt-1 text-xs text-(--color-text-muted)" role="status">Uploading…</p>
+                }
+              </div>
+            </div>
+          </section>
+        </div>
+
         <!-- Live preview surface (sc-687). Picks up the in-flight color
              edits via CSS custom properties scoped to the wrapper, so
              every keystroke re-paints without a fetch or reload. -->
@@ -375,14 +527,25 @@ export class ThemePage {
   private readonly auth = inject(AuthService);
 
   protected readonly presets = THEME_PRESETS;
+  protected readonly displayFonts = DISPLAY_FONTS;
+  protected readonly bodyFonts = BODY_FONTS;
   protected readonly loading = this.svc.isLoading;
   protected readonly error = this.svc.error;
   protected readonly saving = this.svc.saving;
+  protected readonly uploading = this.svc.uploading;
+  protected readonly config = this.svc.config;
+  protected readonly themableDispensaries = this.svc.themableDispensaries;
+  protected readonly activeDispensaryId = this.svc.activeDispensaryId;
 
   /** Local edit state — diverges from `svc.config()` until Save/Reset. */
   protected readonly local = signal<ThemeColors>(EMPTY_COLORS);
   protected readonly activePreset = signal<string>(DEFAULT_PRESET_ID);
   protected readonly savedTick = signal<boolean>(false);
+
+  /** Font selection lives outside ThemeColors so the preview surface
+   * (which renders against ThemeColors only) doesn't need to know. */
+  protected readonly displayFont = signal<string | null>(null);
+  protected readonly bodyFont = signal<string | null>(null);
 
   protected readonly colorGroups = [
     { id: 'brand', label: 'Brand', fields: COLOR_FIELDS.filter((f) => f.group === 'brand') },
@@ -432,7 +595,11 @@ export class ThemePage {
         return true;
       }
     }
-    return server.isDark !== localState.isDark || server.preset !== this.activePreset();
+    if (server.isDark !== localState.isDark) return true;
+    if (server.preset !== this.activePreset()) return true;
+    if ((server.displayFont ?? null) !== this.displayFont()) return true;
+    if ((server.bodyFont ?? null) !== this.bodyFont()) return true;
+    return false;
   });
 
   constructor() {
@@ -441,7 +608,36 @@ export class ThemePage {
       if (!server) return;
       this.local.set(themeColorsFromConfig(server));
       this.activePreset.set(server.preset || DEFAULT_PRESET_ID);
+      this.displayFont.set(server.displayFont ?? null);
+      this.bodyFont.set(server.bodyFont ?? null);
     });
+  }
+
+  protected onSelectDispensary(event: Event): void {
+    const id = (event.target as HTMLSelectElement).value;
+    if (id) this.svc.setActiveDispensary(id);
+  }
+
+  protected onDisplayFontChange(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.displayFont.set(value || null);
+  }
+
+  protected onBodyFontChange(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.bodyFont.set(value || null);
+  }
+
+  protected async onLogoSelected(event: Event): Promise<void> {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) await this.svc.uploadLogo(file);
+    (event.target as HTMLInputElement).value = '';
+  }
+
+  protected async onMastheadSelected(event: Event): Promise<void> {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) await this.svc.uploadMasthead(file);
+    (event.target as HTMLInputElement).value = '';
   }
 
   protected colorValue(key: keyof ThemeColors): string {
@@ -493,6 +689,8 @@ export class ThemePage {
     if (server) {
       this.local.set(themeColorsFromConfig(server));
       this.activePreset.set(server.preset || DEFAULT_PRESET_ID);
+      this.displayFont.set(server.displayFont ?? null);
+      this.bodyFont.set(server.bodyFont ?? null);
     }
   }
 
@@ -510,7 +708,7 @@ export class ThemePage {
   }
 
   protected async onSave(): Promise<void> {
-    const dispensaryId = this.auth.user()?.dispensaryId;
+    const dispensaryId = this.svc.activeDispensaryId();
     if (!dispensaryId) return;
     const colors = this.local();
     await this.svc.save({
@@ -531,6 +729,8 @@ export class ThemePage {
       error: colors.error,
       info: colors.info,
       isDark: colors.isDark,
+      displayFont: this.displayFont() ?? undefined,
+      bodyFont: this.bodyFont() ?? undefined,
     });
     this.savedTick.set(true);
     setTimeout(() => this.savedTick.set(false), 3000);

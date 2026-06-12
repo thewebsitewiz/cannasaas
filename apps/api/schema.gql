@@ -2189,6 +2189,7 @@ type Query {
   myPointHistory(limit: Int = 20): [PointTransaction!]!
   myProfile: CustomerProfile
   myShifts(endDate: String!, startDate: String!): [ScheduledShift!]!
+  myThemableDispensaries: [ThemableDispensary!]!
   myTimeEntries(dispensaryId: ID!, endDate: String!, startDate: String!): [TimeEntry!]!
   notificationStats(days: Int = 30, dispensaryId: ID!): NotificationStats!
   notificationTemplates: [NotificationTemplate!]!
@@ -2384,7 +2385,9 @@ input SaveThemeConfigInput {
   bgCard: String
   bgPrimary: String
   bgSecondary: String
+  bodyFont: String
   dispensaryId: String!
+  displayFont: String
   error: String
   info: String
   isDark: Boolean
@@ -2570,17 +2573,29 @@ type TestProcessorResult {
   ok: Boolean!
 }
 
+type ThemableDispensary {
+  entityId: ID!
+  logoUrl: String
+  name: String!
+  preset: String
+  slug: String!
+}
+
 type ThemeConfigType {
   accent: String!
   bgCard: String!
   bgPrimary: String!
   bgSecondary: String!
+  bodyFont: String
   createdAt: DateTime!
   dispensaryId: String!
+  displayFont: String
   error: String!
   id: ID!
   info: String!
   isDark: Boolean!
+  logoUrl: String
+  mastheadUrl: String
   preset: String!
   primary: String!
   secondary: String!

@@ -17,9 +17,9 @@ export class ThemableDispensary {
   @Field()
   slug!: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   preset?: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   logoUrl?: string | null;
 }
