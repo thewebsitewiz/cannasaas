@@ -1,32 +1,21 @@
-# CannaSaaS — Database Schema (single diagram)
+%% CannaSaaS — Comprehensive database schema (one canvas).
+%%
+%% Companion to docs/data-model.md (which splits the same content
+%% across 10 per-domain diagrams) and docs/data-dictionary.md (which
+%% lists every column for every entity).
+%%
+%% Source of truth: TypeORM entity files under
+%%   apps/api/src/modules/**/entities/
+%% Last regenerated: 2026-06-11
+%%
+%% Render with mermaid-cli:
+%%   pnpm dlx @mermaid-js/mermaid-cli -i docs/database-schema.mmd \
+%%     -o docs/database-schema.svg
+%%
+%% Pure-enum lookups (lkp_effects, lkp_flavors, lkp_terpenes,
+%% lkp_cannabinoids, lkp_allergens, lkp_warning_statements) are
+%% omitted — they live in apps/api/src/modules/product-data/.
 
-Comprehensive Mermaid `erDiagram` of the entire database schema in one
-canvas — every entity (~54 main + 12 FK-bearing lookups = 75 tables)
-and every foreign-key relationship.
-
-> **Tip:** GitHub renders this Mermaid block natively. Open this file
-> on the web and scroll. For a printable export, copy the diagram into
-> [mermaid.live](https://mermaid.live) or pipe it through
-> `@mermaid-js/mermaid-cli`.
-
-Companion files in this folder:
-
-| File | Best for |
-|---|---|
-| `data-model.md` | 10 domain-grouped diagrams (easier to read on one screen). |
-| `data-dictionary.md` | Looking up a specific column's type / description. |
-| `mermaid.MD` (this file) | The whole picture on one canvas. |
-
-Pure-enum lookups (`lkp_effects`, `lkp_flavors`, `lkp_terpenes`,
-`lkp_cannabinoids`, `lkp_allergens`, `lkp_warning_statements`) are
-omitted to keep the diagram navigable.
-
-Source of truth: TypeORM entity files under
-`apps/api/src/modules/**/entities/`.
-
----
-
-```mermaid
 erDiagram
     %% ── 1. Tenancy backbone ───────────────────────────────────
     organizations ||--o{ companies : "owns"
@@ -694,4 +683,3 @@ erDiagram
         varchar code
         varchar label
     }
-```
