@@ -1,0 +1,697 @@
+# CannaSaaS — Database Schema (single diagram)
+
+Comprehensive Mermaid `erDiagram` of the entire database schema in one
+canvas — every entity (~54 main + 12 FK-bearing lookups = 75 tables)
+and every foreign-key relationship.
+
+> **Tip:** GitHub renders this Mermaid block natively. Open this file
+> on the web and scroll. For a printable export, copy the diagram into
+> [mermaid.live](https://mermaid.live) or pipe it through
+> `@mermaid-js/mermaid-cli`.
+
+Companion files in this folder:
+
+| File | Best for |
+|---|---|
+| `data-model.md` | 10 domain-grouped diagrams (easier to read on one screen). |
+| `data-dictionary.md` | Looking up a specific column's type / description. |
+| `mermaid.MD` (this file) | The whole picture on one canvas. |
+
+Pure-enum lookups (`lkp_effects`, `lkp_flavors`, `lkp_terpenes`,
+`lkp_cannabinoids`, `lkp_allergens`, `lkp_warning_statements`) are
+omitted to keep the diagram navigable.
+
+Source of truth: TypeORM entity files under
+`apps/api/src/modules/**/entities/`.
+
+---
+
+```mermaid
+erDiagram
+    %% ── 1. Tenancy backbone ───────────────────────────────────
+    organizations ||--o{ companies : "owns"
+    companies ||--o{ dispensaries : "operates"
+    dispensaries ||--o{ users : "employs / serves"
+    organizations ||--o{ users : "belongs to"
+
+    %% ── 2. Users, profiles, sessions ──────────────────────────
+    users ||--o| customer_profiles : "is-a customer"
+    users ||--o| employee_profiles : "is-a staff member"
+    users ||--o{ customer_addresses : "ships to"
+    users ||--o{ refresh_tokens : "owns"
+    users ||--o{ age_verifications : "verified by"
+    users ||--o{ kiosk_devices : "operates"
+    dispensaries ||--o{ employee_profiles : "employs"
+    dispensaries ||--o{ age_verifications : "scoped to"
+    dispensaries ||--o{ kiosk_devices : "scoped to"
+    dispensaries ||--o| customer_profiles : "preferred"
+
+    %% ── 3. Products & catalog ─────────────────────────────────
+    organizations ||--o{ brands : "owns"
+    brands ||--o{ manufacturers : "represents"
+    dispensaries ||--o{ products : "sells"
+    brands ||--o{ products : "branded as"
+    manufacturers ||--o{ products : "produced by"
+    strain_data ||--o{ products : "genetics"
+    lkp_product_types ||--o{ products : "categorized"
+    lkp_product_categories ||--o{ products : "primary cat"
+    lkp_tax_categories ||--o{ products : "taxed as"
+    lkp_packaging_types ||--o{ products : "packaged in"
+    lkp_extraction_methods ||--o{ products : "extracted by"
+    lkp_unit_of_measure ||--o{ products : "measured in"
+    lkp_metrc_item_categories ||--o{ products : "metrc cat"
+    products ||--o{ product_variants : "comes in"
+    product_variants ||--o{ product_batches : "produced as"
+    product_variants ||--o{ product_pricing : "priced at"
+    product_batches ||--o{ lab_tests : "tested"
+    lab_tests ||--o{ lab_test_results : "yields"
+    lkp_lab_test_categories ||--o{ lab_test_results : "category"
+    lkp_unit_of_measure ||--o{ product_variants : "uom"
+    dispensaries ||--o{ product_variants : "stocks"
+    dispensaries ||--o{ product_batches : "owns batches"
+    dispensaries ||--o{ product_pricing : "prices"
+    dispensaries ||--o{ lab_tests : "scopes"
+
+    %% ── 4. Inventory & stock movement ─────────────────────────
+    product_variants ||--o{ inventory : "stocked as"
+    dispensaries ||--o{ inventory : "holds"
+    inventory ||--o{ inventory_transactions : "logged in"
+    dispensaries ||--o{ inventory_transactions : "scoped"
+    lkp_metrc_adjustment_reasons ||--o{ inventory_transactions : "reason"
+    dispensaries ||--o{ inventory_adjustments : "records"
+    product_variants ||--o{ inventory_adjustments : "of variant"
+    lkp_adjustment_reasons ||--o{ inventory_adjustments : "reason"
+    organizations ||--o{ inventory_transfers : "moves"
+    dispensaries ||--o{ inventory_transfers : "from"
+    dispensaries ||--o{ inventory_transfers : "to"
+    inventory_transfers ||--o{ inventory_transfer_items : "contains"
+    product_variants ||--o{ inventory_transfer_items : "of variant"
+    dispensaries ||--o{ inventory_counts : "audits"
+    inventory_counts ||--o{ inventory_count_items : "tallies"
+    product_variants ||--o{ inventory_count_items : "counted"
+
+    %% ── 5. Orders, line items, payments ───────────────────────
+    dispensaries ||--o{ orders : "fulfills"
+    users ||--o{ orders : "places (customer)"
+    users ||--o{ orders : "rings (staff)"
+    orders ||--o{ order_line_items : "contains"
+    products ||--o{ order_line_items : "buys"
+    product_variants ||--o{ order_line_items : "variant"
+    product_batches ||--o{ order_line_items : "from batch"
+    orders ||--o{ payments : "settled by"
+    dispensaries ||--o{ payments : "scoped"
+    dispensaries ||--o{ dispensary_payment_processors : "configures"
+    orders ||--o| order_tracking : "tracked"
+
+    %% ── 6. Compliance — Metrc, audit, waste ───────────────────
+    dispensaries ||--o| metrc_credentials : "Metrc creds"
+    dispensaries ||--o| biotrack_credentials : "Biotrack creds"
+    metrc_credentials ||--o{ metrc_sync_logs : "syncs via"
+    dispensaries ||--o{ metrc_sync_logs : "logs"
+    dispensaries ||--o{ metrc_manifests : "ships"
+    metrc_manifests ||--o{ metrc_manifest_items : "lists"
+    product_variants ||--o{ metrc_manifest_items : "shipped"
+    dispensaries ||--o{ compliance_logs : "records"
+    users ||--o{ compliance_logs : "actor"
+    dispensaries ||--o{ waste_destruction_logs : "records"
+    product_variants ||--o{ waste_destruction_logs : "destroyed"
+    dispensaries ||--o{ reconciliation_reports : "files"
+    reconciliation_reports ||--o{ reconciliation_items : "lines"
+    dispensaries ||--o{ audit_log : "audited"
+    users ||--o{ audit_log : "actor"
+
+    %% ── 7. Workforce — POS, shifts, scheduling, delivery ──────
+    dispensaries ||--o{ register_sessions : "operates"
+    users ||--o{ register_sessions : "opened by"
+    dispensaries ||--o| pos_integrations : "POS"
+    dispensaries ||--o{ pos_product_mappings : "maps"
+    products ||--o{ pos_product_mappings : "external POS sku"
+    product_variants ||--o{ pos_product_mappings : "variant"
+    dispensaries ||--o{ pos_sync_logs : "syncs"
+    dispensaries ||--o{ shift_templates : "schedules"
+    dispensaries ||--o{ scheduled_shifts : "books"
+    employee_profiles ||--o{ scheduled_shifts : "assigned"
+    shift_templates ||--o{ scheduled_shifts : "based on"
+    scheduled_shifts ||--o{ shift_swap_requests : "swap of"
+    employee_profiles ||--o{ shift_swap_requests : "requesting"
+    employee_profiles ||--o{ shift_swap_requests : "covering"
+    employee_profiles ||--o{ time_entries : "clocks"
+    dispensaries ||--o{ time_entries : "at"
+    employee_profiles ||--o{ time_off_requests : "submits"
+    dispensaries ||--o{ time_off_requests : "scoped"
+    employee_profiles ||--o| driver_profiles : "drives as"
+    driver_profiles ||--o{ delivery_trips : "drives"
+    orders ||--o| delivery_trips : "delivered by"
+    dispensaries ||--o{ delivery_zones : "delivers in"
+    dispensaries ||--o{ delivery_time_slots : "windows"
+    employee_profiles ||--o{ employee_certifications : "holds"
+    employee_profiles ||--o{ performance_reviews : "reviewed in"
+    users ||--o{ performance_reviews : "reviewed by"
+    lkp_certification_types ||--o{ employee_certifications : "of type"
+    lkp_positions ||--o{ employee_profiles : "position"
+
+    %% ── 8. Promotions ─────────────────────────────────────────
+    dispensaries ||--o{ promotions : "runs"
+    lkp_product_types ||--o{ promotions : "applies to type"
+    brands ||--o{ promotions : "applies to brand"
+    lkp_tax_categories ||--o{ promotions : "applies to tax cat"
+    promotions ||--o{ promotion_products : "scoped to"
+    products ||--o{ promotion_products : "matched"
+    product_variants ||--o{ promotion_products : "variant"
+    promotions ||--o{ promotion_categories : "scoped to"
+    lkp_product_categories ||--o{ promotion_categories : "matched"
+
+    %% ── 9. Notifications & theme ──────────────────────────────
+    users ||--o{ notification_log : "recipient"
+    dispensaries ||--o{ notification_log : "context"
+    notification_templates ||--o{ notification_log : "rendered from"
+    dispensaries ||--o| theme_configs : "branded as"
+
+    %% ── 10. Lookup self-reference ─────────────────────────────
+    lkp_product_categories ||--o{ lkp_product_categories : "parent of"
+
+    %% ──────────────────────────────────────────────────────────
+    %% Entity definitions (PKs + FKs + a few load-bearing columns
+    %% per table; full column lists live in data-dictionary.md)
+    %% ──────────────────────────────────────────────────────────
+
+    organizations {
+        uuid organization_id PK
+        varchar name
+    }
+    companies {
+        uuid company_id PK
+        uuid organization_id FK
+        varchar name
+    }
+    dispensaries {
+        uuid entity_id PK
+        uuid company_id FK
+        varchar name
+        varchar slug
+        varchar state
+        bool is_active
+    }
+    users {
+        uuid id PK
+        uuid organization_id FK
+        uuid dispensary_id FK
+        varchar email UK
+        varchar role
+        bool is_active
+    }
+    customer_profiles {
+        uuid profile_id PK
+        uuid user_id FK
+        uuid preferred_dispensary_id FK
+        date date_of_birth
+        bool sms_opt_in
+        bool marketing_opt_in
+    }
+    employee_profiles {
+        uuid profile_id PK
+        uuid user_id FK
+        uuid dispensary_id FK
+        int position_id FK
+        date hire_date
+    }
+    customer_addresses {
+        uuid address_id PK
+        uuid user_id FK
+        varchar line1
+        varchar city
+        varchar state
+        varchar zip
+    }
+    age_verifications {
+        uuid verification_id PK
+        uuid user_id FK
+        uuid dispensary_id FK
+        timestamptz verified_at
+    }
+    refresh_tokens {
+        uuid id PK
+        uuid user_id FK
+        uuid dispensary_id FK
+        timestamptz expires_at
+        bool is_revoked
+    }
+    kiosk_devices {
+        uuid id PK
+        uuid user_id FK,UK
+        uuid dispensary_id FK
+        varchar label
+        text public_key
+    }
+    brands {
+        uuid brand_id PK
+        uuid organization_id FK
+        varchar name
+        varchar logo_url
+    }
+    manufacturers {
+        uuid manufacturer_id PK
+        uuid brand_id FK
+        varchar name
+    }
+    strain_data {
+        uuid strain_data_id PK
+        varchar strain_name
+        varchar type
+    }
+    products {
+        uuid id PK
+        uuid dispensary_id FK
+        uuid brand_id FK
+        uuid manufacturer_id FK
+        uuid strain_id FK
+        int product_type_id FK
+        int primary_category_id FK
+        int tax_category_id FK
+        int packaging_type_id FK
+        int extraction_method_id FK
+        int uom_id FK
+        int metrc_item_category_id FK
+        varchar name
+        bool is_active
+        int sort_order
+    }
+    product_variants {
+        uuid variant_id PK
+        uuid product_id FK
+        uuid dispensary_id FK
+        int uom_id FK
+        numeric size
+    }
+    product_batches {
+        uuid batch_id PK
+        uuid variant_id FK
+        uuid dispensary_id FK
+        uuid manufacturer_id FK
+        varchar metrc_package_label
+    }
+    product_pricing {
+        uuid pricing_id PK
+        uuid variant_id FK
+        uuid dispensary_id FK
+        numeric price
+        timestamptz effective_at
+    }
+    lab_tests {
+        uuid lab_test_id PK
+        uuid batch_id FK
+        uuid dispensary_id FK
+        timestamptz tested_at
+    }
+    lab_test_results {
+        uuid result_id PK
+        uuid lab_test_id FK
+        int test_category_id FK
+        numeric value
+    }
+    inventory {
+        uuid inventory_id PK
+        uuid variant_id FK,UK
+        uuid dispensary_id FK
+        numeric quantity_on_hand
+        numeric quantity_reserved
+        numeric quantity_available
+        numeric reorder_threshold
+        numeric reorder_quantity
+        varchar location_in_store
+    }
+    inventory_transactions {
+        uuid transaction_id PK
+        uuid inventory_id FK
+        uuid dispensary_id FK
+        uuid batch_id FK
+        int adjustment_reason_id FK
+        varchar transaction_type
+        numeric quantity_delta
+        numeric quantity_before
+        numeric quantity_after
+        uuid reference_order_id
+    }
+    inventory_transfers {
+        uuid transfer_id PK
+        uuid organization_id FK
+        uuid from_dispensary_id FK
+        uuid to_dispensary_id FK
+        varchar status
+    }
+    inventory_transfer_items {
+        uuid item_id PK
+        uuid transfer_id FK
+        uuid variant_id FK
+        numeric quantity
+    }
+    inventory_counts {
+        uuid count_id PK
+        uuid dispensary_id FK
+        timestamptz started_at
+        timestamptz completed_at
+    }
+    inventory_count_items {
+        uuid count_item_id PK
+        uuid count_id FK
+        uuid variant_id FK
+        numeric counted_qty
+        numeric expected_qty
+    }
+    inventory_adjustments {
+        uuid adjustment_id PK
+        uuid dispensary_id FK
+        uuid variant_id FK
+        int reason_id FK
+        numeric delta
+    }
+    orders {
+        uuid order_id PK
+        uuid dispensary_id FK
+        uuid customer_user_id FK
+        uuid staff_user_id FK
+        varchar order_type
+        varchar order_status
+        numeric subtotal
+        numeric tax_total
+        numeric total
+        varchar payment_method
+        varchar metrc_receipt_id
+        varchar metrc_sync_status
+    }
+    order_line_items {
+        uuid line_item_id PK
+        uuid order_id FK
+        uuid product_id FK
+        uuid variant_id FK
+        uuid batch_id FK
+        numeric quantity
+        numeric unit_price
+        numeric tax_applied
+    }
+    payments {
+        uuid payment_id PK
+        uuid order_id FK
+        uuid dispensary_id FK
+        varchar processor
+        numeric amount
+        varchar status
+    }
+    dispensary_payment_processors {
+        uuid id PK
+        uuid dispensary_id FK
+        varchar processor_name
+        bool is_enabled
+        bool is_sandbox
+        varchar merchant_external_id
+        timestamptz provisioned_at
+    }
+    order_tracking {
+        uuid tracking_id PK
+        uuid order_id FK
+        varchar status
+        timestamptz occurred_at
+    }
+    metrc_credentials {
+        uuid credential_id PK
+        uuid dispensary_id FK,UK
+        varchar license_number
+        text encrypted_api_key
+    }
+    biotrack_credentials {
+        uuid credential_id PK
+        uuid dispensary_id FK,UK
+        text encrypted_api_key
+    }
+    metrc_sync_logs {
+        uuid sync_id PK
+        uuid credential_id FK
+        uuid dispensary_id FK
+        varchar sync_type
+        varchar status
+    }
+    metrc_manifests {
+        uuid manifest_id PK
+        uuid dispensary_id FK
+        uuid transfer_id
+        varchar metrc_manifest_number
+    }
+    metrc_manifest_items {
+        uuid item_id PK
+        uuid manifest_id FK
+        uuid variant_id FK
+        numeric quantity
+    }
+    compliance_logs {
+        uuid log_id PK
+        uuid dispensary_id FK
+        uuid user_id FK
+        varchar event_code
+    }
+    waste_destruction_logs {
+        uuid log_id PK
+        uuid dispensary_id FK
+        uuid variant_id FK
+        numeric quantity
+        varchar reason
+    }
+    reconciliation_reports {
+        uuid report_id PK
+        uuid dispensary_id FK
+        timestamptz period_start
+        timestamptz period_end
+    }
+    reconciliation_items {
+        uuid item_id PK
+        uuid report_id FK
+        varchar metric
+        numeric delta
+    }
+    audit_log {
+        uuid audit_id PK
+        uuid dispensary_id FK
+        uuid user_id FK
+        varchar action
+        jsonb payload
+    }
+    regulatory_library {
+        uuid reg_id PK
+        varchar state
+        varchar citation
+        text body
+        timestamptz effective_date
+    }
+    register_sessions {
+        uuid id PK
+        uuid dispensary_id FK
+        uuid opened_by_user_id FK
+        int opening_cash_cents
+        int closing_cash_cents
+        text status
+        timestamptz opened_at
+        timestamptz closed_at
+    }
+    pos_integrations {
+        uuid integration_id PK
+        uuid dispensary_id FK,UK
+        varchar provider
+        jsonb credentials
+    }
+    pos_product_mappings {
+        uuid mapping_id PK
+        uuid dispensary_id FK
+        uuid internal_product_id FK
+        uuid internal_variant_id FK
+        varchar external_sku
+    }
+    pos_sync_logs {
+        uuid sync_log_id PK
+        uuid dispensary_id FK
+        varchar status
+    }
+    shift_templates {
+        uuid template_id PK
+        uuid dispensary_id FK
+        varchar name
+    }
+    scheduled_shifts {
+        uuid shift_id PK
+        uuid dispensary_id FK
+        uuid profile_id FK
+        uuid template_id FK
+        timestamptz starts_at
+        timestamptz ends_at
+    }
+    shift_swap_requests {
+        uuid swap_id PK
+        uuid original_shift_id FK
+        uuid requesting_profile_id FK
+        uuid covering_profile_id FK
+        varchar status
+    }
+    time_entries {
+        uuid entry_id PK
+        uuid profile_id FK
+        uuid dispensary_id FK
+        timestamptz clock_in
+        timestamptz clock_out
+    }
+    time_off_requests {
+        uuid request_id PK
+        uuid profile_id FK
+        uuid dispensary_id FK
+        timestamptz starts_at
+        timestamptz ends_at
+        varchar status
+    }
+    driver_profiles {
+        uuid driver_id PK
+        uuid profile_id FK,UK
+        uuid dispensary_id FK
+        varchar license_number
+    }
+    delivery_trips {
+        uuid trip_id PK
+        uuid driver_id FK
+        uuid dispensary_id FK
+        uuid order_id FK
+        varchar status
+    }
+    delivery_zones {
+        uuid zone_id PK
+        uuid dispensary_id FK
+        text polygon
+    }
+    delivery_time_slots {
+        uuid slot_id PK
+        uuid dispensary_id FK
+        timestamptz starts_at
+        timestamptz ends_at
+    }
+    employee_certifications {
+        uuid certification_id PK
+        uuid profile_id FK
+        int cert_type_id FK
+        varchar number
+        date expires_at
+    }
+    performance_reviews {
+        uuid review_id PK
+        uuid profile_id FK
+        uuid reviewer_user_id FK
+        date period_start
+        int rating
+    }
+    promotions {
+        uuid promo_id PK
+        uuid dispensary_id FK
+        int applies_to_product_type_id FK
+        uuid applies_to_brand_id FK
+        int applies_to_tax_category_id FK
+        varchar code
+        varchar discount_type
+        numeric discount_value
+        timestamptz starts_at
+        timestamptz ends_at
+    }
+    promotion_products {
+        uuid id PK
+        uuid promo_id FK
+        uuid product_id FK
+        uuid variant_id FK
+    }
+    promotion_categories {
+        uuid id PK
+        uuid promo_id FK
+        int category_id FK
+    }
+    notification_templates {
+        int template_id PK
+        varchar code UK
+        varchar name
+        varchar channel
+        varchar subject
+        text body_template
+        bool is_active
+    }
+    notification_log {
+        uuid log_id PK
+        uuid user_id FK
+        uuid dispensary_id FK
+        varchar template_code
+        varchar channel
+        varchar recipient
+        varchar status
+        timestamptz sent_at
+    }
+    theme_configs {
+        uuid id PK
+        uuid dispensary_id FK,UK
+        varchar preset
+        varchar primary
+        varchar secondary
+        varchar accent
+        bool is_dark
+        varchar logo_url
+        varchar masthead_url
+        varchar display_font
+        varchar body_font
+    }
+    lkp_product_types {
+        int product_type_id PK
+        varchar code UK
+        varchar label
+    }
+    lkp_product_categories {
+        int category_id PK
+        int parent_category_id FK
+        varchar name
+    }
+    lkp_unit_of_measure {
+        int uom_id PK
+        varchar code UK
+    }
+    lkp_packaging_types {
+        int packaging_type_id PK
+        varchar name
+    }
+    lkp_extraction_methods {
+        int extraction_method_id PK
+        varchar name
+    }
+    lkp_tax_categories {
+        int tax_category_id PK
+        varchar code UK
+        varchar state
+        varchar tax_basis
+        numeric rate
+    }
+    lkp_lab_test_categories {
+        int test_category_id PK
+        varchar name
+    }
+    lkp_metrc_item_categories {
+        int metrc_category_id PK
+        varchar metrc_name
+    }
+    lkp_metrc_adjustment_reasons {
+        int adjustment_reason_id PK
+        varchar code
+        varchar label
+    }
+    lkp_adjustment_reasons {
+        int reason_id PK
+        varchar code
+        varchar label
+    }
+    lkp_positions {
+        int position_id PK
+        varchar code
+        varchar label
+    }
+    lkp_certification_types {
+        int cert_type_id PK
+        varchar code
+        varchar label
+    }
+```
