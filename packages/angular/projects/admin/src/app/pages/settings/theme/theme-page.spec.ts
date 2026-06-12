@@ -22,6 +22,12 @@ function makeSvc(args: FakeArgs): ThemeService {
     isLoading: signal<boolean>(args.loading ?? false).asReadonly(),
     error: signal<unknown>(args.error ?? null).asReadonly(),
     saving: signal<boolean>(args.saving ?? false).asReadonly(),
+    uploading: signal<'logo' | 'masthead' | null>(null).asReadonly(),
+    themableDispensaries: signal<readonly unknown[]>([]).asReadonly(),
+    activeDispensaryId: signal<string | null>('disp-1').asReadonly(),
+    setActiveDispensary: vi.fn(),
+    uploadLogo: vi.fn().mockResolvedValue(undefined),
+    uploadMasthead: vi.fn().mockResolvedValue(undefined),
     save: args.save ?? vi.fn().mockResolvedValue(undefined),
   } as unknown as ThemeService;
 }
@@ -73,6 +79,10 @@ function cfg(overrides: Partial<ThemeConfig> = {}): ThemeConfig {
     error: '#c0392b',
     info: '#2e86ab',
     isDark: false,
+    displayFont: null,
+    bodyFont: null,
+    logoUrl: null,
+    mastheadUrl: null,
     ...overrides,
   } as ThemeConfig;
 }
@@ -305,6 +315,86 @@ describe('ThemePage', () => {
     expect(clicks).toHaveLength(1);
     expect(clicks[0].download).toBe('theme.modern.css');
     createSpy.mockRestore();
+  });
+
+  // sc-637 follow-on — font picker + branding uploaders + dispensary selector
+
+  it('TC-THEME-FONT-001 — display + body font dropdowns render with the curated catalog', () => {
+    const { fixture } = configure({ config: cfg() });
+    const root = fixture.nativeElement as HTMLElement;
+    const displaySelect = root.querySelector(
+      'select[aria-label="Display font"]',
+    ) as HTMLSelectElement;
+    const bodySelect = root.querySelector('select[aria-label="Body font"]') as HTMLSelectElement;
+    expect(displaySelect).toBeTruthy();
+    expect(bodySelect).toBeTruthy();
+    // 10 display fonts + the "Use preset default" empty option
+    expect(displaySelect.options.length).toBe(11);
+    // 6 body fonts + the "Use preset default" empty option
+    expect(bodySelect.options.length).toBe(7);
+  });
+
+  it('TC-THEME-FONT-002 — picking a display font marks the form dirty', () => {
+    const { fixture } = configure({ config: cfg() });
+    const root = fixture.nativeElement as HTMLElement;
+    const select = root.querySelector(
+      'select[aria-label="Display font"]',
+    ) as HTMLSelectElement;
+    select.value = 'Playfair Display';
+    select.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+    const saveBtn = Array.from(root.querySelectorAll('button')).find((b) =>
+      (b.textContent ?? '').trim().startsWith('Save'),
+    ) as HTMLButtonElement;
+    expect(saveBtn.disabled).toBe(false);
+  });
+
+  it('TC-THEME-BRAND-001 — logo upload calls svc.uploadLogo with the chosen file', async () => {
+    const { fixture, svc } = configure({ config: cfg() });
+    const fileInput = (fixture.nativeElement as HTMLElement).querySelector(
+      'input[aria-label="Upload dispensary logo"]',
+    ) as HTMLInputElement;
+    const file = new File(['x'], 'logo.png', { type: 'image/png' });
+    Object.defineProperty(fileInput, 'files', { value: [file] });
+    fileInput.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
+    expect(svc.uploadLogo).toHaveBeenCalledWith(file);
+  });
+
+  it('TC-THEME-BRAND-002 — masthead upload calls svc.uploadMasthead with the chosen file', async () => {
+    const { fixture, svc } = configure({ config: cfg() });
+    const fileInput = (fixture.nativeElement as HTMLElement).querySelector(
+      'input[aria-label="Upload storefront masthead"]',
+    ) as HTMLInputElement;
+    const file = new File(['x'], 'masthead.jpg', { type: 'image/jpeg' });
+    Object.defineProperty(fileInput, 'files', { value: [file] });
+    fileInput.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
+    expect(svc.uploadMasthead).toHaveBeenCalledWith(file);
+  });
+
+  it('TC-THEME-BRAND-003 — current logo + masthead URLs render as <img> previews', () => {
+    const { fixture } = configure({
+      config: cfg({
+        logoUrl: 'http://localhost:3000/uploads/branding/d_logo.png',
+        mastheadUrl: 'http://localhost:3000/uploads/branding/d_masthead.jpg',
+      }),
+    });
+    const root = fixture.nativeElement as HTMLElement;
+    const logo = root.querySelector('img[alt="Current dispensary logo"]') as HTMLImageElement;
+    const masthead = root.querySelector(
+      'img[alt="Current storefront masthead"]',
+    ) as HTMLImageElement;
+    expect(logo.src).toContain('d_logo.png');
+    expect(masthead.src).toContain('d_masthead.jpg');
+  });
+
+  it('TC-THEME-SCOPE-001 — dispensary picker is hidden when only one site is themable', () => {
+    const { fixture } = configure({ config: cfg() });
+    const picker = (fixture.nativeElement as HTMLElement).querySelector(
+      '[aria-label="Dispensary picker"]',
+    );
+    expect(picker).toBeNull();
   });
 });
 

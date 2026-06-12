@@ -56,16 +56,16 @@ export class ThemeConfigType {
   @Field()
   isDark!: boolean;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   logoUrl?: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   mastheadUrl?: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   displayFont?: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   bodyFont?: string | null;
 
   @Field()

@@ -1,3 +1,4 @@
+/* eslint-disable */
 // AUTO-GENERATED — do not edit by hand
 
 import { gql } from 'apollo-angular';
@@ -3164,6 +3165,7 @@ export type Query = {
   myPointHistory: Array<PointTransaction>;
   myProfile?: Maybe<CustomerProfile>;
   myShifts: Array<ScheduledShift>;
+  myThemableDispensaries: Array<ThemableDispensary>;
   myTimeEntries: Array<TimeEntry>;
   notificationStats: NotificationStats;
   notificationTemplates: Array<NotificationTemplate>;
@@ -4067,7 +4069,9 @@ export type SaveThemeConfigInput = {
   bgCard?: InputMaybe<Scalars['String']['input']>;
   bgPrimary?: InputMaybe<Scalars['String']['input']>;
   bgSecondary?: InputMaybe<Scalars['String']['input']>;
+  bodyFont?: InputMaybe<Scalars['String']['input']>;
   dispensaryId: Scalars['String']['input'];
+  displayFont?: InputMaybe<Scalars['String']['input']>;
   error?: InputMaybe<Scalars['String']['input']>;
   info?: InputMaybe<Scalars['String']['input']>;
   isDark?: InputMaybe<Scalars['Boolean']['input']>;
@@ -4266,18 +4270,31 @@ export type TestProcessorResult = {
   ok: Scalars['Boolean']['output'];
 };
 
+export type ThemableDispensary = {
+  __typename?: 'ThemableDispensary';
+  entityId: Scalars['ID']['output'];
+  logoUrl?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  preset?: Maybe<Scalars['String']['output']>;
+  slug: Scalars['String']['output'];
+};
+
 export type ThemeConfigType = {
   __typename?: 'ThemeConfigType';
   accent: Scalars['String']['output'];
   bgCard: Scalars['String']['output'];
   bgPrimary: Scalars['String']['output'];
   bgSecondary: Scalars['String']['output'];
+  bodyFont?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
   dispensaryId: Scalars['String']['output'];
+  displayFont?: Maybe<Scalars['String']['output']>;
   error: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   info: Scalars['String']['output'];
   isDark: Scalars['Boolean']['output'];
+  logoUrl?: Maybe<Scalars['String']['output']>;
+  mastheadUrl?: Maybe<Scalars['String']['output']>;
   preset: Scalars['String']['output'];
   primary: Scalars['String']['output'];
   secondary: Scalars['String']['output'];
@@ -6326,6 +6343,10 @@ export type ThemeConfigQuery = {
     error: string;
     info: string;
     isDark: boolean;
+    displayFont?: string | null;
+    bodyFont?: string | null;
+    logoUrl?: string | null;
+    mastheadUrl?: string | null;
   };
 };
 
@@ -6354,7 +6375,25 @@ export type SaveThemeConfigMutation = {
     error: string;
     info: string;
     isDark: boolean;
+    displayFont?: string | null;
+    bodyFont?: string | null;
+    logoUrl?: string | null;
+    mastheadUrl?: string | null;
   };
+};
+
+export type MyThemableDispensariesQueryVariables = Exact<{ [key: string]: never }>;
+
+export type MyThemableDispensariesQuery = {
+  __typename?: 'Query';
+  myThemableDispensaries: Array<{
+    __typename?: 'ThemableDispensary';
+    entityId: string;
+    name: string;
+    slug: string;
+    preset?: string | null;
+    logoUrl?: string | null;
+  }>;
 };
 
 export type ActiveClocksQueryVariables = Exact<{
@@ -9136,6 +9175,10 @@ export const ThemeConfigDocument = gql`
       error
       info
       isDark
+      displayFont
+      bodyFont
+      logoUrl
+      mastheadUrl
     }
   }
 `;
@@ -9170,6 +9213,10 @@ export const SaveThemeConfigDocument = gql`
       error
       info
       isDark
+      displayFont
+      bodyFont
+      logoUrl
+      mastheadUrl
     }
   }
 `;
@@ -9182,6 +9229,31 @@ export class SaveThemeConfigGQL extends Apollo.Mutation<
   SaveThemeConfigMutationVariables
 > {
   override document = SaveThemeConfigDocument;
+
+  constructor(apollo: Apollo.Apollo) {
+    super(apollo);
+  }
+}
+export const MyThemableDispensariesDocument = gql`
+  query MyThemableDispensaries {
+    myThemableDispensaries {
+      entityId
+      name
+      slug
+      preset
+      logoUrl
+    }
+  }
+`;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class MyThemableDispensariesGQL extends Apollo.Query<
+  MyThemableDispensariesQuery,
+  MyThemableDispensariesQueryVariables
+> {
+  override document = MyThemableDispensariesDocument;
 
   constructor(apollo: Apollo.Apollo) {
     super(apollo);
