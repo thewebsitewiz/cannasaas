@@ -2,6 +2,7 @@ import {
   ApplicationConfig,
   ErrorHandler,
   inject,
+  provideAppInitializer,
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
 import { HttpHeaders, provideHttpClient, withFetch } from '@angular/common/http';
@@ -17,6 +18,7 @@ import { AuthService } from './core/auth/auth.service';
 import { DeviceSignerService } from './core/attestation/device-signer.service';
 import { createDeviceSignatureLink } from './core/attestation/device-signature-link';
 import { GlobalErrorHandler } from './core/error/global-error-handler';
+import { AppThemeService } from './core/theme/app-theme.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -53,5 +55,10 @@ export const appConfig: ApplicationConfig = {
       };
     }),
     { provide: ErrorHandler, useExisting: GlobalErrorHandler },
+    // Per-dispensary CSS link is one-shot — environment.dispensaryId is
+    // baked in at provisioning time (sc-637 follow-on).
+    provideAppInitializer(() => {
+      inject(AppThemeService).apply();
+    }),
   ],
 };

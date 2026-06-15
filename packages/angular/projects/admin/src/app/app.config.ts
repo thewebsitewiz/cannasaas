@@ -1,4 +1,9 @@
-import { ApplicationConfig, inject, provideBrowserGlobalErrorListeners } from '@angular/core';
+import {
+  ApplicationConfig,
+  inject,
+  provideAppInitializer,
+  provideBrowserGlobalErrorListeners,
+} from '@angular/core';
 import { provideHttpClient, withFetch } from '@angular/common/http';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { provideRouter, withInMemoryScrolling } from '@angular/router';
@@ -10,6 +15,7 @@ import { routes } from './app.routes';
 import { environment } from '../environments/environment';
 import { AuthService } from './core/auth/auth.service';
 import { createAuthMiddleware } from './core/auth/auth-middleware';
+import { AppThemeService } from './core/theme/app-theme.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -34,6 +40,11 @@ export const appConfig: ApplicationConfig = {
           query: { fetchPolicy: 'network-only', errorPolicy: 'all' },
         },
       };
+    }),
+    // Eagerly construct AppThemeService so its auth-state effect runs and
+    // link-injects /css/dispensary/:id.css on login (sc-637 follow-on).
+    provideAppInitializer(() => {
+      inject(AppThemeService);
     }),
   ],
 };
