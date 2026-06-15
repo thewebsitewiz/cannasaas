@@ -14,6 +14,11 @@ import { CompleteOrderInput } from './dto/complete-order.input';
 import { OrderSummary, TaxLineItem } from './dto/order-summary.type';
 import { StockEventEmitterService } from '../inventory/stock-event-emitter.service';
 import type { StockChangeSource } from '../inventory/stock-events';
+import {
+  ORDER_COMPLETED,
+  ORDER_CREATED,
+  ORDER_STATUS_CHANGED,
+} from '../../common/events/event-names';
 
 interface ReserveReturningRow {
   inventory_id: string;
@@ -307,7 +312,7 @@ export class OrdersService {
       const order = rows[0];
       if (!order) return;
       this.eventEmitter.emit(
-        status === 'pending' ? 'order.created' : 'order.status_changed',
+        status === 'pending' ? ORDER_CREATED : ORDER_STATUS_CHANGED,
         new OrderEvent(
           orderId,
           dispensaryId,
@@ -874,7 +879,7 @@ export class OrdersService {
 
       // Fire event — triggers Metrc sale sync via OrderCompletedListener
       this.eventEmitter.emit(
-        'order.completed',
+        ORDER_COMPLETED,
         new OrderCompletedEvent(input.orderId, input.dispensaryId, new Date()),
       );
 

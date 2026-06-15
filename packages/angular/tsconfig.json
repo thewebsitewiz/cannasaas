@@ -17,7 +17,9 @@
     "module": "preserve",
     "paths": {
       "@cannasaas/ui-ng": ["dist/ui"],
-      "@cannasaas/ui-ng/*": ["dist/ui/*"]
+      "@cannasaas/ui-ng/*": ["dist/ui/*"],
+      "@cannasaas/types": ["../types/src"],
+      "@cannasaas/types/*": ["../types/src/*"]
     }
   },
   "angularCompilerOptions": {
