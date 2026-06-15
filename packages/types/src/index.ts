@@ -102,3 +102,7 @@ export type {
   MetricWithChange,
   TimeSeriesPoint,
 } from './models/analytics-summary';
+
+// ── Per-dispensary theme — curated Google Fonts catalog (sc-637) ─────────────
+export type { GoogleFontEntry, GoogleFontKind } from './google-fonts';
+export { GOOGLE_FONT_CATALOG } from './google-fonts';

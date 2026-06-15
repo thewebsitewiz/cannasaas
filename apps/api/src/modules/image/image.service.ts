@@ -139,8 +139,7 @@ export class ImageService {
   /**
    * Per-dispensary branding upload (sc-637 follow-on). One file per kind
    * (logo or masthead) — the caller stores the returned URL on the
-   * `theme_configs` row. Kind-specific size caps avoid loosening the
-   * existing 5 MB validateFile() default just for one path.
+   * `theme_configs` row.
    */
   async uploadBranding(
     file: UploadedFile,
@@ -148,17 +147,7 @@ export class ImageService {
     kind: 'logo' | 'masthead',
   ): Promise<{ url: string }> {
     const cap = kind === 'logo' ? 2 * 1024 * 1024 : 5 * 1024 * 1024;
-    if (!file) throw new BadRequestException('No file provided');
-    if (!this.allowedTypes.includes(file.mimetype)) {
-      throw new BadRequestException(
-        'Invalid file type. Allowed: JPEG, PNG, WebP',
-      );
-    }
-    if (file.size > cap) {
-      throw new BadRequestException(
-        `File too large. Maximum ${cap / (1024 * 1024)}MB for ${kind}`,
-      );
-    }
+    this.validateFile(file, cap);
 
     const ext = this.getExtension(file.mimetype);
     const hash = crypto.randomBytes(8).toString('hex');
@@ -183,15 +172,24 @@ export class ImageService {
     }
   }
 
-  private validateFile(file: UploadedFile | undefined | null): void {
+  /**
+   * Validates mime + size for an uploaded file. `maxSize` defaults to
+   * `this.maxSize` (5 MB) so existing callers don't change; callers that
+   * need a tighter cap (e.g. avatar at 2 MB, logo at 2 MB) pass it in.
+   */
+  private validateFile(
+    file: UploadedFile | undefined | null,
+    maxSize: number = this.maxSize,
+  ): void {
     if (!file) throw new BadRequestException('No file provided');
     if (!this.allowedTypes.includes(file.mimetype)) {
       throw new BadRequestException(
         'Invalid file type. Allowed: JPEG, PNG, WebP',
       );
     }
-    if (file.size > this.maxSize) {
-      throw new BadRequestException('File too large. Maximum 5MB');
+    if (file.size > maxSize) {
+      const mb = Math.round(maxSize / (1024 * 1024));
+      throw new BadRequestException(`File too large. Maximum ${mb}MB`);
     }
   }
 

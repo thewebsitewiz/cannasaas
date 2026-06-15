@@ -5,6 +5,7 @@ import { DataSource } from 'typeorm';
 import { MetrcResolver } from './metrc.resolver';
 import { MetrcService } from './metrc.service';
 import { MetrcSyncQueueService } from './queue/metrc-sync.queue-service';
+import { MetrcLicenseValidatorService } from './metrc-license-validator.service';
 
 /**
  * Smoke spec for the sc-608 queue-stats query. The other Metrc
@@ -30,6 +31,10 @@ describe('MetrcResolver — queueStats (sc-608)', () => {
           useValue: {
             getQueueStats,
           } as unknown as MetrcSyncQueueService,
+        },
+        {
+          provide: MetrcLicenseValidatorService,
+          useValue: {} as MetrcLicenseValidatorService,
         },
         {
           provide: getDataSourceToken(),
