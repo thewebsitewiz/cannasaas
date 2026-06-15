@@ -120,10 +120,14 @@ async function bootstrap(): Promise<void> {
       const o = config.get<string[] | string | undefined>('corsOrigins');
       if (Array.isArray(o)) return o;
       if (typeof o === 'string') return o.split(',');
+      // Dev defaults match the actual app port scheme (see CLAUDE.md):
+      // 5177 platform (React), 5273-5276 Angular projects.
       return [
-        'http://localhost:5174',
-        'http://localhost:5175',
+        'http://localhost:5177',
         'http://localhost:5273',
+        'http://localhost:5274',
+        'http://localhost:5275',
+        'http://localhost:5276',
       ];
     })(),
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -149,19 +153,15 @@ async function bootstrap(): Promise<void> {
   app.enableShutdownHooks(); // Graceful shutdown: drain connections on SIGTERM/SIGINT
 
   if (!isProd) {
+    // Bearer JWT is the only auth surface. The previous X-Organization-Id /
+    // X-Dispensary-Id apiKey entries are gone — they pointed at headers the
+    // (now deleted) TenantMiddleware required but never validated. Tenant
+    // context lives on the JWT payload.
     const swaggerConfig = new DocumentBuilder()
       .setTitle('CannaSaas API')
       .setDescription('Multi-tenant cannabis platform API')
       .setVersion('1.0')
       .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' })
-      .addApiKey(
-        { type: 'apiKey', in: 'header', name: 'X-Organization-Id' },
-        'OrganizationId',
-      )
-      .addApiKey(
-        { type: 'apiKey', in: 'header', name: 'X-Dispensary-Id' },
-        'DispensaryId',
-      )
       .build();
     SwaggerModule.setup(
       'docs',

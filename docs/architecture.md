@@ -4,7 +4,7 @@ _Last reviewed: 2026-06-15. Source of truth is the codebase; when this document 
 
 > **Update log**
 >
-> - **2026-06-15** — Refresh pass. Both 🔴 critical items closed on main via [PR #134](https://github.com/thewebsitewiz/cannasaas/pull/134). Three new findings added to §7; §7 #3a (filter + interceptor bypass DI) fixed in the same PR as this refresh.
+> - **2026-06-15** — Refresh pass. Both 🔴 critical items closed on main via [PR #134](https://github.com/thewebsitewiz/cannasaas/pull/134). Three new findings added to §7 + all three (#3a filter/interceptor DI, #3b stale Swagger keys, #3c CORS dev defaults) fixed across follow-on PRs #135 and #136.
 > - **2026-06-14** — First publication.
 
 ---
@@ -617,25 +617,17 @@ The one place every Angular project picks up GraphQL operations + design tokens 
 - Original: instantiating with bare `new` meant the `@Optional() @Inject(SentryService)` / `@Inject(MetricsService)` constructor params always resolved to `undefined`. Sentry never received GraphQL errors; Prometheus metrics never incremented. Observability was silently disabled.
 - **Fix shipped (this PR)**: registered both as `APP_FILTER` / `APP_INTERCEPTOR` providers in `AppModule` and dropped the `useGlobalFilters` / `useGlobalInterceptors` calls from `main.ts`. The optional injections now resolve correctly.
 
-**3b. Swagger config still advertises `X-Organization-Id` / `X-Dispensary-Id` as API keys.**
+**3b. ✅ Swagger config advertised `X-Organization-Id` / `X-Dispensary-Id` as API keys.**
 
-- File: [apps/api/src/main.ts:156-164](apps/api/src/main.ts#L156-L164)
-- Leftover from the `TenantMiddleware` deleted in PR #134. The "Authorize" panel in Swagger UI tells consumers to send headers that the API no longer reads (and never validated). Confusing surface for partners.
-- **Fix**: remove the two `.addApiKey(...)` calls. Bearer JWT is the only auth mechanism left.
+- ~~File: `apps/api/src/main.ts:156-164`~~
+- Original: leftover from the `TenantMiddleware` deleted in PR #134. The "Authorize" panel in Swagger UI told consumers to send headers that the API no longer reads and never validated.
+- **Fix shipped (this PR)**: dropped the two `.addApiKey(...)` calls. Bearer JWT is the only documented auth surface.
 
-**3c. CORS dev defaults reference ports that no app uses.**
+**3c. ✅ CORS dev defaults referenced ports that no app uses.**
 
-- File: [apps/api/src/main.ts:126-129](apps/api/src/main.ts#L126-L129) — defaults are `[5174, 5175, 5273]`. Actual Angular dev ports are **5273-5276** (storefront/admin/staff/kiosk) plus **5177** (platform). 5174 and 5175 don't match any current app per [CLAUDE.md](CLAUDE.md) port table.
-- **Fix**: align defaults with the real port scheme:
-  ```ts
-  return [
-    'http://localhost:5177',
-    'http://localhost:5273',
-    'http://localhost:5274',
-    'http://localhost:5275',
-    'http://localhost:5276',
-  ];
-  ```
+- ~~File: `apps/api/src/main.ts:126-129`~~
+- Original: defaults were `[5174, 5175, 5273]`. Actual Angular dev ports are **5273-5276** (storefront/admin/staff/kiosk) plus **5177** (platform). 5174 and 5175 don't match any current app per `CLAUDE.md`.
+- **Fix shipped (this PR)**: aligned defaults with the real port scheme — 5177 + 5273-5276.
 
 **3. `validateFile` cap is duplicated across `ImageService` methods.**
 
@@ -744,8 +736,8 @@ The one place every Angular project picks up GraphQL operations + design tokens 
 | 1   | ~~In-memory rate limiter that doesn't survive restarts~~                                                                               | ✅       | —      | done     | Fixed in PR #134 — now uses `CacheService.checkRateLimit` and is registered as the first `APP_GUARD`. 6 new specs.           |
 | 2   | ~~`TenantMiddleware` trusts client headers without auth check~~                                                                        | ✅       | —      | done     | Fixed in PR #134 — middleware was dead code (no consumers of `req.tenantContext`); deleted entirely.                         |
 | 2a  | ~~Global filter + interceptor instantiated with bare `new` in `main.ts` — DI is bypassed; Sentry + Metrics silently disabled~~         | ✅       | —      | done     | Fixed in this PR — moved to `APP_FILTER` / `APP_INTERCEPTOR` providers in `AppModule`. §7 #3a.                                |
-| 2b  | Swagger advertises `X-Organization-Id` / `X-Dispensary-Id` API keys that no longer do anything                                         | 🟡       | XS     | P1       | Drop the two `addApiKey(...)` calls. §7 #3b.                                                                                 |
-| 2c  | CORS dev defaults reference ports 5174/5175 that no app uses                                                                           | 🟡       | XS     | P2       | Align with 5177/5273-5276. §7 #3c.                                                                                           |
+| 2b  | ~~Swagger advertises `X-Organization-Id` / `X-Dispensary-Id` API keys that no longer do anything~~                                     | ✅       | —      | done     | Fixed in this PR. §7 #3b.                                                                                                    |
+| 2c  | ~~CORS dev defaults reference ports 5174/5175 that no app uses~~                                                                       | ✅       | —      | done     | Fixed in this PR — defaults now 5177 + 5273-5276. §7 #3c.                                                                    |
 | 3   | Camel-case legacy columns in `orders`/`order_line_items`/`payments`                                                                    | 🔴       | M      | P1       | PR #122 fixed `orders.service.ts`; the **column names themselves** are still camelCase. Future migration could rename.       |
 | 4   | `orders.service.ts` is 1,000+ lines mixing tax math, stock reserve, status transitions                                                 | 🟡       | L      | P1       | Split into `OrderCreator`, `OrderStateMachine`, `OrderQueryService`.                                                         |
 | 5   | `orders.service.spec.ts` has 3 broken tests that were green by accident pre-PR #122                                                    | 🟡       | S      | P1       | Either fix to match real flow or delete. §7 #4.                                                                              |
