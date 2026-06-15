@@ -21,9 +21,9 @@ const PREVIEW_ROWS = [25, 50, 75, 100, 150];
  *    "allow cash on delivery", Save → mutation, preview table.
  *
  * The React `DesignSystemPicker` is intentionally **not ported**:
- * admin's CLAUDE.md prohibits per-tenant theme injection inside the
- * admin app itself (storefront themes are configured via the
- * upcoming ThemePage in sc-636).
+ * full theme designer lives at `/settings/theme` (sc-636). As of
+ * sc-637 the admin app also link-injects its own dispensary's CSS
+ * at boot (see `core/theme/app-theme.service.ts`).
  */
 @Component({
   selector: 'cs-settings-page',

@@ -90,9 +90,12 @@ export function buildThemeCss(themeId: string, colors: ThemeColors): string {
  * criterion without adding cross-origin routing or a preview-only
  * storefront route.
  *
- * Admin's CLAUDE.md prohibits per-tenant theme injection *inside*
- * the admin app itself; this page configures the **storefront's**
- * theme, not the admin's, so no conflict.
+ * This page configures the theme that's served via
+ * `/css/dispensary/:id.css` (sc-637), which is consumed at boot by
+ * storefront/admin/staff/kiosk via the shared
+ * `ThemeService.setDispensaryCss` helper. A dispensary admin sees
+ * their own brand mark in the back-office, matching what staff and
+ * customers see.
  */
 @Component({
   selector: 'cs-theme-page',
