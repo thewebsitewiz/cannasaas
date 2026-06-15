@@ -1,4 +1,4 @@
-import { APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { BullModule } from '@nestjs/bullmq';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
@@ -14,6 +14,8 @@ import { complexityLimitPlugin } from './common/plugins/complexity-limit.plugin'
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { RateLimitGuard } from './common/guards/rate-limit.guard';
+import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { KioskAttestationGuard } from './modules/auth/guards/kiosk-attestation.guard';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -131,6 +133,11 @@ import { join } from 'path';
     WebhooksModule,
   ],
   providers: [
+    // Filter + interceptor wired through DI so their @Optional() Sentry +
+    // Metrics injections actually resolve (instead of always being undefined
+    // when instantiated via bare `new` in main.ts).
+    { provide: APP_FILTER, useClass: GlobalExceptionFilter },
+    { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
     // Rate limit BEFORE auth so we drop floods without doing any JWT work.
     { provide: APP_GUARD, useClass: RateLimitGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },

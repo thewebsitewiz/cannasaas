@@ -1,6 +1,11 @@
 # CannaSaaS — Architecture Document
 
-_Last generated: 2026-06-14. Source of truth is the codebase; when this document and the code disagree, the code wins._
+_Last reviewed: 2026-06-15. Source of truth is the codebase; when this document and the code disagree, the code wins._
+
+> **Update log**
+>
+> - **2026-06-15** — Refresh pass. Both 🔴 critical items closed on main via [PR #134](https://github.com/thewebsitewiz/cannasaas/pull/134). Three new findings added to §7; §7 #3a (filter + interceptor bypass DI) fixed in the same PR as this refresh.
+> - **2026-06-14** — First publication.
 
 ---
 
@@ -560,10 +565,19 @@ The one place every Angular project picks up GraphQL operations + design tokens 
 
 ### 6.5 Rate limiting & abuse protection
 
-- **`RateLimitGuard`** ([rate-limit.guard.ts](apps/api/src/common/guards/rate-limit.guard.ts)) — per-handler `@RateLimit(n, windowSeconds)`. In-memory bucket (Map keyed by `ip:handlerName`).
-  - ⚠️ **Bug surface**: in-memory means it doesn't survive process restarts and doesn't coordinate across multiple API replicas. Flagged in §7.
-- **Helmet** applied in `main.ts` for HTTP headers.
+- **`RateLimitGuard`** ([rate-limit.guard.ts](apps/api/src/common/guards/rate-limit.guard.ts)) — per-handler `@RateLimit(n, windowSeconds)`. **Redis-backed** as of PR #134; registered as the first global `APP_GUARD` so floods drop before any JWT work. Keyed by `<ip>:<handler>` with TTL = window seconds.
+- **Helmet** applied in [main.ts:98-106](apps/api/src/main.ts#L98-L106). In prod the full CSP is on; in dev the CSP + cross-origin-embedder are disabled so Swagger / GraphQL Playground / hot-reload work.
 - **CSRF middleware** ([csrf.middleware.ts](apps/api/src/common/middleware/csrf.middleware.ts)) for cookie-bearing endpoints.
+- **Body-size limits** — webhooks get 5 MB, everything else 1 MB ([main.ts:111-113](apps/api/src/main.ts#L111-L113)).
+
+### 6.6 Versioning
+
+- **URI versioning** via `app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' })` ([main.ts:147](apps/api/src/main.ts#L147)). All routes live under `/v1/...` (e.g. `/v1/auth/login`, `/v1/webhooks/aeropay`).
+- **GraphQL is unversioned** — schema evolution is managed by additive changes + `@deprecated` directives.
+
+### 6.7 Bootstrap pre-flight
+
+- [main.ts:26-62](apps/api/src/main.ts#L26-L62) — `preflightDeps()` TCP-probes Redis (and Postgres, if `DATABASE_URL` is set) before NestFactory wires anything. Saves operators from a wall of TypeORM/BullMQ retry stack traces when Docker isn't running. Logs one line and `process.exit(1)`. Nice quality-of-life touch.
 
 ---
 
@@ -596,6 +610,32 @@ The one place every Angular project picks up GraphQL operations + design tokens 
 - **Fix shipped**: deleted the file + the `.forRoutes('*')` wiring. Tenant context is the JWT payload (`req.user.organizationId`, `req.user.dispensaryId`); ownership checks go through `DispensaryOwnershipService`. Integration tests that still set the headers are now harmless noise.
 
 #### 🟡 Warning
+
+**3a. ✅ `useGlobalFilters(new GlobalExceptionFilter())` and `useGlobalInterceptors(new LoggingInterceptor())` bypassed DI.**
+
+- ~~File: `apps/api/src/main.ts:145-146`~~
+- Original: instantiating with bare `new` meant the `@Optional() @Inject(SentryService)` / `@Inject(MetricsService)` constructor params always resolved to `undefined`. Sentry never received GraphQL errors; Prometheus metrics never incremented. Observability was silently disabled.
+- **Fix shipped (this PR)**: registered both as `APP_FILTER` / `APP_INTERCEPTOR` providers in `AppModule` and dropped the `useGlobalFilters` / `useGlobalInterceptors` calls from `main.ts`. The optional injections now resolve correctly.
+
+**3b. Swagger config still advertises `X-Organization-Id` / `X-Dispensary-Id` as API keys.**
+
+- File: [apps/api/src/main.ts:156-164](apps/api/src/main.ts#L156-L164)
+- Leftover from the `TenantMiddleware` deleted in PR #134. The "Authorize" panel in Swagger UI tells consumers to send headers that the API no longer reads (and never validated). Confusing surface for partners.
+- **Fix**: remove the two `.addApiKey(...)` calls. Bearer JWT is the only auth mechanism left.
+
+**3c. CORS dev defaults reference ports that no app uses.**
+
+- File: [apps/api/src/main.ts:126-129](apps/api/src/main.ts#L126-L129) — defaults are `[5174, 5175, 5273]`. Actual Angular dev ports are **5273-5276** (storefront/admin/staff/kiosk) plus **5177** (platform). 5174 and 5175 don't match any current app per [CLAUDE.md](CLAUDE.md) port table.
+- **Fix**: align defaults with the real port scheme:
+  ```ts
+  return [
+    'http://localhost:5177',
+    'http://localhost:5273',
+    'http://localhost:5274',
+    'http://localhost:5275',
+    'http://localhost:5276',
+  ];
+  ```
 
 **3. `validateFile` cap is duplicated across `ImageService` methods.**
 
@@ -701,8 +741,11 @@ The one place every Angular project picks up GraphQL operations + design tokens 
 
 | #   | Item                                                                                                                                   | Severity | Effort | Priority | Notes                                                                                                                        |
 | --- | -------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------ | -------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| 1   | ~~In-memory rate limiter that doesn't survive restarts~~                                                                               | ✅       | —      | done     | Fixed in PR #134 — now uses `CacheService.checkRateLimit` and is registered as the first `APP_GUARD`. 6 new specs.            |
-| 2   | ~~`TenantMiddleware` trusts client headers without auth check~~                                                                        | ✅       | —      | done     | Fixed in PR #134 — middleware was dead code (no consumers of `req.tenantContext`); deleted entirely.                          |
+| 1   | ~~In-memory rate limiter that doesn't survive restarts~~                                                                               | ✅       | —      | done     | Fixed in PR #134 — now uses `CacheService.checkRateLimit` and is registered as the first `APP_GUARD`. 6 new specs.           |
+| 2   | ~~`TenantMiddleware` trusts client headers without auth check~~                                                                        | ✅       | —      | done     | Fixed in PR #134 — middleware was dead code (no consumers of `req.tenantContext`); deleted entirely.                         |
+| 2a  | ~~Global filter + interceptor instantiated with bare `new` in `main.ts` — DI is bypassed; Sentry + Metrics silently disabled~~         | ✅       | —      | done     | Fixed in this PR — moved to `APP_FILTER` / `APP_INTERCEPTOR` providers in `AppModule`. §7 #3a.                                |
+| 2b  | Swagger advertises `X-Organization-Id` / `X-Dispensary-Id` API keys that no longer do anything                                         | 🟡       | XS     | P1       | Drop the two `addApiKey(...)` calls. §7 #3b.                                                                                 |
+| 2c  | CORS dev defaults reference ports 5174/5175 that no app uses                                                                           | 🟡       | XS     | P2       | Align with 5177/5273-5276. §7 #3c.                                                                                           |
 | 3   | Camel-case legacy columns in `orders`/`order_line_items`/`payments`                                                                    | 🔴       | M      | P1       | PR #122 fixed `orders.service.ts`; the **column names themselves** are still camelCase. Future migration could rename.       |
 | 4   | `orders.service.ts` is 1,000+ lines mixing tax math, stock reserve, status transitions                                                 | 🟡       | L      | P1       | Split into `OrderCreator`, `OrderStateMachine`, `OrderQueryService`.                                                         |
 | 5   | `orders.service.spec.ts` has 3 broken tests that were green by accident pre-PR #122                                                    | 🟡       | S      | P1       | Either fix to match real flow or delete. §7 #4.                                                                              |
@@ -728,7 +771,8 @@ The one place every Angular project picks up GraphQL operations + design tokens 
 
 1. ~~**Swap `RateLimitGuard` to Redis-backed**~~ — ✅ done in PR #134.
 2. ~~**Lock down `TenantMiddleware`**~~ — ✅ done in PR #134 (deleted the dead middleware).
-3. **File Shortcut bugs** for the broken `orders.service.spec` and `metrc.resolver.spec` failures so they're tracked instead of muscle-memory-ignored.
+3. ~~**Wire `GlobalExceptionFilter` + `LoggingInterceptor` through DI**~~ — ✅ done in this PR. Restores Sentry capture on the GraphQL exception path and Prometheus increments on every HTTP request.
+4. **File Shortcut bugs** for the broken `orders.service.spec` and `metrc.resolver.spec` failures so they're tracked instead of muscle-memory-ignored.
 
 ### Short-term (next sprint, P1)
 
