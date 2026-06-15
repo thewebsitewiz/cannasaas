@@ -4,7 +4,7 @@ _Last reviewed: 2026-06-15. Source of truth is the codebase; when this document 
 
 > **Update log**
 >
-> - **2026-06-15** — Refresh pass. Both 🔴 critical items closed on main via [PR #134](https://github.com/thewebsitewiz/cannasaas/pull/134). Two new findings added to §7: global filter + interceptor lose DI because they're instantiated with bare `new`; Swagger config still advertises the headers tied to the deleted middleware.
+> - **2026-06-15** — Refresh pass. Both 🔴 critical items closed on main via [PR #134](https://github.com/thewebsitewiz/cannasaas/pull/134). Three new findings added to §7; §7 #3a (filter + interceptor bypass DI) fixed in the same PR as this refresh.
 > - **2026-06-14** — First publication.
 
 ---
@@ -611,16 +611,11 @@ The one place every Angular project picks up GraphQL operations + design tokens 
 
 #### 🟡 Warning
 
-**3a. `useGlobalFilters(new GlobalExceptionFilter())` and `useGlobalInterceptors(new LoggingInterceptor())` bypass DI.**
+**3a. ✅ `useGlobalFilters(new GlobalExceptionFilter())` and `useGlobalInterceptors(new LoggingInterceptor())` bypassed DI.**
 
-- File: [apps/api/src/main.ts:145-146](apps/api/src/main.ts#L145-L146)
-- Both classes declare `@Optional() @Inject(SentryService)` / `@Inject(MetricsService)` constructor dependencies. Instantiating with bare `new` means **those optional injections always resolve to `undefined`** — Sentry never receives GraphQL errors via [global-exception.filter.ts:74-77](apps/api/src/common/filters/global-exception.filter.ts#L74-L77), and Prometheus metrics never increment via [logging.interceptor.ts:63-64](apps/api/src/common/interceptors/logging.interceptor.ts#L63-L64).
-- **Fix**: register both as `APP_FILTER` / `APP_INTERCEPTOR` providers in `AppModule` so Nest constructs them through the container:
-  ```ts
-  { provide: APP_FILTER, useClass: GlobalExceptionFilter },
-  { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
-  ```
-  and drop the `useGlobalFilters` / `useGlobalInterceptors` calls from `main.ts`.
+- ~~File: `apps/api/src/main.ts:145-146`~~
+- Original: instantiating with bare `new` meant the `@Optional() @Inject(SentryService)` / `@Inject(MetricsService)` constructor params always resolved to `undefined`. Sentry never received GraphQL errors; Prometheus metrics never incremented. Observability was silently disabled.
+- **Fix shipped (this PR)**: registered both as `APP_FILTER` / `APP_INTERCEPTOR` providers in `AppModule` and dropped the `useGlobalFilters` / `useGlobalInterceptors` calls from `main.ts`. The optional injections now resolve correctly.
 
 **3b. Swagger config still advertises `X-Organization-Id` / `X-Dispensary-Id` as API keys.**
 
@@ -748,7 +743,7 @@ The one place every Angular project picks up GraphQL operations + design tokens 
 | --- | -------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------ | -------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | 1   | ~~In-memory rate limiter that doesn't survive restarts~~                                                                               | ✅       | —      | done     | Fixed in PR #134 — now uses `CacheService.checkRateLimit` and is registered as the first `APP_GUARD`. 6 new specs.           |
 | 2   | ~~`TenantMiddleware` trusts client headers without auth check~~                                                                        | ✅       | —      | done     | Fixed in PR #134 — middleware was dead code (no consumers of `req.tenantContext`); deleted entirely.                         |
-| 2a  | Global filter + interceptor instantiated with bare `new` in `main.ts` — DI is bypassed; Sentry + Metrics silently disabled             | 🟡       | XS     | P0       | Switch to `APP_FILTER` / `APP_INTERCEPTOR` providers. §7 #3a.                                                                |
+| 2a  | ~~Global filter + interceptor instantiated with bare `new` in `main.ts` — DI is bypassed; Sentry + Metrics silently disabled~~         | ✅       | —      | done     | Fixed in this PR — moved to `APP_FILTER` / `APP_INTERCEPTOR` providers in `AppModule`. §7 #3a.                                |
 | 2b  | Swagger advertises `X-Organization-Id` / `X-Dispensary-Id` API keys that no longer do anything                                         | 🟡       | XS     | P1       | Drop the two `addApiKey(...)` calls. §7 #3b.                                                                                 |
 | 2c  | CORS dev defaults reference ports 5174/5175 that no app uses                                                                           | 🟡       | XS     | P2       | Align with 5177/5273-5276. §7 #3c.                                                                                           |
 | 3   | Camel-case legacy columns in `orders`/`order_line_items`/`payments`                                                                    | 🔴       | M      | P1       | PR #122 fixed `orders.service.ts`; the **column names themselves** are still camelCase. Future migration could rename.       |
@@ -776,7 +771,7 @@ The one place every Angular project picks up GraphQL operations + design tokens 
 
 1. ~~**Swap `RateLimitGuard` to Redis-backed**~~ — ✅ done in PR #134.
 2. ~~**Lock down `TenantMiddleware`**~~ — ✅ done in PR #134 (deleted the dead middleware).
-3. **Wire `GlobalExceptionFilter` + `LoggingInterceptor` through DI**. They're instantiated with bare `new` in `main.ts`, so their `@Optional() @Inject(SentryService)` / `@Inject(MetricsService)` constructor params always resolve to `undefined` — observability is silently disabled. Tiny change, restores Sentry + Prometheus. See §7 #3a.
+3. ~~**Wire `GlobalExceptionFilter` + `LoggingInterceptor` through DI**~~ — ✅ done in this PR. Restores Sentry capture on the GraphQL exception path and Prometheus increments on every HTTP request.
 4. **File Shortcut bugs** for the broken `orders.service.spec` and `metrc.resolver.spec` failures so they're tracked instead of muscle-memory-ignored.
 
 ### Short-term (next sprint, P1)

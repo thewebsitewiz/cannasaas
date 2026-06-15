@@ -6,8 +6,6 @@ import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
-import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
-import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -142,8 +140,10 @@ async function bootstrap(): Promise<void> {
     }),
   );
 
-  app.useGlobalFilters(new GlobalExceptionFilter());
-  app.useGlobalInterceptors(new LoggingInterceptor());
+  // GlobalExceptionFilter + LoggingInterceptor are wired through AppModule
+  // as APP_FILTER / APP_INTERCEPTOR providers so their @Optional() Sentry +
+  // Metrics injections resolve via DI (instead of being undefined when
+  // instantiated with bare `new` here).
   app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' });
   app.useWebSocketAdapter(new IoAdapter(app));
   app.enableShutdownHooks(); // Graceful shutdown: drain connections on SIGTERM/SIGINT
