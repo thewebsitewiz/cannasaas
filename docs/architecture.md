@@ -581,34 +581,19 @@ The one place every Angular project picks up GraphQL operations + design tokens 
 
 ### 7.2 Issues found
 
-#### 🔴 Critical
+#### 🔴 Critical — both fixed in [PR #134](https://github.com/thewebsitewiz/cannasaas/pull/134)
 
-**1. `RateLimitGuard` uses in-memory buckets — doesn't survive restarts or scale horizontally.**
+**1. ✅ `RateLimitGuard` was in-memory AND was never globally registered.**
 
-- File: [apps/api/src/common/guards/rate-limit.guard.ts:19-22](apps/api/src/common/guards/rate-limit.guard.ts#L19-L22)
-- `private readonly buckets = new Map<string, { count: number; resetAt: number }>();`
-- **Impact**: Behind a load balancer (multiple API replicas), each instance has its own bucket — effective limit is `replicas × limit`. After a redeploy buckets reset. Rate limiting is **advisory at best, no enforcement under load.**
-- **Fix**: Use Redis via `CacheService.checkRateLimit` (which already exists at [cache.service.ts:60-68](apps/api/src/common/services/cache.service.ts#L60-L68) using `INCR` + `EXPIRE`):
-  ```ts
-  const ok = await this.cache.checkRateLimit(key, limit.maxRequests, limit.windowSeconds);
-  if (!ok) throw new HttpException(...);
-  ```
+- ~~File: `apps/api/src/common/guards/rate-limit.guard.ts:19-22`~~
+- Original implementation used `new Map<string, …>()` per process — each API replica had its own bucket, every redeploy reset the buckets. AND it was never wired as `APP_GUARD`, so `@RateLimit(5, 300)` decorators in `auth.controller.ts` had **zero enforcement**.
+- **Fix shipped**: rewrote to `await this.cache.checkRateLimit(...)` (Redis `INCR` + `EXPIRE`); registered as the FIRST `APP_GUARD` so floods drop before any JWT work. 6 new Jest specs cover the contract.
 
-**2. `TenantMiddleware` trusts client-supplied headers without auth.**
+**2. ✅ `TenantMiddleware` trusted client-supplied headers; turned out to be entirely dead code.**
 
-- File: [apps/api/src/common/middleware/tenant.middleware.ts:17-37](apps/api/src/common/middleware/tenant.middleware.ts#L17-L37)
-- Reads `x-organization-id` and `x-dispensary-id` from the request and stuffs them into `req.tenantContext` with **no verification that the caller has access to those IDs**. Public paths (`/graphql`, `/auth`, etc.) skip the check; everything else requires the headers but never validates them.
-- **Impact**: Code paths that read `req.tenantContext` (vs. JWT-derived `req.user.dispensaryId`) are tenant-spoofable. The `DispensaryOwnershipService` mitigates this where it's wired, but it's not wired everywhere.
-- **Fix**: Either derive the tenant context from the JWT payload (single source of truth), or validate the headers against `req.user`:
-  ```ts
-  if (
-    req.user &&
-    organizationId &&
-    organizationId !== req.user.organizationId
-  ) {
-    throw new UnauthorizedException('Tenant header mismatch');
-  }
-  ```
+- ~~File: `apps/api/src/common/middleware/tenant.middleware.ts`~~
+- Original read `x-organization-id` / `x-dispensary-id` from the request and stuffed them into `req.tenantContext` with no auth check. **Nothing in production code read `req.tenantContext`** — the middleware was purely enforcing that clients send the headers.
+- **Fix shipped**: deleted the file + the `.forRoutes('*')` wiring. Tenant context is the JWT payload (`req.user.organizationId`, `req.user.dispensaryId`); ownership checks go through `DispensaryOwnershipService`. Integration tests that still set the headers are now harmless noise.
 
 #### 🟡 Warning
 
@@ -716,8 +701,8 @@ The one place every Angular project picks up GraphQL operations + design tokens 
 
 | #   | Item                                                                                                                                   | Severity | Effort | Priority | Notes                                                                                                                        |
 | --- | -------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------ | -------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| 1   | In-memory rate limiter that doesn't survive restarts                                                                                   | 🔴       | S      | P0       | One-line swap to existing `CacheService.checkRateLimit`. See §7 #1.                                                          |
-| 2   | `TenantMiddleware` trusts client headers without auth check                                                                            | 🔴       | S      | P0       | Derive from JWT or validate against `req.user`. §7 #2.                                                                       |
+| 1   | ~~In-memory rate limiter that doesn't survive restarts~~                                                                               | ✅       | —      | done     | Fixed in PR #134 — now uses `CacheService.checkRateLimit` and is registered as the first `APP_GUARD`. 6 new specs.            |
+| 2   | ~~`TenantMiddleware` trusts client headers without auth check~~                                                                        | ✅       | —      | done     | Fixed in PR #134 — middleware was dead code (no consumers of `req.tenantContext`); deleted entirely.                          |
 | 3   | Camel-case legacy columns in `orders`/`order_line_items`/`payments`                                                                    | 🔴       | M      | P1       | PR #122 fixed `orders.service.ts`; the **column names themselves** are still camelCase. Future migration could rename.       |
 | 4   | `orders.service.ts` is 1,000+ lines mixing tax math, stock reserve, status transitions                                                 | 🟡       | L      | P1       | Split into `OrderCreator`, `OrderStateMachine`, `OrderQueryService`.                                                         |
 | 5   | `orders.service.spec.ts` has 3 broken tests that were green by accident pre-PR #122                                                    | 🟡       | S      | P1       | Either fix to match real flow or delete. §7 #4.                                                                              |
@@ -741,8 +726,8 @@ The one place every Angular project picks up GraphQL operations + design tokens 
 
 ### Immediate (this week, P0)
 
-1. **Swap `RateLimitGuard` to Redis-backed** — one PR, ~30 lines changed. Closes the abuse-protection hole today.
-2. **Lock down `TenantMiddleware`** — either delete it (JWT claims are the source of truth) or validate headers against `req.user`. Closes the tenant-spoof vector.
+1. ~~**Swap `RateLimitGuard` to Redis-backed**~~ — ✅ done in PR #134.
+2. ~~**Lock down `TenantMiddleware`**~~ — ✅ done in PR #134 (deleted the dead middleware).
 3. **File Shortcut bugs** for the broken `orders.service.spec` and `metrc.resolver.spec` failures so they're tracked instead of muscle-memory-ignored.
 
 ### Short-term (next sprint, P1)

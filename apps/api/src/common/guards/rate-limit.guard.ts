@@ -5,53 +5,56 @@ import {
   HttpException,
   HttpStatus,
   Logger,
+  SetMetadata,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { SetMetadata } from '@nestjs/common';
+import { CacheService } from '../services/cache.service';
 
 export const RATE_LIMIT_KEY = 'rateLimit';
 export const RateLimit = (maxRequests: number, windowSeconds: number) =>
   SetMetadata(RATE_LIMIT_KEY, { maxRequests, windowSeconds });
 
+/**
+ * Per-handler rate limit. Backed by Redis (via `CacheService.checkRateLimit`)
+ * so buckets are shared across API replicas and survive process restarts —
+ * a fix for the original in-memory `Map` implementation that effectively
+ * multiplied the limit by replica count and reset on every deploy.
+ *
+ * Key shape: `<ip>:<handler>`. IP comes from `req.ip` (Express, so it
+ * already respects `trust proxy`).
+ */
 @Injectable()
 export class RateLimitGuard implements CanActivate {
   private readonly logger = new Logger(RateLimitGuard.name);
-  private readonly buckets = new Map<
-    string,
-    { count: number; resetAt: number }
-  >();
 
-  constructor(private reflector: Reflector) {
-    setInterval(() => {
-      const n = Date.now();
-      for (const [k, b] of this.buckets.entries()) {
-        if (b.resetAt < n) this.buckets.delete(k);
-      }
-    }, 300000);
-  }
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly cache: CacheService,
+  ) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const limit = this.reflector.get<
       { maxRequests: number; windowSeconds: number } | undefined
     >(RATE_LIMIT_KEY, context.getHandler());
     if (!limit) return true;
+
     let ip = '0.0.0.0';
     try {
       const req = context.switchToHttp().getRequest<{ ip?: string }>();
       ip = req.ip ?? '0.0.0.0';
     } catch {
-      // Non-HTTP context — fall back to default ip.
+      // Non-HTTP context (GraphQL subscription, WS) — degrade to a shared
+      // bucket rather than failing closed.
     }
-    const key = ip + ':' + context.getHandler().name;
-    const now = Date.now();
-    let bucket = this.buckets.get(key);
-    if (!bucket || bucket.resetAt < now) {
-      bucket = { count: 0, resetAt: now + limit.windowSeconds * 1000 };
-      this.buckets.set(key, bucket);
-    }
-    bucket.count++;
-    if (bucket.count > limit.maxRequests) {
-      this.logger.warn('Rate limit exceeded: ' + key);
+    const key = `${ip}:${context.getHandler().name}`;
+
+    const allowed = await this.cache.checkRateLimit(
+      key,
+      limit.maxRequests,
+      limit.windowSeconds,
+    );
+    if (!allowed) {
+      this.logger.warn(`Rate limit exceeded: ${key}`);
       throw new HttpException(
         { message: 'Too many requests', statusCode: 429 },
         HttpStatus.TOO_MANY_REQUESTS,
