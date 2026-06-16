@@ -60,13 +60,15 @@ describe('OrdersService.emitStockChanges → StockEventEmitterService (sc-113)',
       },
     ];
 
-    await (service as unknown as {
-      emitStockChanges: (
-        r: typeof rows,
-        d: string,
-        s: 'reserve' | 'release' | 'adjustment',
-      ) => Promise<void>;
-    }).emitStockChanges(rows, 'disp-1', 'reserve');
+    await (
+      service as unknown as {
+        emitStockChanges: (
+          r: typeof rows,
+          d: string,
+          s: 'reserve' | 'release' | 'adjustment',
+        ) => Promise<void>;
+      }
+    ).emitStockChanges(rows, 'disp-1', 'reserve');
 
     expect(recordChange).toHaveBeenCalledTimes(2);
     expect(recordChange.mock.calls[0][0]).toEqual({
@@ -100,13 +102,15 @@ describe('OrdersService.emitStockChanges → StockEventEmitterService (sc-113)',
       },
     ];
 
-    await (service as unknown as {
-      emitStockChanges: (
-        r: typeof rows,
-        d: string,
-        s: 'reserve' | 'release' | 'adjustment',
-      ) => Promise<void>;
-    }).emitStockChanges(rows, 'disp-1', 'release');
+    await (
+      service as unknown as {
+        emitStockChanges: (
+          r: typeof rows,
+          d: string,
+          s: 'reserve' | 'release' | 'adjustment',
+        ) => Promise<void>;
+      }
+    ).emitStockChanges(rows, 'disp-1', 'release');
 
     expect(recordChange).toHaveBeenCalledTimes(1);
     expect(recordChange.mock.calls[0][0].reorderThreshold).toBeNull();
@@ -127,13 +131,15 @@ describe('OrdersService.emitStockChanges → StockEventEmitterService (sc-113)',
     ];
 
     await expect(
-      (service as unknown as {
-        emitStockChanges: (
-          r: typeof rows,
-          d: string,
-          s: 'reserve' | 'release' | 'adjustment',
-        ) => Promise<void>;
-      }).emitStockChanges(rows, 'disp-1', 'reserve'),
+      (
+        service as unknown as {
+          emitStockChanges: (
+            r: typeof rows,
+            d: string,
+            s: 'reserve' | 'release' | 'adjustment',
+          ) => Promise<void>;
+        }
+      ).emitStockChanges(rows, 'disp-1', 'reserve'),
     ).resolves.toBeUndefined();
   });
 });
