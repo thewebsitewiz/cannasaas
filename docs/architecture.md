@@ -658,11 +658,11 @@ The one place every Angular project picks up GraphQL operations + design tokens 
 - Comment on the admin file says "MUST stay in lockstep" but there's no automated check.
 - **Fix**: Move the catalog into `packages/types/` and import from both — single source of truth.
 
-**7. `KioskDevice` entity uses camelCase property names + `@Column({ type: 'uuid' })` without explicit `name:`.**
+**7. ~~`KioskDevice` entity uses camelCase property names + `@Column({ type: 'uuid' })` without explicit `name:`.~~ Resolved in PR for tech-debt #9.**
 
-- File: [apps/api/src/modules/auth/entities/kiosk-device.entity.ts:28,31,37](apps/api/src/modules/auth/entities/kiosk-device.entity.ts) — `userId`, `dispensaryId`, `currentTokenId` rely on `SnakeNamingStrategy` to convert to snake_case columns.
-- The actual columns ARE `user_id` / `dispensary_id` / `current_token_id` (per the migration), so this works. **But** it's the opposite convention from the explicit `@Column({ name: 'is_active' })` elsewhere — inconsistent.
-- **Fix**: Pick one convention per file. Recommendation: always explicit `name:` so future maintainers don't have to know `SnakeNamingStrategy` is wired.
+- Codified rule: every column's `databaseName` must equal `snakeCase(propertyName)` — i.e. rely on `SnakeNamingStrategy`. Explicit `@Column({ name: 'foo_bar' })` is allowed only when it agrees with the strategy output (redundant but harmless) or when allowlisted with a written reason. Guard: [apps/api/test/integration/entity-naming-convention.e2e-spec.ts](../apps/api/test/integration/entity-naming-convention.e2e-spec.ts) boots the full entity metadata graph and fails CI on any drift.
+- Original survey: 47 entity files; 29 mixed explicit + implicit `name:`, 18 all-implicit, 0 all-explicit. The dominant pattern is rely-on-strategy, so codifying that direction (rather than "always explicit") avoided touching ~620 column declarations.
+- Allowlist contains 4 entries for `ThemeConfig.{success,warning,error,info}` → `color_*` columns: the bare names are also the GraphQL SDL field names and renaming would break the admin theme editor's mutation contract.
 
 #### 🔵 Suggestion
 
@@ -748,7 +748,7 @@ The one place every Angular project picks up GraphQL operations + design tokens 
 | 6   | ~~Font catalog duplicated server vs. admin app~~                                                                                       | ✅       | —      | done     | Moved to `@cannasaas/types` in PR #137. Both consumers now import `GOOGLE_FONT_CATALOG` from there.                            |
 | 7   | ~~Public-path matching is `startsWith` (open to subpath bypass)~~                                                                      | ✅       | —      | done     | Resolved by PR #134 — `TenantMiddleware` (the only `startsWith` matcher) was deleted entirely.                                |
 | 8   | ~~`validateFile` cap duplicated in `uploadBranding`~~                                                                                  | ✅       | —      | done     | Parameterized `validateFile(file, maxSize?)` in PR #137; `uploadBranding` calls through it.                                   |
-| 9   | Mixed snake-vs-camel column declarations in entities (inconsistent style)                                                              | 🟡       | M      | P2       | Codify "always explicit `name:`" rule and lint for it. §7 #7.                                                                |
+| 9   | ~~Mixed snake-vs-camel column declarations in entities (inconsistent style)~~                                                          | ✅       | —      | done     | Codified rule: column `databaseName` must equal `snakeCase(propertyName)`. Runtime guard at `test/integration/entity-naming-convention.e2e-spec.ts` boots the entity metadata graph and fails CI on drift. 4 `ThemeConfig` columns allowlisted (GraphQL SDL contract). §7 #7. |
 | 10  | ~~Angular admin's no-tenant-theming CLAUDE.md rule blocks rollout of sc-637 to admin/staff/kiosk~~                                     | ✅       | —      | done     | Rolled out in PR #138 — `ThemeService.setDispensaryCss` added to `@cannasaas/ui-ng`; admin/staff/kiosk each provide an `AppThemeService` wired via `provideAppInitializer`. Stale source comments updated. |
 | 11  | Two test runners (Vitest in Angular, Jest in API)                                                                                      | 🔵       | XL     | P3       | Long-term standardize on Vitest.                                                                                             |
 | 12  | Event-name magic strings scattered (`@OnEvent('order.completed')` etc.)                                                                | 🔵       | S      | P3       | Constants file exists at `common/events/event-names.ts` as of PR #137. OrdersService migrated; existing listeners migrate opportunistically. §7 #10. |
