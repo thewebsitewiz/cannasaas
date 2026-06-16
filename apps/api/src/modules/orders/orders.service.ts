@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OrderCompletedEvent } from './events/order-completed.event';
-import { OrderEvent } from './events/order-event';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, QueryRunner } from 'typeorm';
 import { CreateOrderInput } from './dto/create-order.input';
@@ -14,19 +13,15 @@ import { CompleteOrderInput } from './dto/complete-order.input';
 import { OrderSummary, TaxLineItem } from './dto/order-summary.type';
 import { StockEventEmitterService } from '../inventory/stock-event-emitter.service';
 import type { StockChangeSource } from '../inventory/stock-events';
+import { ORDER_COMPLETED } from '../../common/events/event-names';
 import {
-  ORDER_COMPLETED,
-  ORDER_CREATED,
-  ORDER_STATUS_CHANGED,
-} from '../../common/events/event-names';
-
-interface ReserveReturningRow {
-  inventory_id: string;
-  variant_id: string;
-  new_available: string;
-  prev_available: string;
-  reorder_threshold: string | null;
-}
+  dmlRowCount,
+  OrderEventEmitterService,
+  OrderStockEventBridgeService,
+  type ReserveReturningRow,
+  runnerQuery,
+  THC_TAX_CATEGORY_MAP,
+} from './order-helpers';
 
 /** Row shape returned from lkp_tax_categories */
 interface TaxCategoryRow {
@@ -43,12 +38,6 @@ interface TaxCategoryRow {
 
 /** Product type code from lkp_product_types */
 type ProductTypeCode = string;
-
-interface OrderEventRow {
-  customerUserId: string | null;
-  orderType: string;
-  total: string | null;
-}
 
 interface DispensaryStateRow {
   entity_id: string;
@@ -194,44 +183,6 @@ export interface MyFavoritesRow {
   orderCount: number;
 }
 
-/**
- * Narrows the loose return of `DataSource.query(...)` for DML statements into
- * a row count. node-postgres returns `{ rowCount, command, oid, fields, rows }`
- * but some adapters historically returned `[rows, rowCount]`. This handles
- * both and falls back to 0.
- */
-function dmlRowCount(result: unknown): number {
-  if (Array.isArray(result)) {
-    const second: unknown = result[1];
-    return typeof second === 'number' ? second : 0;
-  }
-  if (result !== null && typeof result === 'object' && 'rowCount' in result) {
-    const rc = (result as { rowCount?: unknown }).rowCount;
-    return typeof rc === 'number' ? rc : 0;
-  }
-  return 0;
-}
-
-/**
- * Maps product_type codes to the per_mg_thc tax code suffix.
- * FLOWER / PRE_ROLL -> FLOWER, VAPE / CONCENTRATE -> CONCENTRATE,
- * EDIBLE / BEVERAGE / TINCTURE / CAPSULE -> EDIBLE.
- * Products that don't match (TOPICAL, ACCESSORY, HEMP_CBD) are not
- * subject to per-mg-THC excise — those rules will simply be skipped.
- */
-const THC_TAX_CATEGORY_MAP: Record<string, string> = {
-  FLOWER: 'FLOWER',
-  PRE_ROLL: 'FLOWER',
-  VAPE: 'CONCENTRATE',
-  CONCENTRATE: 'CONCENTRATE',
-  EDIBLE: 'EDIBLE',
-  BEVERAGE: 'EDIBLE',
-  TINCTURE: 'EDIBLE',
-  CAPSULE: 'EDIBLE',
-  SUPPOSITORY: 'EDIBLE',
-  PATCH: 'EDIBLE',
-};
-
 @Injectable()
 export class OrdersService {
   private readonly logger = new Logger(OrdersService.name);
@@ -240,92 +191,37 @@ export class OrdersService {
     @InjectDataSource() private dataSource: DataSource,
     private readonly eventEmitter: EventEmitter2,
     private readonly stockEvents: StockEventEmitterService,
+    private readonly orderEventEmitter: OrderEventEmitterService,
+    private readonly stockBridge: OrderStockEventBridgeService,
   ) {}
 
-  /**
-   * Translate a batch of inventory `UPDATE … RETURNING` rows into
-   * `StockEventEmitterService.recordChange` calls. Used by the order
-   * reserve / cancel paths so customer orders flow through the same
-   * event pipeline as manual adjustments (sc-113). Emitting happens
-   * post-commit; a failure to emit never rolls back the order.
-   */
+  /** Delegates to {@link OrderStockEventBridgeService.emit}; thin wrapper
+   *  preserved for the existing in-class call sites. */
   private async emitStockChanges(
     rows: ReserveReturningRow[],
     dispensaryId: string,
     source: StockChangeSource,
   ): Promise<void> {
-    for (const row of rows) {
-      try {
-        await this.stockEvents.recordChange({
-          dispensaryId,
-          inventoryId: row.inventory_id,
-          variantId: row.variant_id,
-          previousAvailable: Number(row.prev_available),
-          newAvailable: Number(row.new_available),
-          reorderThreshold:
-            row.reorder_threshold != null
-              ? Number(row.reorder_threshold)
-              : null,
-          source,
-        });
-      } catch (err) {
-        this.logger.warn(
-          `emitStockChanges: recordChange failed for variant=${row.variant_id}: ${
-            err instanceof Error ? err.message : 'unknown'
-          }`,
-        );
-      }
-    }
+    await this.stockBridge.emit(rows, dispensaryId, source);
   }
 
-  /**
-   * Typed wrapper around `QueryRunner.query` — TypeORM declares it as
-   * `Promise<any>` (no generic), so without a wrapper every awaited row
-   * is `any` and trips no-unsafe-assignment. DataSource.query, in contrast,
-   * IS generic (`query<T = any>`) so a typed variable annotation on those
-   * call sites infers T contextually and lints clean.
-   */
-  private async runnerQuery<T>(
-    qr: QueryRunner,
-    sql: string,
-    params: unknown[] = [],
-  ): Promise<T[]> {
-    const rows: unknown = await qr.query(sql, params);
-    return rows as T[];
-  }
-
-  /**
-   * Fetches order context and emits an OrderEvent.
-   * Notifications are handled by the NotificationService listener.
-   */
+  /** Delegates to {@link OrderEventEmitterService.emit}. */
   private async emitOrderEvent(
     orderId: string,
     dispensaryId: string,
     status: string,
   ): Promise<void> {
-    try {
-      const rows: OrderEventRow[] = await this.dataSource.query(
-        `SELECT customer_user_id AS "customerUserId", order_type AS "orderType", total
-         FROM orders WHERE order_id = $1`,
-        [orderId],
-      );
-      const order = rows[0];
-      if (!order) return;
-      this.eventEmitter.emit(
-        status === 'pending' ? ORDER_CREATED : ORDER_STATUS_CHANGED,
-        new OrderEvent(
-          orderId,
-          dispensaryId,
-          status,
-          order.customerUserId,
-          order.orderType,
-          order.total ? parseFloat(order.total) : null,
-        ),
-      );
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      this.logger.warn(`Failed to emit order event: ${message}`);
-    }
+    await this.orderEventEmitter.emit(orderId, dispensaryId, status);
+  }
+
+  /** @deprecated kept only to avoid touching ~10 call sites in this PR;
+   *  re-exports the module-level helper. */
+  private async runnerQuery<T>(
+    qr: QueryRunner,
+    sql: string,
+    params: unknown[] = [],
+  ): Promise<T[]> {
+    return runnerQuery<T>(qr, sql, params);
   }
 
   private async getTaxRulesForState(

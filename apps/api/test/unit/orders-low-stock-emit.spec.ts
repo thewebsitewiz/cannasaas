@@ -7,6 +7,10 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { OrdersService } from '../../src/modules/orders/orders.service';
 import { StockEventEmitterService } from '../../src/modules/inventory/stock-event-emitter.service';
+import {
+  OrderEventEmitterService,
+  OrderStockEventBridgeService,
+} from '../../src/modules/orders/order-helpers';
 
 /**
  * Sc-113: order create + cancel paths must funnel into the
@@ -28,6 +32,11 @@ describe('OrdersService.emitStockChanges → StockEventEmitterService (sc-113)',
         { provide: DataSource, useValue: { query: jest.fn() } },
         { provide: EventEmitter2, useValue: { emit: jest.fn() } },
         { provide: StockEventEmitterService, useValue: { recordChange } },
+        {
+          provide: OrderEventEmitterService,
+          useValue: { emit: jest.fn().mockResolvedValue(undefined) },
+        },
+        OrderStockEventBridgeService,
       ],
     }).compile();
     service = module.get(OrdersService);
@@ -51,13 +60,15 @@ describe('OrdersService.emitStockChanges → StockEventEmitterService (sc-113)',
       },
     ];
 
-    await (service as unknown as {
-      emitStockChanges: (
-        r: typeof rows,
-        d: string,
-        s: 'reserve' | 'release' | 'adjustment',
-      ) => Promise<void>;
-    }).emitStockChanges(rows, 'disp-1', 'reserve');
+    await (
+      service as unknown as {
+        emitStockChanges: (
+          r: typeof rows,
+          d: string,
+          s: 'reserve' | 'release' | 'adjustment',
+        ) => Promise<void>;
+      }
+    ).emitStockChanges(rows, 'disp-1', 'reserve');
 
     expect(recordChange).toHaveBeenCalledTimes(2);
     expect(recordChange.mock.calls[0][0]).toEqual({
@@ -91,13 +102,15 @@ describe('OrdersService.emitStockChanges → StockEventEmitterService (sc-113)',
       },
     ];
 
-    await (service as unknown as {
-      emitStockChanges: (
-        r: typeof rows,
-        d: string,
-        s: 'reserve' | 'release' | 'adjustment',
-      ) => Promise<void>;
-    }).emitStockChanges(rows, 'disp-1', 'release');
+    await (
+      service as unknown as {
+        emitStockChanges: (
+          r: typeof rows,
+          d: string,
+          s: 'reserve' | 'release' | 'adjustment',
+        ) => Promise<void>;
+      }
+    ).emitStockChanges(rows, 'disp-1', 'release');
 
     expect(recordChange).toHaveBeenCalledTimes(1);
     expect(recordChange.mock.calls[0][0].reorderThreshold).toBeNull();
@@ -118,13 +131,15 @@ describe('OrdersService.emitStockChanges → StockEventEmitterService (sc-113)',
     ];
 
     await expect(
-      (service as unknown as {
-        emitStockChanges: (
-          r: typeof rows,
-          d: string,
-          s: 'reserve' | 'release' | 'adjustment',
-        ) => Promise<void>;
-      }).emitStockChanges(rows, 'disp-1', 'reserve'),
+      (
+        service as unknown as {
+          emitStockChanges: (
+            r: typeof rows,
+            d: string,
+            s: 'reserve' | 'release' | 'adjustment',
+          ) => Promise<void>;
+        }
+      ).emitStockChanges(rows, 'disp-1', 'reserve'),
     ).resolves.toBeUndefined();
   });
 });

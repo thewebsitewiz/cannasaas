@@ -1,6 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { OrdersService } from '../../src/modules/orders/orders.service';
 import { StockEventEmitterService } from '../../src/modules/inventory/stock-event-emitter.service';
+import {
+  OrderEventEmitterService,
+  OrderStockEventBridgeService,
+} from '../../src/modules/orders/order-helpers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DataSource } from 'typeorm';
 import { BadRequestException } from '@nestjs/common';
@@ -41,6 +45,11 @@ describe('OrdersService', () => {
           provide: StockEventEmitterService,
           useValue: { recordChange: jest.fn() },
         },
+        {
+          provide: OrderEventEmitterService,
+          useValue: { emit: jest.fn().mockResolvedValue(undefined) },
+        },
+        OrderStockEventBridgeService,
       ],
     }).compile();
 
@@ -72,8 +81,12 @@ describe('OrdersService', () => {
         lineItems: [],
       };
 
-      await expect(service.createOrder(emptyInput as any)).rejects.toThrow(BadRequestException);
-      await expect(service.createOrder(emptyInput as any)).rejects.toThrow('Order must contain at least one line item');
+      await expect(service.createOrder(emptyInput as any)).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.createOrder(emptyInput as any)).rejects.toThrow(
+        'Order must contain at least one line item',
+      );
     });
   });
 
@@ -87,28 +100,43 @@ describe('OrdersService', () => {
     it('should deduct inventory and emit event', async () => {
       // Order lookup
       mockQueryRunner.query
-        .mockResolvedValueOnce([{
-          orderId: 'order-1',
-          dispensaryId: 'disp-1',
-          orderStatus: 'confirmed',
-          subtotal: 50,
-          taxTotal: 4,
-          total: 54,
-          taxBreakdown: '[]',
-          customerUserId: 'cust-1',
-          orderType: 'in_store',
-          createdAt: new Date(),
-        }])
+        .mockResolvedValueOnce([
+          {
+            orderId: 'order-1',
+            dispensaryId: 'disp-1',
+            orderStatus: 'confirmed',
+            subtotal: 50,
+            taxTotal: 4,
+            total: 54,
+            taxBreakdown: '[]',
+            customerUserId: 'cust-1',
+            orderType: 'in_store',
+            createdAt: new Date(),
+          },
+        ])
         // Line items
         .mockResolvedValueOnce([
-          { lineItemId: 'li-1', productId: 'prod-1', variantId: 'var-1', quantity: 2, unitPrice: 25, taxApplied: 4, metrcItemUid: null, metrcPackageLabel: null, product_name: 'Blue Dream' },
+          {
+            lineItemId: 'li-1',
+            productId: 'prod-1',
+            variantId: 'var-1',
+            quantity: 2,
+            unitPrice: 25,
+            taxApplied: 4,
+            metrcItemUid: null,
+            metrcPackageLabel: null,
+            product_name: 'Blue Dream',
+          },
         ])
         // Update order status
         .mockResolvedValueOnce([])
         // Deduct inventory
         .mockResolvedValueOnce([]);
 
-      const result = await service.completeOrder({ orderId: 'order-1', dispensaryId: 'disp-1' });
+      const result = await service.completeOrder({
+        orderId: 'order-1',
+        dispensaryId: 'disp-1',
+      });
 
       expect(result).toHaveProperty('order');
       expect(result).toHaveProperty('lineItems');
@@ -117,7 +145,10 @@ describe('OrdersService', () => {
         [2, 'disp-1', 'var-1'],
       );
       expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith('order.completed', expect.anything());
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+        'order.completed',
+        expect.anything(),
+      );
     });
   });
 });
