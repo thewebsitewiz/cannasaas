@@ -1,6 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { OrdersService } from '../../src/modules/orders/orders.service';
 import { StockEventEmitterService } from '../../src/modules/inventory/stock-event-emitter.service';
+import {
+  OrderEventEmitterService,
+  OrderStockEventBridgeService,
+} from '../../src/modules/orders/order-helpers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DataSource } from 'typeorm';
 import { BadRequestException } from '@nestjs/common';
@@ -41,6 +45,11 @@ describe('OrdersService', () => {
           provide: StockEventEmitterService,
           useValue: { recordChange: jest.fn() },
         },
+        {
+          provide: OrderEventEmitterService,
+          useValue: { emit: jest.fn().mockResolvedValue(undefined) },
+        },
+        OrderStockEventBridgeService,
       ],
     }).compile();
 

@@ -5,6 +5,10 @@ import { OrderLineItem } from './entities/order-line-item.entity';
 import { OrdersService } from './orders.service';
 import { OrdersResolver } from './orders.resolver';
 import { StaffPosResolver } from './staff-pos.resolver';
+import {
+  OrderEventEmitterService,
+  OrderStockEventBridgeService,
+} from './order-helpers';
 import { MetrcModule } from '../metrc/metrc.module';
 import { InventoryModule } from '../inventory/inventory.module';
 
@@ -14,7 +18,13 @@ import { InventoryModule } from '../inventory/inventory.module';
     MetrcModule,
     InventoryModule,
   ],
-  providers: [OrdersService, OrdersResolver, StaffPosResolver],
+  providers: [
+    OrdersService,
+    OrdersResolver,
+    StaffPosResolver,
+    OrderEventEmitterService,
+    OrderStockEventBridgeService,
+  ],
   exports: [OrdersService],
 })
 export class OrdersModule {}

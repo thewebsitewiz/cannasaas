@@ -7,6 +7,10 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { OrdersService } from '../../src/modules/orders/orders.service';
 import { StockEventEmitterService } from '../../src/modules/inventory/stock-event-emitter.service';
+import {
+  OrderEventEmitterService,
+  OrderStockEventBridgeService,
+} from '../../src/modules/orders/order-helpers';
 
 /**
  * Sc-113: order create + cancel paths must funnel into the
@@ -28,6 +32,11 @@ describe('OrdersService.emitStockChanges → StockEventEmitterService (sc-113)',
         { provide: DataSource, useValue: { query: jest.fn() } },
         { provide: EventEmitter2, useValue: { emit: jest.fn() } },
         { provide: StockEventEmitterService, useValue: { recordChange } },
+        {
+          provide: OrderEventEmitterService,
+          useValue: { emit: jest.fn().mockResolvedValue(undefined) },
+        },
+        OrderStockEventBridgeService,
       ],
     }).compile();
     service = module.get(OrdersService);
