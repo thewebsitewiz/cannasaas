@@ -23,14 +23,14 @@ export class ThemeCssController {
     @Req() req: Request,
     @Res() res: Response,
   ): Promise<void> {
-    const { css, updatedAt } = await this.themeCss.generate(dispensaryId);
+    const { css } = await this.themeCss.generate(dispensaryId);
+    // ETag is a content hash of the rendered CSS. Previous version
+    // hashed `dispensaryId + updatedAt + css.length`, which had a
+    // (vanishingly small) collision risk if the controller logic ever
+    // produced two semantically-different bodies of identical length
+    // for the same theme update. Hashing the body itself eliminates it.
     const etag =
-      '"' +
-      crypto
-        .createHash('sha1')
-        .update(dispensaryId + ':' + updatedAt.toISOString() + ':' + css.length)
-        .digest('hex') +
-      '"';
+      '"' + crypto.createHash('sha1').update(css).digest('hex') + '"';
     res.setHeader('ETag', etag);
     if (req.headers['if-none-match'] === etag) {
       res.status(304).end();
