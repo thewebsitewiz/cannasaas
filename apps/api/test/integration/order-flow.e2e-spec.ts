@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { INestApplication, ValidationPipe, VersioningType } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
 import { AppModule } from '../../src/app.module';
 
 describe('Order Flow (E2E)', () => {

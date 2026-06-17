@@ -1,4 +1,4 @@
-import * as request from 'supertest';
+import request from 'supertest';
 import { getApp, getServer, closeApp } from './test-helper';
 
 beforeAll(async () => { await getApp(); }, 30000);
