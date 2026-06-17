@@ -5,12 +5,13 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import { vi } from 'vitest';
 import * as bcrypt from 'bcrypt';
 
-// Mock bcrypt
-jest.mock('bcrypt', () => ({
-  hash: jest.fn(),
-  compare: jest.fn(),
+// Mock bcrypt. Hoisted by Vitest only for literal `vi.mock(...)`.
+vi.mock('bcrypt', () => ({
+  hash: vi.fn(),
+  compare: vi.fn(),
 }));
 
 // Inline entity stubs so we don't rely on barrel exports

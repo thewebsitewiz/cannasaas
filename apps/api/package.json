@@ -25,6 +25,7 @@
     "class-validator": "^0.14.1",
     "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
+    "express": "4",
     "graphql": "^16.13.1",
     "graphql-type-json": "^0.3.2",
     "helmet": "^8.1.0",
@@ -54,13 +55,15 @@
     "@types/nodemailer": "^7.0.11",
     "@types/passport-jwt": "^4.0.1",
     "@types/supertest": "^7.2.0",
+    "@vitest/coverage-v8": "^4.1.9",
     "jest": "^30.3.0",
     "socket.io-client": "^4.8.3",
     "supertest": "^7.2.2",
     "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^4.0.8"
   },
   "name": "@cannasaas/api",
   "private": true,
@@ -75,7 +78,7 @@
     "migration:revert": "ts-node --swc -r tsconfig-paths/register ./node_modules/typeorm/cli migration:revert -d src/data-source.ts",
     "migration:run": "ts-node --swc -r tsconfig-paths/register ./node_modules/typeorm/cli migration:run -d src/data-source.ts",
     "start": "node dist/main.js",
-    "test": "jest",
+    "test": "vitest run",
     "test:e2e": "jest --config jest-e2e.config.js --runInBand --forceExit"
   },
   "version": "0.1.0"
