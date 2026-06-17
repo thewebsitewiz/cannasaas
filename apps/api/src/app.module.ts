@@ -88,49 +88,66 @@ import { join } from 'path';
       context: ({ req, res }: { req: unknown; res: unknown }) => ({ req, res }),
       plugins: [depthLimitPlugin, complexityLimitPlugin],
     }),
+
+    // Foundations — shared infra that downstream features depend on.
     CacheModule,
     DispensaryOwnershipModule,
     DatabaseModule,
+
+    // Identity + tenancy hierarchy (organizations → companies → dispensaries).
     AuthModule,
     UsersModule,
     OrganizationsModule,
     CompaniesModule,
     DispensariesModule,
+    PlatformModule,
+    RegisterSessionsModule,
+
+    // Catalog: what the dispensary sells.
     ProductsModule,
     BrandsModule,
     ManufacturersModule,
-    OrdersModule,
-    PaymentsModule,
-    StaffingModule,
-    TimeClockModule,
-    InventoryControlModule,
-    CustomerModule,
-    NotificationModule,
-    SchedulingModule,
-    ReportingModule,
-    ComplianceModule,
-    WsModule,
+    ProductDataModule,
     PromotionsModule,
     InventoryModule,
-    MetrcModule,
-    ProductDataModule,
-    AnalyticsModule,
+    InventoryControlModule,
+    SearchModule,
+    RecommendationModule,
+
+    // Customer-facing identity + experience.
+    CustomerModule,
+    IdVerificationModule,
+    LoyaltyModule,
+    MarketingModule,
+    ThemeModule,
+
+    // Order pipeline — checkout, payment, fulfillment, in-store POS.
+    OrdersModule,
+    PaymentsModule,
     FulfillmentModule,
     PosModule,
-    LoyaltyModule,
+
+    // Compliance + regulator integrations.
+    ComplianceModule,
+    MetrcModule,
+    BiotrackModule,
+
+    // Workforce.
+    StaffingModule,
+    TimeClockModule,
+    SchedulingModule,
+
+    // Cross-cutting surfaces: notifications, analytics, vendor pipeline,
+    // realtime, image handling, knowledge base, ops health.
+    NotificationModule,
+    AnalyticsModule,
+    ReportingModule,
     VendorModule,
     ImageModule,
-    PlatformModule,
-    ThemeModule,
-    HealthModule,
-    MarketingModule,
-    BiotrackModule,
-    IdVerificationModule,
-    RecommendationModule,
     KnowledgeModule,
-    SearchModule,
-    RegisterSessionsModule,
+    WsModule,
     WebhooksModule,
+    HealthModule,
   ],
   providers: [
     // Filter + interceptor wired through DI so their @Optional() Sentry +

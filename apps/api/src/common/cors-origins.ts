@@ -3,9 +3,9 @@
  *
  * Resolved at module load time because some consumers (notably the WS
  * @WebSocketGateway decorator) need the value before ConfigService exists.
- * If `CORS_ORIGINS` is unset, we fall back to a dev-default list and log a
- * warning so a misconfigured production environment surfaces loudly instead
- * of silently dropping handshakes / CSRF-rejecting POSTs.
+ * If `CORS_ORIGINS` is unset in dev, we fall back to a dev-default list
+ * and log a warning. In production we fail-fast — a wrong-origin allowlist
+ * silently shipped to prod is worse than not booting (architecture.md §7 #11).
  */
 const DEFAULT_DEV_ORIGINS = [
   // React apps (51xx) — only platform remains post-cutover (sc-626)
@@ -19,6 +19,13 @@ const DEFAULT_DEV_ORIGINS = [
 
 const corsOriginsEnv = process.env['CORS_ORIGINS'];
 if (!corsOriginsEnv) {
+  if (process.env['NODE_ENV'] === 'production') {
+    throw new Error(
+      '[cors-origins] CORS_ORIGINS is required in production (NODE_ENV=production). ' +
+        'Set it to a comma-separated list of allowed origins, e.g. ' +
+        '"https://admin.cannasaas.com,https://app.cannasaas.com".',
+    );
+  }
   console.warn(
     '[cors-origins] CORS_ORIGINS not set — using dev defaults. ' +
       'Set CORS_ORIGINS in your environment for production deployments.',

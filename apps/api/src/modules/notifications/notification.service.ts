@@ -13,6 +13,14 @@ import {
 import { CircuitBreaker } from '../../common/services/circuit-breaker';
 import { CacheService } from '../../common/services/cache.service';
 import type { LowStockEvent } from '../inventory/stock-events';
+import {
+  CUSTOMER_REGISTERED,
+  INVENTORY_LOW_STOCK,
+  INVENTORY_OUT_OF_STOCK,
+  ORDER_COMPLETED,
+  ORDER_CREATED,
+  ORDER_STATUS_CHANGED,
+} from '../../common/events/event-names';
 
 // ── Twilio shape (avoid pulling the full SDK type surface) ────────────────
 
@@ -414,7 +422,7 @@ export class NotificationService {
 
   // ── Event Listeners ───────────────────────────────────────────────────────
 
-  @OnEvent('order.created')
+  @OnEvent(ORDER_CREATED)
   async onOrderCreated(payload: OrderEventPayload): Promise<void> {
     if (payload.orderType === 'in_store') return;
     if (!payload.customerUserId) return;
@@ -436,7 +444,7 @@ export class NotificationService {
     });
   }
 
-  @OnEvent('order.completed')
+  @OnEvent(ORDER_COMPLETED)
   async onOrderCompleted(payload: OrderEventPayload): Promise<void> {
     if (payload.orderType === 'in_store') return;
     if (!payload.customerUserId) return;
@@ -456,7 +464,7 @@ export class NotificationService {
     });
   }
 
-  @OnEvent('order.status_changed')
+  @OnEvent(ORDER_STATUS_CHANGED)
   async onOrderStatusChanged(payload: {
     orderId: string;
     dispensaryId: string;
@@ -500,7 +508,7 @@ export class NotificationService {
     });
   }
 
-  @OnEvent('customer.registered')
+  @OnEvent(CUSTOMER_REGISTERED)
   async onCustomerRegistered(
     payload: CustomerRegisteredPayload,
   ): Promise<void> {
@@ -538,12 +546,12 @@ export class NotificationService {
    */
   private readonly lowStockCooldownSeconds = 3600;
 
-  @OnEvent('inventory.low_stock')
+  @OnEvent(INVENTORY_LOW_STOCK)
   async onLowStock(payload: LowStockEvent): Promise<void> {
     await this.dispatchStockAlert(payload, 'low_stock_alert');
   }
 
-  @OnEvent('inventory.out_of_stock')
+  @OnEvent(INVENTORY_OUT_OF_STOCK)
   async onOutOfStock(payload: LowStockEvent): Promise<void> {
     await this.dispatchStockAlert(payload, 'out_of_stock_alert');
   }

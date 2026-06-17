@@ -8,6 +8,7 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { OnEvent } from '@nestjs/event-emitter';
 import { Cron } from '@nestjs/schedule';
+import { ORDER_COMPLETED } from '../../common/events/event-names';
 
 // ── DB row types ──────────────────────────────────────────────────────────
 
@@ -590,7 +591,7 @@ export class LoyaltyService {
 
   // ═══ EVENT LISTENERS ═══
 
-  @OnEvent('order.completed')
+  @OnEvent(ORDER_COMPLETED)
   async onOrderCompleted(payload: OrderCompletedPayload): Promise<void> {
     if (!payload.customerUserId || !payload.dispensaryId || !payload.total)
       return;

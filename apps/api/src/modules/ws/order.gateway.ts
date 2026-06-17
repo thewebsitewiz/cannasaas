@@ -13,6 +13,14 @@ import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { ALLOWED_ORIGINS } from '../../common/cors-origins';
+import {
+  DELIVERY_STATUS_CHANGED,
+  INVENTORY_LOW_STOCK,
+  INVENTORY_OUT_OF_STOCK,
+  INVENTORY_STOCK_CHANGED,
+  ORDER_COMPLETED,
+  ORDER_STATUS_CHANGED,
+} from '../../common/events/event-names';
 
 interface ConnectedClient {
   userId: string;
@@ -245,7 +253,7 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   // ── Event Listeners (from EventEmitter2) ──────────────────────────────
 
-  @OnEvent('order.completed')
+  @OnEvent(ORDER_COMPLETED)
   handleOrderCompleted(payload: OrderCompletedPayload): void {
     const event = {
       type: 'order.confirmed',
@@ -270,7 +278,7 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.logger.log('WS broadcast: order.confirmed ' + payload.orderId);
   }
 
-  @OnEvent('order.status_changed')
+  @OnEvent(ORDER_STATUS_CHANGED)
   handleOrderStatusChanged(payload: OrderStatusChangedPayload): void {
     const event = {
       type: 'order.status_changed',
@@ -299,7 +307,7 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
     );
   }
 
-  @OnEvent('inventory.low_stock')
+  @OnEvent(INVENTORY_LOW_STOCK)
   handleLowStock(payload: LowStockPayload): void {
     this.server.to('staff:' + payload.dispensaryId).emit('inventory:alert', {
       type: 'low_stock',
@@ -309,7 +317,7 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
-  @OnEvent('inventory.stock_changed')
+  @OnEvent(INVENTORY_STOCK_CHANGED)
   handleStockChanged(payload: StockChangedPayload): void {
     // Storefront customers see only the per-variant public projection —
     // never the full payload (productName + threshold leak operator
@@ -323,7 +331,7 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
-  @OnEvent('inventory.out_of_stock')
+  @OnEvent(INVENTORY_OUT_OF_STOCK)
   handleOutOfStock(payload: LowStockPayload): void {
     // Operator-facing toast.
     this.server.to('staff:' + payload.dispensaryId).emit('inventory:alert', {
@@ -334,7 +342,7 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
-  @OnEvent('delivery.status_changed')
+  @OnEvent(DELIVERY_STATUS_CHANGED)
   handleDeliveryUpdate(payload: DeliveryStatusChangedPayload): void {
     const event = {
       type: 'delivery.update',
