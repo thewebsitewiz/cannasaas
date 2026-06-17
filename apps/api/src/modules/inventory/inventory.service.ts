@@ -247,6 +247,11 @@ export class InventoryService {
     const before = toNumber(inv.quantity_on_hand) - delta;
     const after = toNumber(inv.quantity_on_hand);
 
+    // `inv.dispensary_id` comes off the `RETURNING *` row above. The
+    // column is `dispensary_id` (snake) in the DB; we read it via the
+    // snake key because the raw `rawQuery<InventoryUpdatedRow>` path
+    // bypasses TypeORM's SnakeNamingStrategy property mapping. Same
+    // shape carries through to the `inventory_transactions` INSERT.
     const txRows = await rawQuery<InventoryTxRow>(
       this.ds,
       `INSERT INTO inventory_transactions (inventory_id, dispensary_id, transaction_type, quantity_delta, quantity_before, quantity_after, performed_by_user_id, notes, reference_order_id)

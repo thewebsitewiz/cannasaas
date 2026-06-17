@@ -695,12 +695,12 @@ The one place every Angular project picks up GraphQL operations + design tokens 
 
 - ✅ Cleanly split into `theme.service.ts` (CRUD), `theme-css.service.ts` (CSS rendering), `theme-css.controller.ts` (REST). Single responsibility per file.
 - ✅ `ThemeCssService.collectFontImports` ([theme-css.service.ts:30-37](apps/api/src/modules/theme/theme-css.service.ts#L30-L37)) dedups when display + body fonts share a URL — small but thoughtful.
-- 🔵 `theme-css.controller.ts` builds the ETag from `dispensaryId + updatedAt + length` — collision risk is real but vanishingly small. Could use a content hash for stricter correctness.
+- ✅ ETag is now a sha1 content hash of the rendered CSS (was `dispensaryId + updatedAt + length`). Eliminates the vanishingly-small length-collision risk.
 
 #### `apps/api/src/modules/inventory/`
 
 - ✅ `StockEventEmitterService.recordChange` ([stock-event-emitter.service.ts](apps/api/src/modules/inventory/stock-event-emitter.service.ts)) is the canonical funnel; PR #120 wired the order paths through it.
-- 🟡 The `inventory_transactions` INSERT references `dispensary_id` but the SELECT it reads from uses `inv.dispensary_id` (from `RETURNING *`) — works because of SnakeNamingStrategy, but worth a comment for the next maintainer.
+- ✅ Added a maintainer comment in `inventory.service.adjust` explaining why `inv.dispensary_id` (snake) is read off the raw `RETURNING *` row — the raw-query path bypasses SnakeNamingStrategy property mapping.
 
 #### `apps/api/src/modules/orders/`
 
@@ -710,12 +710,12 @@ The one place every Angular project picks up GraphQL operations + design tokens 
 #### `packages/angular/projects/admin/src/app/pages/settings/theme/theme-page.ts`
 
 - ✅ Test coverage is excellent — 25/25 specs pass, including new TC-THEME-FONT / -BRAND / -SCOPE cases (PR #128).
-- 🔵 The "Download CSS" button (`onExportCss`) builds CSS using a different token map (`CSS_VAR_MAP` in the page) than the server-side generator (`ThemeCssService.renderRoot`). Two implementations of the same export are a drift risk.
+- 🟡 **Promoted from 🔵 — bigger than it looked.** The "Download CSS" button (`onExportCss`) uses `CSS_VAR_MAP` which matches the **built-in theme files** at `packages/ui/src/themes/theme.*.css` (e.g. `--color-bg-alt`, `--color-surface`, `--color-primary-light`). The server-side `ThemeCssService.renderRoot` writes a **different** set of names (`--color-bg-secondary`, `--color-bg-card`, `--color-secondary`) that no consumer reads — so per-tenant overrides served via `/css/dispensary/:id.css` are currently no-ops on those 3 variables. Closing this requires aligning the server with `CSS_VAR_MAP` (likely extracting it to `@cannasaas/types`) AND verifying every existing saved `theme_configs` row's chosen colors look acceptable post-fix, since the override will start applying for real. Out of scope for the §7.3 nits PR; flagged as its own ticket.
 
 #### `packages/angular/projects/storefront/src/app/core/theme/app-theme.service.ts`
 
 - ✅ Theme resolution is the cleanest of the 5 apps — uses `DispensaryContextService` for tenancy + `ThemeService.loadTheme` for the actual injection. Other apps will adopt this pattern in the next theme PR.
-- 🔵 Falls back to `'dark'` on fetch failure — could be `'modern'` (the default everywhere else) for visual consistency.
+- ⚪ **WONTFIX.** The suggestion to swap the fallback to `'modern'` was overridden by [storefront/CLAUDE.md](../packages/angular/projects/storefront/CLAUDE.md) which documents `'dark'` as the explicit fallback. The shared `ThemeService` default is `'casual'` (not `'modern'`), so the original "default everywhere else" framing was inaccurate. Per-app rule wins.
 
 ---
 
