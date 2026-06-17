@@ -2,44 +2,34 @@
 // test/ is outside the TS project; Jest globals lose types.
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { DataSource } from 'typeorm';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 
-import { OrdersService } from '../../src/modules/orders/orders.service';
 import { StockEventEmitterService } from '../../src/modules/inventory/stock-event-emitter.service';
-import {
-  OrderEventEmitterService,
-  OrderStockEventBridgeService,
-} from '../../src/modules/orders/order-helpers';
+import { OrderStockEventBridgeService } from '../../src/modules/orders/order-helpers';
 
 /**
  * Sc-113: order create + cancel paths must funnel into the
  * StockEventEmitterService so `inventory.low_stock` / `out_of_stock`
  * fire on customer orders, not just manual adjustments.
  *
- * Full createOrder path is too thick to mock here; we drive the new
- * helper `emitStockChanges` directly to lock down its contract.
+ * Originally tested OrdersService's private `emitStockChanges` wrapper.
+ * After the tech-debt #4 split that private wrapper is gone — the
+ * createOrder / cancelOrder paths call `OrderStockEventBridgeService.emit`
+ * directly. Tests now drive the bridge service directly to lock down
+ * the same contract.
  */
-describe('OrdersService.emitStockChanges → StockEventEmitterService (sc-113)', () => {
-  let service: OrdersService;
+describe('OrderStockEventBridgeService.emit → StockEventEmitterService (sc-113)', () => {
+  let bridge: OrderStockEventBridgeService;
   let recordChange: jest.Mock;
 
   beforeEach(async () => {
     recordChange = jest.fn();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        OrdersService,
-        { provide: DataSource, useValue: { query: jest.fn() } },
-        { provide: EventEmitter2, useValue: { emit: jest.fn() } },
-        { provide: StockEventEmitterService, useValue: { recordChange } },
-        {
-          provide: OrderEventEmitterService,
-          useValue: { emit: jest.fn().mockResolvedValue(undefined) },
-        },
         OrderStockEventBridgeService,
+        { provide: StockEventEmitterService, useValue: { recordChange } },
       ],
     }).compile();
-    service = module.get(OrdersService);
+    bridge = module.get(OrderStockEventBridgeService);
   });
 
   it('TC-INV-LS-001 — converts each RETURNING row into a recordChange call with parsed numerics', async () => {
@@ -60,15 +50,7 @@ describe('OrdersService.emitStockChanges → StockEventEmitterService (sc-113)',
       },
     ];
 
-    await (
-      service as unknown as {
-        emitStockChanges: (
-          r: typeof rows,
-          d: string,
-          s: 'reserve' | 'release' | 'adjustment',
-        ) => Promise<void>;
-      }
-    ).emitStockChanges(rows, 'disp-1', 'reserve');
+    await bridge.emit(rows, 'disp-1', 'reserve');
 
     expect(recordChange).toHaveBeenCalledTimes(2);
     expect(recordChange.mock.calls[0][0]).toEqual({
@@ -102,15 +84,7 @@ describe('OrdersService.emitStockChanges → StockEventEmitterService (sc-113)',
       },
     ];
 
-    await (
-      service as unknown as {
-        emitStockChanges: (
-          r: typeof rows,
-          d: string,
-          s: 'reserve' | 'release' | 'adjustment',
-        ) => Promise<void>;
-      }
-    ).emitStockChanges(rows, 'disp-1', 'release');
+    await bridge.emit(rows, 'disp-1', 'release');
 
     expect(recordChange).toHaveBeenCalledTimes(1);
     expect(recordChange.mock.calls[0][0].reorderThreshold).toBeNull();
@@ -130,16 +104,6 @@ describe('OrdersService.emitStockChanges → StockEventEmitterService (sc-113)',
       },
     ];
 
-    await expect(
-      (
-        service as unknown as {
-          emitStockChanges: (
-            r: typeof rows,
-            d: string,
-            s: 'reserve' | 'release' | 'adjustment',
-          ) => Promise<void>;
-        }
-      ).emitStockChanges(rows, 'disp-1', 'reserve'),
-    ).resolves.toBeUndefined();
+    await expect(bridge.emit(rows, 'disp-1', 'reserve')).resolves.toBeUndefined();
   });
 });

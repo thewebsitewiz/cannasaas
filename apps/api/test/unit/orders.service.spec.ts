@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { getDataSourceToken } from '@nestjs/typeorm';
 import { OrdersService } from '../../src/modules/orders/orders.service';
+import { OrderCreatorService } from '../../src/modules/orders/order-creator.service';
+import { OrderQueryService } from '../../src/modules/orders/order-query.service';
+import { OrderStateMachineService } from '../../src/modules/orders/order-state-machine.service';
 import { StockEventEmitterService } from '../../src/modules/inventory/stock-event-emitter.service';
 import {
   OrderEventEmitterService,
@@ -39,7 +43,17 @@ describe('OrdersService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         OrdersService,
+        // Real instances of the three split services so the facade
+        // delegates into the actual code paths the tests exercise
+        // (createOrder → OrderCreatorService.createOrder etc.).
+        OrderCreatorService,
+        OrderQueryService,
+        OrderStateMachineService,
+        // TypeORM's @InjectDataSource() uses a token, not the raw
+        // DataSource class — provide both so DI on either lookup form
+        // hits the same mock.
         { provide: DataSource, useValue: mockDataSource },
+        { provide: getDataSourceToken(), useValue: mockDataSource },
         { provide: EventEmitter2, useValue: mockEventEmitter },
         {
           provide: StockEventEmitterService,

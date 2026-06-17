@@ -5,6 +5,9 @@ import { OrderLineItem } from './entities/order-line-item.entity';
 import { OrdersService } from './orders.service';
 import { OrdersResolver } from './orders.resolver';
 import { StaffPosResolver } from './staff-pos.resolver';
+import { OrderCreatorService } from './order-creator.service';
+import { OrderQueryService } from './order-query.service';
+import { OrderStateMachineService } from './order-state-machine.service';
 import {
   OrderEventEmitterService,
   OrderStockEventBridgeService,
@@ -22,9 +25,17 @@ import { InventoryModule } from '../inventory/inventory.module';
     OrdersService,
     OrdersResolver,
     StaffPosResolver,
+    OrderCreatorService,
+    OrderQueryService,
+    OrderStateMachineService,
     OrderEventEmitterService,
     OrderStockEventBridgeService,
   ],
-  exports: [OrdersService],
+  exports: [
+    OrdersService,
+    OrderCreatorService,
+    OrderQueryService,
+    OrderStateMachineService,
+  ],
 })
 export class OrdersModule {}
