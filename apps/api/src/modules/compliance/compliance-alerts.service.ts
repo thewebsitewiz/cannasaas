@@ -3,6 +3,10 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { Cron } from '@nestjs/schedule';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import {
+  COMPLIANCE_CRITICAL,
+  COMPLIANCE_WARNING,
+} from '../../common/events/event-names';
 
 type Severity = 'critical' | 'warning' | 'info';
 
@@ -327,7 +331,7 @@ export class ComplianceAlertsService {
         const result = await this.getComplianceAlerts(d.entity_id);
 
         if (result.criticalCount > 0) {
-          this.eventEmitter.emit('compliance.critical', {
+          this.eventEmitter.emit(COMPLIANCE_CRITICAL, {
             dispensaryId: d.entity_id,
             alertCount: result.criticalCount,
             alerts: result.alerts.filter((a) => a.severity === 'critical'),
@@ -338,7 +342,7 @@ export class ComplianceAlertsService {
         }
 
         if (result.warningCount > 0) {
-          this.eventEmitter.emit('compliance.warning', {
+          this.eventEmitter.emit(COMPLIANCE_WARNING, {
             dispensaryId: d.entity_id,
             alertCount: result.warningCount,
             alerts: result.alerts.filter((a) => a.severity === 'warning'),

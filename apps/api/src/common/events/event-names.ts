@@ -22,3 +22,18 @@ export const INVENTORY_OUT_OF_STOCK = 'inventory.out_of_stock';
 
 // ── Customers ─────────────────────────────────────────────────────
 export const CUSTOMER_REGISTERED = 'customer.registered';
+
+// ── Compliance ────────────────────────────────────────────────────
+export const COMPLIANCE_CRITICAL = 'compliance.critical';
+export const COMPLIANCE_WARNING = 'compliance.warning';
+
+// ── Delivery ──────────────────────────────────────────────────────
+export const DELIVERY_STATUS_CHANGED = 'delivery.status_changed';
+
+// ── Payments ──────────────────────────────────────────────────────
+/**
+ * EventEmitter2 wildcard pattern — matches every `payment.webhook.*`
+ * (succeeded / failed / refunded / pending …). Listeners using this
+ * receive the full event name as their second `EventContext` arg.
+ */
+export const PAYMENT_WEBHOOK_WILDCARD = 'payment.webhook.**';

@@ -666,20 +666,10 @@ The one place every Angular project picks up GraphQL operations + design tokens 
 
 #### 🔵 Suggestion
 
-**8. `app.module.ts` imports list is unstructured (~45 imports).**
+**8. ~~`app.module.ts` imports list is unstructured (~45 imports).~~ Done.**
 
-- File: [apps/api/src/app.module.ts:18-62](apps/api/src/app.module.ts#L18-L62)
-- 45 feature module imports in alphabetical-ish order with no grouping. Hard to skim.
-- **Suggestion**: Group by domain in comments:
-  ```ts
-  // Tenancy
-  OrganizationsModule, CompaniesModule, DispensariesModule,
-  // Catalog
-  ProductsModule, BrandsModule, ManufacturersModule, ProductDataModule,
-  // Orders + payments
-  OrdersModule, PaymentsModule,
-  // ...
-  ```
+- File: [apps/api/src/app.module.ts](apps/api/src/app.module.ts)
+- Module imports grouped by domain with section comments: Foundations, Identity + tenancy, Catalog, Customer-facing, Order pipeline, Compliance, Workforce, Cross-cutting. Skimmable in seconds; new modules slot into the right group on review.
 
 **9. `theme-page.ts` is ~600 lines and combines template + class.**
 
@@ -687,21 +677,17 @@ The one place every Angular project picks up GraphQL operations + design tokens 
 - The template is a multi-hundred-line inline string. Editability is OK but linting / Prettier alignment is awkward.
 - **Suggestion**: Extract preset gallery, color editor, fonts/branding into child standalone components (`ThemePresetGallery`, `ThemeColorEditor`, `ThemeBrandingEditor`). Each one becomes ~80 lines and unit-testable in isolation.
 
-**10. Magic strings for event names.**
+**10. ~~Magic strings for event names.~~ Done.**
 
-- Files: many event consumers / publishers — `@OnEvent('inventory.low_stock')`, `eventEmitter.emit('order.created')`.
-- Some are exported as constants from `apps/api/src/modules/inventory/stock-events.ts` (`STOCK_LOW_EVENT`), but other modules (`OrdersService`) inline the strings.
-- **Suggestion**: Move all event names into a single `apps/api/src/common/events/event-names.ts` and import everywhere.
+- All `@OnEvent(...)` / `eventEmitter.emit(...)` call sites now import from [apps/api/src/common/events/event-names.ts](apps/api/src/common/events/event-names.ts). Added constants for compliance + delivery + the wildcard payment-webhook pattern. The 14 remaining listener call sites (loyalty, metrc, notifications x6, ws x6, compliance x2, payments) were migrated in the same pass.
 
-**11. `cors-origins.ts` has env-driven origins but no env validation.**
+**11. ~~`cors-origins.ts` has env-driven origins but no env validation.~~ Done.**
 
-- File: [apps/api/src/common/cors-origins.ts](apps/api/src/common/cors-origins.ts) — warns if `CORS_ORIGINS` isn't set but doesn't fail; production deploys without the env get permissive defaults.
-- **Suggestion**: In production, fail-fast on missing `CORS_ORIGINS` instead of using dev defaults.
+- File: [apps/api/src/common/cors-origins.ts](apps/api/src/common/cors-origins.ts) — now throws at module load if `CORS_ORIGINS` is unset and `NODE_ENV === 'production'`. Dev still warns + uses the default localhost allowlist.
 
-**12. Test infra split — Angular uses Vitest, API uses Jest.**
+**12. ~~Test infra split — Angular uses Vitest, API uses Jest.~~ Done.**
 
-- Two runners means two configs, two mock styles, two CI steps. Not breaking, but doubles maintenance.
-- **Suggestion**: Future-state, standardize on Vitest (per Angular 21 default). Migrate API specs gradually.
+- API is now 100% Vitest (both `test` and `test:e2e`). See row #11 in §8 for the close note.
 
 ### 7.3 Per-area highlights
 
@@ -718,8 +704,8 @@ The one place every Angular project picks up GraphQL operations + design tokens 
 
 #### `apps/api/src/modules/orders/`
 
-- 🟡 `orders.service.ts` is 1,000+ lines; consider splitting status-transition mutations (`confirmOrder`, `startPreparing`, `markReady`) into a dedicated state-machine class.
-- 🔴 The pre-existing `orders.service.spec.ts` has 3 failing tests on main (createOrder + cancelOrder) that were broken before the recent fixes. They mock `dataSource.query` while the methods use `qr.query` — the spec was never validating the right surface. **Action**: rewrite or delete those specs; they're false confidence.
+- ✅ Split (tech-debt row #4 close, PR #145): `OrdersService` is now a 119-line facade delegating to `OrderCreatorService` (createOrder + tax/THC math), `OrderStateMachineService` (confirm/preparing/ready/complete/cancel), and `OrderQueryService` (read paths). Shared row interfaces live in `order-types.ts`.
+- ✅ The pre-existing 3 broken specs (`createOrder` + `cancelOrder` mocking `dataSource.query` instead of `qr.query`) were deleted in PR #137 — see tech-debt row #5.
 
 #### `packages/angular/projects/admin/src/app/pages/settings/theme/theme-page.ts`
 

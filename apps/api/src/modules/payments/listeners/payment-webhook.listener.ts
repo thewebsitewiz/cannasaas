@@ -5,6 +5,7 @@ import {
   ProcessorWebhookEvent,
 } from '../processors/payment-processor.interface';
 import { PaymentLifecycleQueueService } from '../queue/payment-lifecycle.queue-service';
+import { PAYMENT_WEBHOOK_WILDCARD } from '../../../common/events/event-names';
 
 interface WebhookEventPayload {
   readonly processor: PaymentProcessorName;
@@ -17,7 +18,7 @@ export class PaymentWebhookListener {
 
   constructor(private readonly queue: PaymentLifecycleQueueService) {}
 
-  @OnEvent('payment.webhook.**')
+  @OnEvent(PAYMENT_WEBHOOK_WILDCARD)
   async handle(payload: WebhookEventPayload): Promise<void> {
     this.logger.log(
       `Webhook event received: ${payload.processor} ${payload.event.type} ${payload.event.processorTransactionId}`,
