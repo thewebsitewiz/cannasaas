@@ -50,16 +50,13 @@
     "@types/compression": "^1.8.1",
     "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.6",
-    "@types/jest": "^30.0.0",
     "@types/node": "^22.16.0",
     "@types/nodemailer": "^7.0.11",
     "@types/passport-jwt": "^4.0.1",
     "@types/supertest": "^7.2.0",
     "@vitest/coverage-v8": "^4.1.9",
-    "jest": "^30.3.0",
     "socket.io-client": "^4.8.3",
     "supertest": "^7.2.2",
-    "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.8.3",
@@ -79,7 +76,7 @@
     "migration:run": "ts-node --swc -r tsconfig-paths/register ./node_modules/typeorm/cli migration:run -d src/data-source.ts",
     "start": "node dist/main.js",
     "test": "vitest run",
-    "test:e2e": "jest --config jest-e2e.config.js --runInBand --forceExit"
+    "test:e2e": "vitest run --config vitest.e2e.config.ts"
   },
   "version": "0.1.0"
 }

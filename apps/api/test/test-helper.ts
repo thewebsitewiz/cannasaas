@@ -3,7 +3,7 @@ import { INestApplication, VersioningType, ValidationPipe } from '@nestjs/common
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../src/app.module';
 import { GlobalExceptionFilter } from '../src/common/filters/global-exception.filter';
-import * as request from 'supertest';
+import request from 'supertest';
 
 export const DISP = 'b406186e-4d6a-425b-b7af-851cde868c5c';
 export const ORG = 'e72ff942-705c-497b-9912-9f0e2e1d6633';
