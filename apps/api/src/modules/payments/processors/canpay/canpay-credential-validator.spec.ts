@@ -1,8 +1,9 @@
+import { vi } from 'vitest';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import { CanPayCredentialValidator } from './canpay-credential-validator';
 
-jest.mock('axios');
+vi.mock('axios');
 
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 

@@ -1,17 +1,19 @@
+import { vi } from 'vitest';
 import { DutchieAdapter } from '../../src/modules/pos/adapters/dutchie.adapter';
 import { TreezAdapter } from '../../src/modules/pos/adapters/treez.adapter';
 import { PosProvider } from '../../src/modules/pos/interfaces/pos-provider.interface';
 
-// Mock axios with interceptors
-jest.mock('axios', () => {
-  const mockInterceptor = { use: jest.fn() };
+// Mock axios with interceptors. Vitest only hoists `vi.mock(...)`;
+// `jest.mock(...)` would not be lifted above imports.
+vi.mock('axios', () => {
+  const mockInterceptor = { use: vi.fn() };
   const mockClient = {
-    post: jest.fn(),
-    get: jest.fn(),
-    put: jest.fn(),
+    post: vi.fn(),
+    get: vi.fn(),
+    put: vi.fn(),
     interceptors: { request: mockInterceptor, response: mockInterceptor },
   };
-  return { __esModule: true, default: { create: jest.fn(() => mockClient) } };
+  return { __esModule: true, default: { create: vi.fn(() => mockClient) } };
 });
 
 describe('POS Adapters', () => {
