@@ -86,6 +86,34 @@ function hashCode(str: string): number {
           class="h-8 w-8 animate-spin rounded-full border-2 border-emerald-300 border-t-transparent"
         ></div>
       </div>
+    } @else if (error()) {
+      <div class="mx-auto max-w-md p-8 text-center">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="48"
+          height="48"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="mx-auto mb-4 text-red-300"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+        <p class="font-medium text-gray-700">Couldn't load this product</p>
+        <p class="mt-1 text-sm text-gray-400">Check your connection, then try again.</p>
+        <button
+          type="button"
+          (click)="reload()"
+          class="mt-5 rounded-full bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-md shadow-emerald-500/20 active:scale-95"
+        >
+          Retry
+        </button>
+      </div>
     } @else if (product(); as p) {
       @let strain = strainStyleFor(p.strainType);
       @let orb = orbStyle(p.name);
@@ -366,7 +394,15 @@ export class ProductPage {
   });
 
   protected readonly loading = this.resource.isLoading;
-  protected readonly product = computed<ApiProduct | null>(() => this.resource.value() ?? null);
+  protected readonly error = computed<Error | null>(() => this.resource.error() ?? null);
+  protected readonly product = computed<ApiProduct | null>(() => {
+    if (this.resource.status() === 'error') return null;
+    return this.resource.value() ?? null;
+  });
+
+  protected reload(): void {
+    this.resource.reload();
+  }
 
   protected readonly activeVariant = computed<ApiVariant | undefined>(() => {
     const p = this.product();

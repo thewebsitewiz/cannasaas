@@ -145,6 +145,34 @@ function hashCode(str: string): number {
           ></div>
           Loading menu...
         </div>
+      } @else if (error()) {
+        <div class="py-20 text-center">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="mx-auto mb-4 text-red-300"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <p class="font-medium text-gray-700">Couldn't load the menu</p>
+          <p class="mt-1 text-sm text-gray-400">Check your connection, then try again.</p>
+          <button
+            type="button"
+            (click)="reload()"
+            class="mt-5 rounded-full bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-md shadow-emerald-500/20 active:scale-95"
+          >
+            Retry
+          </button>
+        </div>
       } @else if (filtered().length === 0) {
         <div class="py-20 text-center">
           <svg
@@ -305,7 +333,15 @@ export class MenuPage {
   });
 
   protected readonly loading = this.resource.isLoading;
-  protected readonly filtered = computed<readonly ApiProduct[]>(() => this.resource.value() ?? []);
+  protected readonly error = computed<Error | null>(() => this.resource.error() ?? null);
+  protected readonly filtered = computed<readonly ApiProduct[]>(() => {
+    if (this.resource.status() === 'error') return [];
+    return this.resource.value() ?? [];
+  });
+
+  protected reload(): void {
+    this.resource.reload();
+  }
 
   protected goToProduct(id: string): void {
     void this.router.navigateByUrl(`/product/${id}`);
