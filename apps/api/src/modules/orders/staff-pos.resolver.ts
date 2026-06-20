@@ -103,7 +103,11 @@ export class StaffPosResolver {
     rawLimit = 10,
     @CurrentUser() user?: JwtPayload,
   ): Promise<CustomerSearchResult[]> {
-    if (user && user.role !== 'super_admin' && user.dispensaryId !== dispensaryId) {
+    if (
+      user &&
+      user.role !== 'super_admin' &&
+      user.dispensaryId !== dispensaryId
+    ) {
       throw new ForbiddenException('Cross-dispensary search not allowed');
     }
     const q = query.trim();
