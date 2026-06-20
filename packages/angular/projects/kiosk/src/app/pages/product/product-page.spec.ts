@@ -1,14 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { ProductGQL } from '@cannasaas/ui-ng';
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Subject, of, throwError } from 'rxjs';
 
 import { CartService } from '../../core/cart/cart.service';
@@ -61,10 +54,12 @@ interface Product {
 
 interface ProductPageExposed {
   loading: () => boolean;
+  error: () => Error | null;
   product: () => Product | null;
   activeVariant: () => Variant | undefined;
   quantity: { set: (n: number) => void; (): number };
   added: { set: (v: boolean) => void; (): boolean };
+  reload: () => void;
   priceFor: (v: Variant | undefined) => number;
   effectsOf: (p: Product) => string[];
   flavorsOf: (p: Product) => string[];
@@ -84,16 +79,9 @@ function makeVariant(overrides: Partial<Variant> = {}): Variant {
   return {
     variantId: 'variantId' in overrides ? (overrides.variantId as string) : 'v-1',
     name: 'name' in overrides ? (overrides.name as string) : '1g',
-    retailPrice:
-      'retailPrice' in overrides
-        ? (overrides.retailPrice as number | null)
-        : 12,
-    stockQuantity:
-      'stockQuantity' in overrides
-        ? (overrides.stockQuantity as number | null)
-        : 5,
-    stockStatus:
-      'stockStatus' in overrides ? overrides.stockStatus : 'in_stock',
+    retailPrice: 'retailPrice' in overrides ? (overrides.retailPrice as number | null) : 12,
+    stockQuantity: 'stockQuantity' in overrides ? (overrides.stockQuantity as number | null) : 5,
+    stockStatus: 'stockStatus' in overrides ? overrides.stockStatus : 'in_stock',
     isActive: 'isActive' in overrides ? overrides.isActive : true,
   };
 }
@@ -113,11 +101,7 @@ function makeProduct(overrides: Partial<Product> = {}): Product {
   };
 }
 
-function makeComponent(
-  routeId: string | null,
-  productGQL: ProductGQLMock,
-  router: RouterMock,
-) {
+function makeComponent(routeId: string | null, productGQL: ProductGQLMock, router: RouterMock) {
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     providers: [
@@ -126,9 +110,7 @@ function makeComponent(
       {
         provide: ActivatedRoute,
         useValue: {
-          paramMap: of(
-            convertToParamMap(routeId !== null ? { id: routeId } : {}),
-          ),
+          paramMap: of(convertToParamMap(routeId !== null ? { id: routeId } : {})),
         },
       },
     ],
@@ -203,7 +185,7 @@ describe('ProductPage — product resolution', () => {
     expect(cmp.product()).toBeNull();
   });
 
-  it('error branch: product() throws when fetch errors (known gap, sc-733)', async () => {
+  it('error branch: loading flips false, error() is set, product() is null (sc-733 fix)', async () => {
     const productGQL: ProductGQLMock = {
       fetch: vi.fn().mockReturnValue(throwError(() => new Error('API down'))),
     };
@@ -212,10 +194,49 @@ describe('ProductPage — product resolution', () => {
     await Promise.resolve();
 
     expect(cmp.loading()).toBe(false);
-    // Same source pattern as MenuPage: `product = computed(() =>
-    // resource.value() ?? null)` doesn't catch the error throw.
-    // Tracked in sc-733.
-    expect(() => cmp.product()).toThrow(/Resource is currently in an error state/);
+    expect(cmp.error()).toBeInstanceOf(Error);
+    expect(cmp.error()?.message).toBe('API down');
+    // product() no longer throws — graceful null so the template can
+    // render the error branch without re-entering an error throw.
+    expect(() => cmp.product()).not.toThrow();
+    expect(cmp.product()).toBeNull();
+  });
+
+  it('error branch: non-Error throws still surface as Error via rxResource wrapping', async () => {
+    // rxResource itself wraps non-Error throws so error() always
+    // returns a real Error instance. We don't re-wrap.
+    const productGQL: ProductGQLMock = {
+      fetch: vi.fn().mockReturnValue(throwError(() => 'boom')),
+    };
+    const router: RouterMock = { navigateByUrl: vi.fn() };
+    const { cmp } = makeComponent('p-1', productGQL, router);
+    await Promise.resolve();
+
+    expect(cmp.error()).toBeInstanceOf(Error);
+    expect((cmp.error() as Error & { cause?: unknown }).cause).toBe('boom');
+  });
+
+  it('reload(): re-invokes the fetch and clears error on success', async () => {
+    const product = makeProduct({ id: 'p-1' });
+    const fetch = vi
+      .fn()
+      .mockReturnValueOnce(throwError(() => new Error('API down')))
+      .mockReturnValueOnce(of({ data: { product } }));
+    const productGQL: ProductGQLMock = { fetch };
+    const router: RouterMock = { navigateByUrl: vi.fn() };
+    const { cmp, fixture } = makeComponent('p-1', productGQL, router);
+    await Promise.resolve();
+
+    expect(cmp.error()).toBeInstanceOf(Error);
+    expect(cmp.product()).toBeNull();
+
+    cmp.reload();
+    fixture.detectChanges();
+    await Promise.resolve();
+
+    expect(cmp.error()).toBeNull();
+    expect(cmp.product()?.id).toBe('p-1');
+    expect(fetch).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -474,7 +495,7 @@ describe('ProductPage — add (loops N times into cart)', () => {
 });
 
 describe('ProductPage — helpers', () => {
-  it('priceFor returns retailPrice (0 fallback)', async () => {
+  it('priceFor returns retailPrice (0 fallback)', () => {
     const productGQL: ProductGQLMock = { fetch: vi.fn() };
     const router: RouterMock = { navigateByUrl: vi.fn() };
     const { cmp } = makeComponent(null, productGQL, router);
@@ -491,9 +512,7 @@ describe('ProductPage — helpers', () => {
 
     expect(cmp.isVariantInStock(makeVariant({ stockQuantity: 5 }))).toBe(true);
     expect(cmp.isVariantInStock(makeVariant({ stockQuantity: 0 }))).toBe(false);
-    expect(
-      cmp.isVariantInStock(makeVariant({ stockQuantity: 5, isActive: false })),
-    ).toBe(false);
+    expect(cmp.isVariantInStock(makeVariant({ stockQuantity: 5, isActive: false }))).toBe(false);
   });
 
   it('stockFor floors / clamps to 0 for null', () => {

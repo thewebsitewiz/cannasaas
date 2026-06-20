@@ -1,14 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { ProductsGQL } from '@cannasaas/ui-ng';
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Subject, of, throwError } from 'rxjs';
 
 import { CartService } from '../../core/cart/cart.service';
@@ -43,8 +36,10 @@ interface MenuPageExposed {
     (): { label: string; productTypeId: number | null };
   };
   loading: () => boolean;
+  error: () => Error | null;
   filtered: () => readonly unknown[];
   addedId: () => string | null;
+  reload: () => void;
   goToProduct: (id: string) => void;
   onAddClick: (e: Event, p: unknown) => void;
   priceOf: (p: unknown) => number;
@@ -203,13 +198,10 @@ describe('MenuPage — loading / empty / error / data branches', () => {
     await Promise.resolve();
 
     expect(cmp.filtered()).toHaveLength(2);
-    expect(cmp.filtered().map((p) => (p as { id: string }).id)).toEqual([
-      'p-1',
-      'p-2',
-    ]);
+    expect(cmp.filtered().map((p) => (p as { id: string }).id)).toEqual(['p-1', 'p-2']);
   });
 
-  it('error branch: rxResource transitions out of loading; filtered() throws when read (known gap)', async () => {
+  it('error branch: loading flips false, error() is set, filtered() is empty (sc-733 fix)', async () => {
     const productsGQL: ProductsGQLMock = {
       fetch: vi.fn().mockReturnValue(throwError(() => new Error('API down'))),
     };
@@ -217,21 +209,49 @@ describe('MenuPage — loading / empty / error / data branches', () => {
     const { cmp } = makeComponent(productsGQL, router);
     await Promise.resolve();
 
-    // Resource leaves the loading state once the error settles.
     expect(cmp.loading()).toBe(false);
+    expect(cmp.error()).toBeInstanceOf(Error);
+    expect(cmp.error()?.message).toBe('API down');
+    // filtered() no longer throws — graceful empty so the template
+    // can render the error branch without re-entering an error throw.
+    expect(() => cmp.filtered()).not.toThrow();
+    expect(cmp.filtered()).toEqual([]);
+  });
 
-    // Documents a real source gap: `filtered = computed(() =>
-    // resource.value() ?? [])` only coalesces `undefined` — `value()`
-    // THROWS when the resource is in an error state, so reading
-    // `filtered()` propagates "Resource is currently in an error
-    // state". The template avoids this today because it gates on
-    // `loading()` then `filtered().length === 0` — and rxResource's
-    // change-detection cycle hasn't pushed the error into the
-    // computed yet during the current synchronous render — but it's
-    // a latent bug. File a follow-up: either expose an `error()`
-    // signal and a separate error branch in the template, or wrap
-    // the value() read in try/catch.
-    expect(() => cmp.filtered()).toThrow(/Resource is currently in an error state/);
+  it('error branch: non-Error throws still surface as Error via rxResource wrapping', async () => {
+    // rxResource itself wraps non-Error throws so error() always
+    // returns a real Error instance. We don't re-wrap.
+    const productsGQL: ProductsGQLMock = {
+      fetch: vi.fn().mockReturnValue(throwError(() => 'boom')),
+    };
+    const router: RouterMock = { navigateByUrl: vi.fn() };
+    const { cmp } = makeComponent(productsGQL, router);
+    await Promise.resolve();
+
+    expect(cmp.error()).toBeInstanceOf(Error);
+    expect((cmp.error() as Error & { cause?: unknown }).cause).toBe('boom');
+  });
+
+  it('reload(): re-invokes the fetch and clears error on success', async () => {
+    const fetch = vi
+      .fn()
+      .mockReturnValueOnce(throwError(() => new Error('API down')))
+      .mockReturnValueOnce(of({ data: { products: [makeProduct({ id: 'p-1' })] } }));
+    const productsGQL: ProductsGQLMock = { fetch };
+    const router: RouterMock = { navigateByUrl: vi.fn() };
+    const { cmp, fixture } = makeComponent(productsGQL, router);
+    await Promise.resolve();
+
+    expect(cmp.error()).toBeInstanceOf(Error);
+    expect(cmp.filtered()).toEqual([]);
+
+    cmp.reload();
+    tick(fixture); // flush the reload-triggered effect
+    await Promise.resolve();
+
+    expect(cmp.error()).toBeNull();
+    expect(cmp.filtered()).toHaveLength(1);
+    expect(fetch).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -312,15 +332,9 @@ describe('MenuPage — onAddClick (add-to-cart + flash)', () => {
     const router: RouterMock = { navigateByUrl: vi.fn() };
     const { cmp } = makeComponent(productsGQL, router);
 
-    cmp.onAddClick(
-      { stopPropagation: vi.fn() } as unknown as Event,
-      makeProduct({ id: 'p-1' }),
-    );
+    cmp.onAddClick({ stopPropagation: vi.fn() } as unknown as Event, makeProduct({ id: 'p-1' }));
     vi.advanceTimersByTime(800);
-    cmp.onAddClick(
-      { stopPropagation: vi.fn() } as unknown as Event,
-      makeProduct({ id: 'p-2' }),
-    );
+    cmp.onAddClick({ stopPropagation: vi.fn() } as unknown as Event, makeProduct({ id: 'p-2' }));
     expect(cmp.addedId()).toBe('p-2');
 
     // The first timer fires at 1500ms total. It sees addedId === 'p-2'
@@ -340,10 +354,7 @@ describe('MenuPage — onAddClick (add-to-cart + flash)', () => {
     const router: RouterMock = { navigateByUrl: vi.fn() };
     const { cmp, cart } = makeComponent(productsGQL, router);
 
-    cmp.onAddClick(
-      { stopPropagation: vi.fn() } as unknown as Event,
-      makeProduct({ variants: [] }),
-    );
+    cmp.onAddClick({ stopPropagation: vi.fn() } as unknown as Event, makeProduct({ variants: [] }));
 
     expect(cart.items()).toEqual([]);
     expect(cmp.addedId()).toBeNull();
