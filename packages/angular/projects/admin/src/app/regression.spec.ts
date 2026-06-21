@@ -48,22 +48,15 @@ describe('admin regression — TC-REG-001 (sc-530) no Stripe references', () => 
   });
 });
 
-describe('admin regression — TC-REG-002 (sc-531) admin theme is fixed', () => {
-  it('admin has no AppThemeService / loadTheme() runtime switcher', () => {
-    const offenders: { file: string; match: string }[] = [];
-    for (const [path, text] of Object.entries(adminTsFiles)) {
-      if (path.endsWith('.spec.ts')) continue;
-      if (path.endsWith('regression.spec.ts')) continue;
-      // Skip the *editor* — settings/theme/* configures the storefront's
-      // theme, not the admin's, so it can legitimately mention theme
-      // tokens. The check is for runtime theme-loading wiring.
-      if (/\bloadTheme\s*\(/.test(text)) offenders.push({ file: path, match: 'loadTheme()' });
-      if (/\bAppThemeService\b/.test(text))
-        offenders.push({ file: path, match: 'AppThemeService' });
-    }
-    expect(offenders).toEqual([]);
-  });
-
+// TC-REG-002 (sc-531) originally enforced "admin has no AppThemeService /
+// loadTheme() runtime switcher." That rule was deliberately superseded by
+// sc-637 (PR #138, 2026-06-15), which wired admin/staff/kiosk to the
+// per-dispensary CSS endpoint via a JWT-claim-driven AppThemeService. The
+// AppThemeService / loadTheme() assertion was removed in PR #159 once CI
+// was unblocked and the contradiction surfaced. The narrower boundary
+// below — no storefront-style DispensaryContextService in admin — still
+// applies: admin resolves dispensary from auth claims, not subdomain.
+describe('admin regression — TC-REG-002 (sc-531 / sc-637) tenant theming bootstrap', () => {
   it('no DispensaryContextService-style tenant theming wired into admin bootstrap', () => {
     // The storefront uses DispensaryContextService to resolve per-tenant
     // themes at boot. Admin must not import it.
