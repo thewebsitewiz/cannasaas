@@ -53,7 +53,7 @@
     "start:kiosk": "ng serve kiosk",
     "start:staff": "ng serve staff",
     "start:storefront": "ng serve storefront",
-    "test": "ng test",
+    "test": "pnpm build:ui && ng test",
     "watch": "ng build --watch --configuration development",
     "watch:ui": "ng build ui --watch"
   },
