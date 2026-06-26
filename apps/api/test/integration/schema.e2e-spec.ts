@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-explicit-any */
 import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
@@ -14,7 +15,9 @@ describe('GraphQL Schema (E2E)', () => {
     await app.init();
   }, 30000);
 
-  afterAll(async () => { await app.close(); });
+  afterAll(async () => {
+    await app.close();
+  });
 
   it('should expose introspection with expected types', async () => {
     const res = await request(app.getHttpServer())
@@ -32,9 +35,17 @@ describe('GraphQL Schema (E2E)', () => {
     const typeNames = res.body.data.__schema.types.map((t: any) => t.name);
 
     // Verify critical types exist in schema
+    // Aligned with actual entity class names — `InventoryItem` was
+    // wishful; the entity class is named `Inventory` (sc-748).
     const requiredTypes = [
-      'Product', 'Order', 'User', 'Dispensary', 'Organization',
-      'CustomerProfile', 'InventoryItem', 'ThemeConfig',
+      'Product',
+      'Order',
+      'User',
+      'Dispensary',
+      'Organization',
+      'CustomerProfile',
+      'Inventory',
+      'ThemeConfig',
     ];
     for (const type of requiredTypes) {
       expect(typeNames).toContain(type);
@@ -42,12 +53,16 @@ describe('GraphQL Schema (E2E)', () => {
   });
 
   it('should have query and mutation types', async () => {
-    const res = await request(app.getHttpServer())
-      .post('/graphql')
-      .send({ query: `{ __schema { queryType { fields { name } } mutationType { fields { name } } } }` });
+    const res = await request(app.getHttpServer()).post('/graphql').send({
+      query: `{ __schema { queryType { fields { name } } mutationType { fields { name } } } }`,
+    });
 
-    const queryFields = res.body.data.__schema.queryType.fields.map((f: any) => f.name);
-    const mutationFields = res.body.data.__schema.mutationType.fields.map((f: any) => f.name);
+    const queryFields = res.body.data.__schema.queryType.fields.map(
+      (f: any) => f.name,
+    );
+    const mutationFields = res.body.data.__schema.mutationType.fields.map(
+      (f: any) => f.name,
+    );
 
     // Verify critical queries exist
     expect(queryFields).toContain('products');
