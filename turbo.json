@@ -16,13 +16,13 @@
     "test": {
       "dependsOn": ["^build"],
       "outputs": ["coverage/**"],
-      "env": ["DATABASE_URL", "REDIS_URL"]
+      "env": ["DATABASE_URL", "REDIS_URL", "PAYMENTS_ENCRYPTION_KEY"]
     },
     "test:e2e": {
       "dependsOn": ["^build"],
       "outputs": [],
       "cache": false,
-      "env": ["DATABASE_URL", "REDIS_URL"]
+      "env": ["DATABASE_URL", "REDIS_URL", "PAYMENTS_ENCRYPTION_KEY"]
     },
     "type-check": {
       "dependsOn": ["^build"]
