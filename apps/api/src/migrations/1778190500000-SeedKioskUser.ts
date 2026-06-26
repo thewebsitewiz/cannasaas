@@ -30,9 +30,14 @@ export class SeedKioskUser1778190500000 implements MigrationInterface {
   name = 'SeedKioskUser1778190500000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // Column names are snake_case post-Baseline (sc-745). Pre-Baseline
+    // this migration used camelCase identifiers; the rename was implicit
+    // in the now-deleted RenameCamelCaseColumns migration. Existing envs
+    // have already executed this migration under its old name and won't
+    // re-run, so the new column names only matter on fresh DBs.
     await queryRunner.query(
       `INSERT INTO users
-        (id, email, "passwordHash", role, "firstName", "lastName", "isActive", "emailVerified", "dispensaryId")
+        (id, email, password_hash, role, first_name, last_name, is_active, email_verified, dispensary_id)
        VALUES ($1, $2, $3, 'kiosk', 'Kiosk', 'Service', true, true, $4)
        ON CONFLICT (email) DO NOTHING`,
       [KIOSK_USER_ID, KIOSK_EMAIL, KIOSK_PASSWORD_HASH, KIOSK_DISPENSARY_ID],

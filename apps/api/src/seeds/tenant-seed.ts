@@ -3,10 +3,14 @@ import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 
+// The seed uses raw SQL via queryRunner — no entity decorators are
+// actually needed. Skipping the entity glob avoids the Node 24 ESM
+// `__dirname is not defined` failure that broke fresh-DB CI seeding
+// before sc-745.
 const AppDataSource = new DataSource({
   type: 'postgres',
   url: process.env['DATABASE_URL'],
-  entities: [__dirname + '/../modules/**/*.entity{.ts,.js}'],
+  entities: [],
   synchronize: false,
 });
 
@@ -64,7 +68,10 @@ async function seed() {
       )[0].entity_id;
     console.log('✓ Dispensary:', dispensaryId);
 
-    const passwordHash = await bcrypt.hash('Admin1234!', 12);
+    // Password 'Admin123!' matches test-helper.ts's login fixture
+    // (sc-745 reconciliation — seed previously used 'Admin1234!' which
+    // didn't match any consumer).
+    const passwordHash = await bcrypt.hash('Admin123!', 12);
     await qr.query(
       `
       INSERT INTO users (id, email, password_hash, role, first_name, last_name, is_active, email_verified, dispensary_id, organization_id)
@@ -73,7 +80,7 @@ async function seed() {
     `,
       [passwordHash, dispensaryId, orgId],
     );
-    console.log('✓ Admin user: admin@greenleaf.com / Admin1234!');
+    console.log('✓ Admin user: admin@greenleaf.com / Admin123!');
 
     const products = [
       {
