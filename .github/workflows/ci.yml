@@ -58,24 +58,14 @@ jobs:
       - name: Run unit tests
         run: pnpm run test
         env:
-          DATABASE_HOST: localhost
-          DATABASE_PORT: 5432
-          DATABASE_USERNAME: test_user
-          DATABASE_PASSWORD: test_password
-          DATABASE_NAME: test_db
-          REDIS_HOST: localhost
-          REDIS_PORT: 6379
+          DATABASE_URL: postgres://test_user:test_password@localhost:5432/test_db
+          REDIS_URL: redis://localhost:6379
 
       - name: Run e2e tests
         run: pnpm run test:e2e
         env:
-          DATABASE_HOST: localhost
-          DATABASE_PORT: 5432
-          DATABASE_USERNAME: test_user
-          DATABASE_PASSWORD: test_password
-          DATABASE_NAME: test_db
-          REDIS_HOST: localhost
-          REDIS_PORT: 6379
+          DATABASE_URL: postgres://test_user:test_password@localhost:5432/test_db
+          REDIS_URL: redis://localhost:6379
 
       - name: Build project
         run: pnpm run build

@@ -16,29 +16,13 @@
     "test": {
       "dependsOn": ["^build"],
       "outputs": ["coverage/**"],
-      "env": [
-        "DATABASE_HOST",
-        "DATABASE_PORT",
-        "DATABASE_USERNAME",
-        "DATABASE_PASSWORD",
-        "DATABASE_NAME",
-        "REDIS_HOST",
-        "REDIS_PORT"
-      ]
+      "env": ["DATABASE_URL", "REDIS_URL"]
     },
     "test:e2e": {
       "dependsOn": ["^build"],
       "outputs": [],
       "cache": false,
-      "env": [
-        "DATABASE_HOST",
-        "DATABASE_PORT",
-        "DATABASE_USERNAME",
-        "DATABASE_PASSWORD",
-        "DATABASE_NAME",
-        "REDIS_HOST",
-        "REDIS_PORT"
-      ]
+      "env": ["DATABASE_URL", "REDIS_URL"]
     },
     "type-check": {
       "dependsOn": ["^build"]
