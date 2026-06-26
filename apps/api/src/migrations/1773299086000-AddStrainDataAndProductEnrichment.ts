@@ -1,10 +1,23 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddStrainDataAndProductEnrichment1741761600000 implements MigrationInterface {
+/**
+ * Class timestamp realigned to match filename timestamp (sc-741).
+ *
+ * Class was previously `AddStrainDataAndProductEnrichment1741761600000`
+ * (March 2025) — sorted BEFORE `InitialSchema` (`1773159747693`) and
+ * referenced the `products` table which doesn't exist yet on a fresh
+ * DB. Now `1773299086000` to match the filename + sort after
+ * InitialSchema. `CREATE TABLE`/`CREATE INDEX` made idempotent so
+ * environments that previously ran the old-named version don't fail
+ * when TypeORM sees the new class name as un-recorded.
+ */
+export class AddStrainDataAndProductEnrichment1773299086000 implements MigrationInterface {
+  name = 'AddStrainDataAndProductEnrichment1773299086000';
+
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Create strain_data table
     await queryRunner.query(`
-      CREATE TABLE strain_data (
+      CREATE TABLE IF NOT EXISTS strain_data (
         strain_data_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         ocpc VARCHAR(50) UNIQUE,
         name VARCHAR(255) NOT NULL,
@@ -23,9 +36,9 @@ export class AddStrainDataAndProductEnrichment1741761600000 implements Migration
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
-      CREATE INDEX idx_strain_data_name ON strain_data(name);
-      CREATE INDEX idx_strain_data_type ON strain_data(type);
-      CREATE INDEX idx_strain_data_ocpc ON strain_data(ocpc);
+      CREATE INDEX IF NOT EXISTS idx_strain_data_name ON strain_data(name);
+      CREATE INDEX IF NOT EXISTS idx_strain_data_type ON strain_data(type);
+      CREATE INDEX IF NOT EXISTS idx_strain_data_ocpc ON strain_data(ocpc);
     `);
 
     // Add enrichment columns to products
