@@ -66,12 +66,16 @@ jobs:
           JWT_REFRESH_SECRET: ci-test-jwt-refresh-secret-do-not-use-in-production
 
       - name: Run database migrations
-        run: pnpm run db:migrate
+        # Use the post-tech-debt-#11 migration script (data-source.ts +
+        # ALL_ENTITIES barrel + ts-node-swc) — the legacy `db:migrate`
+        # script points at the old database.config.ts which uses
+        # `__dirname` and breaks under Node 24 ESM.
+        run: pnpm --filter @cannasaas/api migration:run
         env:
           DATABASE_URL: postgres://test_user:test_password@localhost:5432/test_db
 
       - name: Seed test database
-        run: pnpm run db:seed
+        run: pnpm --filter @cannasaas/api db:seed
         env:
           DATABASE_URL: postgres://test_user:test_password@localhost:5432/test_db
 
