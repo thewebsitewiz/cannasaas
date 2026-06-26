@@ -8,6 +8,9 @@ import {
   Float,
 } from '@nestjs/graphql';
 import { ObjectType, Field } from '@nestjs/graphql';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Inventory } from './entities/inventory.entity';
 import {
   InventoryService,
   InventoryRow,
@@ -143,7 +146,22 @@ export class InventoryResolver {
   constructor(
     private readonly inventory: InventoryService,
     private readonly reorderSuggestions: ReorderSuggestionService,
+    @InjectRepository(Inventory)
+    private readonly inventoryRepo: Repository<Inventory>,
   ) {}
+
+  /**
+   * Entity-typed accessor (sc-748). Exposes the typed Inventory entity
+   * so the GraphQL schema includes it and introspection can reach it.
+   * The other queries return DTO shapes for back-compat.
+   */
+  @Roles('dispensary_admin', 'org_admin', 'super_admin', 'budtender')
+  @Query(() => Inventory, { name: 'inventoryEntity', nullable: true })
+  async inventoryEntity(
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<Inventory | null> {
+    return this.inventoryRepo.findOne({ where: { inventoryId: id } });
+  }
 
   // ── Queries ─────────────────────────────────────────────────────────
 

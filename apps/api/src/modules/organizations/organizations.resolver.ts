@@ -8,11 +8,14 @@ import {
   InputType,
 } from '@nestjs/graphql';
 import { ObjectType, Field } from '@nestjs/graphql';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import {
   OrganizationsService,
   OrganizationDto,
   OrganizationListItemDto,
 } from './organizations.service';
+import { Organization } from './entities/organization.entity';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtPayload } from '../auth/strategies/jwt.strategy';
@@ -66,7 +69,11 @@ class UpdateSubscriptionInput {
 
 @Resolver()
 export class OrganizationsResolver {
-  constructor(private readonly organizations: OrganizationsService) {}
+  constructor(
+    private readonly organizations: OrganizationsService,
+    @InjectRepository(Organization)
+    private readonly organizationRepo: Repository<Organization>,
+  ) {}
 
   // ── Queries ─────────────────────────────────────────────────────────
 
@@ -76,6 +83,21 @@ export class OrganizationsResolver {
     @Args('organizationId', { type: () => ID }) organizationId: string,
   ): Promise<OrganizationDto> {
     return this.organizations.findById(organizationId);
+  }
+
+  /**
+   * Entity-typed accessor (sc-748). Same rationale as DispensariesResolver.
+   * dispensaryEntity — exposes the typed Organization entity so the
+   * GraphQL schema includes it and introspection can reach it.
+   */
+  @Roles('org_admin', 'super_admin')
+  @Query(() => Organization, { name: 'organizationEntity', nullable: true })
+  async organizationEntity(
+    @Args('organizationId', { type: () => ID }) organizationId: string,
+  ): Promise<Organization | null> {
+    return this.organizationRepo.findOne({
+      where: { organization_id: organizationId },
+    });
   }
 
   @Roles('org_admin', 'super_admin')
