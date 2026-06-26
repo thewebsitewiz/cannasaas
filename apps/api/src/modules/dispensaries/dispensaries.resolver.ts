@@ -10,12 +10,15 @@ import {
   ObjectType,
   Field,
 } from '@nestjs/graphql';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import {
   DispensariesService,
   DispensaryListRow,
   DispensaryPublicRow,
   DispensaryRow,
 } from './dispensaries.service';
+import { Dispensary } from './entities/dispensary.entity';
 import { Roles } from '../../common/decorators/roles.decorator';
 import GraphQLJSON from 'graphql-type-json';
 
@@ -126,7 +129,11 @@ class CreateDispensaryInput {
 
 @Resolver()
 export class DispensariesResolver {
-  constructor(private readonly dispensaries: DispensariesService) {}
+  constructor(
+    private readonly dispensaries: DispensariesService,
+    @InjectRepository(Dispensary)
+    private readonly dispensaryRepo: Repository<Dispensary>,
+  ) {}
 
   // ── Queries ─────────────────────────────────────────────────────────
 
@@ -136,6 +143,21 @@ export class DispensariesResolver {
     @Args('entityId', { type: () => ID }) entityId: string,
   ): Promise<DispensaryRow> {
     return this.dispensaries.findById(entityId);
+  }
+
+  /**
+   * Entity-typed accessor (sc-748). The `dispensary(entityId)` query above
+   * returns a custom DispensaryResult shape for back-compat with existing
+   * consumers; this complement exposes the typed Dispensary entity so the
+   * GraphQL schema includes it and downstream tooling can reach it via
+   * introspection. Same data, different return type.
+   */
+  @Roles('dispensary_admin', 'org_admin', 'super_admin')
+  @Query(() => Dispensary, { name: 'dispensaryEntity', nullable: true })
+  async dispensaryEntity(
+    @Args('entityId', { type: () => ID }) entityId: string,
+  ): Promise<Dispensary | null> {
+    return this.dispensaryRepo.findOne({ where: { entity_id: entityId } });
   }
 
   /**
