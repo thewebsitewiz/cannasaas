@@ -62,6 +62,8 @@ jobs:
           REDIS_URL: redis://localhost:6379
           # Test-only base64-encoded 32-byte zero key; not used to encrypt anything real.
           PAYMENTS_ENCRYPTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          JWT_SECRET: ci-test-jwt-secret-do-not-use-in-production
+          JWT_REFRESH_SECRET: ci-test-jwt-refresh-secret-do-not-use-in-production
 
       - name: Run e2e tests
         run: pnpm run test:e2e
@@ -70,6 +72,8 @@ jobs:
           REDIS_URL: redis://localhost:6379
           # Test-only base64-encoded 32-byte zero key; not used to encrypt anything real.
           PAYMENTS_ENCRYPTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          JWT_SECRET: ci-test-jwt-secret-do-not-use-in-production
+          JWT_REFRESH_SECRET: ci-test-jwt-refresh-secret-do-not-use-in-production
 
       - name: Build project
         run: pnpm run build
