@@ -58,24 +58,36 @@ jobs:
       - name: Run unit tests
         run: pnpm run test
         env:
-          DATABASE_HOST: localhost
-          DATABASE_PORT: 5432
-          DATABASE_USERNAME: test_user
-          DATABASE_PASSWORD: test_password
-          DATABASE_NAME: test_db
-          REDIS_HOST: localhost
-          REDIS_PORT: 6379
+          DATABASE_URL: postgres://test_user:test_password@localhost:5432/test_db
+          REDIS_URL: redis://localhost:6379
+          # Test-only base64-encoded 32-byte zero key; not used to encrypt anything real.
+          PAYMENTS_ENCRYPTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          JWT_SECRET: ci-test-jwt-secret-do-not-use-in-production
+          JWT_REFRESH_SECRET: ci-test-jwt-refresh-secret-do-not-use-in-production
+
+      - name: Run database migrations
+        # Use the post-tech-debt-#11 migration script (data-source.ts +
+        # ALL_ENTITIES barrel + ts-node-swc) — the legacy `db:migrate`
+        # script points at the old database.config.ts which uses
+        # `__dirname` and breaks under Node 24 ESM.
+        run: pnpm --filter @cannasaas/api migration:run
+        env:
+          DATABASE_URL: postgres://test_user:test_password@localhost:5432/test_db
+
+      - name: Seed test database
+        run: pnpm --filter @cannasaas/api db:seed
+        env:
+          DATABASE_URL: postgres://test_user:test_password@localhost:5432/test_db
 
       - name: Run e2e tests
         run: pnpm run test:e2e
         env:
-          DATABASE_HOST: localhost
-          DATABASE_PORT: 5432
-          DATABASE_USERNAME: test_user
-          DATABASE_PASSWORD: test_password
-          DATABASE_NAME: test_db
-          REDIS_HOST: localhost
-          REDIS_PORT: 6379
+          DATABASE_URL: postgres://test_user:test_password@localhost:5432/test_db
+          REDIS_URL: redis://localhost:6379
+          # Test-only base64-encoded 32-byte zero key; not used to encrypt anything real.
+          PAYMENTS_ENCRYPTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          JWT_SECRET: ci-test-jwt-secret-do-not-use-in-production
+          JWT_REFRESH_SECRET: ci-test-jwt-refresh-secret-do-not-use-in-production
 
       - name: Build project
         run: pnpm run build

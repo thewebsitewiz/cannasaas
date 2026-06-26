@@ -17,13 +17,11 @@
       "dependsOn": ["^build"],
       "outputs": ["coverage/**"],
       "env": [
-        "DATABASE_HOST",
-        "DATABASE_PORT",
-        "DATABASE_USERNAME",
-        "DATABASE_PASSWORD",
-        "DATABASE_NAME",
-        "REDIS_HOST",
-        "REDIS_PORT"
+        "DATABASE_URL",
+        "REDIS_URL",
+        "PAYMENTS_ENCRYPTION_KEY",
+        "JWT_SECRET",
+        "JWT_REFRESH_SECRET"
       ]
     },
     "test:e2e": {
@@ -31,24 +29,24 @@
       "outputs": [],
       "cache": false,
       "env": [
-        "DATABASE_HOST",
-        "DATABASE_PORT",
-        "DATABASE_USERNAME",
-        "DATABASE_PASSWORD",
-        "DATABASE_NAME",
-        "REDIS_HOST",
-        "REDIS_PORT"
+        "DATABASE_URL",
+        "REDIS_URL",
+        "PAYMENTS_ENCRYPTION_KEY",
+        "JWT_SECRET",
+        "JWT_REFRESH_SECRET"
       ]
     },
     "type-check": {
       "dependsOn": ["^build"]
     },
     "db:migrate": {
-      "cache": false
+      "cache": false,
+      "env": ["DATABASE_URL"]
     },
     "db:seed": {
       "cache": false,
-      "dependsOn": ["db:migrate"]
+      "dependsOn": ["db:migrate"],
+      "env": ["DATABASE_URL"]
     },
     "clean": {
       "cache": false
