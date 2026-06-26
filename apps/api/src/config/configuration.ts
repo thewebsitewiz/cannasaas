@@ -41,4 +41,6 @@ export const configuration = () => ({
     aiIdVerification: process.env['ENABLE_AI_ID_VERIFICATION'] === 'true',
     budtenderVideo: process.env['ENABLE_BUDTENDER_VIDEO'] === 'true',
   },
+  // Top-level keys (looked up by their env-var NAME via ConfigService.get())
+  PAYMENTS_ENCRYPTION_KEY: process.env['PAYMENTS_ENCRYPTION_KEY'],
 });
