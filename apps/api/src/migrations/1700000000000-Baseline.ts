@@ -31,6 +31,11 @@ export class Baseline1700000000000 implements MigrationInterface {
       return;
     }
 
+    // Extensions needed by the schema. TypeORM auto-creates uuid-ossp
+    // on first connect; pg_trgm has to be requested explicitly (used
+    // by product search via `similarity()`).
+    await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "pg_trgm"`);
+
     await queryRunner.query(
       `CREATE TABLE "kiosk_devices" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "user_id" uuid NOT NULL, "dispensary_id" uuid NOT NULL, "label" character varying NOT NULL, "current_token_id" uuid NOT NULL, "public_key" text, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_c4d72f67c19f337b3614f9b811f" PRIMARY KEY ("id"))`,
     );
