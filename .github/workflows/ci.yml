@@ -60,12 +60,16 @@ jobs:
         env:
           DATABASE_URL: postgres://test_user:test_password@localhost:5432/test_db
           REDIS_URL: redis://localhost:6379
+          # Test-only base64-encoded 32-byte zero key; not used to encrypt anything real.
+          PAYMENTS_ENCRYPTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
 
       - name: Run e2e tests
         run: pnpm run test:e2e
         env:
           DATABASE_URL: postgres://test_user:test_password@localhost:5432/test_db
           REDIS_URL: redis://localhost:6379
+          # Test-only base64-encoded 32-byte zero key; not used to encrypt anything real.
+          PAYMENTS_ENCRYPTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
 
       - name: Build project
         run: pnpm run build
