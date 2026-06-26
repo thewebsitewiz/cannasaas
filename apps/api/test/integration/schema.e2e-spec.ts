@@ -34,9 +34,10 @@ describe('GraphQL Schema (E2E)', () => {
     expect(res.status).toBe(200);
     const typeNames = res.body.data.__schema.types.map((t: any) => t.name);
 
-    // Verify critical types exist in schema
-    // Aligned with actual entity class names — `InventoryItem` was
-    // wishful; the entity class is named `Inventory` (sc-748).
+    // Verify critical types exist in schema. Aligned with actual
+    // entity class names (sc-748): `InventoryItem` was wishful (entity
+    // is `Inventory`); `ThemeConfig` the entity isn't @ObjectType-
+    // decorated, the GraphQL type is `ThemeConfigType` (a DTO).
     const requiredTypes = [
       'Product',
       'Order',
@@ -45,7 +46,7 @@ describe('GraphQL Schema (E2E)', () => {
       'Organization',
       'CustomerProfile',
       'Inventory',
-      'ThemeConfig',
+      'ThemeConfigType',
     ];
     for (const type of requiredTypes) {
       expect(typeNames).toContain(type);

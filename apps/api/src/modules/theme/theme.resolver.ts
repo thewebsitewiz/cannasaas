@@ -1,8 +1,5 @@
-import { ID, Resolver, Query, Mutation, Args } from '@nestjs/graphql';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
 import { ThemeService } from './theme.service';
-import { ThemeConfig } from './theme-config.entity';
 import {
   ThemableDispensary,
   ThemeConfigType,
@@ -19,23 +16,7 @@ export class ThemeResolver {
   constructor(
     private readonly themeService: ThemeService,
     private readonly ownership: DispensaryOwnershipService,
-    @InjectRepository(ThemeConfig)
-    private readonly themeConfigRepo: Repository<ThemeConfig>,
   ) {}
-
-  /**
-   * Entity-typed accessor (sc-748). Exposes the typed ThemeConfig
-   * entity so the GraphQL schema includes it and introspection can
-   * reach it. The `themeConfig` query above returns the DTO shape
-   * for back-compat with existing consumers.
-   */
-  @Roles('dispensary_admin', 'org_admin', 'super_admin')
-  @Query(() => ThemeConfig, { name: 'themeConfigEntity', nullable: true })
-  async themeConfigEntity(
-    @Args('dispensaryId', { type: () => ID }) dispensaryId: string,
-  ): Promise<ThemeConfig | null> {
-    return this.themeConfigRepo.findOne({ where: { dispensaryId } });
-  }
 
   /**
    * Public read — every storefront / kiosk page consumes this to paint
