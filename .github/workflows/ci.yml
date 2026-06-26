@@ -65,6 +65,16 @@ jobs:
           JWT_SECRET: ci-test-jwt-secret-do-not-use-in-production
           JWT_REFRESH_SECRET: ci-test-jwt-refresh-secret-do-not-use-in-production
 
+      - name: Run database migrations
+        run: pnpm run db:migrate
+        env:
+          DATABASE_URL: postgres://test_user:test_password@localhost:5432/test_db
+
+      - name: Seed test database
+        run: pnpm run db:seed
+        env:
+          DATABASE_URL: postgres://test_user:test_password@localhost:5432/test_db
+
       - name: Run e2e tests
         run: pnpm run test:e2e
         env:
