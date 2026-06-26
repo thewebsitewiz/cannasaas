@@ -40,11 +40,13 @@
       "dependsOn": ["^build"]
     },
     "db:migrate": {
-      "cache": false
+      "cache": false,
+      "env": ["DATABASE_URL"]
     },
     "db:seed": {
       "cache": false,
-      "dependsOn": ["db:migrate"]
+      "dependsOn": ["db:migrate"],
+      "env": ["DATABASE_URL"]
     },
     "clean": {
       "cache": false
