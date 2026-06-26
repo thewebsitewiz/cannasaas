@@ -3,10 +3,14 @@ import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 
+// The seed uses raw SQL via queryRunner — no entity decorators are
+// actually needed. Skipping the entity glob avoids the Node 24 ESM
+// `__dirname is not defined` failure that broke fresh-DB CI seeding
+// before sc-745.
 const AppDataSource = new DataSource({
   type: 'postgres',
   url: process.env['DATABASE_URL'],
-  entities: [__dirname + '/../modules/**/*.entity{.ts,.js}'],
+  entities: [],
   synchronize: false,
 });
 

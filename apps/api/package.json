@@ -68,7 +68,7 @@
     "build": "tsc -p tsconfig.build.json",
     "db:migrate": "typeorm migration:run -d src/config/database.config.ts",
     "db:migrate:generate": "typeorm migration:generate -d src/config/database.config.ts",
-    "db:seed": "ts-node -r tsconfig-paths/register src/database/seeds/run-seeds.ts",
+    "db:seed": "ts-node --swc -r tsconfig-paths/register src/seeds/tenant-seed.ts",
     "dev": "ts-node --swc -r tsconfig-paths/register src/main.ts",
     "lint": "eslint src --ext .ts",
     "migration:generate": "ts-node --swc -r tsconfig-paths/register ./node_modules/typeorm/cli migration:generate src/migrations/InitialSchema -d src/data-source.ts",
