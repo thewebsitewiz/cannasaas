@@ -52,21 +52,25 @@ describe('StockAlertsService', () => {
   let auth: FakeAuthService;
   let svc: StockAlertsService;
 
-  beforeEach(() => {
-    ioMock.mockReset();
-    ioMock.mockImplementation(() => makeFakeSocket());
+  function bootService(initialToken: string | null = null): void {
+    TestBed.resetTestingModule();
     auth = new FakeAuthService();
+    if (initialToken !== null) auth.setToken(initialToken);
     TestBed.configureTestingModule({
       providers: [StockAlertsService, { provide: AuthService, useValue: auth }],
     });
+    // Inject AFTER seeding the auth signal so the constructor effect's
+    // initial run captures `initialToken` directly. Avoids the
+    // "signal-write-then-tick" pattern that doesn't flush reliably
+    // under CI's scheduler — same trick used by cart-stock-guardian.spec.
     svc = TestBed.inject(StockAlertsService);
-    // Flush the constructor's initial effect run (sees null token, no-op)
-    // BEFORE the test mutates auth. Without this, the test's subsequent
-    // signal write is collapsed into the pending initial run, and the
-    // effect only fires once with the pre-write value — `ioMock` ends
-    // up uncalled. The cart-stock-guardian spec doesn't hit this because
-    // it mutates state BEFORE injecting the consumer service.
     TestBed.tick();
+  }
+
+  beforeEach(() => {
+    ioMock.mockReset();
+    ioMock.mockImplementation(() => makeFakeSocket());
+    bootService();
   });
 
   // ── TC-LSW-005 — Dedupe across many events for same product (sc-520) ────
@@ -154,8 +158,7 @@ describe('StockAlertsService', () => {
   });
 
   it('TC-LSW-008 — disconnect handler flips connected to false', () => {
-    auth.setToken('tok-1');
-    TestBed.tick();
+    bootService('tok-1');
     expect(ioMock).toHaveBeenCalledTimes(1);
     const sock = ioMock.mock.results[0].value as FakeSocket;
     sock.handlers.get('connect')?.(undefined);
@@ -166,14 +169,14 @@ describe('StockAlertsService', () => {
 
   // ── TC-LSW-009 — Token rotation reopens the socket (sc-524) ─────────────
 
-  it('TC-LSW-009 — setting a token opens a socket; rotating it closes + reopens', () => {
-    auth.setToken('tok-1');
-    TestBed.tick();
+  it('TC-LSW-009 — setting a token opens a socket; rotating it closes + reopens', async () => {
+    bootService('tok-1');
     expect(ioMock).toHaveBeenCalledTimes(1);
     const sock1 = ioMock.mock.results[0].value as FakeSocket;
 
     auth.setToken('tok-2');
     TestBed.tick();
+    await Promise.resolve(); // drain microtasks — CI's Node 24 scheduler needs this
     expect(ioMock).toHaveBeenCalledTimes(2);
     expect(sock1.disconnect).toHaveBeenCalledTimes(1);
 
@@ -183,13 +186,13 @@ describe('StockAlertsService', () => {
     expect(secondOptions.auth?.token).toBe('tok-2');
   });
 
-  it('TC-LSW-009 — clearing the token closes the socket without reopening', () => {
-    auth.setToken('tok-1');
-    TestBed.tick();
+  it('TC-LSW-009 — clearing the token closes the socket without reopening', async () => {
+    bootService('tok-1');
     const sock = ioMock.mock.results[0].value as FakeSocket;
 
     auth.setToken(null);
     TestBed.tick();
+    await Promise.resolve(); // drain microtasks — CI's Node 24 scheduler needs this
     expect(sock.disconnect).toHaveBeenCalledTimes(1);
     expect(ioMock).toHaveBeenCalledTimes(1); // not reopened
     expect(svc.connected()).toBe(false);
