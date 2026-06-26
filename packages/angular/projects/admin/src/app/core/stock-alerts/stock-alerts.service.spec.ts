@@ -60,6 +60,13 @@ describe('StockAlertsService', () => {
       providers: [StockAlertsService, { provide: AuthService, useValue: auth }],
     });
     svc = TestBed.inject(StockAlertsService);
+    // Flush the constructor's initial effect run (sees null token, no-op)
+    // BEFORE the test mutates auth. Without this, the test's subsequent
+    // signal write is collapsed into the pending initial run, and the
+    // effect only fires once with the pre-write value — `ioMock` ends
+    // up uncalled. The cart-stock-guardian spec doesn't hit this because
+    // it mutates state BEFORE injecting the consumer service.
+    TestBed.tick();
   });
 
   // ── TC-LSW-005 — Dedupe across many events for same product (sc-520) ────
@@ -146,12 +153,7 @@ describe('StockAlertsService', () => {
     expect(svc.connected()).toBe(false);
   });
 
-  // SKIP (sc-736): TestBed.tick() does not reliably flush the constructor
-  // effect that watches `auth.accessToken` in CI's tighter scheduler. The
-  // effect fires ~50% locally, ~0% in CI. Likely needs `await TestBed.tick()`
-  // or `TestBed.flushEffects()`; out of scope for the CI-unblock PR (#159).
-  // Re-enable once sc-736 lands.
-  it.skip('TC-LSW-008 — disconnect handler flips connected to false', () => {
+  it('TC-LSW-008 — disconnect handler flips connected to false', () => {
     auth.setToken('tok-1');
     TestBed.tick();
     expect(ioMock).toHaveBeenCalledTimes(1);
@@ -164,8 +166,7 @@ describe('StockAlertsService', () => {
 
   // ── TC-LSW-009 — Token rotation reopens the socket (sc-524) ─────────────
 
-  // SKIP — same TestBed.tick() effect-flush gap as TC-LSW-008 above.
-  it.skip('TC-LSW-009 — setting a token opens a socket; rotating it closes + reopens', () => {
+  it('TC-LSW-009 — setting a token opens a socket; rotating it closes + reopens', () => {
     auth.setToken('tok-1');
     TestBed.tick();
     expect(ioMock).toHaveBeenCalledTimes(1);
@@ -182,8 +183,7 @@ describe('StockAlertsService', () => {
     expect(secondOptions.auth?.token).toBe('tok-2');
   });
 
-  // SKIP — same TestBed.tick() effect-flush gap as TC-LSW-008 above.
-  it.skip('TC-LSW-009 — clearing the token closes the socket without reopening', () => {
+  it('TC-LSW-009 — clearing the token closes the socket without reopening', () => {
     auth.setToken('tok-1');
     TestBed.tick();
     const sock = ioMock.mock.results[0].value as FakeSocket;
